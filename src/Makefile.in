@@ -2265,6 +2265,9 @@ uninstall-am: uninstall-binPROGRAMS uninstall-desktopfilesDATA \
 	uninstall-wmpropertiesDATA
 
 
+# Flag build for parallelism; see https://savannah.gnu.org/patch/?6905
+.AUTOPARALLEL:
+
 # We need to strip out the attribute that would point back to libmutter-introspect
 # so that libgirepository looks for symbols in the executable instead
 @WITH_INTROSPECTION_TRUE@Meta-$(api_version).gir: $(G_IR_SCANNER) mutter $(libmutterinclude_HEADERS) $(mutter_SOURCES)
@@ -2324,7 +2327,7 @@ mutter-marshal.c: Makefile mutter-marshal.list
 
 mutter-enum-types.h: stamp-mutter-enum-types.h Makefile
 	@true
-stamp-mutter-enum-types.h: $(mutter_source_h) mutter-enum-types.h.in
+stamp-mutter-enum-types.h: $(libmutterinclude_base_headers) mutter-enum-types.h.in
 	$(AM_V_GEN) ( cd $(srcdir) && \
 	  $(GLIB_MKENUMS) \
 	    --template $(srcdir)/mutter-enum-types.h.in \
