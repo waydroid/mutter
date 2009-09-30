@@ -483,7 +483,7 @@ meta_display_open (void)
   the_display->leader_window = None;
   the_display->timestamp_pinging_window = None;
 
-  the_display->xinerama_cache_invalidated = TRUE;
+  the_display->monitor_cache_invalidated = TRUE;
 
   the_display->groups_by_leader = NULL;
 
@@ -722,6 +722,13 @@ meta_display_open (void)
                                     the_display->leader_window,
                                     the_display->atom__NET_WM_NAME,
                                     "Mutter");
+
+    /* The GNOME keybindings capplet should include both the Mutter and Metacity
+     * keybindings */
+    meta_prop_set_utf8_string_hint (the_display,
+                                    the_display->leader_window,
+                                    the_display->atom__GNOME_WM_KEYBINDINGS,
+                                    "Mutter,Metacity");
     
     meta_prop_set_utf8_string_hint (the_display,
                                     the_display->leader_window,
@@ -1528,7 +1535,7 @@ event_callback (XEvent   *event,
   bypass_compositor = FALSE;
   filter_out_event = FALSE;
   display->current_time = event_get_time (display, event);
-  display->xinerama_cache_invalidated = TRUE;
+  display->monitor_cache_invalidated = TRUE;
   
   modified = event_get_modified_window (display, event);
   
@@ -5111,9 +5118,9 @@ sanity_check_timestamps (MetaDisplay *display,
               meta_warning ("%s appears to be one of the offending windows "
                             "with a timestamp of %u.  Working around...\n",
                             window->desc, window->net_wm_user_time);
-              window->net_wm_user_time = timestamp;
+              meta_window_set_user_time (window, timestamp);
             }
-          
+
           tmp = tmp->next;
         }
 

@@ -38,7 +38,7 @@ meta_edge_type_get_type (void)
     {
       static const GEnumValue values[] = {
         { META_EDGE_WINDOW, "META_EDGE_WINDOW", "window" },
-        { META_EDGE_XINERAMA, "META_EDGE_XINERAMA", "xinerama" },
+        { META_EDGE_MONITOR, "META_EDGE_MONITOR", "monitor" },
         { META_EDGE_SCREEN, "META_EDGE_SCREEN", "screen" },
         { 0, NULL, NULL }
       };

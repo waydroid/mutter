@@ -136,7 +136,8 @@ enum {
   PROP_MINI_ICON,
   PROP_DECORATED,
   PROP_FULLSCREEN,
-  PROP_WINDOW_TYPE
+  PROP_WINDOW_TYPE,
+  PROP_USER_TIME
 };
 
 enum
@@ -201,6 +202,9 @@ meta_window_get_property(GObject         *object,
       break;
     case PROP_WINDOW_TYPE:
       g_value_set_enum (value, win->type);
+      break;
+    case PROP_USER_TIME:
+      g_value_set_uint (value, win->net_wm_user_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -278,6 +282,16 @@ meta_window_class_init (MetaWindowClass *klass)
                                                       "The type of the window",
                                                       MUTTER_TYPE_WINDOW_TYPE,
                                                       META_WINDOW_NORMAL,
+                                                      G_PARAM_READABLE));
+
+  g_object_class_install_property (object_class,
+                                   PROP_USER_TIME,
+                                   g_param_spec_uint ("user-time",
+                                                      "User time",
+                                                      "Timestamp of last user interaction",
+                                                      0,
+                                                      G_MAXUINT,
+                                                      0,
                                                       G_PARAM_READABLE));
 
   window_signals[WORKSPACE_CHANGED] =
@@ -675,7 +689,7 @@ meta_window_new_with_attrs (MetaDisplay       *display,
   window->fullscreen = FALSE;
   window->fullscreen_monitors[0] = -1;
   window->require_fully_onscreen = TRUE;
-  window->require_on_single_xinerama = TRUE;
+  window->require_on_single_monitor = TRUE;
   window->require_titlebar_visible = TRUE;
   window->on_all_workspaces = FALSE;
   window->shaded = FALSE;
@@ -3241,10 +3255,10 @@ meta_window_update_fullscreen_monitors (MetaWindow    *window,
                                         unsigned long  left,
                                         unsigned long  right)
 {
-  if ((int)top < window->screen->n_xinerama_infos &&
-      (int)bottom < window->screen->n_xinerama_infos &&
-      (int)left < window->screen->n_xinerama_infos &&
-      (int)right < window->screen->n_xinerama_infos)
+  if ((int)top < window->screen->n_monitor_infos &&
+      (int)bottom < window->screen->n_monitor_infos &&
+      (int)left < window->screen->n_monitor_infos &&
+      (int)right < window->screen->n_monitor_infos)
     {
       window->fullscreen_monitors[0] = top;
       window->fullscreen_monitors[1] = bottom;
@@ -6788,7 +6802,7 @@ recalc_window_features (MetaWindow *window)
 
       /* don't allow fullscreen if we can't resize, unless the size
        * is entire screen size (kind of broken, because we
-       * actually fullscreen to xinerama head size not screen size)
+       * actually fullscreen to monitor size not screen size)
        */
       if (window->size_hints.min_width == window->screen->rect.width &&
           window->size_hints.min_height == window->screen->rect.height)
@@ -7449,22 +7463,22 @@ update_move (MetaWindow  *window,
 
       return;
     }
-  /* remaximize window on an other xinerama monitor if window has
-   * been shaken loose or it is still maximized (then move straight)
+  /* remaximize window on another monitor if window has been shaken
+   * loose or it is still maximized (then move straight)
    */
   else if (window->shaken_loose || META_WINDOW_MAXIMIZED (window))
     {
-      const MetaXineramaScreenInfo *wxinerama;
+      const MetaMonitorInfo *wmonitor;
       MetaRectangle work_area;
       int monitor;
 
-      wxinerama = meta_screen_get_xinerama_for_window (window->screen, window);
+      wmonitor = meta_screen_get_monitor_for_window (window->screen, window);
 
-      for (monitor = 0; monitor < window->screen->n_xinerama_infos; monitor++)
+      for (monitor = 0; monitor < window->screen->n_monitor_infos; monitor++)
         {
-          meta_window_get_work_area_for_xinerama (window, monitor, &work_area);
+          meta_window_get_work_area_for_monitor (window, monitor, &work_area);
 
-          /* check if cursor is near the top of a xinerama work area */
+          /* check if cursor is near the top of a monitor work area */
           if (x >= work_area.x &&
               x < (work_area.x + work_area.width) &&
               y >= work_area.y &&
@@ -7473,7 +7487,7 @@ update_move (MetaWindow  *window,
               /* move the saved rect if window will become maximized on an
                * other monitor so user isn't surprised on a later unmaximize
                */
-              if (wxinerama->number != monitor)
+              if (wmonitor->number != monitor)
                 {
                   window->saved_rect.x = work_area.x;
                   window->saved_rect.y = work_area.y;
@@ -7955,24 +7969,24 @@ meta_window_set_gravity (MetaWindow *window,
 }
 
 static void
-get_work_area_xinerama (MetaWindow    *window,
-                        MetaRectangle *area,
-                        int            which_xinerama)
+get_work_area_monitor (MetaWindow    *window,
+                       MetaRectangle *area,
+                       int            which_monitor)
 {
   GList *tmp;
 
-  g_assert (which_xinerama >= 0);
+  g_assert (which_monitor >= 0);
 
-  /* Initialize to the whole xinerama */
-  *area = window->screen->xinerama_infos[which_xinerama].rect;
+  /* Initialize to the whole monitor */
+  *area = window->screen->monitor_infos[which_monitor].rect;
 
   tmp = meta_window_get_workspaces (window);
   while (tmp != NULL)
     {
       MetaRectangle workspace_work_area;
-      meta_workspace_get_work_area_for_xinerama (tmp->data,
-                                                 which_xinerama,
-                                                 &workspace_work_area);
+      meta_workspace_get_work_area_for_monitor (tmp->data,
+                                                which_monitor,
+                                                &workspace_work_area);
       meta_rectangle_intersect (area,
                                 &workspace_work_area,
                                 area);
@@ -7980,39 +7994,39 @@ get_work_area_xinerama (MetaWindow    *window,
     }
 
   meta_topic (META_DEBUG_WORKAREA,
-              "Window %s xinerama %d has work area %d,%d %d x %d\n",
-              window->desc, which_xinerama,
+              "Window %s monitor %d has work area %d,%d %d x %d\n",
+              window->desc, which_monitor,
               area->x, area->y, area->width, area->height);
 }
 
 void
-meta_window_get_work_area_current_xinerama (MetaWindow    *window,
-					    MetaRectangle *area)
+meta_window_get_work_area_current_monitor (MetaWindow    *window,
+                                           MetaRectangle *area)
 {
-  const MetaXineramaScreenInfo *xinerama = NULL;
-  xinerama = meta_screen_get_xinerama_for_window (window->screen,
-						  window);
+  const MetaMonitorInfo *monitor = NULL;
+  monitor = meta_screen_get_monitor_for_window (window->screen,
+                                                window);
 
-  meta_window_get_work_area_for_xinerama (window,
-                                          xinerama->number,
-                                          area);
+  meta_window_get_work_area_for_monitor (window,
+                                         monitor->number,
+                                         area);
 }
 
 void
-meta_window_get_work_area_for_xinerama (MetaWindow    *window,
-					int            which_xinerama,
-					MetaRectangle *area)
+meta_window_get_work_area_for_monitor (MetaWindow    *window,
+                                       int            which_monitor,
+                                       MetaRectangle *area)
 {
-  g_return_if_fail (which_xinerama >= 0);
+  g_return_if_fail (which_monitor >= 0);
 
-  get_work_area_xinerama (window,
-                          area,
-                          which_xinerama);
+  get_work_area_monitor (window,
+                         area,
+                         which_monitor);
 }
 
 void
-meta_window_get_work_area_all_xineramas (MetaWindow    *window,
-                                         MetaRectangle *area)
+meta_window_get_work_area_all_monitors (MetaWindow    *window,
+                                        MetaRectangle *area)
 {
   GList *tmp;
 
@@ -8023,8 +8037,8 @@ meta_window_get_work_area_all_xineramas (MetaWindow    *window,
   while (tmp != NULL)
     {
       MetaRectangle workspace_work_area;
-      meta_workspace_get_work_area_all_xineramas (tmp->data,
-                                                  &workspace_work_area);
+      meta_workspace_get_work_area_all_monitors (tmp->data,
+                                                 &workspace_work_area);
       meta_rectangle_intersect (area,
                                 &workspace_work_area,
                                 area);
@@ -8456,6 +8470,26 @@ meta_window_stack_just_below (MetaWindow *window,
     }
 }
 
+/**
+ * meta_window_get_user_time:
+ *
+ * The user time represents a timestamp for the last time the user
+ * interacted with this window.  Note this property is only available
+ * for non-override-redirect windows.
+ *
+ * The property is set by Mutter initially upon window creation,
+ * and updated thereafter on input events (key and button presses) seen by Mutter,
+ * client updates to the _NET_WM_USER_TIME property (if later than the current time)
+ * and when focusing the window.
+ *
+ * Returns: The last time the user interacted with this window.
+ */
+guint32
+meta_window_get_user_time (MetaWindow *window)
+{
+  return window->net_wm_user_time;
+}
+
 void
 meta_window_set_user_time (MetaWindow *window,
                            guint32     timestamp)
@@ -8494,6 +8528,8 @@ meta_window_set_user_time (MetaWindow *window,
           __window_is_terminal (window))
         window->display->allow_terminal_deactivation = FALSE;
     }
+
+  g_object_notify (G_OBJECT (window), "user-time");
 }
 
 /* Sets the demands_attention hint on a window, but only
