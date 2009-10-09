@@ -152,6 +152,29 @@ meta_debug_topic_get_type (void)
 
   return g_enum_type_id__volatile;
 }
+GType
+meta_later_type_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { META_LATER_RESIZE, "META_LATER_RESIZE", "resize" },
+        { META_LATER_BEFORE_REDRAW, "META_LATER_BEFORE_REDRAW", "before-redraw" },
+        { META_LATER_IDLE, "META_LATER_IDLE", "idle" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_enum_register_static (g_intern_static_string ("MetaLaterType"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
 
 /* enumerations from "include/common.h" */
 #include "include/common.h"

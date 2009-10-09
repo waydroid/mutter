@@ -95,9 +95,8 @@ libmutter_private_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(libmutter_private_la_LDFLAGS) $(LDFLAGS) -o $@
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am__objects_1 = mutter-marshal.$(OBJEXT) mutter-enum-types.$(OBJEXT)
-am_mutter_OBJECTS = async-getprop.$(OBJEXT) alttabhandler.$(OBJEXT) \
-	alttabhandlerdefault.$(OBJEXT) bell.$(OBJEXT) boxes.$(OBJEXT) \
-	compositor.$(OBJEXT) mutter-module.$(OBJEXT) \
+am_mutter_OBJECTS = async-getprop.$(OBJEXT) bell.$(OBJEXT) \
+	boxes.$(OBJEXT) compositor.$(OBJEXT) mutter-module.$(OBJEXT) \
 	mutter-plugin.$(OBJEXT) mutter-plugin-manager.$(OBJEXT) \
 	mutter-shaped-texture.$(OBJEXT) mutter-window.$(OBJEXT) \
 	mutter-window-group.$(OBJEXT) shadow.$(OBJEXT) \
@@ -406,10 +405,6 @@ mutter_built_sources = \
 mutter_SOURCES = \
 	core/async-getprop.c			\
 	core/async-getprop.h			\
-	core/alttabhandler.c			\
-	include/alttabhandler.h			\
-	core/alttabhandlerdefault.c		\
-	include/alttabhandlerdefault.h		\
 	core/bell.c				\
 	core/bell.h				\
 	core/boxes.c				\
@@ -543,7 +538,6 @@ libmutterincludedir = $(includedir)/mutter/mutter-private
 # Headers installed for plugins; introspected information will
 # be extracted into Mutter-<version>.gir
 libmutterinclude_base_headers = \
-	include/alttabhandler.h			\
 	include/boxes.h				\
 	ui/gradient.h				\
 	include/main.h				\
@@ -780,8 +774,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alttabhandler.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alttabhandlerdefault.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/async-getprop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bell.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/boxes.Po@am__quote@
@@ -930,38 +922,6 @@ async-getprop.obj: core/async-getprop.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='core/async-getprop.c' object='async-getprop.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o async-getprop.obj `if test -f 'core/async-getprop.c'; then $(CYGPATH_W) 'core/async-getprop.c'; else $(CYGPATH_W) '$(srcdir)/core/async-getprop.c'; fi`
-
-alttabhandler.o: core/alttabhandler.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT alttabhandler.o -MD -MP -MF $(DEPDIR)/alttabhandler.Tpo -c -o alttabhandler.o `test -f 'core/alttabhandler.c' || echo '$(srcdir)/'`core/alttabhandler.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/alttabhandler.Tpo $(DEPDIR)/alttabhandler.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='core/alttabhandler.c' object='alttabhandler.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o alttabhandler.o `test -f 'core/alttabhandler.c' || echo '$(srcdir)/'`core/alttabhandler.c
-
-alttabhandler.obj: core/alttabhandler.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT alttabhandler.obj -MD -MP -MF $(DEPDIR)/alttabhandler.Tpo -c -o alttabhandler.obj `if test -f 'core/alttabhandler.c'; then $(CYGPATH_W) 'core/alttabhandler.c'; else $(CYGPATH_W) '$(srcdir)/core/alttabhandler.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/alttabhandler.Tpo $(DEPDIR)/alttabhandler.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='core/alttabhandler.c' object='alttabhandler.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o alttabhandler.obj `if test -f 'core/alttabhandler.c'; then $(CYGPATH_W) 'core/alttabhandler.c'; else $(CYGPATH_W) '$(srcdir)/core/alttabhandler.c'; fi`
-
-alttabhandlerdefault.o: core/alttabhandlerdefault.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT alttabhandlerdefault.o -MD -MP -MF $(DEPDIR)/alttabhandlerdefault.Tpo -c -o alttabhandlerdefault.o `test -f 'core/alttabhandlerdefault.c' || echo '$(srcdir)/'`core/alttabhandlerdefault.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/alttabhandlerdefault.Tpo $(DEPDIR)/alttabhandlerdefault.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='core/alttabhandlerdefault.c' object='alttabhandlerdefault.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o alttabhandlerdefault.o `test -f 'core/alttabhandlerdefault.c' || echo '$(srcdir)/'`core/alttabhandlerdefault.c
-
-alttabhandlerdefault.obj: core/alttabhandlerdefault.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT alttabhandlerdefault.obj -MD -MP -MF $(DEPDIR)/alttabhandlerdefault.Tpo -c -o alttabhandlerdefault.obj `if test -f 'core/alttabhandlerdefault.c'; then $(CYGPATH_W) 'core/alttabhandlerdefault.c'; else $(CYGPATH_W) '$(srcdir)/core/alttabhandlerdefault.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/alttabhandlerdefault.Tpo $(DEPDIR)/alttabhandlerdefault.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='core/alttabhandlerdefault.c' object='alttabhandlerdefault.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o alttabhandlerdefault.obj `if test -f 'core/alttabhandlerdefault.c'; then $(CYGPATH_W) 'core/alttabhandlerdefault.c'; else $(CYGPATH_W) '$(srcdir)/core/alttabhandlerdefault.c'; fi`
 
 bell.o: core/bell.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bell.o -MD -MP -MF $(DEPDIR)/bell.Tpo -c -o bell.o `test -f 'core/bell.c' || echo '$(srcdir)/'`core/bell.c
