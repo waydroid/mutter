@@ -27,6 +27,9 @@ GType meta_exit_code_get_type (void) G_GNUC_CONST;
 GType meta_debug_topic_get_type (void) G_GNUC_CONST;
 #define MUTTER_TYPE_DEBUG_TOPIC (meta_debug_topic_get_type())
 
+GType meta_later_type_get_type (void) G_GNUC_CONST;
+#define MUTTER_TYPE_LATER_TYPE (meta_later_type_get_type())
+
 /* enumerations from "include/common.h" */
 GType meta_frame_flags_get_type (void) G_GNUC_CONST;
 #define MUTTER_TYPE_FRAME_FLAGS (meta_frame_flags_get_type())
