@@ -98,22 +98,22 @@ am__objects_1 = mutter-marshal.$(OBJEXT) mutter-enum-types.$(OBJEXT)
 am_mutter_OBJECTS = async-getprop.$(OBJEXT) bell.$(OBJEXT) \
 	boxes.$(OBJEXT) compositor.$(OBJEXT) mutter-module.$(OBJEXT) \
 	mutter-plugin.$(OBJEXT) mutter-plugin-manager.$(OBJEXT) \
-	mutter-shaped-texture.$(OBJEXT) mutter-window.$(OBJEXT) \
-	mutter-window-group.$(OBJEXT) shadow.$(OBJEXT) \
-	tidy-texture-frame.$(OBJEXT) constraints.$(OBJEXT) \
-	core.$(OBJEXT) delete.$(OBJEXT) display.$(OBJEXT) \
-	draw-workspace.$(OBJEXT) edge-resistance.$(OBJEXT) \
-	errors.$(OBJEXT) eventqueue.$(OBJEXT) frame.$(OBJEXT) \
-	gradient.$(OBJEXT) group-props.$(OBJEXT) group.$(OBJEXT) \
-	iconcache.$(OBJEXT) keybindings.$(OBJEXT) main.$(OBJEXT) \
-	place.$(OBJEXT) prefs.$(OBJEXT) screen.$(OBJEXT) \
-	session.$(OBJEXT) stack.$(OBJEXT) stack-tracker.$(OBJEXT) \
-	util.$(OBJEXT) window-props.$(OBJEXT) window.$(OBJEXT) \
-	workspace.$(OBJEXT) xprops.$(OBJEXT) fixedtip.$(OBJEXT) \
-	frames.$(OBJEXT) menu.$(OBJEXT) metaaccellabel.$(OBJEXT) \
-	resizepopup.$(OBJEXT) tabpopup.$(OBJEXT) \
-	theme-parser.$(OBJEXT) theme.$(OBJEXT) themewidget.$(OBJEXT) \
-	ui.$(OBJEXT) $(am__objects_1)
+	mutter-shaped-texture.$(OBJEXT) mutter-texture-tower.$(OBJEXT) \
+	mutter-window.$(OBJEXT) mutter-window-group.$(OBJEXT) \
+	shadow.$(OBJEXT) tidy-texture-frame.$(OBJEXT) \
+	constraints.$(OBJEXT) core.$(OBJEXT) delete.$(OBJEXT) \
+	display.$(OBJEXT) draw-workspace.$(OBJEXT) \
+	edge-resistance.$(OBJEXT) errors.$(OBJEXT) \
+	eventqueue.$(OBJEXT) frame.$(OBJEXT) gradient.$(OBJEXT) \
+	group-props.$(OBJEXT) group.$(OBJEXT) iconcache.$(OBJEXT) \
+	keybindings.$(OBJEXT) main.$(OBJEXT) place.$(OBJEXT) \
+	prefs.$(OBJEXT) screen.$(OBJEXT) session.$(OBJEXT) \
+	stack.$(OBJEXT) stack-tracker.$(OBJEXT) util.$(OBJEXT) \
+	window-props.$(OBJEXT) window.$(OBJEXT) workspace.$(OBJEXT) \
+	xprops.$(OBJEXT) fixedtip.$(OBJEXT) frames.$(OBJEXT) \
+	menu.$(OBJEXT) metaaccellabel.$(OBJEXT) resizepopup.$(OBJEXT) \
+	tabpopup.$(OBJEXT) theme-parser.$(OBJEXT) theme.$(OBJEXT) \
+	themewidget.$(OBJEXT) ui.$(OBJEXT) $(am__objects_1)
 mutter_OBJECTS = $(am_mutter_OBJECTS)
 am__DEPENDENCIES_1 =
 mutter_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -418,6 +418,8 @@ mutter_SOURCES = \
 	compositor/mutter-plugin-manager.c	\
 	compositor/mutter-plugin-manager.h	\
 	compositor/mutter-shaped-texture.c	\
+	compositor/mutter-texture-tower.c	\
+	compositor/mutter-texture-tower.h	\
 	compositor/mutter-window.c		\
 	compositor/mutter-window-private.h	\
 	compositor/mutter-window-group.c	\
@@ -810,6 +812,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter-plugin-manager.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter-plugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter-shaped-texture.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter-texture-tower.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter-window-group.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter-window.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/place.Po@am__quote@
@@ -1035,6 +1038,22 @@ mutter-shaped-texture.obj: compositor/mutter-shaped-texture.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='compositor/mutter-shaped-texture.c' object='mutter-shaped-texture.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mutter-shaped-texture.obj `if test -f 'compositor/mutter-shaped-texture.c'; then $(CYGPATH_W) 'compositor/mutter-shaped-texture.c'; else $(CYGPATH_W) '$(srcdir)/compositor/mutter-shaped-texture.c'; fi`
+
+mutter-texture-tower.o: compositor/mutter-texture-tower.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mutter-texture-tower.o -MD -MP -MF $(DEPDIR)/mutter-texture-tower.Tpo -c -o mutter-texture-tower.o `test -f 'compositor/mutter-texture-tower.c' || echo '$(srcdir)/'`compositor/mutter-texture-tower.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mutter-texture-tower.Tpo $(DEPDIR)/mutter-texture-tower.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='compositor/mutter-texture-tower.c' object='mutter-texture-tower.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mutter-texture-tower.o `test -f 'compositor/mutter-texture-tower.c' || echo '$(srcdir)/'`compositor/mutter-texture-tower.c
+
+mutter-texture-tower.obj: compositor/mutter-texture-tower.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mutter-texture-tower.obj -MD -MP -MF $(DEPDIR)/mutter-texture-tower.Tpo -c -o mutter-texture-tower.obj `if test -f 'compositor/mutter-texture-tower.c'; then $(CYGPATH_W) 'compositor/mutter-texture-tower.c'; else $(CYGPATH_W) '$(srcdir)/compositor/mutter-texture-tower.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mutter-texture-tower.Tpo $(DEPDIR)/mutter-texture-tower.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='compositor/mutter-texture-tower.c' object='mutter-texture-tower.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mutter-texture-tower.obj `if test -f 'compositor/mutter-texture-tower.c'; then $(CYGPATH_W) 'compositor/mutter-texture-tower.c'; else $(CYGPATH_W) '$(srcdir)/compositor/mutter-texture-tower.c'; fi`
 
 mutter-window.o: compositor/mutter-window.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mutter-window.o -MD -MP -MF $(DEPDIR)/mutter-window.Tpo -c -o mutter-window.o `test -f 'compositor/mutter-window.c' || echo '$(srcdir)/'`compositor/mutter-window.c
