@@ -117,7 +117,7 @@ texture_is_rectangle (CoglHandle texture)
   GLenum gl_target;
 
   cogl_texture_get_gl_texture (texture, &gl_tex, &gl_target);
-  return gl_target == CGL_TEXTURE_RECTANGLE_ARB;
+  return gl_target == GL_TEXTURE_RECTANGLE_ARB;
 }
 
 static void
@@ -128,7 +128,7 @@ free_texture (CoglHandle texture)
 
   cogl_texture_get_gl_texture (texture, &gl_tex, &gl_target);
 
-  if (gl_target == CGL_TEXTURE_RECTANGLE_ARB)
+  if (gl_target == GL_TEXTURE_RECTANGLE_ARB)
     glDeleteTextures (1, &gl_tex);
 
   cogl_texture_unref (texture);
@@ -168,7 +168,7 @@ mutter_texture_tower_set_base_texture (MutterTextureTower *tower,
 #if CLUTTER_CHECK_VERSION(1,1,3)
           if (tower->fbos[i] != COGL_INVALID_HANDLE)
             {
-              cogl_offscreen_unref (tower->fbos[i]);
+              cogl_handle_unref (tower->fbos[i]);
               tower->fbos[i] = COGL_INVALID_HANDLE;
             }
 #else
@@ -401,8 +401,8 @@ texture_tower_create_texture (MutterTextureTower *tower,
       GLuint tex = 0;
 
       glGenTextures (1, &tex);
-      glBindTexture (CGL_TEXTURE_RECTANGLE_ARB, tex);
-      glTexImage2D (CGL_TEXTURE_RECTANGLE_ARB, 0,
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0,
                     GL_RGBA, width,height,
 #if TEXTURE_FORMAT == COGL_PIXEL_FORMAT_BGRA_8888_PRE
                     0, GL_BGRA, GL_UNSIGNED_BYTE,
@@ -411,7 +411,7 @@ texture_tower_create_texture (MutterTextureTower *tower,
 #endif
                     NULL);
 
-      tower->textures[level] = cogl_texture_new_from_foreign (tex, CGL_TEXTURE_RECTANGLE_ARB,
+      tower->textures[level] = cogl_texture_new_from_foreign (tex, GL_TEXTURE_RECTANGLE_ARB,
                                                               width, height,
                                                               0, 0,
                                                               TEXTURE_FORMAT);
@@ -459,8 +459,7 @@ texture_tower_revalidate_fbo (MutterTextureTower *tower,
   if (tower->fbos[level] == COGL_INVALID_HANDLE)
     return FALSE;
 
-  cogl_push_draw_buffer ();
-  cogl_set_draw_buffer (COGL_OFFSCREEN_BUFFER, tower->fbos[level]);
+  cogl_push_framebuffer (tower->fbos[level]);
 
   cogl_ortho (0, dest_texture_width, dest_texture_height, 0, -1., 1.);
 
@@ -475,7 +474,7 @@ texture_tower_revalidate_fbo (MutterTextureTower *tower,
                                       (2. * invalid->x2) / source_texture_width,
                                       (2. * invalid->y2) / source_texture_height);
 
-  cogl_pop_draw_buffer ();
+  cogl_pop_framebuffer ();
 
   return TRUE;
 }
