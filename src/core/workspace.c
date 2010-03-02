@@ -33,6 +33,9 @@
 
 #include <X11/Xatom.h>
 #include <string.h>
+#ifdef HAVE_LIBCANBERRA
+#include <canberra-gtk.h>
+#endif
 
 enum {
   PROP_0,
@@ -439,6 +442,69 @@ meta_workspace_queue_calc_showing  (MetaWorkspace *workspace)
     }
 }
 
+static void
+workspace_switch_sound(MetaWorkspace *from,
+                       MetaWorkspace *to)
+{
+#ifdef HAVE_LIBCANBERRA
+  MetaWorkspaceLayout layout;
+  int i, nw, x, y, fi, ti;
+  const char *e;
+
+  nw = meta_screen_get_n_workspaces(from->screen);
+  fi = meta_workspace_index(from);
+  ti = meta_workspace_index(to);
+
+  meta_screen_calc_workspace_layout(from->screen,
+                                    nw,
+                                    fi,
+                                    &layout);
+
+  for (i = 0; i < nw; i++)
+    if (layout.grid[i] == ti)
+      break;
+
+  if (i >= nw)
+    {
+      meta_bug("Failed to find destination workspace in layout\n");
+      goto finish;
+    }
+
+  y = i / layout.cols;
+  x = i % layout.cols;
+
+  /* We priorize horizontal over vertical movements here. The
+     rationale for this is that horizontal movements are probably more
+     interesting for sound effects because speakers are usually
+     positioned on a horizontal and not a vertical axis. i.e. your
+     spatial "Woosh!" effects will easily be able to encode horizontal
+     movement but not such much vertical movement. */
+
+  if (x < layout.current_col)
+    e = "desktop-switch-left";
+  else if (x > layout.current_col)
+    e = "desktop-switch-right";
+  else if (y < layout.current_row)
+    e = "desktop-switch-up";
+  else if (y > layout.current_row)
+    e = "desktop-switch-down";
+  else
+    {
+      meta_bug("Uh, origin and destination workspace at same logic position!\n");
+      goto finish;
+    }
+
+  ca_context_play(ca_gtk_context_get(), 1,
+                  CA_PROP_EVENT_ID, e,
+                  CA_PROP_EVENT_DESCRIPTION, "Desktop switched",
+                  CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                  NULL);
+
+ finish:
+  meta_screen_free_workspace_layout (&layout);
+#endif /* HAVE_LIBCANBERRA */
+}
+
 /**
  * meta_workspace_activate_with_focus:
  * @workspace: a #MetaWorkspace
@@ -477,6 +543,13 @@ meta_workspace_activate_with_focus (MetaWorkspace *workspace,
   
   if (workspace->screen->active_workspace == workspace)
     return;
+
+  /* Free any cached pointers to the workspaces's edges from
+   * a current resize or move operation */
+  meta_display_cleanup_edges (workspace->screen->display);
+
+  if (workspace->screen->active_workspace)
+    workspace_switch_sound (workspace->screen->active_workspace, workspace);
 
   /* Note that old can be NULL; e.g. when starting up */
   old = workspace->screen->active_workspace;
@@ -712,6 +785,11 @@ meta_workspace_invalidate_work_area (MetaWorkspace *workspace)
   meta_topic (META_DEBUG_WORKAREA,
               "Invalidating work area for workspace %d\n",
               meta_workspace_index (workspace));
+
+  /* If we are in the middle of a resize or move operation, we
+   * might have cached pointers to the workspace's edges */
+  if (workspace == workspace->screen->active_workspace)
+    meta_display_cleanup_edges (workspace->screen->display);
 
   g_free (workspace->work_area_monitor);
   workspace->work_area_monitor = NULL;
@@ -950,6 +1028,23 @@ ensure_work_areas_validated (MetaWorkspace *workspace)
   }
 }
 
+static gboolean
+strut_lists_equal (GSList *l,
+                   GSList *m)
+{
+  for (; l && m; l = l->next, m = m->next)
+    {
+      MetaStrut *a = l->data;
+      MetaStrut *b = m->data;
+
+      if (a->side != b->side ||
+          !meta_rectangle_equal (&a->rect, &b->rect))
+        return FALSE;
+    }
+
+  return l == NULL && m == NULL;
+}
+
 /**
  * meta_workspace_set_builtin_struts:
  * @workspace: a #MetaWorkspace
@@ -963,6 +1058,12 @@ void
 meta_workspace_set_builtin_struts (MetaWorkspace *workspace,
                                    GSList        *struts)
 {
+  /* Reordering doesn't actually matter, so we don't catch all
+   * no-impact changes, but this is just a (possibly unnecessary
+   * anyways) optimization */
+  if (strut_lists_equal (struts, workspace->builtin_struts))
+    return;
+
   workspace_free_builtin_struts (workspace);
   workspace->builtin_struts = copy_strut_list (struts);
 
@@ -1202,7 +1303,10 @@ focus_ancestor_or_mru_window (MetaWorkspace *workspace,
       MetaWindow *ancestor;
       ancestor = NULL;
       meta_window_foreach_ancestor (not_this_one, record_ancestor, &ancestor);
-      if (ancestor != NULL)
+      if (ancestor != NULL &&
+          (ancestor->on_all_workspaces ||
+           ancestor->workspace == workspace) &&
+          meta_window_showing_on_its_workspace (ancestor))
         {
           meta_topic (META_DEBUG_FOCUS,
                       "Focusing %s, ancestor of %s\n", 

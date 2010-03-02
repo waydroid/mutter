@@ -2645,6 +2645,7 @@ parse_size_unchecked (MetaDrawSpec        *spec,
 void
 meta_draw_spec_free (MetaDrawSpec *spec)
 {
+  if (!spec) return;
   free_tokens (spec->tokens, spec->n_tokens);
   g_slice_free (MetaDrawSpec, spec);
 }
@@ -3489,10 +3490,25 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
 
         x1 = parse_x_position_unchecked (op->data.line.x1, env);
         y1 = parse_y_position_unchecked (op->data.line.y1, env); 
-        x2 = parse_x_position_unchecked (op->data.line.x2, env);
-        y2 = parse_y_position_unchecked (op->data.line.y2, env);
 
-        gdk_draw_line (drawable, gc, x1, y1, x2, y2);
+        if (!op->data.line.x2 &&
+            !op->data.line.y2 &&
+            op->data.line.width==0)
+          gdk_draw_point (drawable, gc, x1, y1);
+        else
+          {
+            if (op->data.line.x2)
+              x2 = parse_x_position_unchecked (op->data.line.x2, env);
+            else
+              x2 = x1;
+
+            if (op->data.line.y2)
+              y2 = parse_y_position_unchecked (op->data.line.y2, env);
+            else
+              y2 = y1;
+
+            gdk_draw_line (drawable, gc, x1, y1, x2, y2);
+          }
 
         g_object_unref (G_OBJECT (gc));
       }
@@ -5220,16 +5236,6 @@ meta_theme_draw_frame_by_name (MetaTheme              *theme,
                          mini_icon, icon);
 }
 
-
-
-
-
-
-
-
-
-
-
 void
 meta_theme_get_frame_borders (MetaTheme      *theme,
                               MetaFrameType   type,
@@ -5526,6 +5532,15 @@ meta_theme_define_color_constant (MetaTheme   *theme,
   return TRUE;
 }
 
+/**
+ * Looks up a colour constant.
+ *
+ * \param theme  the theme containing the constant
+ * \param name  the name of the constant
+ * \param value  [out] the string representation of the colour, or NULL if it
+ *               doesn't exist
+ * \return  TRUE if it exists, FALSE otherwise
+ */
 gboolean
 meta_theme_lookup_color_constant (MetaTheme   *theme,
                                   const char  *name,
@@ -5572,6 +5587,13 @@ meta_gtk_widget_get_font_desc (GtkWidget *widget,
   return font_desc;
 }
 
+/**
+ * Returns the height of the letters in a particular font.
+ *
+ * \param font_desc  the font
+ * \param context  the context of the font
+ * \return  the height of the letters
+ */
 int
 meta_pango_font_desc_get_text_height (const PangoFontDescription *font_desc,
                                       PangoContext         *context)
@@ -6117,6 +6139,13 @@ meta_gtk_arrow_to_string (GtkArrowType arrow)
   return "<unknown>";
 }
 
+/**
+ * Returns a fill_type from a string.  The inverse of
+ * meta_image_fill_type_to_string().
+ *
+ * \param str  a string representing a fill_type
+ * \result  the fill_type, or -1 if it represents no fill_type.
+ */
 MetaImageFillType
 meta_image_fill_type_from_string (const char *str)
 {
@@ -6128,6 +6157,13 @@ meta_image_fill_type_from_string (const char *str)
     return -1;
 }
 
+/**
+ * Returns a string representation of a fill_type.  The inverse of
+ * meta_image_fill_type_from_string().
+ *
+ * \param fill_type  the fill type
+ * \result  a string representing that type
+ */
 const char*
 meta_image_fill_type_to_string (MetaImageFillType fill_type)
 {
@@ -6142,7 +6178,15 @@ meta_image_fill_type_to_string (MetaImageFillType fill_type)
   return "<unknown>";
 }
 
-/* gtkstyle.c cut-and-pastage */
+/**
+ * Takes a colour "a", scales the lightness and saturation by a certain amount,
+ * and sets "b" to the resulting colour.
+ * gtkstyle.c cut-and-pastage.
+ *
+ * \param a  the starting colour
+ * \param b  [out] the resulting colour
+ * \param k  amount to scale lightness and saturation by
+ */ 
 static void
 gtk_style_shade (GdkColor *a,
                  GdkColor *b,
@@ -6177,6 +6221,13 @@ gtk_style_shade (GdkColor *a,
   b->blue = blue * 65535.0;
 }
 
+/**
+ * Converts a red/green/blue triplet to a hue/lightness/saturation triplet.
+ *
+ * \param r  on input, red; on output, hue
+ * \param g  on input, green; on output, lightness
+ * \param b  on input, blue; on output, saturation
+ */
 static void
 rgb_to_hls (gdouble *r,
             gdouble *g,
@@ -6248,6 +6299,13 @@ rgb_to_hls (gdouble *r,
   *b = s;
 }
 
+/**
+ * Converts a hue/lightness/saturation triplet to a red/green/blue triplet.
+ *
+ * \param h  on input, hue; on output, red
+ * \param l  on input, lightness; on output, green
+ * \param s  on input, saturation; on output, blue
+ */
 static void
 hls_to_rgb (gdouble *h,
             gdouble *l,
@@ -6536,6 +6594,14 @@ draw_bg_gradient_composite (const MetaTextureSpec *bg,
 }
 #endif
 
+/**
+ * Returns the earliest version of the theme format which required support
+ * for a particular button.  (For example, "shade" first appeared in v2, and
+ * "close" in v1.)
+ *
+ * \param type  the button type
+ * \return  the number of the theme format
+ */
 guint
 meta_theme_earliest_version_with_button (MetaButtonType type)
 {

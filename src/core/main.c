@@ -68,6 +68,7 @@
 #include <fcntl.h>
 #include <locale.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <clutter/clutter.h>
 #include <clutter/x11/clutter-x11.h>
@@ -124,11 +125,13 @@ log_handler (const gchar   *log_domain,
 static void
 version (void)
 {
+  const int latest_year = 2010;
+
   g_print (_("mutter %s\n"
-             "Copyright (C) 2001-2008 Havoc Pennington, Red Hat, Inc., and others\n"
+             "Copyright (C) 2001-%d Havoc Pennington, Red Hat, Inc., and others\n"
              "This is free software; see the source for copying conditions.\n"
              "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"),
-           VERSION);
+           VERSION, latest_year);
   exit (0);
 }
 
@@ -226,6 +229,7 @@ typedef struct
   gboolean sync;
   gboolean composite;
   gboolean no_composite;
+  gboolean no_force_fullscreen;
   gboolean no_tab_popup;
   gchar *introspect;
 } MetaArguments;
@@ -305,6 +309,12 @@ meta_parse_options (int *argc, char ***argv,
       NULL
     },
     {
+      "no-force-fullscreen", 0, COMPOSITE_OPTS_FLAGS, G_OPTION_ARG_NONE,
+      &my_args.no_force_fullscreen,
+      N_("Don't make fullscreen windows that are maximized and have no decorations"),
+      NULL
+    },
+    {
       "mutter-plugins", 0, 0, G_OPTION_ARG_STRING,
       &my_args.mutter_plugins,
       N_("Comma-separated list of compositor plugins"),
@@ -331,6 +341,7 @@ meta_parse_options (int *argc, char ***argv,
   ctx = g_option_context_new (NULL);
   g_option_context_add_main_entries (ctx, options, "mutter");
   g_option_context_add_group (ctx, clutter_get_option_group_without_init ());
+  g_option_context_add_group (ctx, cogl_get_option_group ());
 
   if (!g_option_context_parse (ctx, argc, argv, &error))
     {
@@ -436,12 +447,26 @@ meta_finalize (void)
   meta_session_shutdown ();
 }
 
+static int sigterm_pipe_fds[2] = { -1, -1 };
+
 static void
 sigterm_handler (int signum)
 {
-  meta_finalize ();
+  if (sigterm_pipe_fds[1] >= 0)
+    {
+      int dummy;
 
-  exit (meta_exit_code);
+      dummy = write (sigterm_pipe_fds[1], "", 1);
+      close (sigterm_pipe_fds[1]);
+      sigterm_pipe_fds[1] = -1;
+    }
+}
+
+static gboolean
+on_sigterm (void)
+{
+  meta_quit (META_EXIT_SUCCESS);
+  return FALSE;
 }
 
 /**
@@ -466,8 +491,9 @@ main (int argc, char **argv)
     "Pango", "GLib-GObject", "GThread"
   };
   guint i;
+  GIOChannel *channel;
   GOptionContext *ctx;
-  
+
   if (!g_thread_supported ())
     g_thread_init (NULL);
   
@@ -488,6 +514,16 @@ main (int argc, char **argv)
     g_printerr ("Failed to register SIGXFSZ handler: %s\n",
                 g_strerror (errno));
 #endif
+
+  if (pipe (sigterm_pipe_fds) != 0)
+    g_printerr ("Failed to create SIGTERM pipe: %s\n",
+                g_strerror (errno));
+
+  channel = g_io_channel_unix_new (sigterm_pipe_fds[0]);
+  g_io_channel_set_flags (channel, G_IO_FLAG_NONBLOCK, NULL);
+  g_io_add_watch (channel, G_IO_IN, (GIOFunc) on_sigterm, NULL);
+  g_io_channel_set_close_on_unref (channel, TRUE);
+  g_io_channel_unref (channel);
 
   act.sa_handler = &sigterm_handler;
   if (sigaction (SIGTERM, &act, NULL) < 0)
@@ -674,6 +710,9 @@ main (int argc, char **argv)
 
   if (meta_args.composite || meta_args.no_composite)
     meta_prefs_set_compositing_manager (meta_args.composite);
+
+  if (meta_args.no_force_fullscreen)
+    meta_prefs_set_force_fullscreen (FALSE);
 
   if (meta_args.no_tab_popup)
     {

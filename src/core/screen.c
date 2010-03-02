@@ -264,6 +264,13 @@ set_wm_check_hint (MetaScreen *screen)
   return Success;
 }
 
+static void
+unset_wm_check_hint (MetaScreen *screen)
+{
+  XDeleteProperty (screen->display->xdisplay, screen->xroot, 
+                   screen->display->atom__NET_SUPPORTING_WM_CHECK);
+}
+
 static int
 set_supported_hint (MetaScreen *screen)
 {
@@ -849,6 +856,8 @@ meta_screen_free (MetaScreen *screen,
   if (meta_error_trap_pop_with_return (screen->display, FALSE) != Success)
     meta_warning (_("Could not release screen %d on display \"%s\"\n"),
                   screen->number, screen->display->name);
+
+  unset_wm_check_hint (screen);
 
   XDestroyWindow (screen->display->xdisplay,
                   screen->wm_sn_selection_window);
@@ -3136,11 +3145,14 @@ meta_screen_set_cm_selection (MetaScreen *screen)
   char selection[32];
   Atom a;
 
+  screen->wm_cm_timestamp = meta_display_get_current_time_roundtrip (
+                                                               screen->display);
+
   g_snprintf (selection, sizeof(selection), "_NET_WM_CM_S%d", screen->number);
   meta_verbose ("Setting selection: %s\n", selection);
   a = XInternAtom (screen->display->xdisplay, selection, FALSE);
   XSetSelectionOwner (screen->display->xdisplay, a, 
-                      screen->wm_cm_selection_window, CurrentTime);
+                      screen->wm_cm_selection_window, screen->wm_cm_timestamp);
 }
 
 void
@@ -3151,7 +3163,8 @@ meta_screen_unset_cm_selection (MetaScreen *screen)
 
   g_snprintf (selection, sizeof(selection), "_NET_WM_CM_S%d", screen->number);
   a = XInternAtom (screen->display->xdisplay, selection, FALSE);
-  XSetSelectionOwner (screen->display->xdisplay, a, None, CurrentTime);
+  XSetSelectionOwner (screen->display->xdisplay, a,
+                      None, screen->wm_cm_timestamp);
 }
 
 GList *

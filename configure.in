@@ -1,8 +1,8 @@
 AC_PREREQ(2.50)
 
 m4_define([mutter_major_version], [2])
-m4_define([mutter_minor_version], [28])
-m4_define([mutter_micro_version], [1])
+m4_define([mutter_minor_version], [29])
+m4_define([mutter_micro_version], [0])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -160,6 +160,11 @@ AC_ARG_WITH(introspection,
                  [disable the use of GObject introspection]),,
   with_introspection=auto)
 
+AC_ARG_WITH(libcanberra,
+  AC_HELP_STRING([--without-libcanberra],
+                 [disable the use of libcanberra for playing sounds]),,
+  with_libcanberra=auto)
+
 AC_ARG_ENABLE(xsync,
   AC_HELP_STRING([--disable-xsync],
                  [disable mutter's use of the XSync extension]),,
@@ -210,6 +215,24 @@ if test x$have_startup_notification = xyes; then
   AC_DEFINE(HAVE_STARTUP_NOTIFICATION, , [Building with startup notification support])
 else
   echo "Building without libstartup-notification"
+fi
+
+have_libcanberra=no
+AC_MSG_CHECKING([libcanberra-gtk])
+if test x$with_libcanberra = xno ; then
+  AC_MSG_RESULT([disabled])
+else
+  if $PKG_CONFIG --exists libcanberra-gtk; then
+    have_libcanberra=yes
+    AC_MSG_RESULT(yes)
+    MUTTER_PC_MODULES="$MUTTER_PC_MODULES libcanberra-gtk"
+    AC_DEFINE([HAVE_LIBCANBERRA], 1, [Building with libcanberra for playing sounds])
+  else
+    AC_MSG_RESULT(no)
+    if test x$with_libcanberra = xyes ; then
+      AC_MSG_ERROR([libcanberra forced and libcanberra-gtk was not found])
+    fi
+  fi
 fi
 
 XCOMPOSITE_VERSION=0.2
@@ -414,7 +437,7 @@ fi
 
 MUTTER_LIBS="$MUTTER_LIBS $XSYNC_LIBS $RANDR_LIBS $SHAPE_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lm"
 MUTTER_MESSAGE_LIBS="$MUTTER_MESSAGE_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS"
-MUTTER_WINDOW_DEMO_LIBS="$MUTTER_WINDOW_DEMO_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS"
+MUTTER_WINDOW_DEMO_LIBS="$MUTTER_WINDOW_DEMO_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lm"
 MUTTER_PROPS_LIBS="$MUTTER_PROPS_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS"
 
 found_sm=no
@@ -532,6 +555,7 @@ mutter-$VERSION:
 	XFree86 Xinerama:         ${use_xfree_xinerama}
 	Solaris Xinerama:         ${use_solaris_xinerama}
 	Startup notification:     ${have_startup_notification}
+	libcanberra:              ${have_libcanberra}
 	Introspection:            ${have_introspection}
 	Session management:       ${found_sm}
 	Shape extension:          ${found_shape}
