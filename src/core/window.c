@@ -45,6 +45,7 @@
 #include "mutter-enum-types.h"
 
 #include <X11/Xatom.h>
+#include <X11/Xlibint.h> /* For display->resource_mask */
 #include <string.h>
 
 #ifdef HAVE_SHAPE
@@ -71,6 +72,9 @@ static gboolean process_property_notify   (MetaWindow     *window,
                                            XPropertyEvent *event);
 static void     meta_window_show          (MetaWindow     *window);
 static void     meta_window_hide          (MetaWindow     *window);
+
+static gboolean meta_window_same_client (MetaWindow *window,
+                                         MetaWindow *other_window);
 
 static void     meta_window_save_rect         (MetaWindow    *window);
 static void     save_user_window_placement    (MetaWindow    *window);
@@ -137,6 +141,8 @@ enum {
   PROP_MINI_ICON,
   PROP_DECORATED,
   PROP_FULLSCREEN,
+  PROP_MAXIMIZED_HORIZONTALLY,
+  PROP_MAXIMIZED_VERTICALLY,
   PROP_WINDOW_TYPE,
   PROP_USER_TIME,
   PROP_DEMANDS_ATTENTION,
@@ -203,6 +209,12 @@ meta_window_get_property(GObject         *object,
       break;
     case PROP_FULLSCREEN:
       g_value_set_boolean (value, win->fullscreen);
+      break;
+    case PROP_MAXIMIZED_HORIZONTALLY:
+      g_value_set_boolean (value, win->maximized_horizontally);
+      break;
+    case PROP_MAXIMIZED_VERTICALLY:
+      g_value_set_boolean (value, win->maximized_vertically);
       break;
     case PROP_WINDOW_TYPE:
       g_value_set_enum (value, win->type);
@@ -273,7 +285,7 @@ meta_window_class_init (MetaWindowClass *klass)
                                    PROP_DECORATED,
                                    g_param_spec_boolean ("decorated",
                                                          "Decorated",
-                                                         "Whether windos is decorated",
+                                                         "Whether window is decorated",
                                                          TRUE,
                                                          G_PARAM_READABLE));
 
@@ -281,7 +293,23 @@ meta_window_class_init (MetaWindowClass *klass)
                                    PROP_FULLSCREEN,
                                    g_param_spec_boolean ("fullscreen",
                                                          "Fullscreen",
-                                                         "Whether windos is fullscreened",
+                                                         "Whether window is fullscreened",
+                                                         FALSE,
+                                                         G_PARAM_READABLE));
+
+  g_object_class_install_property (object_class,
+                                   PROP_MAXIMIZED_HORIZONTALLY,
+                                   g_param_spec_boolean ("maximized-horizontally",
+                                                         "Maximized horizontally",
+                                                         "Whether window is maximized horizontally",
+                                                         FALSE,
+                                                         G_PARAM_READABLE));
+
+  g_object_class_install_property (object_class,
+                                   PROP_MAXIMIZED_VERTICALLY,
+                                   g_param_spec_boolean ("maximized-vertically",
+                                                         "Maximizing vertically",
+                                                         "Whether window is maximized vertically",
                                                          FALSE,
                                                          G_PARAM_READABLE));
 
@@ -723,6 +751,7 @@ meta_window_new_with_attrs (MetaDisplay       *display,
   window->maximize_vertically_after_placement = FALSE;
   window->minimize_after_placement = FALSE;
   window->fullscreen = FALSE;
+  window->fullscreen_after_placement = FALSE;
   window->fullscreen_monitors[0] = -1;
   window->require_fully_onscreen = TRUE;
   window->require_on_single_monitor = TRUE;
@@ -746,6 +775,7 @@ meta_window_new_with_attrs (MetaDisplay       *display,
     meta_topic (META_DEBUG_PLACEMENT,
                 "Not placing window 0x%lx since it's already mapped\n",
                 xwindow);
+  window->force_save_user_rect = TRUE;
   window->denied_focus_and_not_transient = FALSE;
   window->unmanaging = FALSE;
   window->is_in_queues = 0;
@@ -1921,8 +1951,10 @@ idle_calc_showing (gpointer data)
   return FALSE;
 }
 
+#ifdef WITH_VERBOSE_MODE
 static const gchar* meta_window_queue_names[NUMBER_OF_QUEUES] =
   {"calc_showing", "move_resize", "update_icon"};
+#endif
 
 static void
 meta_window_unqueue (MetaWindow *window, guint queuebits)
@@ -2185,6 +2217,9 @@ __window_is_terminal (MetaWindow *window)
     return TRUE;
   /* mlterm ("multi lingual terminal emulator on X") */
   else if (strcmp (window->res_class, "mlterm") == 0)
+    return TRUE;
+  /* Terminal -- XFCE Terminal */
+  else if (strcmp (window->res_class, "Terminal") == 0)
     return TRUE;
 
   return FALSE;
@@ -3003,6 +3038,8 @@ meta_window_maximize_internal (MetaWindow        *window,
     window->maximized_horizontally || maximize_horizontally;
   window->maximized_vertically =
     window->maximized_vertically   || maximize_vertically;
+  if (maximize_horizontally || maximize_vertically)
+    window->force_save_user_rect = FALSE;
 
   /* Fix for #336850: If the frame shape isn't reapplied, it is
    * possible that the frame will retains its rounded corners. That
@@ -3014,6 +3051,11 @@ meta_window_maximize_internal (MetaWindow        *window,
 
   recalc_window_features (window);
   set_net_wm_state (window);
+
+  g_object_freeze_notify (G_OBJECT (window));
+  g_object_notify (G_OBJECT (window), "maximized-horizontally");
+  g_object_notify (G_OBJECT (window), "maximized-vertically");
+  g_object_thaw_notify (G_OBJECT (window));
 }
 
 void
@@ -3182,6 +3224,10 @@ meta_window_unmaximize (MetaWindow        *window,
           window->display->grab_anchor_window_pos = target_rect;
         }
 
+      /* Make sure user_rect is current.
+       */
+      force_save_user_window_placement (window);
+
       if (window->display->compositor)
         {
           MetaRectangle old_rect, new_rect;
@@ -3214,6 +3260,11 @@ meta_window_unmaximize (MetaWindow        *window,
       recalc_window_features (window);
       set_net_wm_state (window);
     }
+
+    g_object_freeze_notify (G_OBJECT (window));
+    g_object_notify (G_OBJECT (window), "maximized-horizontally");
+    g_object_notify (G_OBJECT (window), "maximized-vertically");
+    g_object_thaw_notify (G_OBJECT (window));
 }
 
 void
@@ -3259,6 +3310,7 @@ meta_window_make_fullscreen_internal (MetaWindow  *window)
       meta_window_save_rect (window);
 
       window->fullscreen = TRUE;
+      window->force_save_user_rect = FALSE;
 
       meta_stack_freeze (window->screen->stack);
       meta_window_update_layer (window);
@@ -3313,6 +3365,10 @@ meta_window_unmake_fullscreen (MetaWindow  *window)
                                target_rect.y,
                                target_rect.width,
                                target_rect.height);
+
+      /* Make sure user_rect is current.
+       */
+      force_save_user_window_placement (window);
 
       meta_window_update_layer (window);
 
@@ -4128,7 +4184,7 @@ meta_window_move_resize_internal (MetaWindow          *window,
   if (need_configure_notify)
     send_configure_notify (window);
 
-  if (!window->placed)
+  if (!window->placed && window->force_save_user_rect && !window->fullscreen)
     force_save_user_window_placement (window);
   else if (is_user_action)
     save_user_window_placement (window);
@@ -5156,8 +5212,7 @@ meta_window_configure_request (MetaWindow *window,
     {
       MetaWindow *active_window;
       active_window = window->display->expected_focus_window;
-      if (meta_prefs_get_disable_workarounds () ||
-          !meta_prefs_get_raise_on_click ())
+      if (meta_prefs_get_disable_workarounds ())
         {
           meta_topic (META_DEBUG_STACK,
                       "%s sent an xconfigure stacking request; this is "
@@ -5166,6 +5221,7 @@ meta_window_configure_request (MetaWindow *window,
         }
       else if (active_window &&
                !meta_window_same_application (window, active_window) &&
+               !meta_window_same_client (window, active_window) &&
                XSERVER_TIME_IS_BEFORE (window->net_wm_user_time,
                                        active_window->net_wm_user_time))
         {
@@ -8137,6 +8193,23 @@ meta_window_same_application (MetaWindow *window,
     group!=NULL &&
     other_group!=NULL &&
     group==other_group;
+}
+
+/* Generally meta_window_same_application() is a better idea
+ * of "sameness", since it handles the case where multiple apps
+ * want to look like the same app or the same app wants to look
+ * like multiple apps, but in the case of workarounds for legacy
+ * applications (which likely aren't setting the group properly
+ * anyways), it may be desirable to check this as well.
+ */
+static gboolean
+meta_window_same_client (MetaWindow *window,
+                         MetaWindow *other_window)
+{
+  int resource_mask = window->display->xdisplay->resource_mask;
+
+  return ((window->xwindow & ~resource_mask) ==
+          (other_window->xwindow & ~resource_mask));
 }
 
 void
