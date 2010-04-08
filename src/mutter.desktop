@@ -2,6 +2,7 @@
 Type=Application
 Name=Mutter
 Name[ar]=مَتَر
+Name[bg]=Mutter
 Name[br]=Mutter
 Name[cs]=Mutter
 Name[de]=Mutter
@@ -11,9 +12,12 @@ Name[fr]=Mutter
 Name[gl]=Mutter
 Name[hu]=Mutter
 Name[nb]=Mutter
+Name[nds]=Mutter
+Name[pl]=Mutter
 Name[pt_BR]=Mutter
 Name[sl]=Mutter
 Name[sv]=Mutter
+Name[zh_CN]=Mutter
 Exec=mutter
 NoDisplay=true
 # name of loadable control center module
