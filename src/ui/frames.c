@@ -35,6 +35,8 @@
 #include "prefs.h"
 #include "ui.h"
 
+#include "gtk-compat.h"
+
 #ifdef HAVE_SHAPE
 #include <X11/extensions/shape.h>
 #endif
@@ -133,6 +135,24 @@ meta_frames_get_type (void)
   return frames_type;
 }
 
+static GObject *
+meta_frames_constructor (GType                  gtype,
+                         guint                  n_properties,
+                         GObjectConstructParam *properties)
+{
+  GObject *object;
+  GObjectClass *gobject_class;
+
+  gobject_class = G_OBJECT_CLASS (parent_class);
+  object = gobject_class->constructor (gtype, n_properties, properties);
+
+  g_object_set (object,
+                "type", GTK_WINDOW_POPUP,
+                NULL);
+
+  return object;
+}
+
 static void
 meta_frames_class_init (MetaFramesClass *class)
 {
@@ -146,6 +166,7 @@ meta_frames_class_init (MetaFramesClass *class)
 
   parent_class = g_type_class_peek_parent (class);
 
+  gobject_class->constructor = meta_frames_constructor;
   gobject_class->finalize = meta_frames_finalize;
   object_class->destroy = meta_frames_destroy;
 
@@ -203,8 +224,6 @@ prefs_changed_callback (MetaPreference pref,
 static void
 meta_frames_init (MetaFrames *frames)
 {
-  GTK_WINDOW (frames)->type = GTK_WINDOW_POPUP;
-
   frames->text_heights = g_hash_table_new (NULL, NULL);
   
   frames->frames = g_hash_table_new (unsigned_long_hash, unsigned_long_equal);
@@ -459,10 +478,10 @@ meta_frames_ensure_layout (MetaFrames  *frames,
   MetaFrameFlags flags;
   MetaFrameType type;
   MetaFrameStyle *style;
-  
-  g_return_if_fail (GTK_WIDGET_REALIZED (frames));
 
   widget = GTK_WIDGET (frames);
+
+  g_return_if_fail (gtk_widget_get_realized (widget));
       
   meta_core_get (gdk_display, frame->xwindow,
                  META_CORE_GET_FRAME_FLAGS, &flags,
@@ -501,6 +520,7 @@ meta_frames_ensure_layout (MetaFrames  *frames,
       
       frame->layout = gtk_widget_create_pango_layout (widget, frame->title);
 
+      pango_layout_set_ellipsize (frame->layout, PANGO_ELLIPSIZE_END);
       pango_layout_set_auto_dir (frame->layout, FALSE);
       
       font_desc = meta_gtk_widget_get_font_desc (widget, scale,
@@ -593,8 +613,9 @@ meta_frames_attach_style (MetaFrames  *frames,
     gtk_style_detach (frame->style);
 
   /* Weirdly, gtk_style_attach() steals a reference count from the style passed in */
-  g_object_ref (GTK_WIDGET (frames)->style);
-  frame->style = gtk_style_attach (GTK_WIDGET (frames)->style, frame->window);
+  g_object_ref (gtk_widget_get_style (GTK_WIDGET (frames)));
+  frame->style = gtk_style_attach (gtk_widget_get_style (GTK_WIDGET (frames)),
+                                   frame->window);
 }
 
 void

@@ -82,6 +82,12 @@ gboolean  meta_display_xwindow_is_a_no_focus_window (MetaDisplay *display,
 int meta_display_get_damage_event_base (MetaDisplay *display);
 int meta_display_get_shape_event_base (MetaDisplay *display);
 Atom meta_display_get_atom (MetaDisplay *display, MetaAtom meta_atom);
+
+gboolean meta_display_xserver_time_is_before (MetaDisplay *display,
+                                              guint32      time1,
+                                              guint32      time2);
+
+guint32 meta_display_get_last_user_time (MetaDisplay *display);
 guint32 meta_display_get_current_time (MetaDisplay *display);
 guint32 meta_display_get_current_time_roundtrip (MetaDisplay *display);
 
@@ -144,5 +150,10 @@ void meta_display_set_input_focus_window   (MetaDisplay *display,
 void meta_display_focus_the_no_focus_window (MetaDisplay *display,
                                              MetaScreen  *screen,
                                              guint32      timestamp);
+
+GSList *meta_display_sort_windows_by_stacking (MetaDisplay *display,
+                                               GSList      *windows);
+
+Window meta_display_get_leader_window (MetaDisplay *display);
 
 #endif
