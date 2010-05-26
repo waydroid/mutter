@@ -146,7 +146,8 @@ enum {
   PROP_WINDOW_TYPE,
   PROP_USER_TIME,
   PROP_DEMANDS_ATTENTION,
-  PROP_URGENT
+  PROP_URGENT,
+  PROP_MUTTER_HINTS
 };
 
 enum
@@ -227,6 +228,9 @@ meta_window_get_property(GObject         *object,
       break;
     case PROP_URGENT:
       g_value_set_boolean (value, win->wm_hints_urgent);
+      break;
+    case PROP_MUTTER_HINTS:
+      g_value_set_string (value, win->mutter_hints);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -348,6 +352,13 @@ meta_window_class_init (MetaWindowClass *klass)
                                                          FALSE,
                                                          G_PARAM_READABLE));
 
+  g_object_class_install_property (object_class,
+                                   PROP_MUTTER_HINTS,
+                                   g_param_spec_string ("mutter-hints",
+                                                        "_MUTTER_HINTS",
+                                                        "Contents of the _MUTTER_HINTS property of this window",
+                                                        NULL,
+                                                        G_PARAM_READABLE));
   window_signals[WORKSPACE_CHANGED] =
     g_signal_new ("workspace-changed",
                   G_TYPE_FROM_CLASS (object_class),
@@ -7067,9 +7078,12 @@ menu_callback (MetaWindowMenu *menu,
     {
       meta_verbose ("Menu op %u on %s\n", op, window->desc);
 
-      /* op can be 0 for none */
       switch (op)
         {
+        case META_MENU_OP_NONE:
+          /* nothing */
+          break;
+
         case META_MENU_OP_DELETE:
           meta_window_delete (window, timestamp);
           break;
@@ -7157,10 +7171,6 @@ menu_callback (MetaWindowMenu *menu,
           meta_window_shove_titlebar_onscreen (window);
           break;
 
-        case 0:
-          /* nothing */
-          break;
-
         default:
           meta_warning (G_STRLOC": Unknown window op\n");
           break;
@@ -7213,8 +7223,8 @@ meta_window_show_menu (MetaWindow *window,
       window->display->window_with_menu = NULL;
     }
 
-  ops = 0;
-  insensitive = 0;
+  ops = META_MENU_OP_NONE;
+  insensitive = META_MENU_OP_NONE;
 
   ops |= (META_MENU_OP_DELETE | META_MENU_OP_MINIMIZE | META_MENU_OP_MOVE | META_MENU_OP_RESIZE);
 
@@ -8248,10 +8258,22 @@ meta_window_refresh_resize_popup (MetaWindow *window)
     }
 }
 
+/**
+ * meta_window_foreach_transient:
+ * @window: a #MetaWindow
+ * @func: (scope call): Called for each window which is a transient of @window (transitively)
+ * @user_data: (closure): User data
+ *
+ * Call @func for every window which is either transient for @window, or is
+ * a transient of a window which is in turn transient for @window.
+ * The order of window enumeration is not defined.
+ *
+ * Iteration will stop if @func at any point returns %FALSE.
+ */
 void
 meta_window_foreach_transient (MetaWindow            *window,
                                MetaWindowForeachFunc  func,
-                               void                  *data)
+                               void                  *user_data)
 {
   GSList *windows;
   GSList *tmp;
@@ -8265,7 +8287,7 @@ meta_window_foreach_transient (MetaWindow            *window,
 
       if (meta_window_is_ancestor_of_transient (window, transient))
         {
-          if (!(* func) (transient, data))
+          if (!(* func) (transient, user_data))
             break;
         }
 
@@ -8275,10 +8297,19 @@ meta_window_foreach_transient (MetaWindow            *window,
   g_slist_free (windows);
 }
 
+/**
+ * meta_window_foreach_ancestor:
+ * @window: a #MetaWindow
+ * @func: (scope call): Called for each window which is a transient parent of @window
+ * @user_data: (closure): User data
+ *
+ * If @window is transient, call @func with the window for which it's transient,
+ * repeatedly until either we find a non-transient window, or @func returns %FALSE.
+ */
 void
 meta_window_foreach_ancestor (MetaWindow            *window,
                               MetaWindowForeachFunc  func,
-                              void                  *data)
+                              void                  *user_data)
 {
   MetaWindow *w;
   MetaWindow *tortoise;
@@ -8296,7 +8327,7 @@ meta_window_foreach_ancestor (MetaWindow            *window,
       if (w == NULL || w == tortoise)
         break;
 
-      if (!(* func) (w, data))
+      if (!(* func) (w, user_data))
         break;
 
       if (w->xtransient_for == None ||
@@ -8308,7 +8339,7 @@ meta_window_foreach_ancestor (MetaWindow            *window,
       if (w == NULL || w == tortoise)
         break;
 
-      if (!(* func) (w, data))
+      if (!(* func) (w, user_data))
         break;
 
       tortoise = meta_display_lookup_x_window (tortoise->display,
@@ -9099,4 +9130,30 @@ meta_window_is_modal (MetaWindow *window)
   g_return_val_if_fail (META_IS_WINDOW (window), FALSE);
 
   return window->wm_state_modal;
+}
+
+/**
+ * meta_window_get_mutter_hints:
+ * @window: a #MetaWindow
+ *
+ * Gets the current value of the _MUTTER_HINTS property.
+ *
+ * The purpose of the hints is to allow fine-tuning of the Window Manager and
+ * Compositor behaviour on per-window basis, and is intended primarily for
+ * hints that are plugin-specific.
+ *
+ * The property is a list of colon-separated key=value pairs. The key names for
+ * any plugin-specific hints must be suitably namespaced to allow for shared
+ * use; 'mutter-' key prefix is reserved for internal use, and must not be used
+ * by plugins.
+ *
+ * Return value: (transfer none): the _MUTTER_HINTS string, or %NULL if no hints
+ * are set.
+ */
+const char *
+meta_window_get_mutter_hints (MetaWindow *window)
+{
+  g_return_val_if_fail (META_IS_WINDOW (window), NULL);
+
+  return window->mutter_hints;
 }

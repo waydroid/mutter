@@ -46,9 +46,6 @@
 
 typedef struct _MetaWindowQueue MetaWindowQueue;
 
-typedef gboolean (*MetaWindowForeachFunc) (MetaWindow *window,
-                                           void       *data);
-
 typedef enum {
   META_CLIENT_TYPE_UNKNOWN = 0,
   META_CLIENT_TYPE_APPLICATION = 1,
@@ -99,6 +96,7 @@ struct _MetaWindow
   char *sm_client_id;
   char *wm_client_machine;
   char *startup_id;
+  char *mutter_hints;
 
   int net_wm_pid;
   
@@ -506,8 +504,6 @@ void        meta_window_get_geometry         (MetaWindow  *window,
 void        meta_window_kill               (MetaWindow  *window);
 void        meta_window_focus              (MetaWindow  *window,
                                             guint32      timestamp);
-void        meta_window_raise              (MetaWindow  *window);
-void        meta_window_lower              (MetaWindow  *window);
 
 void        meta_window_update_unfocused_button_grabs (MetaWindow *window);
 
@@ -582,12 +578,6 @@ void meta_window_refresh_resize_popup (MetaWindow *window);
 
 void meta_window_free_delete_dialog (MetaWindow *window);
 
-void     meta_window_foreach_transient        (MetaWindow            *window,
-                                               MetaWindowForeachFunc  func,
-                                               void                  *data);
-void     meta_window_foreach_ancestor         (MetaWindow            *window,
-                                               MetaWindowForeachFunc  func,
-                                               void                  *data);
 
 void meta_window_begin_grab_op (MetaWindow *window,
                                 MetaGrabOp  op,
@@ -609,10 +599,6 @@ void meta_window_stack_just_below (MetaWindow *window,
 
 void meta_window_set_user_time (MetaWindow *window,
                                 guint32     timestamp);
-
-void meta_window_set_demands_attention (MetaWindow *window);
-
-void meta_window_unset_demands_attention (MetaWindow *window);
 
 void meta_window_update_icon_now (MetaWindow *window);
 

@@ -1320,6 +1320,43 @@ meta_grab_op_is_moving (MetaGrabOp op)
     }
 }
 
+/**
+ * meta_display_xserver_time_is_before:
+ * @display: a #MetaDisplay
+ * @time1: An event timestamp
+ * @time2: An event timestamp
+ *
+ * Xserver time can wraparound, thus comparing two timestamps needs to take
+ * this into account. If no wraparound has occurred, this is equivalent to
+ *   time1 < time2
+ * Otherwise, we need to account for the fact that wraparound can occur
+ * and the fact that a timestamp of 0 must be special-cased since it
+ * means "older than anything else".
+ *
+ * Note that this is NOT an equivalent for time1 <= time2; if that's what
+ * you need then you'll need to swap the order of the arguments and negate
+ * the result.
+ */
+gboolean
+meta_display_xserver_time_is_before (MetaDisplay   *display,
+                                     guint32        time1,
+                                     guint32        time2)
+{
+  return XSERVER_TIME_IS_BEFORE(time1, time2);
+}
+
+/**
+ * meta_display_get_last_user_time:
+ * @display: a #MetaDisplay
+ *
+ * Returns: Timestamp of the last user interaction event with a window
+ */
+guint32
+meta_display_get_last_user_time (MetaDisplay *display)
+{
+  return display->last_user_time;
+}
+
 /* Get time of current event, or CurrentTime if none. */
 guint32
 meta_display_get_current_time (MetaDisplay *display)
@@ -4132,8 +4169,8 @@ meta_set_syncing (gboolean setting)
   if (setting != is_syncing)
     {
       is_syncing = setting;
-
-      XSynchronize (meta_get_display ()->xdisplay, is_syncing);
+      if (meta_get_display ())
+        XSynchronize (meta_get_display ()->xdisplay, is_syncing);
     }
 }
 
@@ -4974,6 +5011,34 @@ meta_display_stack_cmp (const void *a,
     return 0; /* not reached in theory, if windows on same display */
 }
 
+/**
+ * meta_display_sort_windows_by_stacking:
+ * @display: a #MetaDisplay
+ * @windows: (element-type MetaWindow): Set of windows
+ *
+ * Sorts a set of windows according to their current stacking order. If windows
+ * from multiple screens are present in the set of input windows, then all the
+ * windows on screen 0 are sorted below all the windows on screen 1, and so forth.
+ * Since the stacking order of override-redirect windows isn't controlled by
+ * Metacity, if override-redirect windows are in the input, the result may not
+ * correspond to the actual stacking order in the X server.
+ *
+ * An example of using this would be to sort the list of transient dialogs for a
+ * window into their current stacking order.
+ *
+ * Returns: (transfer container): Input windows sorted by stacking order, from lowest to highest
+ */
+GSList *
+meta_display_sort_windows_by_stacking (MetaDisplay *display,
+                                       GSList      *windows)
+{
+  GSList *copy = g_slist_copy (windows);
+
+  copy = g_slist_sort (copy, meta_display_stack_cmp);
+
+  return copy;
+}
+
 void
 meta_display_devirtualize_modifiers (MetaDisplay        *display,
                                      MetaVirtualModifier modifiers,
@@ -5339,4 +5404,20 @@ Atom meta_display_get_atom (MetaDisplay *display, MetaAtom meta_atom)
   Atom *atoms = & display->atom_WM_PROTOCOLS;
 
   return atoms[meta_atom - 1];
+}
+
+/**
+ * meta_display_get_leader_window:
+ * @display: a #MetaDisplay
+ *
+ * Returns the window manager's leader window (as defined by the
+ * _NET_SUPPORTING_WM_CHECK mechanism of EWMH). For use by plugins that wish
+ * to attach additional custom properties to this window.
+ *
+ * Return value: (transfer none): xid of the leader window.
+ **/
+Window
+meta_display_get_leader_window (MetaDisplay *display)
+{
+  return display->leader_window;
 }

@@ -319,6 +319,7 @@ PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
@@ -428,6 +429,7 @@ mutter_SOURCES = \
 	compositor/mutter-shaped-texture.h	\
 	compositor/tidy/tidy-texture-frame.c	\
 	compositor/tidy/tidy-texture-frame.h	\
+	gtk-compat.h				\
 	include/compositor.h			\
 	include/mutter-plugin.h			\
 	include/mutter-window.h			\

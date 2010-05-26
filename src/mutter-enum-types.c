@@ -222,6 +222,7 @@ meta_menu_op_get_type (void)
   if (g_once_init_enter (&g_enum_type_id__volatile))
     {
       static const GFlagsValue values[] = {
+        { META_MENU_OP_NONE, "META_MENU_OP_NONE", "none" },
         { META_MENU_OP_DELETE, "META_MENU_OP_DELETE", "delete" },
         { META_MENU_OP_MINIMIZE, "META_MENU_OP_MINIMIZE", "minimize" },
         { META_MENU_OP_UNMAXIMIZE, "META_MENU_OP_UNMAXIMIZE", "unmaximize" },

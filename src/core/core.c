@@ -526,6 +526,9 @@ meta_core_get_menu_accelerator (MetaMenuOp           menu_op,
   
   switch (menu_op)
     {
+    case META_MENU_OP_NONE:
+      /* No keybinding for this one */
+      break;
     case META_MENU_OP_DELETE:
       name = "close";
       break;

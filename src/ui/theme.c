@@ -62,6 +62,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "gtk-compat.h"
+
 #define GDK_COLOR_RGBA(color)                                           \
                          ((guint32) (0xff                         |     \
                                      (((color).red / 256) << 24)   |    \
@@ -1360,9 +1362,13 @@ meta_color_spec_render (MetaColorSpec *spec,
                         GtkWidget     *widget,
                         GdkColor      *color)
 {
+  GtkStyle *style;
+
+  style = gtk_widget_get_style (widget);
+
   g_return_if_fail (spec != NULL);
   g_return_if_fail (GTK_IS_WIDGET (widget));
-  g_return_if_fail (widget->style != NULL);
+  g_return_if_fail (style != NULL);
 
   switch (spec->type)
     {
@@ -1374,28 +1380,28 @@ meta_color_spec_render (MetaColorSpec *spec,
       switch (spec->data.gtk.component)
         {
         case META_GTK_COLOR_BG:
-          *color = widget->style->bg[spec->data.gtk.state];
+          *color = style->bg[spec->data.gtk.state];
           break;
         case META_GTK_COLOR_FG:
-          *color = widget->style->fg[spec->data.gtk.state];
+          *color = style->fg[spec->data.gtk.state];
           break;
         case META_GTK_COLOR_BASE:
-          *color = widget->style->base[spec->data.gtk.state];
+          *color = style->base[spec->data.gtk.state];
           break;
         case META_GTK_COLOR_TEXT:
-          *color = widget->style->text[spec->data.gtk.state];
+          *color = style->text[spec->data.gtk.state];
           break;
         case META_GTK_COLOR_LIGHT:
-          *color = widget->style->light[spec->data.gtk.state];
+          *color = style->light[spec->data.gtk.state];
           break;
         case META_GTK_COLOR_DARK:
-          *color = widget->style->dark[spec->data.gtk.state];
+          *color = style->dark[spec->data.gtk.state];
           break;
         case META_GTK_COLOR_MID:
-          *color = widget->style->mid[spec->data.gtk.state];
+          *color = style->mid[spec->data.gtk.state];
           break;
         case META_GTK_COLOR_TEXT_AA:
-          *color = widget->style->text_aa[spec->data.gtk.state];
+          *color = style->text_aa[spec->data.gtk.state];
           break;
         case META_GTK_COLOR_LAST:
           g_assert_not_reached ();
@@ -2188,6 +2194,10 @@ pos_eval_get_variable (PosToken                  *t,
         *result = env->title_width;
       else if (t->d.v.name_quark == env->theme->quark_title_height)
         *result = env->title_height;
+      else if (t->d.v.name_quark == env->theme->quark_frame_x_center)
+        *result = env->frame_x_center;
+      else if (t->d.v.name_quark == env->theme->quark_frame_y_center)
+        *result = env->frame_y_center;
       else
         {
           g_set_error (err, META_THEME_ERROR,
@@ -2229,6 +2239,10 @@ pos_eval_get_variable (PosToken                  *t,
         *result = env->title_width;
       else if (strcmp (t->d.v.name, "title_height") == 0)
         *result = env->title_height;
+      else if (strcmp (t->d.v.name, "frame_x_center") == 0)
+        *result = env->frame_x_center;
+      else if (strcmp (t->d.v.name, "frame_y_center") == 0)
+        *result = env->frame_y_center;
       else
         {
           g_set_error (err, META_THEME_ERROR,
@@ -2876,6 +2890,8 @@ meta_draw_op_free (MetaDrawOp *op)
 
       meta_draw_spec_free (op->data.title.x);
       meta_draw_spec_free (op->data.title.y);
+      if (op->data.title.ellipsize_width)
+        meta_draw_spec_free (op->data.title.ellipsize_width);
       break;
 
     case META_DRAW_OP_LIST:
@@ -3437,6 +3453,8 @@ fill_env (MetaPositionExprEnv *env,
       env->right_width = info->fgeom->right_width;
       env->top_height = info->fgeom->top_height;
       env->bottom_height = info->fgeom->bottom_height;
+      env->frame_x_center = info->fgeom->width / 2 - logical_region.x;
+      env->frame_y_center = info->fgeom->height / 2 - logical_region.y;
     }
   else
     {
@@ -3444,6 +3462,8 @@ fill_env (MetaPositionExprEnv *env,
       env->right_width = 0;
       env->top_height = 0;
       env->bottom_height = 0;
+      env->frame_x_center = 0;
+      env->frame_y_center = 0;
     }
   
   env->mini_icon_width = info->mini_icon ? gdk_pixbuf_get_width (info->mini_icon) : 0;
@@ -3744,6 +3764,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
       if (info->title_layout)
         {
           int rx, ry;
+          PangoRectangle ink_rect, logical_rect;
 
           gc = get_gc_for_primitive (widget, drawable,
                                      op->data.title.color_spec,
@@ -3752,9 +3773,46 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
           rx = parse_x_position_unchecked (op->data.title.x, env);
           ry = parse_y_position_unchecked (op->data.title.y, env);
 
+          if (op->data.title.ellipsize_width)
+            {
+              int ellipsize_width;
+              int right_bearing;
+
+              ellipsize_width = parse_x_position_unchecked (op->data.title.ellipsize_width, env);
+              /* HACK: parse_x_position_unchecked adds in env->rect.x, subtract out again */
+              ellipsize_width -= env->rect.x;
+
+              pango_layout_set_width (info->title_layout, -1);
+              pango_layout_get_pixel_extents (info->title_layout,
+                                              &ink_rect, &logical_rect);
+
+              /* Pango's idea of ellipsization is with respect to the logical rect.
+               * correct for this, by reducing the ellipsization width by the overflow
+               * of the un-ellipsized text on the right... it's always the visual
+               * right we want regardless of bidi, since since the X we pass in to
+               * gdk_draw_layout() is always the left edge of the line.
+               */
+              right_bearing = (ink_rect.x + ink_rect.width) - (logical_rect.x + logical_rect.width);
+              right_bearing = MAX (right_bearing, 0);
+
+              ellipsize_width -= right_bearing;
+              ellipsize_width = MAX (ellipsize_width, 0);
+
+              /* Only ellipsizing when necessary is a performance optimization -
+               * pango_layout_set_width() will force a relayout if it isn't the
+               * same as the current width of -1.
+               */
+              if (ellipsize_width < logical_rect.width)
+                pango_layout_set_width (info->title_layout, PANGO_SCALE * ellipsize_width);
+            }
+
           gdk_draw_layout (drawable, gc,
                            rx, ry,
                            info->title_layout);
+
+          /* Remove any ellipsization we might have set; will short-circuit
+           * if the width is already -1 */
+          pango_layout_set_width (info->title_layout, -1);
 
           g_object_unref (G_OBJECT (gc));
         }
@@ -3855,7 +3913,7 @@ meta_draw_op_draw (const MetaDrawOp    *op,
                    const MetaDrawInfo  *info,
                    MetaRectangle        logical_region)
 {
-  meta_draw_op_draw_with_style (op, widget->style, widget,
+  meta_draw_op_draw_with_style (op, gtk_widget_get_style (widget), widget,
                                 drawable, clip, info, logical_region);
 }
 
@@ -3985,7 +4043,7 @@ meta_draw_op_list_draw  (const MetaDrawOpList *op_list,
                          MetaRectangle         rect)
 
 {
-  meta_draw_op_list_draw_with_style (op_list, widget->style, widget,
+  meta_draw_op_list_draw_with_style (op_list, gtk_widget_get_style (widget), widget,
                                      drawable, clip, info, rect);
 }
 
@@ -4314,7 +4372,7 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
   GdkRectangle bottom_titlebar_edge;
   GdkRectangle top_titlebar_edge;
   GdkRectangle left_edge, right_edge, bottom_edge;
-  PangoRectangle extents;
+  PangoRectangle logical_rect;
   MetaDrawInfo draw_info;
   
   g_return_if_fail (style_gtk->colormap == gdk_drawable_get_colormap (drawable));
@@ -4361,13 +4419,13 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
 
   if (title_layout)
     pango_layout_get_pixel_extents (title_layout,
-                                    NULL, &extents);
+                                    NULL, &logical_rect);
 
   draw_info.mini_icon = mini_icon;
   draw_info.icon = icon;
   draw_info.title_layout = title_layout;
-  draw_info.title_layout_width = title_layout ? extents.width : 0;
-  draw_info.title_layout_height = title_layout ? extents.height : 0;
+  draw_info.title_layout_width = title_layout ? logical_rect.width : 0;
+  draw_info.title_layout_height = title_layout ? logical_rect.height : 0;
   draw_info.fgeom = fgeom;
   
   /* The enum is in the order the pieces should be rendered. */
@@ -4557,7 +4615,7 @@ meta_frame_style_draw (MetaFrameStyle          *style,
                        GdkPixbuf               *mini_icon,
                        GdkPixbuf               *icon)
 {
-  meta_frame_style_draw_with_style (style, widget->style, widget,
+  meta_frame_style_draw_with_style (style, gtk_widget_get_style (widget), widget,
                                     drawable, x_offset, y_offset,
                                     clip, fgeom, client_width, client_height,
                                     title_layout, text_height,
@@ -4845,6 +4903,8 @@ meta_theme_new (void)
   theme->quark_icon_height = g_quark_from_static_string ("icon_height");
   theme->quark_title_width = g_quark_from_static_string ("title_width");
   theme->quark_title_height = g_quark_from_static_string ("title_height");
+  theme->quark_frame_x_center = g_quark_from_static_string ("frame_x_center");
+  theme->quark_frame_y_center = g_quark_from_static_string ("frame_y_center");
   return theme;
 }
 
@@ -5180,7 +5240,7 @@ meta_theme_draw_frame (MetaTheme              *theme,
                        GdkPixbuf              *mini_icon,
                        GdkPixbuf              *icon)
 {
-  meta_theme_draw_frame_with_style (theme, widget->style, widget,
+  meta_theme_draw_frame_with_style (theme, gtk_widget_get_style (widget), widget,
                                     drawable, clip, x_offset, y_offset, type,flags,
                                     client_width, client_height,
                                     title_layout, text_height,
@@ -5574,9 +5634,9 @@ meta_gtk_widget_get_font_desc (GtkWidget *widget,
 {
   PangoFontDescription *font_desc;
   
-  g_return_val_if_fail (GTK_WIDGET_REALIZED (widget), NULL);
+  g_return_val_if_fail (gtk_widget_get_realized (widget), NULL);
 
-  font_desc = pango_font_description_copy (widget->style->font_desc);
+  font_desc = pango_font_description_copy (gtk_widget_get_style (widget)->font_desc);
 
   if (override)
     pango_font_description_merge (font_desc, override, TRUE);
@@ -6617,7 +6677,7 @@ meta_theme_earliest_version_with_button (MetaButtonType type)
     case META_BUTTON_TYPE_RIGHT_LEFT_BACKGROUND:
     case META_BUTTON_TYPE_RIGHT_MIDDLE_BACKGROUND:
     case META_BUTTON_TYPE_RIGHT_RIGHT_BACKGROUND:
-      return 1;
+      return 1000;
       
     case META_BUTTON_TYPE_SHADE:
     case META_BUTTON_TYPE_ABOVE:
@@ -6625,10 +6685,10 @@ meta_theme_earliest_version_with_button (MetaButtonType type)
     case META_BUTTON_TYPE_UNSHADE:
     case META_BUTTON_TYPE_UNABOVE:
     case META_BUTTON_TYPE_UNSTICK:
-      return 2;
+      return 2000;
 
     default:
       meta_warning("Unknown button %d\n", type);
-      return 1; 
+      return 1000;
     }
 }

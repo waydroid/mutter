@@ -92,6 +92,9 @@ const char * meta_window_get_wm_class_instance (MetaWindow *window);
 /* Return whether the window would be showing if we were on its workspace */
 gboolean    meta_window_showing_on_its_workspace (MetaWindow *window);
 
+void meta_window_set_demands_attention (MetaWindow *window);
+void meta_window_unset_demands_attention (MetaWindow *window);
+
 const char* meta_window_get_startup_id (MetaWindow *window);
 void meta_window_change_workspace_by_index (MetaWindow *window,
                                             gint        space_index,
@@ -105,6 +108,17 @@ MetaStackLayer meta_window_get_layer (MetaWindow *window);
 MetaWindow* meta_window_find_root_ancestor    (MetaWindow *window);
 gboolean meta_window_is_ancestor_of_transient (MetaWindow            *window,
                                                MetaWindow            *transient);
+
+typedef gboolean (*MetaWindowForeachFunc) (MetaWindow *window,
+                                           void       *data);
+
+void     meta_window_foreach_transient        (MetaWindow            *window,
+                                               MetaWindowForeachFunc  func,
+                                               void                  *user_data);
+void     meta_window_foreach_ancestor         (MetaWindow            *window,
+                                               MetaWindowForeachFunc  func,
+                                               void                  *user_data);
+
 gboolean meta_window_is_mapped (MetaWindow  *window);
 gboolean meta_window_toplevel_is_mapped (MetaWindow  *window);
 gboolean meta_window_get_icon_geometry (MetaWindow    *window,
@@ -115,6 +129,8 @@ void meta_window_unmaximize (MetaWindow        *window,
                              MetaMaximizeFlags  directions);
 void        meta_window_minimize           (MetaWindow  *window);
 void        meta_window_unminimize         (MetaWindow  *window);
+void        meta_window_raise              (MetaWindow  *window);
+void        meta_window_lower              (MetaWindow  *window);
 const char *meta_window_get_title (MetaWindow *window);
 MetaWindow *meta_window_get_transient_for (MetaWindow *window);
 Window      meta_window_get_transient_for_as_xid (MetaWindow *window);
@@ -125,4 +141,5 @@ guint32     meta_window_get_user_time (MetaWindow *window);
 int         meta_window_get_pid (MetaWindow *window);
 const char *meta_window_get_client_machine (MetaWindow *window);
 gboolean    meta_window_is_modal (MetaWindow *window);
+const char *meta_window_get_mutter_hints (MetaWindow *window);
 #endif
