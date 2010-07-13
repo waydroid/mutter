@@ -118,6 +118,7 @@ meta_debug_topic_get_type (void)
   if (g_once_init_enter (&g_enum_type_id__volatile))
     {
       static const GFlagsValue values[] = {
+        { META_DEBUG_VERBOSE, "META_DEBUG_VERBOSE", "verbose" },
         { META_DEBUG_FOCUS, "META_DEBUG_FOCUS", "focus" },
         { META_DEBUG_WORKAREA, "META_DEBUG_WORKAREA", "workarea" },
         { META_DEBUG_STACK, "META_DEBUG_STACK", "stack" },

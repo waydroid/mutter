@@ -39,10 +39,12 @@ mutter_SOURCES= 				\
 	compositor/mutter-shaped-texture.h	\
 	compositor/tidy/tidy-texture-frame.c	\
 	compositor/tidy/tidy-texture-frame.h	\
+	gdk-compat.h				\
 	gtk-compat.h				\
 	include/compositor.h			\
 	include/mutter-plugin.h			\
 	include/mutter-window.h			\
+	include/region.h			\
 	include/compositor-mutter.h 		\
 	core/constraints.c			\
 	core/constraints.h			\
@@ -210,18 +212,21 @@ Meta-$(api_version).gir: $(G_IR_SCANNER) mutter $(libmutterinclude_HEADERS) $(mu
 		--namespace=Meta			\
 		--nsversion=$(api_version)		\
 		--include=GObject-2.0			\
-		--include=Gdk-2.0			\
-		--include=Gtk-2.0			\
+		--include=Gdk-@GTK_API_VERSION@		\
+		--include=Gtk-@GTK_API_VERSION@		\
 		--include=Clutter-1.0			\
 		--pkg=clutter-1.0			\
-		--pkg=gtk+-2.0				\
+		--pkg=gtk+-@GTK_API_VERSION@		\
 		--include=xlib-2.0			\
 		--include=xfixes-4.0			\
 		--program=$$pwd/mutter			\
 		$(filter %.c,$(mutter_SOURCES))		\
 		$(libmutterinclude_base_headers)	\
 		$(INCLUDES)				\
-		-o $$pwd/$@
+		-o $$pwd/$@.tmp &&			\
+	$(PYTHON) $(srcdir)/fix-meta-rectangle.py $$pwd/$@.tmp $$pwd/$@.tmp2 &&	\
+	rm $$pwd/$@.tmp &&							\
+	mv $$pwd/$@.tmp2 $$pwd/$@
 
 Meta-$(api_version).typelib: $(G_IR_COMPILER) Meta-$(api_version).gir
 	$(AM_V_GEN) LD_LIBRARY_PATH=$${LD_LIBRARY_PATH:+$$LD_LIBRARY_PATH:}. $(G_IR_COMPILER) Meta-$(api_version).gir -o $@
@@ -298,6 +303,7 @@ EXTRA_DIST=$(desktopfiles_files) 	\
 	$(desktopfiles_in_files)	\
 	$(wmproperties_in_files)	\
 	$(schema_in_files)		\
+	fix-meta-rectangle.py		\
 	libmutter-private.pc.in	\
 	mutter-plugins.pc.in  \
 	mutter-enum-types.h.in \

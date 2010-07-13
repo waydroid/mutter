@@ -42,10 +42,10 @@ struct _MutterWindowPrivate
   gchar *           desc;
 
   /* If the window is shaped, a region that matches the shape */
-  GdkRegion        *shape_region;
+  MetaRegion        *shape_region;
   /* A rectangular region with the unshaped extends of the window
    * texture */
-  GdkRegion        *bounding_region;
+  MetaRegion        *bounding_region;
 
   gint              freeze_count;
 
@@ -68,6 +68,7 @@ struct _MutterWindowPrivate
   guint             redecorating           : 1;
 
   guint		    needs_damage_all       : 1;
+  guint		    received_damage        : 1;
 
   guint		    needs_pixmap           : 1;
   guint		    needs_reshape          : 1;
@@ -337,7 +338,7 @@ mutter_window_constructed (GObject *object)
     priv->damage = None;
   else
     priv->damage = XDamageCreate (xdisplay, xwindow,
-                                  XDamageReportRawRectangles);
+                                  XDamageReportBoundingBox);
 
   format = XRenderFindVisualFormat (xdisplay, priv->attrs.visual);
 
@@ -1349,7 +1350,7 @@ mutter_window_clear_shape_region (MutterWindow *self)
 
   if (priv->shape_region)
     {
-      gdk_region_destroy (priv->shape_region);
+      meta_region_destroy (priv->shape_region);
       priv->shape_region = NULL;
     }
 }
@@ -1361,7 +1362,7 @@ mutter_window_clear_bounding_region (MutterWindow *self)
 
   if (priv->bounding_region)
     {
-      gdk_region_destroy (priv->bounding_region);
+      meta_region_destroy (priv->bounding_region);
       priv->bounding_region = NULL;
     }
 }
@@ -1376,7 +1377,7 @@ mutter_window_update_bounding_region (MutterWindow *self,
 
   mutter_window_clear_bounding_region (self);
 
-  priv->bounding_region = gdk_region_rectangle (&bounding_rectangle);
+  priv->bounding_region = meta_region_new_from_rectangle (&bounding_rectangle);
 }
 
 static void
@@ -1389,11 +1390,11 @@ mutter_window_update_shape_region (MutterWindow *self,
 
   mutter_window_clear_shape_region (self);
 
-  priv->shape_region = gdk_region_new ();
+  priv->shape_region = meta_region_new ();
   for (i = 0; i < n_rects; i++)
     {
       GdkRectangle rect = { rects[i].x, rects[i].y, rects[i].width, rects[i].height };
-      gdk_region_union_with_rect (priv->shape_region, &rect);
+      meta_region_union_rectangle (priv->shape_region, &rect);
     }
 }
 
@@ -1407,7 +1408,7 @@ mutter_window_update_shape_region (MutterWindow *self,
  * Return value: (transfer none): the area obscured by the window,
  *  %NULL is the same as an empty region.
  */
-GdkRegion *
+MetaRegion *
 mutter_window_get_obscured_region (MutterWindow *self)
 {
   MutterWindowPrivate *priv = self->priv;
@@ -1426,13 +1427,13 @@ mutter_window_get_obscured_region (MutterWindow *self)
 #if 0
 /* Print out a region; useful for debugging */
 static void
-dump_region (GdkRegion *region)
+dump_region (MetaRegion *region)
 {
   GdkRectangle *rects;
   int n_rects;
   int i;
 
-  gdk_region_get_rectangles (region, &rects, &n_rects);
+  meta_region_get_rectangles (region, &rects, &n_rects);
   g_print ("[");
   for (i = 0; i < n_rects; i++)
     {
@@ -1456,10 +1457,10 @@ dump_region (GdkRegion *region)
  */
 void
 mutter_window_set_visible_region (MutterWindow *self,
-                                  GdkRegion    *visible_region)
+                                  MetaRegion   *visible_region)
 {
   MutterWindowPrivate *priv = self->priv;
-  GdkRegion *texture_clip_region = NULL;
+  MetaRegion *texture_clip_region = NULL;
 
   /* Get the area of the window texture that would be drawn if
    * we weren't obscured at all
@@ -1467,21 +1468,21 @@ mutter_window_set_visible_region (MutterWindow *self,
   if (priv->shaped)
     {
       if (priv->shape_region)
-        texture_clip_region = gdk_region_copy (priv->shape_region);
+        texture_clip_region = meta_region_copy (priv->shape_region);
     }
   else
     {
       if (priv->bounding_region)
-        texture_clip_region = gdk_region_copy (priv->bounding_region);
+        texture_clip_region = meta_region_copy (priv->bounding_region);
     }
 
   if (!texture_clip_region)
-    texture_clip_region = gdk_region_new ();
+    texture_clip_region = meta_region_new ();
 
   /* Then intersect that with the visible region to get the region
    * that we actually need to redraw.
    */
-  gdk_region_intersect (texture_clip_region, visible_region);
+  meta_region_intersect (texture_clip_region, visible_region);
 
   /* Assumes ownership */
   mutter_shaped_texture_set_clip_region (MUTTER_SHAPED_TEXTURE (priv->actor),
@@ -1502,7 +1503,7 @@ mutter_window_set_visible_region (MutterWindow *self,
  */
 void
 mutter_window_set_visible_region_beneath (MutterWindow *self,
-                                          GdkRegion    *beneath_region)
+                                          MetaRegion    *beneath_region)
 {
   MutterWindowPrivate *priv = self->priv;
 
@@ -1510,7 +1511,7 @@ mutter_window_set_visible_region_beneath (MutterWindow *self,
     {
       GdkRectangle shadow_rect;
       ClutterActorBox box;
-      GdkOverlapType overlap;
+      MetaOverlapType overlap;
 
       /* We could compute an full clip region as we do for the window
        * texture, but the shadow is relatively cheap to draw, and
@@ -1525,10 +1526,10 @@ mutter_window_set_visible_region_beneath (MutterWindow *self,
       shadow_rect.width = roundf (box.x2 - box.x1);
       shadow_rect.height = roundf (box.y2 - box.y1);
 
-      overlap = gdk_region_rect_in (beneath_region, &shadow_rect);
+      overlap = meta_region_contains_rectangle (beneath_region, &shadow_rect);
 
       tidy_texture_frame_set_needs_paint (TIDY_TEXTURE_FRAME (priv->shadow),
-                                          overlap != GDK_OVERLAP_RECTANGLE_OUT);
+                                          overlap != META_REGION_OVERLAP_OUT);
     }
 }
 
@@ -1652,6 +1653,8 @@ mutter_window_process_damage (MutterWindow       *self,
   MutterWindowPrivate *priv = self->priv;
   ClutterX11TexturePixmap *texture_x11 = CLUTTER_X11_TEXTURE_PIXMAP (priv->actor);
 
+  priv->received_damage = TRUE;
+
   if (is_frozen (self))
     {
       /* The window is frozen due to an effect in progress: we ignore damage
@@ -1748,11 +1751,22 @@ mutter_window_update_shape (MutterWindow   *self,
 void
 mutter_window_pre_paint (MutterWindow *self)
 {
+  MutterWindowPrivate *priv = self->priv;
+  MetaScreen          *screen   = priv->screen;
+  MetaDisplay         *display  = meta_screen_get_display (screen);
+  Display             *xdisplay = meta_display_get_xdisplay (display);
+
   if (is_frozen (self))
     {
       /* The window is frozen due to a pending animation: we'll wait until
        * the animation finishes to reshape and repair the window */
       return;
+    }
+
+  if (priv->received_damage)
+    {
+      XDamageSubtract (xdisplay, priv->damage, None, None);
+      priv->received_damage = FALSE;
     }
 
   check_needs_reshape (self);
