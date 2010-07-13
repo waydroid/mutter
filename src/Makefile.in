@@ -263,6 +263,7 @@ GMSGFMT = @GMSGFMT@
 GNOME_KEYBINDINGS_KEYSDIR = @GNOME_KEYBINDINGS_KEYSDIR@
 GOBJECT_QUERY = @GOBJECT_QUERY@
 GREP = @GREP@
+GTK_API_VERSION = @GTK_API_VERSION@
 G_IR_COMPILER = @G_IR_COMPILER@
 G_IR_GENERATE = @G_IR_GENERATE@
 G_IR_SCANNER = @G_IR_SCANNER@
@@ -327,6 +328,11 @@ POFILES = @POFILES@
 POSUB = @POSUB@
 PO_IN_DATADIR_FALSE = @PO_IN_DATADIR_FALSE@
 PO_IN_DATADIR_TRUE = @PO_IN_DATADIR_TRUE@
+PYTHON = @PYTHON@
+PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
+PYTHON_PLATFORM = @PYTHON_PLATFORM@
+PYTHON_PREFIX = @PYTHON_PREFIX@
+PYTHON_VERSION = @PYTHON_VERSION@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -383,9 +389,13 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
+pkgpyexecdir = @pkgpyexecdir@
+pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+pyexecdir = @pyexecdir@
+pythondir = @pythondir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -429,10 +439,12 @@ mutter_SOURCES = \
 	compositor/mutter-shaped-texture.h	\
 	compositor/tidy/tidy-texture-frame.c	\
 	compositor/tidy/tidy-texture-frame.h	\
+	gdk-compat.h				\
 	gtk-compat.h				\
 	include/compositor.h			\
 	include/mutter-plugin.h			\
 	include/mutter-window.h			\
+	include/region.h			\
 	include/compositor-mutter.h 		\
 	core/constraints.c			\
 	core/constraints.h			\
@@ -625,6 +637,7 @@ EXTRA_DIST = $(desktopfiles_files) 	\
 	$(desktopfiles_in_files)	\
 	$(wmproperties_in_files)	\
 	$(schema_in_files)		\
+	fix-meta-rectangle.py		\
 	libmutter-private.pc.in	\
 	mutter-plugins.pc.in  \
 	mutter-enum-types.h.in \
@@ -2258,18 +2271,21 @@ uninstall-am: uninstall-binPROGRAMS uninstall-desktopfilesDATA \
 @WITH_INTROSPECTION_TRUE@		--namespace=Meta			\
 @WITH_INTROSPECTION_TRUE@		--nsversion=$(api_version)		\
 @WITH_INTROSPECTION_TRUE@		--include=GObject-2.0			\
-@WITH_INTROSPECTION_TRUE@		--include=Gdk-2.0			\
-@WITH_INTROSPECTION_TRUE@		--include=Gtk-2.0			\
+@WITH_INTROSPECTION_TRUE@		--include=Gdk-@GTK_API_VERSION@		\
+@WITH_INTROSPECTION_TRUE@		--include=Gtk-@GTK_API_VERSION@		\
 @WITH_INTROSPECTION_TRUE@		--include=Clutter-1.0			\
 @WITH_INTROSPECTION_TRUE@		--pkg=clutter-1.0			\
-@WITH_INTROSPECTION_TRUE@		--pkg=gtk+-2.0				\
+@WITH_INTROSPECTION_TRUE@		--pkg=gtk+-@GTK_API_VERSION@		\
 @WITH_INTROSPECTION_TRUE@		--include=xlib-2.0			\
 @WITH_INTROSPECTION_TRUE@		--include=xfixes-4.0			\
 @WITH_INTROSPECTION_TRUE@		--program=$$pwd/mutter			\
 @WITH_INTROSPECTION_TRUE@		$(filter %.c,$(mutter_SOURCES))		\
 @WITH_INTROSPECTION_TRUE@		$(libmutterinclude_base_headers)	\
 @WITH_INTROSPECTION_TRUE@		$(INCLUDES)				\
-@WITH_INTROSPECTION_TRUE@		-o $$pwd/$@
+@WITH_INTROSPECTION_TRUE@		-o $$pwd/$@.tmp &&			\
+@WITH_INTROSPECTION_TRUE@	$(PYTHON) $(srcdir)/fix-meta-rectangle.py $$pwd/$@.tmp $$pwd/$@.tmp2 &&	\
+@WITH_INTROSPECTION_TRUE@	rm $$pwd/$@.tmp &&							\
+@WITH_INTROSPECTION_TRUE@	mv $$pwd/$@.tmp2 $$pwd/$@
 
 @WITH_INTROSPECTION_TRUE@Meta-$(api_version).typelib: $(G_IR_COMPILER) Meta-$(api_version).gir
 @WITH_INTROSPECTION_TRUE@	$(AM_V_GEN) LD_LIBRARY_PATH=$${LD_LIBRARY_PATH:+$$LD_LIBRARY_PATH:}. $(G_IR_COMPILER) Meta-$(api_version).gir -o $@

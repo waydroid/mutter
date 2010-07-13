@@ -27,6 +27,7 @@
 #include <math.h>
 #include "boxes.h"
 #include "frames.h"
+#include "region.h"
 #include "util.h"
 #include "core.h"
 #include "menu.h"
@@ -36,6 +37,7 @@
 #include "ui.h"
 
 #include "gtk-compat.h"
+#include "gdk-compat.h"
 
 #ifdef HAVE_SHAPE
 #include <X11/extensions/shape.h>
@@ -43,8 +45,6 @@
 
 #define DEFAULT_INNER_BUTTON_BORDER 3
 
-static void meta_frames_class_init (MetaFramesClass *klass);
-static void meta_frames_init       (MetaFrames      *frames);
 static void meta_frames_destroy    (GtkObject       *object);
 static void meta_frames_finalize   (GObject         *object);
 static void meta_frames_style_set  (GtkWidget       *widget,
@@ -76,7 +76,7 @@ static void meta_frames_attach_style (MetaFrames  *frames,
 static void meta_frames_paint_to_drawable (MetaFrames   *frames,
                                            MetaUIFrame  *frame,
                                            GdkDrawable  *drawable,
-                                           GdkRegion    *region,
+                                           MetaRegion   *region,
                                            int           x_offset,
                                            int           y_offset);
 
@@ -108,32 +108,7 @@ static void invalidate_all_caches (MetaFrames *frames);
 static void invalidate_whole_window (MetaFrames *frames,
                                      MetaUIFrame *frame);
 
-static GtkWidgetClass *parent_class = NULL;
-
-GType
-meta_frames_get_type (void)
-{
-  static GType frames_type = 0;
-
-  if (!frames_type)
-    {
-      static const GtkTypeInfo frames_info =
-      {
-        "MetaFrames",
-        sizeof (MetaFrames),
-        sizeof (MetaFramesClass),
-        (GtkClassInitFunc) meta_frames_class_init,
-        (GtkObjectInitFunc) meta_frames_init,
-        /* reserved_1 */ NULL,
-        /* reserved_2 */ NULL,
-        (GtkClassInitFunc) NULL,
-      };
-
-      frames_type = gtk_type_unique (GTK_TYPE_WINDOW, &frames_info);
-    }
-
-  return frames_type;
-}
+G_DEFINE_TYPE (MetaFrames, meta_frames, GTK_TYPE_WINDOW);
 
 static GObject *
 meta_frames_constructor (GType                  gtype,
@@ -143,7 +118,7 @@ meta_frames_constructor (GType                  gtype,
   GObject *object;
   GObjectClass *gobject_class;
 
-  gobject_class = G_OBJECT_CLASS (parent_class);
+  gobject_class = G_OBJECT_CLASS (meta_frames_parent_class);
   object = gobject_class->constructor (gtype, n_properties, properties);
 
   g_object_set (object,
@@ -163,8 +138,6 @@ meta_frames_class_init (MetaFramesClass *class)
   gobject_class = G_OBJECT_CLASS (class);
   object_class = (GtkObjectClass*) class;
   widget_class = (GtkWidgetClass*) class;
-
-  parent_class = g_type_class_peek_parent (class);
 
   gobject_class->constructor = meta_frames_constructor;
   gobject_class->finalize = meta_frames_finalize;
@@ -275,7 +248,7 @@ meta_frames_destroy (GtkObject *object)
     }
   g_slist_free (winlist);
 
-  GTK_OBJECT_CLASS (parent_class)->destroy (object);
+  GTK_OBJECT_CLASS (meta_frames_parent_class)->destroy (object);
 }
 
 static void
@@ -297,7 +270,7 @@ meta_frames_finalize (GObject *object)
   g_hash_table_destroy (frames->frames);
   g_hash_table_destroy (frames->cache);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (meta_frames_parent_class)->finalize (object);
 }
 
 typedef struct
@@ -467,7 +440,7 @@ meta_frames_style_set  (GtkWidget *widget,
   g_hash_table_foreach (frames->frames,
                         reattach_style_func, frames);
 
-  GTK_WIDGET_CLASS (parent_class)->style_set (widget, prev_style);
+  GTK_WIDGET_CLASS (meta_frames_parent_class)->style_set (widget, prev_style);
 }
 
 static void
@@ -705,15 +678,15 @@ meta_frames_unmanage_window (MetaFrames *frames,
 static void
 meta_frames_realize (GtkWidget *widget)
 {
-  if (GTK_WIDGET_CLASS (parent_class)->realize)
-    GTK_WIDGET_CLASS (parent_class)->realize (widget);
+  if (GTK_WIDGET_CLASS (meta_frames_parent_class)->realize)
+    GTK_WIDGET_CLASS (meta_frames_parent_class)->realize (widget);
 }
 
 static void
 meta_frames_unrealize (GtkWidget *widget)
 {
-  if (GTK_WIDGET_CLASS (parent_class)->unrealize)
-    GTK_WIDGET_CLASS (parent_class)->unrealize (widget);
+  if (GTK_WIDGET_CLASS (meta_frames_parent_class)->unrealize)
+    GTK_WIDGET_CLASS (meta_frames_parent_class)->unrealize (widget);
 }
 
 static MetaUIFrame*
@@ -2035,22 +2008,26 @@ meta_frames_destroy_event           (GtkWidget           *widget,
 static GdkGC *
 get_bg_gc (GdkWindow *window, int x_offset, int y_offset)
 {
-  GdkWindowObject *private = (GdkWindowObject *)window;
+  GdkWindow *parent = gdk_window_get_parent (window);
+  GdkPixmap *back_pixmap;
+  gboolean parent_relative;
   guint gc_mask = 0;
   GdkGCValues gc_values;
 
-  if (private->bg_pixmap == GDK_PARENT_RELATIVE_BG && private->parent)
+  gdk_window_get_back_pixmap (window, &back_pixmap, &parent_relative);
+  if (parent_relative && parent)
     {
-      return get_bg_gc (GDK_WINDOW (private->parent),
-                        x_offset + private->x,
-                        y_offset + private->y);
+      gint window_x, window_y;
+
+      gdk_window_get_position (window, &window_x, &window_y);
+      return get_bg_gc (parent,
+                        x_offset + window_x,
+                        y_offset + window_y);
     }
-  else if (private->bg_pixmap && 
-           private->bg_pixmap != GDK_PARENT_RELATIVE_BG && 
-           private->bg_pixmap != GDK_NO_BG)
+  else if (back_pixmap)
     {
       gc_values.fill = GDK_TILED;
-      gc_values.tile = private->bg_pixmap;
+      gc_values.tile = back_pixmap;
       gc_values.ts_x_origin = x_offset;
       gc_values.ts_y_origin = y_offset;
       
@@ -2060,9 +2037,11 @@ get_bg_gc (GdkWindow *window, int x_offset, int y_offset)
     }
   else
     {
+      GdkColor bg_color;
       GdkGC *gc = gdk_gc_new (window);
 
-      gdk_gc_set_foreground (gc, &(private->bg_color));
+      gdk_window_get_background (window, &bg_color);
+      gdk_gc_set_foreground (gc, &bg_color);
 
       return gc;
     }
@@ -2090,7 +2069,7 @@ generate_pixmap (MetaFrames *frames,
                  MetaRectangle rect)
 {
   GdkRectangle rectangle;
-  GdkRegion *region;
+  MetaRegion *region;
   GdkPixmap *result;
 
   rectangle.x = rect.x;
@@ -2103,12 +2082,12 @@ generate_pixmap (MetaFrames *frames,
   
   clear_backing (result, frame->window, rectangle.x, rectangle.y);
 
-  region = gdk_region_rectangle (&rectangle);
+  region = meta_region_new_from_rectangle (&rectangle);
 
   meta_frames_paint_to_drawable (frames, frame, result, region,
                                  -rectangle.x, -rectangle.y);
 
-  gdk_region_destroy (region);
+  meta_region_destroy (region);
 
   return result;
 }
@@ -2192,11 +2171,11 @@ populate_cache (MetaFrames *frames,
 }
 
 static void
-clip_to_screen (GdkRegion *region, MetaUIFrame *frame)
+clip_to_screen (MetaRegion *region, MetaUIFrame *frame)
 {
   GdkRectangle frame_area;
   GdkRectangle screen_area = { 0, 0, 0, 0 };
-  GdkRegion *tmp_region;
+  MetaRegion *tmp_region;
   
   /* Chop off stuff outside the screen; this optimization
    * is crucial to handle huge client windows,
@@ -2211,35 +2190,35 @@ clip_to_screen (GdkRegion *region, MetaUIFrame *frame)
                  META_CORE_GET_SCREEN_HEIGHT, &screen_area.height,
                  META_CORE_GET_END);
 
-  gdk_region_offset (region, frame_area.x, frame_area.y);
+  meta_region_translate (region, frame_area.x, frame_area.y);
 
-  tmp_region = gdk_region_rectangle (&frame_area);
-  gdk_region_intersect (region, tmp_region);
-  gdk_region_destroy (tmp_region);
+  tmp_region = meta_region_new_from_rectangle (&frame_area);
+  meta_region_intersect (region, tmp_region);
+  meta_region_destroy (tmp_region);
 
-  gdk_region_offset (region, - frame_area.x, - frame_area.y);
+  meta_region_translate (region, - frame_area.x, - frame_area.y);
 }
 
 static void
-subtract_from_region (GdkRegion *region, GdkDrawable *drawable,
+subtract_from_region (MetaRegion *region, GdkDrawable *drawable,
                       gint x, gint y)
 {
   GdkRectangle rect;
-  GdkRegion *reg_rect;
+  MetaRegion *reg_rect;
 
   gdk_drawable_get_size (drawable, &rect.width, &rect.height);
   rect.x = x;
   rect.y = y;
 
-  reg_rect = gdk_region_rectangle (&rect);
-  gdk_region_subtract (region, reg_rect);
-  gdk_region_destroy (reg_rect);
+  reg_rect = meta_region_new_from_rectangle (&rect);
+  meta_region_subtract (region, reg_rect);
+  meta_region_destroy (reg_rect);
 }
 
 static void
 cached_pixels_draw (CachedPixels *pixels,
-                    GdkWindow *window,
-                    GdkRegion *region)
+                    GdkWindow    *window,
+                    MetaRegion   *region)
 {
   GdkGC *gc;
   int i;
@@ -2271,8 +2250,8 @@ meta_frames_expose_event (GtkWidget           *widget,
 {
   MetaUIFrame *frame;
   MetaFrames *frames;
-  GdkRegion *region;
   CachedPixels *pixels;
+  MetaRegion *region;
 
   frames = META_FRAMES (widget);
 
@@ -2289,7 +2268,7 @@ meta_frames_expose_event (GtkWidget           *widget,
 
   populate_cache (frames, frame);
 
-  region = gdk_region_copy (event->region);
+  region = meta_region_copy (event->region);
   
   pixels = get_cache (frames, frame);
 
@@ -2298,7 +2277,7 @@ meta_frames_expose_event (GtkWidget           *widget,
   clip_to_screen (region, frame);
   meta_frames_paint_to_drawable (frames, frame, frame->window, region, 0, 0);
 
-  gdk_region_destroy (region);
+  meta_region_destroy (region);
   
   return TRUE;
 }
@@ -2312,7 +2291,7 @@ static void
 meta_frames_paint_to_drawable (MetaFrames   *frames,
                                MetaUIFrame  *frame,
                                GdkDrawable  *drawable,
-                               GdkRegion    *region,
+                               MetaRegion   *region,
                                int           x_offset,
                                int           y_offset)
 {
@@ -2445,7 +2424,7 @@ meta_frames_paint_to_drawable (MetaFrames   *frames,
       GdkRectangle area, *areas;
       int n_areas;
       int screen_width, screen_height;
-      GdkRegion *edges, *tmp_region;
+      MetaRegion *edges, *tmp_region;
       int top, bottom, left, right;
  
       /* Repaint each side of the frame */
@@ -2459,7 +2438,7 @@ meta_frames_paint_to_drawable (MetaFrames   *frames,
                      META_CORE_GET_SCREEN_HEIGHT, &screen_height,
                      META_CORE_GET_END);
 
-      edges = gdk_region_copy (region);
+      edges = meta_region_copy (region);
 
       /* Punch out the client area */
 
@@ -2467,13 +2446,13 @@ meta_frames_paint_to_drawable (MetaFrames   *frames,
       area.y = top;
       area.width = w;
       area.height = h;
-      tmp_region = gdk_region_rectangle (&area);
-      gdk_region_subtract (edges, tmp_region);
-      gdk_region_destroy (tmp_region);
+      tmp_region = meta_region_new_from_rectangle (&area);
+      meta_region_subtract (edges, tmp_region);
+      meta_region_destroy (tmp_region);
 
       /* Now draw remaining portion of region */
 
-      gdk_region_get_rectangles (edges, &areas, &n_areas);
+      meta_region_get_rectangles (edges, &areas, &n_areas);
 
       for (i = 0; i < n_areas; i++)
         {
@@ -2516,7 +2495,7 @@ meta_frames_paint_to_drawable (MetaFrames   *frames,
         }
 
       g_free (areas);
-      gdk_region_destroy (edges);
+      meta_region_destroy (edges);
 
     }
   else
@@ -2579,7 +2558,7 @@ meta_frames_set_window_background (MetaFrames   *frames,
       /* Set A in ARGB to window_background_alpha, if we have ARGB */
 
       visual = gtk_widget_get_visual (GTK_WIDGET (frames));
-      if (visual->depth == 32) /* we have ARGB */
+      if (gdk_visual_get_depth (visual) == 32) /* we have ARGB */
         {
           color.pixel = (color.pixel & 0xffffff) &
             style->window_background_alpha << 24;

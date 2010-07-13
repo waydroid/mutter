@@ -3235,10 +3235,6 @@ meta_window_unmaximize (MetaWindow        *window,
           window->display->grab_anchor_window_pos = target_rect;
         }
 
-      /* Make sure user_rect is current.
-       */
-      force_save_user_window_placement (window);
-
       if (window->display->compositor)
         {
           MetaRectangle old_rect, new_rect;
@@ -3267,6 +3263,10 @@ meta_window_unmaximize (MetaWindow        *window,
                                    target_rect.width,
                                    target_rect.height);
         }
+
+      /* Make sure user_rect is current.
+       */
+      force_save_user_window_placement (window);
 
       recalc_window_features (window);
       set_net_wm_state (window);
@@ -9113,6 +9113,21 @@ meta_window_get_client_machine (MetaWindow *window)
   g_return_val_if_fail (META_IS_WINDOW (window), NULL);
 
   return window->wm_client_machine;
+}
+
+/**
+ * meta_window_is_remote:
+ * @window: a #MetaWindow
+ *
+ * Returns: %TRUE if this window originates from a host
+ * different from the one running mutter.
+ */
+gboolean
+meta_window_is_remote (MetaWindow *window)
+{
+  g_return_val_if_fail (META_IS_WINDOW (window), FALSE);
+
+  return g_strcmp0 (window->wm_client_machine, window->display->hostname) != 0;
 }
 
 /**
