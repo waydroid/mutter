@@ -69,6 +69,7 @@ GType meta_window_get_type (void);
 
 MetaFrame *meta_window_get_frame (MetaWindow *window);
 gboolean meta_window_has_focus (MetaWindow *window);
+gboolean meta_window_appears_focused (MetaWindow *window);
 gboolean meta_window_is_shaded (MetaWindow *window);
 gboolean meta_window_is_override_redirect (MetaWindow *window);
 gboolean meta_window_is_skip_taskbar (MetaWindow *window);
@@ -119,6 +120,9 @@ void     meta_window_foreach_ancestor         (MetaWindow            *window,
                                                MetaWindowForeachFunc  func,
                                                void                  *user_data);
 
+MetaMaximizeFlags meta_window_get_maximized (MetaWindow *window);
+gboolean          meta_window_is_fullscreen (MetaWindow *window);
+
 gboolean meta_window_is_mapped (MetaWindow  *window);
 gboolean meta_window_toplevel_is_mapped (MetaWindow  *window);
 gboolean meta_window_get_icon_geometry (MetaWindow    *window,
@@ -143,4 +147,7 @@ const char *meta_window_get_client_machine (MetaWindow *window);
 gboolean    meta_window_is_remote (MetaWindow *window);
 gboolean    meta_window_is_modal (MetaWindow *window);
 const char *meta_window_get_mutter_hints (MetaWindow *window);
+
+MetaFrameType meta_window_get_frame_type (MetaWindow *window);
+
 #endif

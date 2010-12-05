@@ -233,9 +233,8 @@ reload_keycodes (MetaDisplay *display)
 {
   meta_topic (META_DEBUG_KEYBINDINGS,
               "Reloading keycodes for binding tables\n");
-  
-  if (display->overlay_key_combo.keysym 
-      && display->overlay_key_combo.keycode == 0)
+
+  if (display->overlay_key_combo.keysym != 0)
     {
       display->overlay_key_combo.keycode = XKeysymToKeycode (
           display->xdisplay, display->overlay_key_combo.keysym);
@@ -248,9 +247,11 @@ reload_keycodes (MetaDisplay *display)
       i = 0;
       while (i < display->n_key_bindings)
         {
-          if (display->key_bindings[i].keycode == 0)
+          if (display->key_bindings[i].keysym != 0)
+            {
               display->key_bindings[i].keycode = XKeysymToKeycode (
                       display->xdisplay, display->key_bindings[i].keysym);
+            }
           
           ++i;
         }
@@ -470,7 +471,7 @@ regrab_key_bindings (MetaDisplay *display)
       
       tmp = tmp->next;
     }
-  meta_error_trap_pop (display, FALSE);
+  meta_error_trap_pop (display);
 
   g_slist_free (windows);
 }
@@ -502,21 +503,21 @@ display_get_keybinding (MetaDisplay  *display,
 /**
  * meta_display_get_keybinding_action:
  * @display: A #MetaDisplay
- * @keysym: Key symbol
  * @keycode: Raw keycode
  * @mask: Event mask
  *
- * Returns: The action that should be taken for the given key, or %META_KEYBINDING_ACTION_NONE.
- *
+ * Returns: The action that should be taken for the given key, or
+ * %META_KEYBINDING_ACTION_NONE.
  */
 MetaKeyBindingAction
 meta_display_get_keybinding_action (MetaDisplay  *display,
-                                    unsigned int  keysym,
                                     unsigned int  keycode,
                                     unsigned long mask)
 {
   MetaKeyBinding *binding;
+  KeySym keysym;
 
+  keysym = XKeycodeToKeysym (display->xdisplay, keycode, 0);
   mask = mask & 0xff & ~display->ignored_modifier_mask;
   binding = display_get_keybinding (display, keysym, keycode, mask);
 
@@ -530,26 +531,51 @@ void
 meta_display_process_mapping_event (MetaDisplay *display,
                                     XEvent      *event)
 { 
+  gboolean keymap_changed = FALSE;
+  gboolean modmap_changed = FALSE;
+
+#ifdef HAVE_XKB
+  if (event->type == display->xkb_base_event_type)
+    {
+      meta_topic (META_DEBUG_KEYBINDINGS,
+                  "XKB mapping changed, will redo keybindings\n");
+
+      keymap_changed = TRUE;
+      modmap_changed = TRUE;
+    }
+  else
+#endif
   if (event->xmapping.request == MappingModifier)
     {
       meta_topic (META_DEBUG_KEYBINDINGS,
                   "Received MappingModifier event, will reload modmap and redo keybindings\n");
 
-      reload_modmap (display);
-
-      reload_modifiers (display);
-      
-      regrab_key_bindings (display);
+      modmap_changed = TRUE;
     }
   else if (event->xmapping.request == MappingKeyboard)
     {
       meta_topic (META_DEBUG_KEYBINDINGS,
                   "Received MappingKeyboard event, will reload keycodes and redo keybindings\n");
 
-      reload_keymap (display);
+      keymap_changed = TRUE;
+    }
+
+  /* Now to do the work itself */
+
+  if (keymap_changed || modmap_changed)
+    {
+      if (keymap_changed)
+        reload_keymap (display);
+
+      /* Deciphering the modmap depends on the loaded keysyms to find out
+       * what modifiers is Super and so forth, so we need to reload it
+       * even when only the keymap changes */
       reload_modmap (display);
-      
-      reload_keycodes (display);
+
+      if (keymap_changed)
+        reload_keycodes (display);
+
+      reload_modifiers (display);
 
       regrab_key_bindings (display);
     }
@@ -617,6 +643,14 @@ meta_display_init_keys (MetaDisplay *display)
   /* Keys are actually grabbed in meta_screen_grab_keys() */
   
   meta_prefs_add_listener (bindings_changed_callback, display);
+
+#ifdef HAVE_XKB
+  /* meta_display_init_keys() should have already called XkbQueryExtension() */
+  if (display->xkb_base_event_type != -1)
+    XkbSelectEvents (display->xdisplay, XkbUseCoreKbd,
+                     XkbNewKeyboardNotifyMask | XkbMapNotifyMask,
+                     XkbNewKeyboardNotifyMask | XkbMapNotifyMask);
+#endif
 }
 
 void
@@ -700,7 +734,7 @@ meta_change_keygrab (MetaDisplay *display,
         {
           int result;
           
-          result = meta_error_trap_pop_with_return (display, FALSE);
+          result = meta_error_trap_pop_with_return (display);
           
           if (grab && result != Success)
             {      
@@ -716,7 +750,7 @@ meta_change_keygrab (MetaDisplay *display,
       ++ignored_mask;
     }
 
-  meta_error_trap_pop (display, FALSE);
+  meta_error_trap_pop (display);
 }
 
 static void
@@ -758,7 +792,7 @@ grab_keys (MetaKeyBinding *bindings,
       ++i;
     }
 
-  meta_error_trap_pop (display, FALSE);
+  meta_error_trap_pop (display);
 }
 
 static void
@@ -777,14 +811,14 @@ ungrab_all_keys (MetaDisplay *display,
     {
       int result;
       
-      result = meta_error_trap_pop_with_return (display, FALSE);
+      result = meta_error_trap_pop_with_return (display);
       
       if (result != Success)    
         meta_topic (META_DEBUG_KEYBINDINGS,
                     "Ungrabbing all keys on 0x%lx failed\n", xwindow);
     }
   else
-    meta_error_trap_pop (display, FALSE);
+    meta_error_trap_pop (display);
 }
 
 void
@@ -916,7 +950,7 @@ grab_keyboard (MetaDisplay *display,
   
   if (grab_status != GrabSuccess)
     {
-      meta_error_trap_pop_with_return (display, TRUE);
+      meta_error_trap_pop_with_return (display);
       meta_topic (META_DEBUG_KEYBINDINGS,
                   "XGrabKeyboard() returned failure status %s time %u\n",
                   grab_status_to_string (grab_status),
@@ -925,7 +959,7 @@ grab_keyboard (MetaDisplay *display,
     }
   else
     {
-      result = meta_error_trap_pop_with_return (display, TRUE);
+      result = meta_error_trap_pop_with_return (display);
       if (result != Success)
         {
           meta_topic (META_DEBUG_KEYBINDINGS,
@@ -948,7 +982,7 @@ ungrab_keyboard (MetaDisplay *display, guint32 timestamp)
               "Ungrabbing keyboard with timestamp %u\n",
               timestamp);
   XUngrabKeyboard (display->xdisplay, timestamp);
-  meta_error_trap_pop (display, FALSE);
+  meta_error_trap_pop (display);
 }
 
 gboolean
@@ -1373,8 +1407,7 @@ meta_display_process_key_event (MetaDisplay *display,
     return FALSE; /* event window is destroyed */
   
   /* ignore key events on popup menus and such. */
-  if (window == NULL &&
-      meta_ui_window_is_widget (screen->ui, event->xany.window))
+  if (meta_ui_window_is_widget (screen->ui, event->xany.window))
     return FALSE;
   
   /* window may be NULL */
@@ -2109,6 +2142,16 @@ process_tab_grab (MetaDisplay *display,
               return TRUE;
             }
           break;
+        case META_KEYBINDING_ACTION_NONE:
+          {
+            /*
+             * If this is simply user pressing the Shift key, we do not want
+             * to cancel the grab.
+             */
+            if (is_modifier (display, event->xkey.keycode))
+              return TRUE;
+          }
+
         default:
           break;
         }
@@ -2768,7 +2811,6 @@ process_workspace_switch_grab (MetaDisplay *display,
       MetaKeyBindingAction action;
 
       action = meta_display_get_keybinding_action (display,
-                                                   keysym,
                                                    event->xkey.keycode,
                                                    display->grab_mask);
 
@@ -2890,7 +2932,7 @@ handle_panel (MetaDisplay    *display,
 	      StructureNotifyMask,
 	      (XEvent*) &ev);
 
-  meta_error_trap_pop (display, FALSE);
+  meta_error_trap_pop (display);
 }
 
 static void
@@ -3537,6 +3579,10 @@ meta_keybindings_set_custom_handler (const gchar        *name,
   return TRUE;
 }
 
+/**
+ * meta_keybindings_switch_window: (skip)
+ *
+ */
 void
 meta_keybindings_switch_window (MetaDisplay    *display,
                                 MetaScreen     *screen,

@@ -75,7 +75,7 @@
 
 #ifdef HAVE_INTROSPECTION
 #include <girepository.h>
-#include "compositor/mutter-plugin-manager.h"
+#include "compositor/meta-plugin-manager.h"
 #endif
 
 /**
@@ -401,7 +401,7 @@ static GSourceFuncs event_funcs = {
 static void
 meta_clutter_init (GOptionContext *ctx, int *argc, char ***argv)
 {
-  clutter_x11_set_display (gdk_display);
+  clutter_x11_set_display (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()));
   clutter_x11_disable_event_retrieval ();
   
   if (CLUTTER_INIT_SUCCESS == clutter_init (argc, argv))
@@ -586,8 +586,8 @@ main (int argc, char **argv)
            * is initialized at this point, and we don't plan to run any real
            * plugin code.
            */
-          MutterPluginManager *mgr = mutter_plugin_manager_get_default ();
-          if (!mutter_plugin_manager_load (mgr))
+          MetaPluginManager *mgr = meta_plugin_manager_get_default ();
+          if (!meta_plugin_manager_load (mgr))
             g_critical ("failed to load plugins");
         }
       if (!g_irepository_dump (meta_args.introspect, &error))
@@ -622,9 +622,6 @@ main (int argc, char **argv)
   meta_clutter_init (ctx, &argc, &argv);
 
   g_option_context_free (ctx);
-
-  /* must be after UI init so we can override GDK handlers */
-  meta_errors_init ();
 
   /* Load prefs */
   meta_prefs_init ();

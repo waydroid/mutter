@@ -23,6 +23,7 @@
 
 #include <string.h>
 
+#include "frame-private.h"
 #include "screen-private.h"
 #include "stack-tracker.h"
 #include "util.h"
@@ -53,8 +54,8 @@
  *
  * When we receive a new event: a) we compare the serial in the event to
  * the serial of the queued requests and remove any that are now
- * no longer pending b) drop the predicted stacking order to recompute
- * it at the next opportunity.
+ * no longer pending b) if necessary, drop the predicted stacking
+ * order to recompute it at the next opportunity.
  *
  * Possible optimizations:
  *  Keep the stacks as an array + reverse-mapping hash table to avoid
@@ -504,6 +505,8 @@ static void
 stack_tracker_event_received (MetaStackTracker *tracker,
 			      MetaStackOp      *op)
 {
+  gboolean need_sync = FALSE;
+
   meta_stack_op_dump (op, "Stack op event received: ", "\n");
 
   if (op->any.serial < tracker->server_serial)
@@ -511,7 +514,8 @@ stack_tracker_event_received (MetaStackTracker *tracker,
 
   tracker->server_serial = op->any.serial;
 
-  meta_stack_op_apply (op, tracker->server_stack);
+  if (meta_stack_op_apply (op, tracker->server_stack))
+    need_sync = TRUE;
 
   while (tracker->queued_requests->head)
     {
@@ -521,17 +525,21 @@ stack_tracker_event_received (MetaStackTracker *tracker,
 
       g_queue_pop_head (tracker->queued_requests);
       meta_stack_op_free (queued_op);
+      need_sync = TRUE;
     }
 
-  if (tracker->predicted_stack)
+  if (need_sync)
     {
-      g_array_free (tracker->predicted_stack, TRUE);
-      tracker->predicted_stack = NULL;
+      if (tracker->predicted_stack)
+        {
+          g_array_free (tracker->predicted_stack, TRUE);
+          tracker->predicted_stack = NULL;
+        }
+
+      meta_stack_tracker_queue_sync_stack (tracker);
     }
 
   meta_stack_tracker_dump (tracker);
-
-  meta_stack_tracker_queue_sync_stack (tracker);
 }
 
 void
@@ -682,7 +690,15 @@ meta_stack_tracker_sync_stack (MetaStackTracker *tracker)
 
       meta_window = meta_display_lookup_x_window (tracker->screen->display,
                                                   windows[i]);
-      if (meta_window)
+      /* When mapping back from xwindow to MetaWindow we have to be a bit careful;
+       * children of the root could include unmapped windows created by toolkits
+       * for internal purposes, including ones that we have registered in our
+       * XID => window table. (Wine uses a toplevel for _NET_WM_USER_TIME_WINDOW;
+       * see window-prop.c:reload_net_wm_user_time_window() for registration.)
+       */
+      if (meta_window &&
+          (windows[i] == meta_window->xwindow ||
+           (meta_window->frame && windows[i] == meta_window->frame->xwindow)))
         meta_windows = g_list_prepend (meta_windows, meta_window);
     }
 

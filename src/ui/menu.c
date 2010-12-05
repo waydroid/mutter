@@ -30,7 +30,6 @@
 #include "main.h"
 #include "util.h"
 #include "core.h"
-#include "themewidget.h"
 #include "metaaccellabel.h"
 #include "ui.h"
 
@@ -139,7 +138,8 @@ menu_closed (GtkMenu *widget,
   menu = data;
 
   meta_frames_notify_menu_hide (menu->frames);
-  (* menu->func) (menu, gdk_display,
+  (* menu->func) (menu,
+                  GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
                   menu->client_xwindow,
                   gtk_get_current_event_time (),
                   0, 0,
@@ -158,7 +158,8 @@ activate_cb (GtkWidget *menuitem, gpointer data)
   md = data;
 
   meta_frames_notify_menu_hide (md->menu->frames);
-  (* md->menu->func) (md->menu, gdk_display,
+  (* md->menu->func) (md->menu,
+                      GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
                       md->menu->client_xwindow,
                       gtk_get_current_event_time (),
                       md->op,
@@ -402,7 +403,7 @@ meta_window_menu_new   (MetaFrames         *frames,
                   window = gtk_widget_get_window (GTK_WIDGET (frames));
                   display = gdk_x11_drawable_get_xdisplay (window);
 
-                  screen = gdk_drawable_get_screen (window);
+                  screen = gdk_window_get_screen (window);
                   xroot = GDK_DRAWABLE_XID (gdk_screen_get_root_window (screen));
 
                   submenu = gtk_menu_new ();
@@ -445,7 +446,7 @@ meta_window_menu_new   (MetaFrames         *frames,
                           "workspace",
                           GINT_TO_POINTER (j));
 
-                      g_signal_connect_data (GTK_OBJECT (submi),
+                      g_signal_connect_data (G_OBJECT (submi),
                           "activate",
                           G_CALLBACK (activate_cb),
                           md,
@@ -472,7 +473,7 @@ meta_window_menu_new   (MetaFrames         *frames,
               md->menu = menu;
               md->op = menuitem.op;
               
-              g_signal_connect_data (GTK_OBJECT (mi),
+              g_signal_connect_data (G_OBJECT (mi),
                                      "activate",
                                      G_CALLBACK (activate_cb),
                                      md,

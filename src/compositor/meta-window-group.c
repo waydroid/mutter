@@ -5,23 +5,25 @@
 #define _ISOC99_SOURCE /* for roundf */
 #include <math.h>
 
-#include "mutter-window-private.h"
-#include "mutter-window-group.h"
-#include "region.h"
+#include <gdk/gdk.h> /* for gdk_rectangle_intersect() */
 
-struct _MutterWindowGroupClass
+#include "meta-window-actor-private.h"
+#include "meta-window-group.h"
+#include "meta-background-actor.h"
+
+struct _MetaWindowGroupClass
 {
   ClutterGroupClass parent_class;
 };
 
-struct _MutterWindowGroup
+struct _MetaWindowGroup
 {
   ClutterGroup parent;
 
   MetaScreen *screen;
 };
 
-G_DEFINE_TYPE (MutterWindowGroup, mutter_window_group, CLUTTER_TYPE_GROUP);
+G_DEFINE_TYPE (MetaWindowGroup, meta_window_group, CLUTTER_TYPE_GROUP);
 
 /* We want to find out if the window is "close enough" to
  * 1:1 transform. We do that by converting the transformed coordinates
@@ -99,11 +101,13 @@ actor_is_untransformed (ClutterActor *actor,
 }
 
 static void
-mutter_window_group_paint (ClutterActor *actor)
+meta_window_group_paint (ClutterActor *actor)
 {
-  MutterWindowGroup *window_group = MUTTER_WINDOW_GROUP (actor);
-  MetaRegion *visible_region;
-  GdkRectangle screen_rect = { 0 };
+  MetaWindowGroup *window_group = META_WINDOW_GROUP (actor);
+  cairo_region_t *visible_region;
+  GLboolean scissor_test;
+  cairo_rectangle_int_t screen_rect = { 0 };
+  cairo_rectangle_int_t scissor_rect;
   GList *children, *l;
 
   /* We walk the list from top to bottom (opposite of painting order),
@@ -119,77 +123,113 @@ mutter_window_group_paint (ClutterActor *actor)
    * optimization, however.)
    */
   meta_screen_get_size (window_group->screen, &screen_rect.width, &screen_rect.height);
-  visible_region = meta_region_new_from_rectangle (&screen_rect);
+
+  /* When doing a partial stage paint, Clutter will set the GL scissor
+   * box to the clip rectangle for the partial repaint. We combine the screen
+   * rectangle with the scissor box to get the region we need to
+   * paint. (Strangely, the scissor box sometimes seems to be bigger
+   * than the stage ... Clutter should probably be clampimg)
+   */
+  glGetBooleanv (GL_SCISSOR_TEST, &scissor_test);
+
+  if (scissor_test)
+    {
+      GLint scissor_box[4];
+      glGetIntegerv (GL_SCISSOR_BOX, scissor_box);
+
+      scissor_rect.x = scissor_box[0];
+      scissor_rect.y = screen_rect.height - (scissor_box[1] + scissor_box[3]);
+      scissor_rect.width = scissor_box[2];
+      scissor_rect.height = scissor_box[3];
+
+      gdk_rectangle_intersect (&scissor_rect, &screen_rect, &scissor_rect);
+    }
+  else
+    {
+      scissor_rect = screen_rect;
+    }
+
+  visible_region = cairo_region_create_rectangle (&scissor_rect);
 
   for (l = children; l; l = l->next)
     {
-      MutterWindow *cw;
-      gboolean x, y;
-
-      if (!MUTTER_IS_WINDOW (l->data) || !CLUTTER_ACTOR_IS_VISIBLE (l->data))
+      if (!CLUTTER_ACTOR_IS_VISIBLE (l->data))
         continue;
 
-      cw = l->data;
-
-      if (!actor_is_untransformed (CLUTTER_ACTOR (cw), &x, &y))
-        continue;
-
-      /* Temporarily move to the coordinate system of the actor */
-      meta_region_translate (visible_region, - x, - y);
-
-      mutter_window_set_visible_region (cw, visible_region);
-
-      if (clutter_actor_get_paint_opacity (CLUTTER_ACTOR (cw)) == 0xff)
+      if (META_IS_WINDOW_ACTOR (l->data))
         {
-          MetaRegion *obscured_region = mutter_window_get_obscured_region (cw);
-          if (obscured_region)
-            meta_region_subtract (visible_region, obscured_region);
-        }
+          MetaWindowActor *window_actor = l->data;
+          gboolean x, y;
 
-      mutter_window_set_visible_region_beneath (cw, visible_region);
-      meta_region_translate (visible_region, x, y);
+          if (!actor_is_untransformed (CLUTTER_ACTOR (window_actor), &x, &y))
+            continue;
+
+          /* Temporarily move to the coordinate system of the actor */
+          cairo_region_translate (visible_region, - x, - y);
+
+          meta_window_actor_set_visible_region (window_actor, visible_region);
+
+          if (clutter_actor_get_paint_opacity (CLUTTER_ACTOR (window_actor)) == 0xff)
+            {
+              cairo_region_t *obscured_region = meta_window_actor_get_obscured_region (window_actor);
+              if (obscured_region)
+                cairo_region_subtract (visible_region, obscured_region);
+            }
+
+          meta_window_actor_set_visible_region_beneath (window_actor, visible_region);
+          cairo_region_translate (visible_region, x, y);
+        }
+      else if (META_IS_BACKGROUND_ACTOR (l->data))
+        {
+          MetaBackgroundActor *background_actor = l->data;
+          meta_background_actor_set_visible_region (background_actor, visible_region);
+        }
     }
 
-  meta_region_destroy (visible_region);
+  cairo_region_destroy (visible_region);
 
-  CLUTTER_ACTOR_CLASS (mutter_window_group_parent_class)->paint (actor);
+  CLUTTER_ACTOR_CLASS (meta_window_group_parent_class)->paint (actor);
 
   /* Now that we are done painting, unset the visible regions (they will
    * mess up painting clones of our actors)
    */
   for (l = children; l; l = l->next)
     {
-      MutterWindow *cw;
-
-      if (!MUTTER_IS_WINDOW (l->data))
-        continue;
-
-      cw = l->data;
-      mutter_window_reset_visible_regions (cw);
+      if (META_IS_WINDOW_ACTOR (l->data))
+        {
+          MetaWindowActor *window_actor = l->data;
+          window_actor = l->data;
+          meta_window_actor_reset_visible_regions (window_actor);
+        }
+      else if (META_IS_BACKGROUND_ACTOR (l->data))
+        {
+          MetaBackgroundActor *background_actor = l->data;
+          meta_background_actor_set_visible_region (background_actor, NULL);
+        }
     }
 
   g_list_free (children);
 }
 
 static void
-mutter_window_group_class_init (MutterWindowGroupClass *klass)
+meta_window_group_class_init (MetaWindowGroupClass *klass)
 {
   ClutterActorClass *actor_class = CLUTTER_ACTOR_CLASS (klass);
 
-  actor_class->paint = mutter_window_group_paint;
+  actor_class->paint = meta_window_group_paint;
 }
 
 static void
-mutter_window_group_init (MutterWindowGroup *window_group)
+meta_window_group_init (MetaWindowGroup *window_group)
 {
 }
 
 ClutterActor *
-mutter_window_group_new (MetaScreen *screen)
+meta_window_group_new (MetaScreen *screen)
 {
-  MutterWindowGroup *window_group;
+  MetaWindowGroup *window_group;
 
-  window_group = g_object_new (MUTTER_TYPE_WINDOW_GROUP, NULL);
+  window_group = g_object_new (META_TYPE_WINDOW_GROUP, NULL);
 
   window_group->screen = screen;
 

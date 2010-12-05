@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include "window-private.h"
+#include "boxes-private.h"
 #include "edge-resistance.h"
 #include "util.h"
 #include "frame-private.h"
@@ -483,11 +484,11 @@ meta_window_new (MetaDisplay *display,
 
   if (XGetWindowAttributes (display->xdisplay,xwindow, &attrs))
    {
-      if(meta_error_trap_pop_with_return (display, TRUE) != Success)
+      if(meta_error_trap_pop_with_return (display) != Success)
        {
           meta_verbose ("Failed to get attributes for window 0x%lx\n",
                         xwindow);
-          meta_error_trap_pop (display, TRUE);
+          meta_error_trap_pop (display);
           meta_display_ungrab (display);
           return NULL;
        }
@@ -498,16 +499,16 @@ meta_window_new (MetaDisplay *display,
    }
   else
    {
-         meta_error_trap_pop_with_return (display, TRUE);
+         meta_error_trap_pop_with_return (display);
          meta_verbose ("Failed to get attributes for window 0x%lx\n",
                         xwindow);
-         meta_error_trap_pop (display, TRUE);
+         meta_error_trap_pop (display);
          meta_display_ungrab (display);
          return NULL;
    }
 
 
-  meta_error_trap_pop (display, FALSE);
+  meta_error_trap_pop (display);
   meta_display_ungrab (display);
 
   return window;
@@ -606,7 +607,7 @@ meta_window_new_with_attrs (MetaDisplay       *display,
             (state == IconicState || state == NormalState)))
         {
           meta_verbose ("Deciding not to manage unmapped or unviewable window 0x%lx\n", xwindow);
-          meta_error_trap_pop (display, TRUE);
+          meta_error_trap_pop (display);
           meta_display_ungrab (display);
           return NULL;
         }
@@ -628,7 +629,7 @@ meta_window_new_with_attrs (MetaDisplay       *display,
    */
   meta_error_trap_push_with_return (display);
   XAddToSaveSet (display->xdisplay, xwindow);
-  meta_error_trap_pop_with_return (display, FALSE);
+  meta_error_trap_pop_with_return (display);
 
   event_mask =
     PropertyChangeMask | EnterWindowMask | LeaveWindowMask |
@@ -636,7 +637,11 @@ meta_window_new_with_attrs (MetaDisplay       *display,
   if (attrs->override_redirect)
     event_mask |= StructureNotifyMask;
 
-  XSelectInput (display->xdisplay, xwindow, event_mask);
+  /* If the window is from this client (a menu, say) we need to augment
+   * the event mask, not replace it. For windows from other clients,
+   * attrs->your_event_mask will be empty at this point.
+   */
+  XSelectInput (display->xdisplay, xwindow, attrs->your_event_mask | event_mask);
 
   has_shape = FALSE;
 #ifdef HAVE_SHAPE
@@ -680,11 +685,11 @@ meta_window_new_with_attrs (MetaDisplay       *display,
                                &set_attrs);
     }
 
-  if (meta_error_trap_pop_with_return (display, FALSE) != Success)
+  if (meta_error_trap_pop_with_return (display) != Success)
     {
       meta_verbose ("Window 0x%lx disappeared just as we tried to manage it\n",
                     xwindow);
-      meta_error_trap_pop (display, FALSE);
+      meta_error_trap_pop (display);
       meta_display_ungrab (display);
       return NULL;
     }
@@ -768,6 +773,7 @@ meta_window_new_with_attrs (MetaDisplay       *display,
   window->require_on_single_monitor = TRUE;
   window->require_titlebar_visible = TRUE;
   window->on_all_workspaces = FALSE;
+  window->tile_mode = META_TILE_NONE;
   window->shaded = FALSE;
   window->initially_iconic = FALSE;
   window->minimized = FALSE;
@@ -1156,7 +1162,7 @@ meta_window_new_with_attrs (MetaDisplay       *display,
       !window->initially_iconic)
     unminimize_window_and_all_transient_parents (window);
 
-  meta_error_trap_pop (display, FALSE); /* pop the XSync()-reducing trap */
+  meta_error_trap_pop (display); /* pop the XSync()-reducing trap */
   meta_display_ungrab (display);
 
   window->constructing = FALSE;
@@ -1476,7 +1482,7 @@ meta_window_unmanage (MetaWindow  *window,
                        window->xwindow,
                        window->display->atom__NET_WM_FULLSCREEN_MONITORS);
       set_wm_state (window, WithdrawnState);
-      meta_error_trap_pop (window->display, FALSE);
+      meta_error_trap_pop (window->display);
     }
   else
     {
@@ -1487,7 +1493,7 @@ meta_window_unmanage (MetaWindow  *window,
         {
           meta_error_trap_push (window->display);
           set_wm_state (window, NormalState);
-          meta_error_trap_pop (window->display, FALSE);
+          meta_error_trap_pop (window->display);
         }
 
       /* And we need to be sure the window is mapped so other WMs
@@ -1496,7 +1502,7 @@ meta_window_unmanage (MetaWindow  *window,
       meta_error_trap_push (window->display);
       XMapWindow (window->display->xdisplay,
                   window->xwindow);
-      meta_error_trap_pop (window->display, FALSE);
+      meta_error_trap_pop (window->display);
     }
 
   meta_window_ungrab_keys (window);
@@ -1518,19 +1524,24 @@ meta_window_unmanage (MetaWindow  *window,
   XRemoveFromSaveSet (window->display->xdisplay,
                       window->xwindow);
 
-  /* Don't get events on not-managed windows */
-  XSelectInput (window->display->xdisplay,
-                window->xwindow,
-                NoEventMask);
+  /* Even though the window is now unmanaged, we can't unselect events. This
+   * window might be a window from this process, like a GdkMenu, in
+   * which case it will have pointer events and so forth selected
+   * for it by GDK. There's no way to disentangle those events from the events
+   * we've selected. Even for a window from a different X client,
+   * GDK could also have selected events for it for IPC purposes, so we
+   * can't unselect in that case either.
+   *
+   * Similarly, we can't unselected for events on window->user_time_window.
+   * It might be our own GDK focus window, or it might be a window that a
+   * different client is using for multiple different things:
+   * _NET_WM_USER_TIME_WINDOW and IPC, perhaps.
+   */
 
-  /* Stop getting events for the window's _NET_WM_USER_TIME_WINDOW too */
   if (window->user_time_window != None)
     {
       meta_display_unregister_x_window (window->display,
                                         window->user_time_window);
-      XSelectInput (window->display->xdisplay,
-                    window->user_time_window,
-                    NoEventMask);
       window->user_time_window = None;
     }
 
@@ -1539,7 +1550,7 @@ meta_window_unmanage (MetaWindow  *window,
     XShapeSelectInput (window->display->xdisplay, window->xwindow, NoEventMask);
 #endif
 
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
 
   g_signal_emit (window, window_signals[UNMANAGED], 0);
 
@@ -1566,7 +1577,7 @@ set_wm_state (MetaWindow *window,
                    window->display->atom_WM_STATE,
                    window->display->atom_WM_STATE,
                    32, PropModeReplace, (guchar*) data, 2);
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
 }
 
 static void
@@ -1644,7 +1655,7 @@ set_net_wm_state (MetaWindow *window)
                    window->display->atom__NET_WM_STATE,
                    XA_ATOM,
                    32, PropModeReplace, (guchar*) data, i);
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
 
   if (window->fullscreen)
     {
@@ -1660,7 +1671,7 @@ set_net_wm_state (MetaWindow *window)
                        window->display->atom__NET_WM_FULLSCREEN_MONITORS,
                        XA_CARDINAL, 32, PropModeReplace,
                        (guchar*) data, 4);
-      meta_error_trap_pop (window->display, FALSE);
+      meta_error_trap_pop (window->display);
     }
 }
 
@@ -2403,7 +2414,7 @@ map_client_window (MetaWindow *window)
       window->mapped = TRUE;
       meta_error_trap_push (window->display);
       XMapWindow (window->display->xdisplay, window->xwindow);
-      meta_error_trap_pop (window->display, FALSE);
+      meta_error_trap_pop (window->display);
 
       return TRUE;
     }
@@ -2427,7 +2438,7 @@ unmap_client_window (MetaWindow *window,
       window->unmaps_pending += 1;
       meta_error_trap_push (window->display);
       XUnmapWindow (window->display->xdisplay, window->xwindow);
-      meta_error_trap_pop (window->display, FALSE);
+      meta_error_trap_pop (window->display);
 
       return TRUE;
     }
@@ -2961,7 +2972,7 @@ ensure_size_hints_satisfied (MetaRectangle    *rect,
 static void
 meta_window_save_rect (MetaWindow *window)
 {
-  if (!(META_WINDOW_MAXIMIZED (window) || window->fullscreen))
+  if (!(META_WINDOW_MAXIMIZED (window) || META_WINDOW_TILED (window) || window->fullscreen))
     {
       /* save size/pos as appropriate args for move_resize */
       if (!window->maximized_horizontally)
@@ -3003,7 +3014,7 @@ force_save_user_window_placement (MetaWindow *window)
 static void
 save_user_window_placement (MetaWindow *window)
 {
-  if (!(META_WINDOW_MAXIMIZED (window) || window->fullscreen))
+  if (!(META_WINDOW_MAXIMIZED (window) || META_WINDOW_TILED (window) || window->fullscreen))
     {
       MetaRectangle user_rect;
 
@@ -3073,6 +3084,7 @@ void
 meta_window_maximize (MetaWindow        *window,
                       MetaMaximizeFlags  directions)
 {
+  MetaRectangle *saved_rect = NULL;
   gboolean maximize_horizontally, maximize_vertically;
 
   g_return_if_fail (!window->override_redirect);
@@ -3111,9 +3123,16 @@ meta_window_maximize (MetaWindow        *window,
 	  return;
 	}
 
+      if (window->tile_mode != META_TILE_NONE)
+        {
+          saved_rect = &window->saved_rect;
+
+          window->maximized_vertically = FALSE;
+        }
+
       meta_window_maximize_internal (window,
                                      directions,
-                                     NULL);
+                                     saved_rect);
 
       if (window->display->compositor)
         {
@@ -3137,6 +3156,97 @@ meta_window_maximize (MetaWindow        *window,
           meta_window_queue(window, META_QUEUE_MOVE_RESIZE);
         }
     }
+}
+
+/**
+ * meta_window_get_maximized:
+ *
+ * Gets the current maximization state of the window, as combination
+ * of the %META_MAXIMIZE_HORIZONTAL and %META_MAXIMIZE_VERTICAL flags;
+ *
+ * Return value: current maximization state
+ */
+MetaMaximizeFlags
+meta_window_get_maximized (MetaWindow *window)
+{
+  return ((window->maximized_horizontally ? META_MAXIMIZE_HORIZONTAL : 0) |
+          (window->maximized_vertically ? META_MAXIMIZE_VERTICAL : 0));
+}
+
+/**
+ * meta_window_is_fullscreen:
+ *
+ * Return value: %TRUE if the window is currently fullscreen
+ */
+gboolean
+meta_window_is_fullscreen (MetaWindow *window)
+{
+  return window->fullscreen;
+}
+
+static void
+meta_window_tile (MetaWindow *window)
+{
+  /* Don't do anything if no tiling is requested */
+  if (window->tile_mode == META_TILE_NONE)
+    return;
+
+  meta_window_maximize_internal (window, META_MAXIMIZE_VERTICAL, NULL);
+  meta_screen_tile_preview_update (window->screen, FALSE);
+
+  if (window->display->compositor)
+    {
+      MetaRectangle old_rect;
+      MetaRectangle new_rect;
+
+      meta_window_get_outer_rect (window, &old_rect);
+
+      meta_window_move_resize_now (window);
+
+      meta_window_get_outer_rect (window, &new_rect);
+      meta_compositor_maximize_window (window->display->compositor,
+                                       window,
+                                       &old_rect,
+                                       &new_rect);
+    }
+  else
+    {
+      /* move_resize with new tiling constraints
+       */
+      meta_window_queue (window, META_QUEUE_MOVE_RESIZE);
+    }
+}
+
+static gboolean
+meta_window_can_tile (MetaWindow *window)
+{
+  const MetaMonitorInfo *monitor;
+  MetaRectangle tile_area;
+
+  if (!META_WINDOW_ALLOWS_RESIZE (window))
+    return FALSE;
+
+  monitor = meta_screen_get_current_monitor (window->screen);
+  meta_window_get_work_area_for_monitor (window, monitor->number, &tile_area);
+
+  /* Do not allow tiling in portrait orientation */
+  if (tile_area.height > tile_area.width)
+    return FALSE;
+
+  tile_area.width /= 2;
+
+  if (window->frame)
+    {
+      MetaFrameGeometry fgeom;
+
+      meta_frame_calc_geometry (window->frame, &fgeom);
+
+      tile_area.width  -= (fgeom.left_width + fgeom.right_width);
+      tile_area.height -= (fgeom.top_height + fgeom.bottom_height);
+    }
+
+  return tile_area.width >= window->size_hints.min_width &&
+         tile_area.height >= window->size_hints.min_height;
 }
 
 static void
@@ -3171,9 +3281,11 @@ unmaximize_window_before_freeing (MetaWindow        *window)
     }
 }
 
-void
-meta_window_unmaximize (MetaWindow        *window,
-                        MetaMaximizeFlags  directions)
+static void
+meta_window_unmaximize_internal (MetaWindow        *window,
+                                 MetaMaximizeFlags  directions,
+                                 MetaRectangle     *desired_rect,
+                                 int                gravity)
 {
   gboolean unmaximize_horizontally, unmaximize_vertically;
 
@@ -3210,13 +3322,13 @@ meta_window_unmaximize (MetaWindow        *window,
       meta_window_get_client_root_coords (window, &target_rect);
       if (unmaximize_horizontally)
         {
-          target_rect.x     = window->saved_rect.x;
-          target_rect.width = window->saved_rect.width;
+          target_rect.x     = desired_rect->x;
+          target_rect.width = desired_rect->width;
         }
       if (unmaximize_vertically)
         {
-          target_rect.y      = window->saved_rect.y;
-          target_rect.height = window->saved_rect.height;
+          target_rect.y      = desired_rect->y;
+          target_rect.height = desired_rect->height;
         }
 
       /* Window's size hints may have changed while maximized, making
@@ -3224,29 +3336,19 @@ meta_window_unmaximize (MetaWindow        *window,
        */
       ensure_size_hints_satisfied (&target_rect, &window->size_hints);
 
-      /* When we unmaximize, if we're doing a mouse move also we could
-       * get the window suddenly jumping to the upper left corner of
-       * the workspace, since that's where it was when the grab op
-       * started.  So we need to update the grab state.
-       */
-      if (meta_grab_op_is_moving (window->display->grab_op) &&
-          window->display->grab_window == window)
-        {
-          window->display->grab_anchor_window_pos = target_rect;
-        }
-
       if (window->display->compositor)
         {
           MetaRectangle old_rect, new_rect;
 
 	  meta_window_get_outer_rect (window, &old_rect);
 
-          meta_window_move_resize (window,
-                                   FALSE,
-                                   target_rect.x,
-                                   target_rect.y,
-                                   target_rect.width,
-                                   target_rect.height);
+          meta_window_move_resize_internal (window,
+                                            META_IS_MOVE_ACTION | META_IS_RESIZE_ACTION,
+                                            gravity,
+                                            target_rect.x,
+                                            target_rect.y,
+                                            target_rect.width,
+                                            target_rect.height);
 
 	  meta_window_get_outer_rect (window, &new_rect);
           meta_compositor_unmaximize_window (window->display->compositor,
@@ -3256,17 +3358,31 @@ meta_window_unmaximize (MetaWindow        *window,
         }
       else
         {
-          meta_window_move_resize (window,
-                                   FALSE,
-                                   target_rect.x,
-                                   target_rect.y,
-                                   target_rect.width,
-                                   target_rect.height);
+          meta_window_move_resize_internal (window,
+                                            META_IS_MOVE_ACTION | META_IS_RESIZE_ACTION,
+                                            gravity,
+                                            target_rect.x,
+                                            target_rect.y,
+                                            target_rect.width,
+                                            target_rect.height);
         }
 
       /* Make sure user_rect is current.
        */
       force_save_user_window_placement (window);
+
+      /* When we unmaximize, if we're doing a mouse move also we could
+       * get the window suddenly jumping to the upper left corner of
+       * the workspace, since that's where it was when the grab op
+       * started.  So we need to update the grab state. We have to do
+       * it after the actual operation, as the window may have been moved
+       * by constraints.
+       */
+      if (meta_grab_op_is_moving (window->display->grab_op) &&
+          window->display->grab_window == window)
+        {
+          window->display->grab_anchor_window_pos = window->user_rect;
+        }
 
       recalc_window_features (window);
       set_net_wm_state (window);
@@ -3276,6 +3392,46 @@ meta_window_unmaximize (MetaWindow        *window,
     g_object_notify (G_OBJECT (window), "maximized-horizontally");
     g_object_notify (G_OBJECT (window), "maximized-vertically");
     g_object_thaw_notify (G_OBJECT (window));
+}
+
+void
+meta_window_unmaximize (MetaWindow        *window,
+                        MetaMaximizeFlags  directions)
+{
+  /* Restore tiling if necessary */
+  if (window->tile_mode != META_TILE_NONE)
+    {
+      window->maximized_horizontally = FALSE;
+      meta_window_tile (window);
+      return;
+    }
+
+  meta_window_unmaximize_internal (window, directions, &window->saved_rect,
+                                   NorthWestGravity);
+}
+
+/* Like meta_window_unmaximize(), but instead of unmaximizing to the
+ * saved position, we give the new desired size, and the gravity that
+ * determines the positioning relationship between the area occupied
+ * maximized and the new are. The arguments are similar to
+ * meta_window_resize_with_gravity().
+ * Unlike meta_window_unmaximize(), tiling is not restored for windows
+ * with a tile mode other than META_TILE_NONE.
+ */
+void
+meta_window_unmaximize_with_gravity (MetaWindow        *window,
+                                     MetaMaximizeFlags  directions,
+                                     int                new_width,
+                                     int                new_height,
+                                     int                gravity)
+{
+  MetaRectangle desired_rect;
+
+  meta_window_get_position (window, &desired_rect.x, &desired_rect.y);
+  desired_rect.width = new_width;
+  desired_rect.height = new_height;
+
+  meta_window_unmaximize_internal (window, directions, &desired_rect, gravity);
 }
 
 void
@@ -3770,6 +3926,19 @@ send_sync_request (MetaWindow *window)
 }
 #endif
 
+static gboolean
+move_attached_dialog (MetaWindow *window,
+                      void       *data)
+{
+  MetaWindow *parent = meta_window_get_transient_for (window);
+
+  if (window->type == META_WINDOW_MODAL_DIALOG && parent && parent != window)
+    /* It ignores x,y for such a dialog  */
+    meta_window_move (window, FALSE, 0, 0);
+
+  return FALSE;
+}
+
 static void
 meta_window_move_resize_internal (MetaWindow          *window,
                                   MetaMoveResizeFlags  flags,
@@ -4180,7 +4349,7 @@ meta_window_move_resize_internal (MetaWindow          *window,
                         mask,
                         &values);
 
-      meta_error_trap_pop (window->display, FALSE);
+      meta_error_trap_pop (window->display);
     }
 
   if (!configure_frame_first && window->frame)
@@ -4226,6 +4395,9 @@ meta_window_move_resize_internal (MetaWindow          *window,
    *      server-side size/pos of window->xwindow and frame->xwindow
    *   b) all constraints are obeyed by window->rect and frame->rect
    */
+
+  if (meta_prefs_get_attach_modal_dialogs ())
+    meta_window_foreach_transient (window, move_attached_dialog, NULL);
 }
 
 void
@@ -4362,10 +4534,17 @@ idle_move_resize (gpointer data)
   return FALSE;
 }
 
-/* This is used to notify us of an unrequested configuration
- * (only applicable to override redirect windows) */
+/**
+ * meta_window_configure_notify: (skip)
+ * @window: a #MetaWindow
+ * @event: a #XConfigureEvent
+ *
+ * This is used to notify us of an unrequested configuration
+ * (only applicable to override redirect windows)
+ */
 void
-meta_window_configure_notify (MetaWindow *window, XConfigureEvent *event)
+meta_window_configure_notify (MetaWindow      *window,
+                              XConfigureEvent *event)
 {
   g_assert (window->override_redirect);
   g_assert (window->frame == NULL);
@@ -4873,7 +5052,7 @@ update_net_frame_extents (MetaWindow *window)
                    window->display->atom__NET_FRAME_EXTENTS,
                    XA_CARDINAL,
                    32, PropModeReplace, (guchar*) data, 4);
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
 }
 
 void
@@ -4900,7 +5079,7 @@ meta_window_set_current_workspace_hint (MetaWindow *window)
                    window->display->atom__NET_WM_DESKTOP,
                    XA_CARDINAL,
                    32, PropModeReplace, (guchar*) data, 1);
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
 }
 
 static gboolean
@@ -4918,6 +5097,15 @@ find_root_ancestor (MetaWindow *window,
   return TRUE;
 }
 
+/**
+ * meta_window_find_root_ancestor:
+ * @window: a #MetaWindow
+ *
+ * Follow the chain of parents of @window, skipping transient windows,
+ * and return the "root" window which has no non-transient parent.
+ *
+ * Returns: (transfer none): The root ancestor window
+ */
 MetaWindow *
 meta_window_find_root_ancestor (MetaWindow *window)
 {
@@ -5016,7 +5204,7 @@ meta_window_send_icccm_message (MetaWindow *window,
     meta_error_trap_push (window->display);
     XSendEvent (window->display->xdisplay,
                 window->xwindow, False, 0, (XEvent*) &ev);
-    meta_error_trap_pop (window->display, FALSE);
+    meta_error_trap_pop (window->display);
 }
 
 void
@@ -5421,12 +5609,12 @@ meta_window_client_message (MetaWindow *window,
 
           meta_error_trap_push_with_return (display);
           str1 = XGetAtomName (display->xdisplay, first);
-          if (meta_error_trap_pop_with_return (display, TRUE) != Success)
+          if (meta_error_trap_pop_with_return (display) != Success)
             str1 = NULL;
 
           meta_error_trap_push_with_return (display);
           str2 = XGetAtomName (display->xdisplay, second);
-          if (meta_error_trap_pop_with_return (display, TRUE) != Success)
+          if (meta_error_trap_pop_with_return (display) != Success)
             str2 = NULL;
 
           meta_verbose ("Request to change _NET_WM_STATE action %lu atom1: %s atom2: %s\n",
@@ -5714,7 +5902,7 @@ meta_window_client_message (MetaWindow *window,
                              &query_root_x, &query_root_y,
                              &x, &y,
                              &mask);
-              meta_error_trap_pop (window->display, TRUE);
+              meta_error_trap_pop (window->display);
 
               if (mask & Button1Mask)
                 button = 1;
@@ -5812,6 +6000,22 @@ meta_window_client_message (MetaWindow *window,
     }
 
   return FALSE;
+}
+
+static void
+check_ancestor_focus_appearance (MetaWindow *window)
+{
+  MetaWindow *parent = meta_window_get_transient_for (window);
+
+  if (!meta_prefs_get_attach_modal_dialogs ())
+    return;
+
+  if (window->type != META_WINDOW_MODAL_DIALOG || !parent || parent == window)
+    return;
+  if (parent->frame)
+    meta_frame_queue_draw (parent->frame);
+
+  check_ancestor_focus_appearance (parent);
 }
 
 gboolean
@@ -5934,7 +6138,7 @@ meta_window_notify_focus (MetaWindow *window,
           meta_error_trap_push (window->display);
           XInstallColormap (window->display->xdisplay,
                             window->colormap);
-          meta_error_trap_pop (window->display, FALSE);
+          meta_error_trap_pop (window->display);
 
           /* move into FOCUSED_WINDOW layer */
           meta_window_update_layer (window);
@@ -5955,6 +6159,9 @@ meta_window_notify_focus (MetaWindow *window,
           if (meta_prefs_get_focus_mode () == META_FOCUS_MODE_CLICK ||
               !meta_prefs_get_raise_on_click())
             meta_display_ungrab_focus_window_button (window->display, window);
+
+          /* parent window become active. */
+          check_ancestor_focus_appearance (window);
 
           g_signal_emit (window, window_signals[FOCUS], 0);
           g_object_notify (G_OBJECT (window->display), "focus-window");
@@ -5985,13 +6192,16 @@ meta_window_notify_focus (MetaWindow *window,
           window->display->focus_window = NULL;
           g_object_notify (G_OBJECT (window->display), "focus-window");
           window->has_focus = FALSE;
+          /* parent window become inactive. */
+          check_ancestor_focus_appearance (window);
+
           if (window->frame)
             meta_frame_queue_draw (window->frame);
 
           meta_error_trap_push (window->display);
           XUninstallColormap (window->display->xdisplay,
                               window->colormap);
-          meta_error_trap_pop (window->display, FALSE);
+          meta_error_trap_pop (window->display);
 
           /* move out of FOCUSED_WINDOW layer */
           meta_window_update_layer (window);
@@ -6082,7 +6292,7 @@ send_configure_notify (MetaWindow *window)
   XSendEvent (window->display->xdisplay,
               window->xwindow,
               False, StructureNotifyMask, &event);
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
 }
 
 /* FIXME: @rect should be marked (out), but gjs doesn't currently support
@@ -6318,7 +6528,7 @@ meta_window_update_net_wm_type (MetaWindow *window)
         {
           meta_error_trap_push (window->display);
           str = XGetAtomName (window->display->xdisplay, window->type_atom);
-          meta_error_trap_pop (window->display, TRUE);
+          meta_error_trap_pop (window->display);
         }
 
       meta_verbose ("Window %s type atom %s\n", window->desc,
@@ -6679,7 +6889,7 @@ recalc_window_type (MetaWindow *window)
           meta_error_trap_push (window->display);
           atom_name = XGetAtomName (window->display->xdisplay,
                                     window->type_atom);
-          meta_error_trap_pop (window->display, TRUE);
+          meta_error_trap_pop (window->display);
 
           meta_warning ("Unrecognized type atom [%s] set for %s \n",
                         atom_name ? atom_name : "unknown",
@@ -6837,7 +7047,7 @@ set_allowed_actions_hint (MetaWindow *window)
                    window->display->atom__NET_WM_ALLOWED_ACTIONS,
                    XA_ATOM,
                    32, PropModeReplace, (guchar*) data, i);
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
 #undef MAX_N_ACTIONS
 }
 
@@ -6904,6 +7114,16 @@ recalc_window_features (MetaWindow *window)
   /* Semantic category overrides the MWM hints */
   if (window->type == META_WINDOW_TOOLBAR)
     window->decorated = FALSE;
+
+  if (window->type == META_WINDOW_MODAL_DIALOG && meta_prefs_get_attach_modal_dialogs ())
+    {
+      MetaWindow *parent = meta_window_get_transient_for (window);
+      if (parent)
+        {
+          window->has_resize_func = FALSE;
+          window->border_only = TRUE;
+        }
+    }
 
   if (window->type == META_WINDOW_DESKTOP ||
       window->type == META_WINDOW_DOCK ||
@@ -7564,20 +7784,56 @@ update_move (MetaWindow  *window,
   if (dx == 0 && dy == 0)
     return;
 
-  /* shake loose (unmaximize) maximized window if dragged beyond the threshold
-   * in the Y direction. You can't pull a window loose via X motion.
+  /* Originally for detaching maximized windows, but we use this
+   * for the zones at the sides of the monitor where trigger tiling
+   * because it's about the right size
    */
-
 #define DRAG_THRESHOLD_TO_SHAKE_THRESHOLD_FACTOR 6
   shake_threshold = meta_ui_get_drag_threshold (window->screen->ui) *
     DRAG_THRESHOLD_TO_SHAKE_THRESHOLD_FACTOR;
 
-  if (META_WINDOW_MAXIMIZED (window) && ABS (dy) >= shake_threshold)
+  if (meta_prefs_get_side_by_side_tiling () &&
+      meta_window_can_tile (window))
+    {
+      const MetaMonitorInfo *monitor;
+      MetaRectangle work_area;
+
+      /* For tiling we are interested in the work area of the monitor where
+       * the pointer is located.
+       * Also see comment in meta_window_get_current_tile_area()
+       */
+      monitor = meta_screen_get_current_monitor (window->screen);
+      meta_window_get_work_area_for_monitor (window,
+                                             monitor->number,
+                                             &work_area);
+
+      if (y >= monitor->rect.y &&
+          y < (monitor->rect.y + monitor->rect.height))
+        {
+          /* check if cursor is near an edge of the work area */
+          if (x >= monitor->rect.x && x < (work_area.x + shake_threshold))
+            window->tile_mode = META_TILE_LEFT;
+          else if (x >= work_area.x + work_area.width - shake_threshold &&
+                   x < (monitor->rect.x + monitor->rect.width))
+            window->tile_mode = META_TILE_RIGHT;
+          else
+            window->tile_mode = META_TILE_NONE;
+        }
+    }
+
+  /* shake loose (unmaximize) maximized or tiled window if dragged beyond
+   * the threshold in the Y direction. Tiled windows can also be pulled
+   * loose via X motion.
+   */
+
+  if ((META_WINDOW_MAXIMIZED (window) && ABS (dy) >= shake_threshold) ||
+      (META_WINDOW_TILED (window) && (MAX (ABS (dx), ABS (dy)) >= shake_threshold)))
     {
       double prop;
 
       /* Shake loose */
-      window->shaken_loose = TRUE;
+      window->shaken_loose = !META_WINDOW_TILED (window);
+      window->tile_mode = META_TILE_NONE;
 
       /* move the unmaximized window to the cursor */
       prop =
@@ -7604,10 +7860,12 @@ update_move (MetaWindow  *window,
 
       return;
     }
+
   /* remaximize window on another monitor if window has been shaken
    * loose or it is still maximized (then move straight)
    */
-  else if (window->shaken_loose || META_WINDOW_MAXIMIZED (window))
+  else if ((window->shaken_loose || META_WINDOW_MAXIMIZED (window)) &&
+           window->tile_mode == META_TILE_NONE)
     {
       const MetaMonitorInfo *wmonitor;
       MetaRectangle work_area;
@@ -7661,10 +7919,17 @@ update_move (MetaWindow  *window,
         }
     }
 
+  /* Delay showing the tile preview slightly to make it more unlikely to
+   * trigger it unwittingly, e.g. when shaking loose the window or moving
+   * it to another monitor.
+   */
+  meta_screen_tile_preview_update (window->screen,
+                                   window->tile_mode != META_TILE_NONE);
+
   meta_window_get_client_root_coords (window, &old);
 
-  /* Don't allow movement in the maximized directions */
-  if (window->maximized_horizontally)
+  /* Don't allow movement in the maximized directions or while tiled */
+  if (window->maximized_horizontally || META_WINDOW_TILED (window))
     new_x = old.x;
   if (window->maximized_vertically)
     new_y = old.y;
@@ -7680,6 +7945,113 @@ update_move (MetaWindow  *window,
                                         FALSE);
 
   meta_window_move (window, TRUE, new_x, new_y);
+}
+
+/* When resizing a maximized window by using alt-middle-drag (resizing
+ * with the grips or the menu for a maximized window is not enabled),
+ * the user can "break" out of the maximized state. This checks for
+ * that possibility. During such a break-out resize the user can also
+ * return to the previous maximization state by resizing back to near
+ * the original size.
+ */
+static MetaMaximizeFlags
+check_resize_unmaximize(MetaWindow *window,
+                        int         dx,
+                        int         dy)
+{
+  int threshold;
+  MetaMaximizeFlags new_unmaximize;
+
+#define DRAG_THRESHOLD_TO_RESIZE_THRESHOLD_FACTOR 3
+
+  threshold = meta_ui_get_drag_threshold (window->screen->ui) *
+    DRAG_THRESHOLD_TO_RESIZE_THRESHOLD_FACTOR;
+  new_unmaximize = 0;
+
+  if (window->maximized_horizontally ||
+      window->tile_mode != META_TILE_NONE ||
+      (window->display->grab_resize_unmaximize & META_MAXIMIZE_HORIZONTAL) != 0)
+    {
+      int x_amount;
+
+      /* We allow breaking out of maximization in either direction, to make
+       * the window larger than the monitor as well as smaller than the
+       * monitor. If we wanted to only allow resizing smaller than the
+       * monitor, we'd use - dx for NE/E/SE and dx for SW/W/NW.
+       */
+      switch (window->display->grab_op)
+        {
+        case META_GRAB_OP_RESIZING_NE:
+        case META_GRAB_OP_KEYBOARD_RESIZING_NE:
+        case META_GRAB_OP_RESIZING_E:
+        case META_GRAB_OP_KEYBOARD_RESIZING_E:
+        case META_GRAB_OP_RESIZING_SE:
+        case META_GRAB_OP_KEYBOARD_RESIZING_SE:
+        case META_GRAB_OP_RESIZING_SW:
+        case META_GRAB_OP_KEYBOARD_RESIZING_SW:
+        case META_GRAB_OP_RESIZING_W:
+        case META_GRAB_OP_KEYBOARD_RESIZING_W:
+        case META_GRAB_OP_RESIZING_NW:
+        case META_GRAB_OP_KEYBOARD_RESIZING_NW:
+          x_amount = dx < 0 ? - dx : dx;
+          break;
+        default:
+          x_amount = 0;
+          break;
+        }
+
+      if (x_amount > threshold)
+        new_unmaximize |= META_MAXIMIZE_HORIZONTAL;
+    }
+
+  if (window->maximized_vertically ||
+      (window->display->grab_resize_unmaximize & META_MAXIMIZE_VERTICAL) != 0)
+    {
+      int y_amount;
+
+      switch (window->display->grab_op)
+        {
+        case META_GRAB_OP_RESIZING_N:
+        case META_GRAB_OP_KEYBOARD_RESIZING_N:
+        case META_GRAB_OP_RESIZING_NE:
+        case META_GRAB_OP_KEYBOARD_RESIZING_NE:
+        case META_GRAB_OP_RESIZING_NW:
+        case META_GRAB_OP_KEYBOARD_RESIZING_NW:
+        case META_GRAB_OP_RESIZING_SE:
+        case META_GRAB_OP_KEYBOARD_RESIZING_SE:
+        case META_GRAB_OP_RESIZING_S:
+        case META_GRAB_OP_KEYBOARD_RESIZING_S:
+        case META_GRAB_OP_RESIZING_SW:
+        case META_GRAB_OP_KEYBOARD_RESIZING_SW:
+          y_amount = dy < 0 ? - dy : dy;
+          break;
+        default:
+          y_amount = 0;
+          break;
+        }
+
+      if (y_amount > threshold)
+        new_unmaximize |= META_MAXIMIZE_VERTICAL;
+    }
+
+  /* Metacity doesn't have a full user interface for only horizontally or
+   * vertically maximized, so while only unmaximizing in the direction drags
+   * has some advantages, it will also confuse the user. So, we always
+   * unmaximize both ways if possible.
+   */
+  if (new_unmaximize != 0)
+    {
+      new_unmaximize = 0;
+
+      if (window->maximized_horizontally ||
+          (window->display->grab_resize_unmaximize & META_MAXIMIZE_HORIZONTAL) != 0)
+        new_unmaximize |= META_MAXIMIZE_HORIZONTAL;
+      if (window->maximized_vertically ||
+          (window->display->grab_resize_unmaximize & META_MAXIMIZE_VERTICAL) != 0)
+        new_unmaximize |= META_MAXIMIZE_VERTICAL;
+    }
+
+  return new_unmaximize;
 }
 
 static gboolean
@@ -7706,6 +8078,7 @@ update_resize (MetaWindow *window,
   int gravity;
   MetaRectangle old;
   double remaining;
+  MetaMaximizeFlags new_unmaximize;
 
   window->display->grab_latest_motion_x = x;
   window->display->grab_latest_motion_y = y;
@@ -7766,6 +8139,8 @@ update_resize (MetaWindow *window,
           meta_window_update_keyboard_resize (window, TRUE);
         }
     }
+
+  new_unmaximize = check_resize_unmaximize (window, dx, dy);
 
   switch (window->display->grab_op)
     {
@@ -7877,11 +8252,36 @@ update_resize (MetaWindow *window,
                                           snap,
                                           FALSE);
 
-   /* We don't need to update unless the specified width and height
-    * are actually different from what we had before.
-    */
-  if (old.width != new_w || old.height != new_h)
-    meta_window_resize_with_gravity (window, TRUE, new_w, new_h, gravity);
+  if (new_unmaximize == window->display->grab_resize_unmaximize)
+    {
+      /* We don't need to update unless the specified width and height
+       * are actually different from what we had before.
+       */
+      if (old.width != new_w || old.height != new_h)
+        {
+          if ((window->display->grab_resize_unmaximize == new_unmaximize))
+            meta_window_resize_with_gravity (window, TRUE, new_w, new_h, gravity);
+        }
+    }
+  else
+    {
+      if ((new_unmaximize & ~window->display->grab_resize_unmaximize) != 0)
+        {
+          meta_window_unmaximize_with_gravity (window,
+                                               (new_unmaximize & ~window->display->grab_resize_unmaximize),
+                                               new_w, new_h, gravity);
+        }
+
+      if ((window->display->grab_resize_unmaximize & ~new_unmaximize))
+        {
+          MetaRectangle saved_rect = window->saved_rect;
+          meta_window_maximize (window,
+                                (window->display->grab_resize_unmaximize & ~new_unmaximize));
+          window->saved_rect = saved_rect;
+        }
+    }
+
+  window->display->grab_resize_unmaximize = new_unmaximize;
 
   /* Store the latest resize time, if we actually resized. */
   if (window->rect.width != old.width || window->rect.height != old.height)
@@ -8033,7 +8433,9 @@ meta_window_handle_mouse_grab_op_event (MetaWindow *window,
         {
           if (meta_grab_op_is_moving (window->display->grab_op))
             {
-              if (event->xbutton.root == window->screen->xroot)
+              if (window->tile_mode != META_TILE_NONE)
+                meta_window_tile (window);
+              else if (event->xbutton.root == window->screen->xroot)
                 update_move (window, event->xbutton.state & ShiftMask,
                              event->xbutton.x_root, event->xbutton.y_root);
             }
@@ -8047,6 +8449,17 @@ meta_window_handle_mouse_grab_op_event (MetaWindow *window,
                                TRUE);
 	      if (window->display->compositor)
 		meta_compositor_set_updates (window->display->compositor, window, TRUE);
+
+              /* If a tiled window has been dragged free with a
+               * mouse resize without snapping back to the tiled
+               * state, it will end up with an inconsistent tile
+               * mode on mouse release; cleaning the mode earlier
+               * would break the ability to snap back to the tiled
+               * state, so we wait until mouse release.
+               */
+              if (!window->maximized_vertically &&
+                  window->tile_mode != META_TILE_NONE)
+                window->tile_mode = META_TILE_NONE;
             }
         }
 
@@ -8106,7 +8519,7 @@ meta_window_set_gravity (MetaWindow *window,
                            CWWinGravity,
                            &attrs);
 
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
 }
 
 static void
@@ -8191,6 +8604,29 @@ meta_window_get_work_area_all_monitors (MetaWindow    *window,
               window->desc, area->x, area->y, area->width, area->height);
 }
 
+void
+meta_window_get_current_tile_area (MetaWindow    *window,
+                                   MetaRectangle *tile_area)
+{
+  const MetaMonitorInfo *monitor;
+
+  g_return_if_fail (window->tile_mode != META_TILE_NONE);
+
+  /* The definition of "current" of meta_window_get_work_area_current_monitor()
+   * and meta_screen_get_current_monitor() is slightly different: the former
+   * refers to the monitor which contains the largest part of the window, the
+   * latter to the one where the pointer is located.
+   */
+  monitor = meta_screen_get_current_monitor (window->screen);
+  meta_window_get_work_area_for_monitor (window, monitor->number, tile_area);
+
+  if (window->tile_mode == META_TILE_LEFT  ||
+      window->tile_mode == META_TILE_RIGHT)
+    tile_area->width /= 2;
+
+  if (window->tile_mode == META_TILE_RIGHT)
+    tile_area->x += tile_area->width;
+}
 
 gboolean
 meta_window_same_application (MetaWindow *window,
@@ -8231,6 +8667,32 @@ meta_window_refresh_resize_popup (MetaWindow *window)
   if (window->display->grab_window != window)
     return;
 
+  switch (window->display->grab_op)
+    {
+    case META_GRAB_OP_RESIZING_SE:
+    case META_GRAB_OP_RESIZING_S:
+    case META_GRAB_OP_RESIZING_SW:
+    case META_GRAB_OP_RESIZING_N:
+    case META_GRAB_OP_RESIZING_NE:
+    case META_GRAB_OP_RESIZING_NW:
+    case META_GRAB_OP_RESIZING_W:
+    case META_GRAB_OP_RESIZING_E:
+    case META_GRAB_OP_KEYBOARD_RESIZING_UNKNOWN:
+    case META_GRAB_OP_KEYBOARD_RESIZING_S:
+    case META_GRAB_OP_KEYBOARD_RESIZING_N:
+    case META_GRAB_OP_KEYBOARD_RESIZING_W:
+    case META_GRAB_OP_KEYBOARD_RESIZING_E:
+    case META_GRAB_OP_KEYBOARD_RESIZING_SE:
+    case META_GRAB_OP_KEYBOARD_RESIZING_NE:
+    case META_GRAB_OP_KEYBOARD_RESIZING_SW:
+    case META_GRAB_OP_KEYBOARD_RESIZING_NW:
+      break;
+
+    default:
+      /* Not resizing */
+      return;
+    }
+
   if (window->display->grab_resize_popup == NULL)
     {
       if (window->size_hints.width_inc > 1 ||
@@ -8261,8 +8723,8 @@ meta_window_refresh_resize_popup (MetaWindow *window)
 /**
  * meta_window_foreach_transient:
  * @window: a #MetaWindow
- * @func: (scope call): Called for each window which is a transient of @window (transitively)
- * @user_data: (closure): User data
+ * @func: (scope call) (closure user_data): Called for each window which is a transient of @window (transitively)
+ * @user_data: User data
  *
  * Call @func for every window which is either transient for @window, or is
  * a transient of a window which is in turn transient for @window.
@@ -8300,8 +8762,8 @@ meta_window_foreach_transient (MetaWindow            *window,
 /**
  * meta_window_foreach_ancestor:
  * @window: a #MetaWindow
- * @func: (scope call): Called for each window which is a transient parent of @window
- * @user_data: (closure): User data
+ * @func: (scope call) (closure user_data): Called for each window which is a transient parent of @window
+ * @user_data: User data
  *
  * If @window is transient, call @func with the window for which it's transient,
  * repeatedly until either we find a non-transient window, or @func returns %FALSE.
@@ -8501,7 +8963,7 @@ warp_grab_pointer (MetaWindow          *window,
                 0, 0, 0, 0,
                 *x, *y);
 
-  if (meta_error_trap_pop_with_return (display, FALSE) != Success)
+  if (meta_error_trap_pop_with_return (display) != Success)
     {
       meta_verbose ("Failed to warp pointer for window %s\n",
                     window->desc);
@@ -8819,10 +9281,49 @@ meta_window_unset_demands_attention (MetaWindow *window)
     }
 }
 
+/**
+ * meta_window_get_frame: (skip)
+ *
+ */
 MetaFrame *
 meta_window_get_frame (MetaWindow *window)
 {
   return window->frame;
+}
+
+static gboolean
+transient_has_focus (MetaWindow *window,
+                     void       *data)
+{
+  if (window->type == META_WINDOW_MODAL_DIALOG && meta_window_appears_focused (window))
+    *((gboolean *)data) = TRUE;
+
+  return FALSE;
+}
+
+/**
+ * meta_window_appears_focused:
+ * @window: a #MetaWindow
+ *
+ * Determines if the window should be drawn with a focused appearance. This is
+ * true for focused windows but also true for windows with a focused modal
+ * dialog attached.
+ *
+ * Return value: %TRUE if the window should be drawn with a focused frame
+ */
+gboolean
+meta_window_appears_focused (MetaWindow *window)
+{
+  /* FIXME: meta_window_foreach_transient() iterates over all windows; we
+   *  should eat the complexity to cache a bit for this.
+   */
+  if (!window->has_focus && meta_prefs_get_attach_modal_dialogs ())
+    {
+      gboolean focus = FALSE;
+      meta_window_foreach_transient (window, transient_has_focus, &focus);
+      return focus;
+    }
+  return window->has_focus;
 }
 
 gboolean
@@ -8887,12 +9388,22 @@ meta_window_get_screen (MetaWindow *window)
   return window->screen;
 }
 
+/**
+ * meta_window_get_display:
+ * @window: A #MetaWindow
+ *
+ * Returns: (transfer none): The display for @window
+ */
 MetaDisplay *
 meta_window_get_display (MetaWindow *window)
 {
   return window->display;
 }
 
+/**
+ * meta_window_get_xwindow: (skip)
+ *
+ */
 Window
 meta_window_get_xwindow (MetaWindow *window)
 {
@@ -8905,6 +9416,17 @@ meta_window_get_window_type (MetaWindow *window)
   return window->type;
 }
 
+/**
+ * meta_window_get_window_type_atom: (skip)
+ * @window: a #MetaWindow
+ *
+ * Gets the X atom from the _NET_WM_WINDOW_TYPE property used by the
+ * application to set the window type. (Note that this is constrained
+ * to be some value that Mutter recognizes - a completely unrecognized
+ * type atom will be returned as None.)
+ *
+ * Return value: the raw X atom for the window type, or None
+ */
 Atom
 meta_window_get_window_type_atom (MetaWindow *window)
 {
@@ -9171,4 +9693,75 @@ meta_window_get_mutter_hints (MetaWindow *window)
   g_return_val_if_fail (META_IS_WINDOW (window), NULL);
 
   return window->mutter_hints;
+}
+
+/**
+ * meta_window_get_frame_type:
+ * @window: a #MetaWindow
+ *
+ * Gets the type of window decorations that should be used for this window.
+ *
+ * Return value: the frame type
+ */
+MetaFrameType
+meta_window_get_frame_type (MetaWindow *window)
+{
+  MetaFrameType base_type = META_FRAME_TYPE_LAST;
+
+  switch (window->type)
+    {
+    case META_WINDOW_NORMAL:
+      base_type = META_FRAME_TYPE_NORMAL;
+      break;
+
+    case META_WINDOW_DIALOG:
+      base_type = META_FRAME_TYPE_DIALOG;
+      break;
+
+    case META_WINDOW_MODAL_DIALOG:
+      if (meta_prefs_get_attach_modal_dialogs () &&
+          meta_window_get_transient_for (window) != NULL)
+        base_type = META_FRAME_TYPE_ATTACHED;
+      else
+        base_type = META_FRAME_TYPE_MODAL_DIALOG;
+      break;
+
+    case META_WINDOW_MENU:
+      base_type = META_FRAME_TYPE_MENU;
+      break;
+
+    case META_WINDOW_UTILITY:
+      base_type = META_FRAME_TYPE_UTILITY;
+      break;
+
+    case META_WINDOW_DESKTOP:
+    case META_WINDOW_DOCK:
+    case META_WINDOW_TOOLBAR:
+    case META_WINDOW_SPLASHSCREEN:
+    case META_WINDOW_DROPDOWN_MENU:
+    case META_WINDOW_POPUP_MENU:
+    case META_WINDOW_TOOLTIP:
+    case META_WINDOW_NOTIFICATION:
+    case META_WINDOW_COMBO:
+    case META_WINDOW_DND:
+    case META_WINDOW_OVERRIDE_OTHER:
+      /* No frame */
+      base_type = META_FRAME_TYPE_LAST;
+      break;
+    }
+
+  if (base_type == META_FRAME_TYPE_LAST)
+    {
+      /* can't add border if undecorated */
+      return META_FRAME_TYPE_LAST;
+    }
+  else if (window->border_only && base_type != META_FRAME_TYPE_ATTACHED)
+    {
+      /* override base frame type */
+      return META_FRAME_TYPE_BORDER;
+    }
+  else
+    {
+      return base_type;
+    }
 }
