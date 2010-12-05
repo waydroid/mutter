@@ -27,7 +27,7 @@
 #include "prefs.h"
 #include "ui.h"
 #include "util.h"
-#include "compositor/mutter-plugin-manager.h"
+#include "compositor/meta-plugin-manager.h"
 #ifdef HAVE_GCONF
 #include <gconf/gconf-client.h>
 #endif
@@ -86,6 +86,7 @@ static MetaVirtualModifier mouse_button_mods = Mod1Mask;
 static MetaFocusMode focus_mode = META_FOCUS_MODE_CLICK;
 static MetaFocusNewWindows focus_new_windows = META_FOCUS_NEW_WINDOWS_SMART;
 static gboolean raise_on_click = TRUE;
+static gboolean attach_modal_dialogs = FALSE;
 static char* current_theme = NULL;
 static int num_workspaces = 4;
 static MetaActionTitlebar action_double_click_titlebar = META_ACTION_TITLEBAR_TOGGLE_MAXIMIZE;
@@ -103,6 +104,7 @@ static char *cursor_theme = NULL;
 static int   cursor_size = 24;
 static gboolean compositing_manager = FALSE;
 static gboolean resize_with_right_button = FALSE;
+static gboolean side_by_side_tiling = FALSE;
 static gboolean force_fullscreen = TRUE;
 
 static MetaVisualBellType visual_bell_type = META_VISUAL_BELL_FULLSCREEN_FLASH;
@@ -361,6 +363,11 @@ static MetaEnumPreference preferences_enum[] =
 
 static MetaBoolPreference preferences_bool[] =
   {
+    { "/apps/mutter/general/attach_modal_dialogs",
+      META_PREF_ATTACH_MODAL_DIALOGS,
+      &attach_modal_dialogs,
+      TRUE,
+    },
     { "/apps/metacity/general/raise_on_click",
       META_PREF_RAISE_ON_CLICK,
       &raise_on_click,
@@ -414,6 +421,11 @@ static MetaBoolPreference preferences_bool[] =
     { "/apps/metacity/general/resize_with_right_button",
       META_PREF_RESIZE_WITH_RIGHT_BUTTON,
       &resize_with_right_button,
+      FALSE,
+    },
+    { "/apps/metacity/general/side_by_side_tiling",
+      META_PREF_SIDE_BY_SIDE_TILING,
+      &side_by_side_tiling,
       FALSE,
     },
     { "/apps/mutter/general/live_hidden_windows",
@@ -886,6 +898,10 @@ handle_preference_update_int (const gchar *key, GConfValue *value)
 /* Listeners.                                                               */
 /****************************************************************************/
 
+/**
+ * meta_prefs_add_listener: (skip)
+ *
+ */
 void
 meta_prefs_add_listener (MetaPrefsChangedFunc func,
                          gpointer             data)
@@ -899,6 +915,10 @@ meta_prefs_add_listener (MetaPrefsChangedFunc func,
   listeners = g_list_prepend (listeners, l);
 }
 
+/**
+ * meta_prefs_remove_listener: (skip)
+ *
+ */
 void
 meta_prefs_remove_listener (MetaPrefsChangedFunc func,
                             gpointer             data)
@@ -1038,7 +1058,7 @@ meta_prefs_init (void)
 #ifdef HAVE_GCONF
   GError *err = NULL;
   gchar **gconf_dir_cursor;
-  MutterPluginManager *plugin_manager;
+  MetaPluginManager *plugin_manager;
   
   if (default_client != NULL)
     return;
@@ -1067,8 +1087,8 @@ meta_prefs_init (void)
 
   /* We now initialize plugins so that they can override any preference locations */
 
-  plugin_manager = mutter_plugin_manager_get_default ();
-  mutter_plugin_manager_load (plugin_manager);
+  plugin_manager = meta_plugin_manager_get_default ();
+  meta_plugin_manager_load (plugin_manager);
 
   /* Pick up initial values. */
 
@@ -1483,6 +1503,12 @@ MetaFocusNewWindows
 meta_prefs_get_focus_new_windows (void)
 {
   return focus_new_windows;
+}
+
+gboolean
+meta_prefs_get_attach_modal_dialogs (void)
+{
+  return attach_modal_dialogs;
 }
 
 gboolean
@@ -1906,6 +1932,9 @@ meta_preference_to_string (MetaPreference pref)
     case META_PREF_FOCUS_NEW_WINDOWS:
       return "FOCUS_NEW_WINDOWS";
 
+    case META_PREF_ATTACH_MODAL_DIALOGS:
+      return "ATTACH_MODAL_DIALOGS";
+
     case META_PREF_RAISE_ON_CLICK:
       return "RAISE_ON_CLICK";
       
@@ -1980,6 +2009,9 @@ meta_preference_to_string (MetaPreference pref)
 
     case META_PREF_RESIZE_WITH_RIGHT_BUTTON:
       return "RESIZE_WITH_RIGHT_BUTTON";
+
+    case META_PREF_SIDE_BY_SIDE_TILING:
+      return "SIDE_BY_SIDE_TILING";
 
     case META_PREF_FORCE_FULLSCREEN:
       return "FORCE_FULLSCREEN";
@@ -2085,6 +2117,8 @@ init_bindings (void)
   GConfEntry *entry;
   GConfValue *value;
   GHashTable *to_update;
+
+  g_assert (G_N_ELEMENTS (key_bindings) == META_KEYBINDING_ACTION_LAST + 1);
 
   to_update = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
@@ -2891,6 +2925,12 @@ meta_prefs_get_gnome_animations ()
   return gnome_animations;
 }
 
+gboolean
+meta_prefs_get_side_by_side_tiling ()
+{
+  return side_by_side_tiling;
+}
+
 MetaKeyBindingAction
 meta_prefs_get_keybinding_action (const char *name)
 {
@@ -2998,6 +3038,11 @@ meta_prefs_set_compositing_manager (gboolean whether)
 #endif
 }
 
+/**
+ * meta_prefs_get_clutter_plugins:
+ *
+ * Returns: (transfer none) (element-type utf8): Plugin names to load
+ */
 GSList *
 meta_prefs_get_clutter_plugins (void)
 {

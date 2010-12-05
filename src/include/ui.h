@@ -33,8 +33,6 @@
 
 typedef struct _MetaUI MetaUI;
 
-typedef struct _MetaImageWindow MetaImageWindow;
-
 typedef gboolean (* MetaEventFunc) (XEvent *xevent, gpointer data);
 
 typedef enum
@@ -132,34 +130,10 @@ void            meta_ui_window_menu_popup (MetaWindowMenu     *menu,
 void            meta_ui_window_menu_free  (MetaWindowMenu     *menu);
 
 
-MetaImageWindow* meta_image_window_new          (Display         *xdisplay,
-                                                 int              screen_number,
-                                                 int              max_width,
-                                                 int              max_height);
-void             meta_image_window_free         (MetaImageWindow *iw);
-void             meta_image_window_set_showing  (MetaImageWindow *iw,
-                                                 gboolean         showing);
-void             meta_image_window_set          (MetaImageWindow *iw,
-                                                 GdkPixbuf       *pixbuf,
-                                                 int              x,
-                                                 int              y);
-
 /* FIXME these lack a display arg */
-GdkPixbuf* meta_gdk_pixbuf_get_from_window (GdkPixbuf   *dest,
-                                            Window       xwindow,
+GdkPixbuf* meta_gdk_pixbuf_get_from_pixmap (Pixmap       xpixmap,
                                             int          src_x,
                                             int          src_y,
-                                            int          dest_x,
-                                            int          dest_y,
-                                            int          width,
-                                            int          height);
-
-GdkPixbuf* meta_gdk_pixbuf_get_from_pixmap (GdkPixbuf   *dest,
-                                            Pixmap       xpixmap,
-                                            int          src_x,
-                                            int          src_y,
-                                            int          dest_x,
-                                            int          dest_y,
                                             int          width,
                                             int          height);
 
@@ -200,8 +174,7 @@ int      meta_ui_get_drag_threshold       (MetaUI *ui);
 
 MetaUIDirection meta_ui_get_direction (void);
 
-GdkPixbuf *meta_ui_get_pixbuf_from_pixmap (Pixmap   pmap);
-
 #include "tabpopup.h"
+#include "tile-preview.h"
 
 #endif

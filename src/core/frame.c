@@ -153,7 +153,7 @@ meta_window_ensure_frame (MetaWindow *window)
                    window->rect.x,
                    window->rect.y);
   /* FIXME handle this error */
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
   
   /* stick frame to the window */
   window->frame = frame;
@@ -217,7 +217,7 @@ meta_window_destroy_frame (MetaWindow *window)
                     */
                    window->frame->rect.x,
                    window->frame->rect.y);
-  meta_error_trap_pop (window->display, FALSE);
+  meta_error_trap_pop (window->display);
 
   meta_ui_destroy_frame_window (window->screen->ui, frame->xwindow);
 
@@ -276,7 +276,7 @@ meta_frame_get_flags (MetaFrame *frame)
   if (META_WINDOW_ALLOWS_VERTICAL_RESIZE (frame->window))
     flags |= META_FRAME_ALLOWS_VERTICAL_RESIZE;
   
-  if (frame->window->has_focus)
+  if (meta_window_appears_focused (frame->window))
     flags |= META_FRAME_HAS_FOCUS;
 
   if (frame->window->shaded)

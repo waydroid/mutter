@@ -28,6 +28,7 @@
 #include "frame-private.h"
 #include "workspace-private.h"
 #include "prefs.h"
+#include "errors.h"
 
 /* Looks up the MetaWindow representing the frame of the given X window.
  * Used as a helper function by a bunch of the functions below.
@@ -116,65 +117,8 @@ meta_core_get (Display *xdisplay,
         *((MetaFrameFlags*)answer) = meta_frame_get_flags (window->frame);
         break; 
       case META_CORE_GET_FRAME_TYPE:
-          {
-          MetaFrameType base_type = META_FRAME_TYPE_LAST;
-
-          switch (window->type)
-            {
-            case META_WINDOW_NORMAL:
-              base_type = META_FRAME_TYPE_NORMAL;
-              break;
-
-            case META_WINDOW_DIALOG:
-              base_type = META_FRAME_TYPE_DIALOG;
-              break;
-
-            case META_WINDOW_MODAL_DIALOG:
-              base_type = META_FRAME_TYPE_MODAL_DIALOG;
-              break;
-
-            case META_WINDOW_MENU:
-              base_type = META_FRAME_TYPE_MENU;
-              break;
-
-            case META_WINDOW_UTILITY:
-              base_type = META_FRAME_TYPE_UTILITY;
-              break;
-
-            case META_WINDOW_DESKTOP:
-            case META_WINDOW_DOCK:
-            case META_WINDOW_TOOLBAR:
-            case META_WINDOW_SPLASHSCREEN:
-	    case META_WINDOW_DROPDOWN_MENU:
-	    case META_WINDOW_POPUP_MENU:
-	    case META_WINDOW_TOOLTIP:
-	    case META_WINDOW_NOTIFICATION:
-	    case META_WINDOW_COMBO:
-	    case META_WINDOW_DND:
-	    case META_WINDOW_OVERRIDE_OTHER:
-              /* No frame */
-              base_type = META_FRAME_TYPE_LAST;
-              break;
-
-            }
-
-          if (base_type == META_FRAME_TYPE_LAST)
-            {
-              /* can't add border if undecorated */
-              *((MetaFrameType*)answer) = META_FRAME_TYPE_LAST; 
-            }
-          else if (window->border_only)
-            {
-              /* override base frame type */
-              *((MetaFrameType*)answer) = META_FRAME_TYPE_BORDER; 
-            }
-          else
-            {
-              *((MetaFrameType*)answer) = base_type;
-            }
-
-          break; 
-          }
+        *((MetaFrameType*)answer) = meta_window_get_frame_type (window);
+        break;
       case META_CORE_GET_MINI_ICON:
         *((GdkPixbuf**)answer) = window->mini_icon;
         break;
@@ -260,14 +204,13 @@ meta_core_user_raise (Display *xdisplay,
   meta_window_raise (window);
 }
 
-void
-meta_core_user_lower_and_unfocus (Display *xdisplay,
-                                  Window   frame_xwindow,
-                                  guint32  timestamp)
+static gboolean
+lower_window_and_transients (MetaWindow *window,
+                             gpointer   data)
 {
-  MetaWindow *window = get_window (xdisplay, frame_xwindow);
-  
   meta_window_lower (window);
+
+  meta_window_foreach_transient (window, lower_window_and_transients, NULL);
 
   if (meta_prefs_get_focus_mode () == META_FOCUS_MODE_CLICK &&
       meta_prefs_get_raise_on_click ())
@@ -296,11 +239,59 @@ meta_core_user_lower_and_unfocus (Display *xdisplay,
         }
     }
 
-  /* focus the default window, if needed */
-  if (window->has_focus)
-    meta_workspace_focus_default_window (window->screen->active_workspace,
-                                         NULL,
-                                         timestamp);
+  return FALSE;
+}
+
+void
+meta_core_user_lower_and_unfocus (Display *xdisplay,
+                                  Window   frame_xwindow,
+                                  guint32  timestamp)
+{
+  MetaWindow *window = get_window (xdisplay, frame_xwindow);
+
+  lower_window_and_transients (window, NULL);
+
+ /* Rather than try to figure that out whether we just lowered
+  * the focus window, assume that's always the case. (Typically,
+  * this will be invoked via keyboard action or by a mouse action;
+  * in either case the window or a modal child will have been focused.) */
+  meta_workspace_focus_default_window (window->screen->active_workspace,
+                                       NULL,
+                                       timestamp);
+}
+
+void
+meta_core_lower_beneath_focus_window (Display *xdisplay,
+                                      Window   xwindow,
+                                      guint32  timestamp)
+{
+  XWindowChanges changes;
+  MetaDisplay *display;
+  MetaScreen *screen;
+  MetaWindow *focus_window;
+
+  display = meta_display_for_x_display (xdisplay);
+  screen = meta_display_screen_for_xwindow (display, xwindow);
+  focus_window = meta_stack_get_top (screen->stack);
+
+  if (focus_window == NULL)
+    return;
+
+  changes.stack_mode = Below;
+  changes.sibling = focus_window->frame ? focus_window->frame->xwindow
+                                        : focus_window->xwindow;
+
+  meta_stack_tracker_record_lower_below (screen->stack_tracker,
+                                         xwindow,
+                                         changes.sibling,
+                                         XNextRequest (screen->display->xdisplay));
+
+  meta_error_trap_push (display);
+  XConfigureWindow (xdisplay,
+                    xwindow,
+                    CWSibling | CWStackMode,
+                    &changes);
+  meta_error_trap_pop (display);
 }
 
 void

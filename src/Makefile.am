@@ -19,32 +19,37 @@ mutter_SOURCES= 				\
 	core/bell.c				\
 	core/bell.h				\
 	core/boxes.c				\
+	core/boxes-private.h			\
 	include/boxes.h				\
+	compositor/cogl-utils.c			\
+	compositor/cogl-utils.h			\
 	compositor/compositor.c			\
 	compositor/compositor-private.h		\
-	compositor/mutter-module.c		\
-	compositor/mutter-module.h		\
-	compositor/mutter-plugin.c		\
-	compositor/mutter-plugin-manager.c	\
-	compositor/mutter-plugin-manager.h	\
-	compositor/mutter-shaped-texture.c	\
-	compositor/mutter-texture-tower.c	\
-	compositor/mutter-texture-tower.h	\
-	compositor/mutter-window.c		\
-	compositor/mutter-window-private.h	\
-	compositor/mutter-window-group.c	\
-	compositor/mutter-window-group.h	\
-	compositor/shadow.c			\
-	compositor/shadow.h			\
-	compositor/mutter-shaped-texture.h	\
-	compositor/tidy/tidy-texture-frame.c	\
-	compositor/tidy/tidy-texture-frame.h	\
-	gdk-compat.h				\
-	gtk-compat.h				\
+	compositor/meta-background-actor.c	\
+	compositor/meta-background-actor.h	\
+	compositor/meta-module.c		\
+	compositor/meta-module.h		\
+	compositor/meta-plugin.c		\
+	compositor/meta-plugin-manager.c	\
+	compositor/meta-plugin-manager.h	\
+	compositor/meta-shadow-factory.c	\
+	compositor/meta-shadow-factory-private.h	\
+	compositor/meta-shaped-texture.c	\
+	compositor/meta-shaped-texture.h	\
+	compositor/meta-texture-tower.c		\
+	compositor/meta-texture-tower.h		\
+	compositor/meta-window-actor.c		\
+	compositor/meta-window-actor-private.h	\
+	compositor/meta-window-group.c		\
+	compositor/meta-window-group.h		\
+	compositor/meta-window-shape.c		\
+	compositor/meta-window-shape.h		\
+	compositor/region-utils.c		\
+	compositor/region-utils.h		\
 	include/compositor.h			\
-	include/mutter-plugin.h			\
-	include/mutter-window.h			\
-	include/region.h			\
+	include/meta-plugin.h			\
+	include/meta-shadow-factory.h		\
+	include/meta-window-actor.h		\
 	include/compositor-mutter.h 		\
 	core/constraints.c			\
 	core/constraints.h			\
@@ -76,7 +81,7 @@ mutter_SOURCES= 				\
 	core/keybindings.c			\
 	core/keybindings-private.h		\
 	core/main.c				\
-	core/mutter-Xatomtype.h		\
+	core/mutter-Xatomtype.h			\
 	core/place.c				\
 	core/place.h				\
 	core/prefs.c				\
@@ -118,12 +123,12 @@ mutter_SOURCES= 				\
 	include/resizepopup.h			\
 	ui/tabpopup.c				\
 	include/tabpopup.h				\
+	ui/tile-preview.c			\
+	include/tile-preview.h			\
 	ui/theme-parser.c			\
-	ui/theme-parser.h			\
 	ui/theme.c				\
 	ui/theme.h				\
-	ui/themewidget.c			\
-	ui/themewidget.h			\
+	ui/theme-private.h			\
 	ui/ui.c					\
 	include/all-keybindings.h               \
 	$(mutter_built_sources)
@@ -142,14 +147,11 @@ libmutter_private_la_SOURCES=			\
 	ui/preview-widget.c			\
 	ui/preview-widget.h			\
 	ui/theme-parser.c			\
-	ui/theme-parser.h			\
 	ui/theme.c				\
 	ui/theme.h
 
 libmutter_private_la_LDFLAGS = -no-undefined
 libmutter_private_la_LIBADD  = @MUTTER_LIBS@
-
-libmutterincludedir = $(includedir)/mutter/mutter-private
 
 # Headers installed for plugins; introspected information will
 # be extracted into Mutter-<version>.gir
@@ -159,7 +161,6 @@ libmutterinclude_base_headers =		\
 	include/main.h				\
 	include/util.h				\
 	include/common.h			\
-	ui/theme-parser.h			\
 	ui/theme.h				\
 	include/prefs.h				\
 	include/window.h			\
@@ -172,8 +173,9 @@ libmutterinclude_base_headers =		\
 	include/display.h			\
 	include/group.h				\
 	include/keybindings.h			\
-	include/mutter-plugin.h			\
-	include/mutter-window.h
+	include/meta-plugin.h			\
+	include/meta-shadow-factory.h		\
+	include/meta-window-actor.h
 
 # Excluded from scanning for introspection but installed
 # preview-widget.h: only part of libmutter-private
@@ -181,6 +183,8 @@ libmutterinclude_base_headers =		\
 libmutterinclude_extra_headers =		\
 	ui/preview-widget.h			\
 	include/atomnames.h
+
+libmutterincludedir = $(includedir)/mutter/mutter-private
 
 libmutterinclude_HEADERS =			\
 	$(libmutterinclude_base_headers)	\
@@ -205,28 +209,28 @@ typelib_DATA = Meta-$(api_version).typelib
 
 # We need to strip out the attribute that would point back to libmutter-introspect
 # so that libgirepository looks for symbols in the executable instead
-Meta-$(api_version).gir: $(G_IR_SCANNER) mutter $(libmutterinclude_HEADERS) $(mutter_SOURCES)
+Meta-$(api_version).gir: $(G_IR_SCANNER) mutter $(libmutterinclude_HEADERS) $(mutter_SOURCES) Makefile
 	$(AM_V_GEN) pwd=`pwd` ;				\
         cd $(srcdir) &&					\
 	$(G_IR_SCANNER)					\
 		--namespace=Meta			\
 		--nsversion=$(api_version)		\
+		--warn-all				\
+		--warn-error				\
 		--include=GObject-2.0			\
-		--include=Gdk-@GTK_API_VERSION@		\
-		--include=Gtk-@GTK_API_VERSION@		\
+		--include=Gdk-3.0			\
+		--include=Gtk-3.0			\
 		--include=Clutter-1.0			\
 		--pkg=clutter-1.0			\
-		--pkg=gtk+-@GTK_API_VERSION@		\
+		--pkg=gtk+-3.0				\
 		--include=xlib-2.0			\
 		--include=xfixes-4.0			\
 		--program=$$pwd/mutter			\
+		mutter-enum-types.h			\
 		$(filter %.c,$(mutter_SOURCES))		\
 		$(libmutterinclude_base_headers)	\
 		$(INCLUDES)				\
-		-o $$pwd/$@.tmp &&			\
-	$(PYTHON) $(srcdir)/fix-meta-rectangle.py $$pwd/$@.tmp $$pwd/$@.tmp2 &&	\
-	rm $$pwd/$@.tmp &&							\
-	mv $$pwd/$@.tmp2 $$pwd/$@
+		-o $$pwd/$@
 
 Meta-$(api_version).typelib: $(G_IR_COMPILER) Meta-$(api_version).gir
 	$(AM_V_GEN) LD_LIBRARY_PATH=$${LD_LIBRARY_PATH:+$$LD_LIBRARY_PATH:}. $(G_IR_COMPILER) Meta-$(api_version).gir -o $@
@@ -303,7 +307,6 @@ EXTRA_DIST=$(desktopfiles_files) 	\
 	$(desktopfiles_in_files)	\
 	$(wmproperties_in_files)	\
 	$(schema_in_files)		\
-	fix-meta-rectangle.py		\
 	libmutter-private.pc.in	\
 	mutter-plugins.pc.in  \
 	mutter-enum-types.h.in \

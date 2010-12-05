@@ -24,7 +24,6 @@
 #include <config.h>
 #include "util.h"
 #include "theme.h"
-#include "theme-parser.h"
 #include "preview-widget.h"
 #include <gtk/gtk.h>
 #include <time.h>
@@ -235,7 +234,7 @@ dialog_contents (void)
   
   vbox = gtk_vbox_new (FALSE, 0);
 
-  action_area = gtk_hbutton_box_new ();
+  action_area = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
 
   gtk_button_box_set_layout (GTK_BUTTON_BOX (action_area),
                              GTK_BUTTONBOX_END);  
@@ -408,6 +407,10 @@ get_window_contents (MetaFrameType  type,
     case META_FRAME_TYPE_BORDER:
       *title = _("Border");
       return border_only_contents ();
+
+    case META_FRAME_TYPE_ATTACHED:
+      *title = _("Attached Modal Dialog");
+      return dialog_contents ();
       
     case META_FRAME_TYPE_LAST:
       g_assert_not_reached ();
@@ -454,6 +457,9 @@ get_window_flags (MetaFrameType type)
       break;
 
     case META_FRAME_TYPE_BORDER:
+      break;
+
+    case META_FRAME_TYPE_ATTACHED:
       break;
       
     case META_FRAME_TYPE_LAST:
@@ -941,7 +947,7 @@ static void
 run_theme_benchmark (void)
 {
   GtkWidget* widget;
-  GdkPixmap *pixmap;
+  cairo_surface_t *pixmap;
   int top_height, bottom_height, left_width, right_width;
   MetaButtonState button_states[META_BUTTON_TYPE_LAST] =
   {
@@ -959,6 +965,7 @@ run_theme_benchmark (void)
 #define ITERATIONS 100
   int client_width;
   int client_height;
+  cairo_t *cr;
   int inc;
   
   widget = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -1004,16 +1011,16 @@ run_theme_benchmark (void)
       /* Creating the pixmap in the loop is right, since
        * GDK does the same with its double buffering.
        */
-      pixmap = gdk_pixmap_new (gtk_widget_get_window (widget),
-                               client_width + left_width + right_width,
-                               client_height + top_height + bottom_height,
-                               -1);
+      pixmap = gdk_window_create_similar_surface (gtk_widget_get_window (widget),
+                                                  CAIRO_CONTENT_COLOR,
+                                                  client_width + left_width + right_width,
+                                                  client_height + top_height + bottom_height);
+
+      cr = cairo_create (pixmap);
 
       meta_theme_draw_frame (global_theme,
                              widget,
-                             pixmap,
-                             NULL,
-                             0, 0,
+                             cr,
                              META_FRAME_TYPE_NORMAL,
                              get_flags (widget),
                              client_width, client_height,
@@ -1024,7 +1031,8 @@ run_theme_benchmark (void)
                              meta_preview_get_mini_icon (),
                              meta_preview_get_icon ());
 
-      g_object_unref (G_OBJECT (pixmap));
+      cairo_destroy (cr);
+      cairo_surface_destroy (pixmap);
       
       ++i;
       client_width += inc;

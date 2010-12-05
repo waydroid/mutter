@@ -601,7 +601,7 @@ meta_screen_new (MetaDisplay *display,
       attrs.event_mask = StructureNotifyMask;
       XChangeWindowAttributes (xdisplay,
                                current_wm_sn_owner, CWEventMask, &attrs);
-      if (meta_error_trap_pop_with_return (display, FALSE) != Success)
+      if (meta_error_trap_pop_with_return (display) != Success)
         current_wm_sn_owner = None; /* don't wait for it to die later on */
     }
 
@@ -670,7 +670,7 @@ meta_screen_new (MetaDisplay *display,
                 KeyPressMask | KeyReleaseMask |
                 FocusChangeMask | StructureNotifyMask |
                 ExposureMask | attr.your_event_mask);
-  if (meta_error_trap_pop_with_return (display, FALSE) != Success)
+  if (meta_error_trap_pop_with_return (display) != Success)
     {
       meta_warning (_("Screen %d on display \"%s\" already has a window manager\n"),
                     number, display->name);
@@ -770,6 +770,9 @@ meta_screen_new (MetaDisplay *display,
 
   screen->tab_popup = NULL;
   screen->ws_popup = NULL;
+  screen->tile_preview = NULL;
+
+  screen->tile_preview_timeout_id = 0;
 
   screen->stack = meta_stack_new (screen);
   screen->stack_tracker = meta_stack_tracker_new (screen);
@@ -853,7 +856,7 @@ meta_screen_free (MetaScreen *screen,
 
   meta_error_trap_push_with_return (screen->display);
   XSelectInput (screen->display->xdisplay, screen->xroot, 0);
-  if (meta_error_trap_pop_with_return (screen->display, FALSE) != Success)
+  if (meta_error_trap_pop_with_return (screen->display) != Success)
     meta_warning (_("Could not release screen %d on display \"%s\"\n"),
                   screen->number, screen->display->name);
 
@@ -867,6 +870,12 @@ meta_screen_free (MetaScreen *screen,
 
   if (screen->monitor_infos)
     g_free (screen->monitor_infos);
+
+  if (screen->tile_preview_timeout_id)
+    g_source_remove (screen->tile_preview_timeout_id);
+
+  if (screen->tile_preview)
+    meta_tile_preview_free (screen->tile_preview);
   
   g_free (screen->screen_name);
 
@@ -904,7 +913,7 @@ list_windows (MetaScreen *screen)
       XGetWindowAttributes (screen->display->xdisplay,
                             children[i], &info->attrs);
 
-      if (meta_error_trap_pop_with_return (screen->display, TRUE))
+      if (meta_error_trap_pop_with_return (screen->display))
 	{
           meta_verbose ("Failed to get attributes for window 0x%lx\n",
                         children[i]);
@@ -1211,7 +1220,7 @@ set_number_of_spaces_hint (MetaScreen *screen,
                    screen->display->atom__NET_NUMBER_OF_DESKTOPS,
                    XA_CARDINAL,
                    32, PropModeReplace, (guchar*) data, 1);
-  meta_error_trap_pop (screen->display, FALSE);
+  meta_error_trap_pop (screen->display);
 }
 
 static void
@@ -1232,7 +1241,7 @@ set_desktop_geometry_hint (MetaScreen *screen)
                    screen->display->atom__NET_DESKTOP_GEOMETRY,
                    XA_CARDINAL,
                    32, PropModeReplace, (guchar*) data, 2);
-  meta_error_trap_pop (screen->display, FALSE);
+  meta_error_trap_pop (screen->display);
 }
 
 static void
@@ -1256,7 +1265,7 @@ set_desktop_viewport_hint (MetaScreen *screen)
                    screen->display->atom__NET_DESKTOP_VIEWPORT,
                    XA_CARDINAL,
                    32, PropModeReplace, (guchar*) data, 2);
-  meta_error_trap_pop (screen->display, FALSE);
+  meta_error_trap_pop (screen->display);
 }
 
 void
@@ -1743,6 +1752,69 @@ meta_screen_workspace_popup_destroy (MetaScreen *screen)
     }
 }
 
+static gboolean
+meta_screen_tile_preview_update_timeout (gpointer data)
+{
+  MetaScreen *screen = data;
+  MetaWindow *window = screen->display->grab_window;
+  gboolean composited = screen->display->compositor != NULL;
+
+  screen->tile_preview_timeout_id = 0;
+
+  if (!screen->tile_preview)
+    {
+      Window xwindow;
+      gulong create_serial;
+
+      screen->tile_preview = meta_tile_preview_new (screen->number,
+                                                    composited);
+      xwindow = meta_tile_preview_get_xwindow (screen->tile_preview,
+                                               &create_serial);
+      meta_stack_tracker_record_add (screen->stack_tracker,
+                                     xwindow,
+                                     create_serial);
+    }
+
+  if (window
+      && !META_WINDOW_TILED (window)
+      && window->tile_mode != META_TILE_NONE)
+    {
+      MetaRectangle tile_rect;
+
+      meta_window_get_current_tile_area (window, &tile_rect);
+      meta_tile_preview_show (screen->tile_preview, &tile_rect);
+    }
+  else
+    meta_tile_preview_hide (screen->tile_preview);
+
+  return FALSE;
+}
+
+#define TILE_PREVIEW_TIMEOUT_MS 200
+
+void
+meta_screen_tile_preview_update (MetaScreen *screen,
+                                 gboolean    delay)
+{
+  if (delay)
+    {
+      if (screen->tile_preview_timeout_id > 0)
+        return;
+
+      screen->tile_preview_timeout_id =
+        g_timeout_add (TILE_PREVIEW_TIMEOUT_MS,
+                       meta_screen_tile_preview_update_timeout,
+                       screen);
+    }
+  else
+    {
+      if (screen->tile_preview_timeout_id > 0)
+        g_source_remove (screen->tile_preview_timeout_id);
+
+      meta_screen_tile_preview_update_timeout ((gpointer)screen);
+    }
+}
+
 MetaWindow*
 meta_screen_get_mouse_window (MetaScreen  *screen,
                               MetaWindow  *not_this_one)
@@ -1767,7 +1839,7 @@ meta_screen_get_mouse_window (MetaScreen  *screen,
                  &win_x_return,
                  &win_y_return,
                  &mask_return);
-  meta_error_trap_pop (screen->display, TRUE);
+  meta_error_trap_pop (screen->display);
 
   window = meta_stack_get_default_focus_window_at_point (screen->stack,
                                                          screen->active_workspace,
@@ -2170,7 +2242,7 @@ set_workspace_names (MetaScreen *screen)
 		   screen->display->atom_UTF8_STRING,
                    8, PropModeReplace,
 		   (unsigned char *)flattened->str, flattened->len);
-  meta_error_trap_pop (screen->display, FALSE);
+  meta_error_trap_pop (screen->display);
   
   g_string_free (flattened, TRUE);
 }
@@ -2274,7 +2346,7 @@ set_work_area_hint (MetaScreen *screen)
 		   XA_CARDINAL, 32, PropModeReplace,
 		   (guchar*) data, num_workspaces*4);
   g_free (data);
-  meta_error_trap_pop (screen->display, FALSE);
+  meta_error_trap_pop (screen->display);
 
   g_signal_emit (screen, screen_signals[WORKAREAS_CHANGED], 0);
 }
@@ -2649,7 +2721,7 @@ meta_screen_update_showing_desktop_hint (MetaScreen *screen)
                    screen->display->atom__NET_SHOWING_DESKTOP,
                    XA_CARDINAL,
                    32, PropModeReplace, (guchar*) data, 1);
-  meta_error_trap_pop (screen->display, FALSE);
+  meta_error_trap_pop (screen->display);
 }
 
 static void
@@ -3122,6 +3194,10 @@ meta_screen_get_display (MetaScreen *screen)
   return screen->display;
 }
 
+/**
+ * meta_screen_get_xroot: (skip)
+ *
+ */
 Window
 meta_screen_get_xroot (MetaScreen *screen)
 {
@@ -3137,6 +3213,10 @@ meta_screen_get_size (MetaScreen *screen,
   *height = screen->rect.height;
 }
 
+/**
+ * meta_screen_get_compositor_data: (skip)
+ *
+ */
 gpointer
 meta_screen_get_compositor_data (MetaScreen *screen)
 {
@@ -3178,6 +3258,12 @@ meta_screen_unset_cm_selection (MetaScreen *screen)
                       None, screen->wm_cm_timestamp);
 }
 
+/**
+ * meta_screen_get_workspaces: (skip)
+ * @screen: a #MetaScreen
+ *
+ * Returns: (transfer none) (element-type Meta.Workspace): The workspaces for @screen
+ */
 GList *
 meta_screen_get_workspaces (MetaScreen *screen)
 {

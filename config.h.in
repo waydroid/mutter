@@ -157,9 +157,6 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Use cairo_region_t instead of GdkRegion */
-#undef USE_CAIRO_REGION
-
 /* Version number of package */
 #undef VERSION
 
