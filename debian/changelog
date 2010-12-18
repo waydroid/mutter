@@ -1,3 +1,44 @@
+mutter (2.91.3-3) experimental; urgency=low
+
+  * debian/patches/02_gdk_removed_macro.patch,
+  * debian/patches/03_handle_new_gtk_states.patch,
+  * debian/patches/04_fix_gradient_example.patch:
+    - Patches from upstream git, fix the build with latest GTK+ 3.
+  * debian/control.in:
+    - Bump the libgtk3.0-dev build dependency accordingly.
+
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Sat, 18 Dec 2010 23:39:24 +0000
+
+mutter (2.91.3-2) experimental; urgency=low
+
+  * Update to the new gir policy:
+    - Rename gir1.0-mutter-2.91 to gir1.2-mutter-2.91.
+    - Bump the gobject-introspection build dependency.
+    - Build depend on gir1.2 packages.
+  * debian/control.in:
+    - Fix typo, s/shlib/shlibs/.
+  * debian/rules:
+    - Remove hack to get translations in /usr/share, no longer needed.
+    - Pass the path to the typelibs to dh_girepository to get correct
+      dependencies.
+  * debian/rules,
+    debian/control.in:
+    - Use dh-autoreconf.
+  * debian/patches/90_autotools.patch,
+    debian/patches/99_ltmain_as-needed.patch:
+    - Removed, no longer needed with dh-autoreconf.
+  * debian/rules,
+    debian/copyright:
+    - Fix some metacity leftovers.
+  * debian/mutter.1,
+    debian/mutter-message.1,
+    debian/mutter-theme-viewer.1,
+    debian/mutter-window-demo.1,
+    debian/mutter-common.manpages:
+    - Removed, shipped upstream.
+
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Tue, 14 Dec 2010 00:52:38 +0100
+
 mutter (2.91.3-1) experimental; urgency=low
 
   [ Gustavo Noronha Silva ]
