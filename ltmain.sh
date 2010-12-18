@@ -1884,11 +1884,6 @@ func_mode_execute ()
 	func_dirname "$file" "" "."
 	dir="$func_dirname_result"
 	;;
-        
-       -Wl,--as-needed)
-        deplibs="$deplibs $arg"
-        continue
-        ;;
 
       *)
 	func_warning "\`-dlopen' is ignored for non-libtool libraries and objects"
@@ -5364,10 +5359,7 @@ func_mode_link ()
 	case $pass in
 	dlopen) libs="$dlfiles" ;;
 	dlpreopen) libs="$dlprefiles" ;;
-	link)
-	  libs="$deplibs %DEPLIBS%"
-	  test "X$link_all_deplibs" != Xno && libs="$libs $dependency_libs"
-	  ;;
+	link) libs="$deplibs %DEPLIBS% $dependency_libs" ;;
 	esac
       fi
       if test "$linkmode,$pass" = "lib,dlpreopen"; then
@@ -5402,15 +5394,6 @@ func_mode_link ()
 	lib=
 	found=no
 	case $deplib in
-        -Wl,--as-needed)
-          if test "$linkmode,$pass" = "prog,link"; then
-            compile_deplibs="$deplib $compile_deplibs"
-            finalize_deplibs="$deplib $finalize_deplibs"
-          else
-            deplibs="$deplib $deplibs"
-          fi
-          continue
-          ;;
 	-mt|-mthreads|-kthread|-Kthread|-pthread|-pthreads|--thread-safe|-threads)
 	  if test "$linkmode,$pass" = "prog,link"; then
 	    compile_deplibs="$deplib $compile_deplibs"
@@ -5688,19 +5671,19 @@ func_mode_link ()
 	    # It is a libtool convenience library, so add in its objects.
 	    convenience="$convenience $ladir/$objdir/$old_library"
 	    old_convenience="$old_convenience $ladir/$objdir/$old_library"
-	    tmp_libs=
-	    for deplib in $dependency_libs; do
-	      deplibs="$deplib $deplibs"
-	      if $opt_duplicate_deps ; then
-		case "$tmp_libs " in
-		*" $deplib "*) specialdeplibs="$specialdeplibs $deplib" ;;
-		esac
-	      fi
-	      tmp_libs="$tmp_libs $deplib"
-	    done
 	  elif test "$linkmode" != prog && test "$linkmode" != lib; then
 	    func_fatal_error "\`$lib' is not a convenience library"
 	  fi
+	  tmp_libs=
+	  for deplib in $dependency_libs; do
+	    deplibs="$deplib $deplibs"
+	    if $opt_duplicate_deps ; then
+	      case "$tmp_libs " in
+	      *" $deplib "*) specialdeplibs="$specialdeplibs $deplib" ;;
+	      esac
+	    fi
+	    tmp_libs="$tmp_libs $deplib"
+	  done
 	  continue
 	fi # $pass = conv
 
@@ -8390,7 +8373,6 @@ EOF
 	    # Replace all uninstalled libtool libraries with the installed ones
 	    newdependency_libs=
 	    for deplib in $dependency_libs; do
-	      path=
 	      case $deplib in
 	      *.la)
 		func_basename "$deplib"
@@ -8675,9 +8657,6 @@ func_mode_uninstall ()
 	    # $file with .exe has already been added to rmfiles,
 	    # add $file without .exe
 	    rmfiles="$rmfiles $file"
-	    ;;
-	  *)
-	    func_fatal_configuration "$modename: unknown library version type \`$version_type'"
 	    ;;
 	  esac
 	  # Do a test to see if this is a libtool program.
