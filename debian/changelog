@@ -1,3 +1,26 @@
+mutter (2.91.5-1) experimental; urgency=low
+
+  [ Emilio Pozuelo Monfort ]
+  * New upstream release.
+    + debian/control.in:
+      - Update build dependencies.
+      - Remove unneeded libgtk2.0-dev build dependency.
+    + debian/patches/02_gdk_removed_macro.patch,
+      debian/patches/03_handle_new_gtk_states.patch,
+      debian/patches/04_fix_gradient_example.patch:
+      - Removed, included upstream.
+  * debian/libmutter-private0.symbols:
+    + Add a symbols file.
+  * debian/rules:
+    + Make the shlibs always depend on the latest upstream version.
+      We have symbols file anyway, and manually bumping the shver is
+      error prone.
+
+  [ Laurent Bigonville ]
+  * debian/control: Bump Standards-Version to 3.9.1
+
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Wed, 12 Jan 2011 23:06:20 +0000
+
 mutter (2.91.3-3) experimental; urgency=low
 
   * debian/patches/02_gdk_removed_macro.patch,

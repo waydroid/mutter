@@ -978,7 +978,15 @@ meta_screen_composite_all_windows (MetaScreen *screen)
   windows = meta_display_list_windows (display,
                                        META_LIST_INCLUDE_OVERRIDE_REDIRECT);
   for (tmp = windows; tmp != NULL; tmp = tmp->next)
-    meta_compositor_add_window (display->compositor, tmp->data);
+    {
+      MetaWindow *window = tmp->data;
+
+      meta_compositor_add_window (display->compositor, window);
+      if (window->visible_to_compositor)
+        meta_compositor_show_window (display->compositor, window,
+                                     META_COMP_EFFECT_NONE);
+    }
+
   g_slist_free (windows);
   
   /* initialize the compositor's view of the stacking order */
@@ -1758,6 +1766,7 @@ meta_screen_tile_preview_update_timeout (gpointer data)
   MetaScreen *screen = data;
   MetaWindow *window = screen->display->grab_window;
   gboolean composited = screen->display->compositor != NULL;
+  gboolean needs_preview = FALSE;
 
   screen->tile_preview_timeout_id = 0;
 
@@ -1775,9 +1784,28 @@ meta_screen_tile_preview_update_timeout (gpointer data)
                                      create_serial);
     }
 
-  if (window
-      && !META_WINDOW_TILED (window)
-      && window->tile_mode != META_TILE_NONE)
+  if (window)
+    {
+      switch (window->tile_mode)
+        {
+          case META_TILE_LEFT:
+          case META_TILE_RIGHT:
+              if (!META_WINDOW_TILED_SIDE_BY_SIDE (window))
+                needs_preview = TRUE;
+              break;
+
+          case META_TILE_MAXIMIZED:
+              if (!META_WINDOW_MAXIMIZED (window))
+                needs_preview = TRUE;
+              break;
+
+          default:
+              needs_preview = FALSE;
+              break;
+        }
+    }
+
+  if (needs_preview)
     {
       MetaRectangle tile_rect;
 

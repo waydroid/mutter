@@ -234,7 +234,7 @@ struct _MetaFrameGeometry
 
   /* used for a memset hack */
 #define ADDRESS_OF_BUTTON_RECTS(fgeom) (((char*)(fgeom)) + G_STRUCT_OFFSET (MetaFrameGeometry, close_rect))
-#define LENGTH_OF_BUTTON_RECTS (G_STRUCT_OFFSET (MetaFrameGeometry, right_right_background) + sizeof (GdkRectangle) - G_STRUCT_OFFSET (MetaFrameGeometry, close_rect))
+#define LENGTH_OF_BUTTON_RECTS (G_STRUCT_OFFSET (MetaFrameGeometry, right_single_background) + sizeof (GdkRectangle) - G_STRUCT_OFFSET (MetaFrameGeometry, close_rect))
   
   /* The button rects (if changed adjust memset hack) */
   MetaButtonSpace close_rect;
@@ -252,10 +252,17 @@ struct _MetaFrameGeometry
   GdkRectangle left_left_background;
   GdkRectangle left_middle_backgrounds[MAX_MIDDLE_BACKGROUNDS];
   GdkRectangle left_right_background;
+  GdkRectangle left_single_background;
   GdkRectangle right_left_background;
   GdkRectangle right_middle_backgrounds[MAX_MIDDLE_BACKGROUNDS];
   GdkRectangle right_right_background;
+  GdkRectangle right_single_background;
   /* End of button rects (if changed adjust memset hack) */
+
+  /* Saved button layout */
+  MetaButtonLayout button_layout;
+  int n_left_buttons;
+  int n_right_buttons;
   
   /* Round corners */
   guint top_left_corner_rounded_radius;
@@ -642,9 +649,11 @@ typedef enum
   META_BUTTON_TYPE_LEFT_LEFT_BACKGROUND,
   META_BUTTON_TYPE_LEFT_MIDDLE_BACKGROUND,
   META_BUTTON_TYPE_LEFT_RIGHT_BACKGROUND,
+  META_BUTTON_TYPE_LEFT_SINGLE_BACKGROUND,
   META_BUTTON_TYPE_RIGHT_LEFT_BACKGROUND,
   META_BUTTON_TYPE_RIGHT_MIDDLE_BACKGROUND,
   META_BUTTON_TYPE_RIGHT_RIGHT_BACKGROUND,
+  META_BUTTON_TYPE_RIGHT_SINGLE_BACKGROUND,
   META_BUTTON_TYPE_CLOSE,
   META_BUTTON_TYPE_MAXIMIZE,
   META_BUTTON_TYPE_MINIMIZE,
@@ -767,8 +776,12 @@ typedef enum
 {
   META_FRAME_STATE_NORMAL,
   META_FRAME_STATE_MAXIMIZED,
+  META_FRAME_STATE_TILED_LEFT,
+  META_FRAME_STATE_TILED_RIGHT,
   META_FRAME_STATE_SHADED,
   META_FRAME_STATE_MAXIMIZED_AND_SHADED,
+  META_FRAME_STATE_TILED_LEFT_AND_SHADED,
+  META_FRAME_STATE_TILED_RIGHT_AND_SHADED,
   META_FRAME_STATE_LAST
 } MetaFrameState;
 
@@ -805,8 +818,12 @@ struct _MetaFrameStyleSet
   MetaFrameStyleSet *parent;
   MetaFrameStyle *normal_styles[META_FRAME_RESIZE_LAST][META_FRAME_FOCUS_LAST];
   MetaFrameStyle *maximized_styles[META_FRAME_FOCUS_LAST];
+  MetaFrameStyle *tiled_left_styles[META_FRAME_FOCUS_LAST];
+  MetaFrameStyle *tiled_right_styles[META_FRAME_FOCUS_LAST];
   MetaFrameStyle *shaded_styles[META_FRAME_RESIZE_LAST][META_FRAME_FOCUS_LAST];
   MetaFrameStyle *maximized_and_shaded_styles[META_FRAME_FOCUS_LAST];
+  MetaFrameStyle *tiled_left_and_shaded_styles[META_FRAME_FOCUS_LAST];
+  MetaFrameStyle *tiled_right_and_shaded_styles[META_FRAME_FOCUS_LAST];
 };
 
 /**

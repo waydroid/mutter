@@ -50,7 +50,6 @@
  */
 #define KEY_TITLEBAR_FONT "/apps/metacity/general/titlebar_font"
 #define KEY_NUM_WORKSPACES "/apps/metacity/general/num_workspaces"
-#define KEY_COMPOSITOR "/apps/metacity/general/compositing_manager"
 #define KEY_GNOME_ACCESSIBILITY "/desktop/gnome/interface/accessibility"
 
 #define KEY_COMMAND_DIRECTORY "/apps/metacity/keybinding_commands"
@@ -102,9 +101,8 @@ static gboolean gnome_accessibility = FALSE;
 static gboolean gnome_animations = TRUE;
 static char *cursor_theme = NULL;
 static int   cursor_size = 24;
-static gboolean compositing_manager = FALSE;
 static gboolean resize_with_right_button = FALSE;
-static gboolean side_by_side_tiling = FALSE;
+static gboolean edge_tiling = FALSE;
 static gboolean force_fullscreen = TRUE;
 
 static MetaVisualBellType visual_bell_type = META_VISUAL_BELL_FULLSCREEN_FLASH;
@@ -413,19 +411,14 @@ static MetaBoolPreference preferences_bool[] =
       &gnome_animations,
       TRUE,
     },
-    { "/apps/metacity/general/compositing_manager",
-      META_PREF_COMPOSITING_MANAGER,
-      &compositing_manager,
-      FALSE,
-    },
     { "/apps/metacity/general/resize_with_right_button",
       META_PREF_RESIZE_WITH_RIGHT_BUTTON,
       &resize_with_right_button,
       FALSE,
     },
-    { "/apps/metacity/general/side_by_side_tiling",
-      META_PREF_SIDE_BY_SIDE_TILING,
-      &side_by_side_tiling,
+    { "/apps/metacity/general/edge_tiling",
+      META_PREF_EDGE_TILING,
+      &edge_tiling,
       FALSE,
     },
     { "/apps/mutter/general/live_hidden_windows",
@@ -2004,14 +1997,11 @@ meta_preference_to_string (MetaPreference pref)
     case META_PREF_CURSOR_SIZE:
       return "CURSOR_SIZE";
 
-    case META_PREF_COMPOSITING_MANAGER:
-      return "COMPOSITING_MANAGER";
-
     case META_PREF_RESIZE_WITH_RIGHT_BUTTON:
       return "RESIZE_WITH_RIGHT_BUTTON";
 
-    case META_PREF_SIDE_BY_SIDE_TILING:
-      return "SIDE_BY_SIDE_TILING";
+    case META_PREF_EDGE_TILING:
+      return "EDGE_TILING";
 
     case META_PREF_FORCE_FULLSCREEN:
       return "FORCE_FULLSCREEN";
@@ -2926,9 +2916,9 @@ meta_prefs_get_gnome_animations ()
 }
 
 gboolean
-meta_prefs_get_side_by_side_tiling ()
+meta_prefs_get_edge_tiling ()
 {
-  return side_by_side_tiling;
+  return edge_tiling;
 }
 
 MetaKeyBindingAction
@@ -2992,12 +2982,6 @@ meta_prefs_get_window_binding (const char          *name,
   g_assert_not_reached ();
 }
 
-gboolean
-meta_prefs_get_compositing_manager (void)
-{
-  return compositing_manager;
-}
-
 guint
 meta_prefs_get_mouse_button_resize (void)
 {
@@ -3014,28 +2998,6 @@ gboolean
 meta_prefs_get_force_fullscreen (void)
 {
   return force_fullscreen;
-}
-
-void
-meta_prefs_set_compositing_manager (gboolean whether)
-{
-#ifdef HAVE_GCONF
-  GError *err = NULL;
-
-  gconf_client_set_bool (default_client,
-                         KEY_COMPOSITOR,
-                         whether,
-                         &err);
-
-  if (err)
-    {
-      meta_warning (_("Error setting compositor status: %s\n"),
-                    err->message);
-      g_error_free (err);
-    }
-#else
-  compositing_manager = whether;
-#endif
 }
 
 /**
