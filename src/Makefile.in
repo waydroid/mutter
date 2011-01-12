@@ -102,8 +102,9 @@ am_mutter_OBJECTS = async-getprop.$(OBJEXT) bell.$(OBJEXT) \
 	meta-shadow-factory.$(OBJEXT) meta-shaped-texture.$(OBJEXT) \
 	meta-texture-tower.$(OBJEXT) meta-window-actor.$(OBJEXT) \
 	meta-window-group.$(OBJEXT) meta-window-shape.$(OBJEXT) \
-	region-utils.$(OBJEXT) constraints.$(OBJEXT) core.$(OBJEXT) \
-	delete.$(OBJEXT) display.$(OBJEXT) draw-workspace.$(OBJEXT) \
+	region-utils.$(OBJEXT) above-tab-keycode.$(OBJEXT) \
+	constraints.$(OBJEXT) core.$(OBJEXT) delete.$(OBJEXT) \
+	display.$(OBJEXT) draw-workspace.$(OBJEXT) \
 	edge-resistance.$(OBJEXT) errors.$(OBJEXT) \
 	eventqueue.$(OBJEXT) frame.$(OBJEXT) gradient.$(OBJEXT) \
 	group-props.$(OBJEXT) group.$(OBJEXT) iconcache.$(OBJEXT) \
@@ -293,6 +294,7 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
 MKINSTALLDIRS = @MKINSTALLDIRS@
 MSGFMT = @MSGFMT@
@@ -355,6 +357,7 @@ abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
@@ -453,6 +456,7 @@ mutter_SOURCES = \
 	include/meta-shadow-factory.h		\
 	include/meta-window-actor.h		\
 	include/compositor-mutter.h 		\
+	core/above-tab-keycode.c		\
 	core/constraints.c			\
 	core/constraints.h			\
 	core/core.c				\
@@ -796,6 +800,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/above-tab-keycode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/async-getprop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bell.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/boxes.Po@am__quote@
@@ -1188,6 +1193,22 @@ region-utils.obj: compositor/region-utils.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='compositor/region-utils.c' object='region-utils.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o region-utils.obj `if test -f 'compositor/region-utils.c'; then $(CYGPATH_W) 'compositor/region-utils.c'; else $(CYGPATH_W) '$(srcdir)/compositor/region-utils.c'; fi`
+
+above-tab-keycode.o: core/above-tab-keycode.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT above-tab-keycode.o -MD -MP -MF $(DEPDIR)/above-tab-keycode.Tpo -c -o above-tab-keycode.o `test -f 'core/above-tab-keycode.c' || echo '$(srcdir)/'`core/above-tab-keycode.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/above-tab-keycode.Tpo $(DEPDIR)/above-tab-keycode.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='core/above-tab-keycode.c' object='above-tab-keycode.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o above-tab-keycode.o `test -f 'core/above-tab-keycode.c' || echo '$(srcdir)/'`core/above-tab-keycode.c
+
+above-tab-keycode.obj: core/above-tab-keycode.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT above-tab-keycode.obj -MD -MP -MF $(DEPDIR)/above-tab-keycode.Tpo -c -o above-tab-keycode.obj `if test -f 'core/above-tab-keycode.c'; then $(CYGPATH_W) 'core/above-tab-keycode.c'; else $(CYGPATH_W) '$(srcdir)/core/above-tab-keycode.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/above-tab-keycode.Tpo $(DEPDIR)/above-tab-keycode.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='core/above-tab-keycode.c' object='above-tab-keycode.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o above-tab-keycode.obj `if test -f 'core/above-tab-keycode.c'; then $(CYGPATH_W) 'core/above-tab-keycode.c'; else $(CYGPATH_W) '$(srcdir)/core/above-tab-keycode.c'; fi`
 
 constraints.o: core/constraints.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT constraints.o -MD -MP -MF $(DEPDIR)/constraints.Tpo -c -o constraints.o `test -f 'core/constraints.c' || echo '$(srcdir)/'`core/constraints.c

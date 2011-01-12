@@ -38,7 +38,7 @@
  * look out for.
  */
 #define THEME_MAJOR_VERSION 3
-#define THEME_MINOR_VERSION 2
+#define THEME_MINOR_VERSION 3
 #define THEME_VERSION (1000 * THEME_MAJOR_VERSION + THEME_MINOR_VERSION)
 
 #define METACITY_THEME_FILENAME_FORMAT "metacity-theme-%d.xml"
@@ -2955,6 +2955,7 @@ parse_style_element (GMarkupParseContext  *context,
       const char *function = NULL;
       const char *state = NULL;
       const char *draw_ops = NULL;
+      gint required_version;
       
       if (!locate_attributes (context, element_name, attribute_names, attribute_values,
                               error,
@@ -2973,13 +2974,14 @@ parse_style_element (GMarkupParseContext  *context,
           return;
         }
 
+      required_version = peek_required_version (info);
       if (meta_theme_earliest_version_with_button (info->button_type) >
-          info->theme->format_version)
+          (guint)required_version)
         {
           set_error (error, context, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE,
                      _("Button function \"%s\" does not exist in this version (%d, need %d)"),
                      function,
-                     info->theme->format_version,
+                     required_version,
                      meta_theme_earliest_version_with_button (info->button_type)
                      );
           return;
@@ -3188,6 +3190,31 @@ parse_style_set_element (GMarkupParseContext  *context,
           meta_frame_style_ref (frame_style);
           info->style_set->maximized_styles[frame_focus] = frame_style;
           break;
+        case META_FRAME_STATE_TILED_LEFT:
+          if (info->style_set->tiled_left_styles[frame_focus])
+            {
+              set_error (error, context, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE,
+                         _("Style has already been specified for state %s focus %s"),
+                         state, focus);
+              return;
+            }
+          meta_frame_style_ref (frame_style);
+          info->style_set->tiled_left_styles[frame_focus] = frame_style;
+          break;
+        case META_FRAME_STATE_TILED_RIGHT:
+          if (info->style_set->tiled_right_styles[frame_focus])
+            {
+              set_error (error, context, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE,
+                         _("Style has already been specified for state %s focus %s"),
+                         state, focus);
+              return;
+            }
+          meta_frame_style_ref (frame_style);
+          info->style_set->tiled_right_styles[frame_focus] = frame_style;
+          break;
+          meta_frame_style_ref (frame_style);
+          info->style_set->tiled_right_styles[frame_focus] = frame_style;
+          break;
         case META_FRAME_STATE_SHADED:
           if (info->style_set->shaded_styles[frame_resize][frame_focus])
             {
@@ -3209,6 +3236,28 @@ parse_style_set_element (GMarkupParseContext  *context,
             }
           meta_frame_style_ref (frame_style);
           info->style_set->maximized_and_shaded_styles[frame_focus] = frame_style;
+          break;
+        case META_FRAME_STATE_TILED_LEFT_AND_SHADED:
+          if (info->style_set->tiled_left_and_shaded_styles[frame_focus])
+            {
+              set_error (error, context, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE,
+                         _("Style has already been specified for state %s focus %s"),
+                         state, focus);
+              return;
+            }
+          meta_frame_style_ref (frame_style);
+          info->style_set->tiled_left_and_shaded_styles[frame_focus] = frame_style;
+          break;
+        case META_FRAME_STATE_TILED_RIGHT_AND_SHADED:
+          if (info->style_set->tiled_right_and_shaded_styles[frame_focus])
+            {
+              set_error (error, context, G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE,
+                         _("Style has already been specified for state %s focus %s"),
+                         state, focus);
+              return;
+            }
+          meta_frame_style_ref (frame_style);
+          info->style_set->tiled_right_and_shaded_styles[frame_focus] = frame_style;
           break;
         case META_FRAME_STATE_LAST:
           g_assert_not_reached ();
@@ -3828,7 +3877,7 @@ end_element_handler (GMarkupParseContext *context,
       g_assert (info->style);
 
       if (!meta_frame_style_validate (info->style,
-                                      info->theme->format_version,
+                                      peek_required_version (info),
                                       error))
         {
           add_context_to_error (error, context);

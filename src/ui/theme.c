@@ -452,6 +452,38 @@ meta_frame_layout_get_borders (const MetaFrameLayout *layout,
     }
 }
 
+static MetaButtonType
+map_button_function_to_type (MetaButtonFunction  function)
+{
+  switch (function)
+    {
+    case META_BUTTON_FUNCTION_SHADE:
+      return META_BUTTON_TYPE_SHADE;
+    case META_BUTTON_FUNCTION_ABOVE:
+      return META_BUTTON_TYPE_ABOVE;
+    case META_BUTTON_FUNCTION_STICK:
+      return META_BUTTON_TYPE_STICK;
+    case META_BUTTON_FUNCTION_UNSHADE:
+      return META_BUTTON_TYPE_UNSHADE;
+    case META_BUTTON_FUNCTION_UNABOVE:
+      return META_BUTTON_TYPE_UNABOVE;
+    case META_BUTTON_FUNCTION_UNSTICK:
+      return META_BUTTON_TYPE_UNSTICK;
+    case META_BUTTON_FUNCTION_MENU:
+      return META_BUTTON_TYPE_MENU;
+    case META_BUTTON_FUNCTION_MINIMIZE:
+      return META_BUTTON_TYPE_MINIMIZE;
+    case META_BUTTON_FUNCTION_MAXIMIZE:
+      return META_BUTTON_TYPE_MAXIMIZE;
+    case META_BUTTON_FUNCTION_CLOSE:
+      return META_BUTTON_TYPE_CLOSE;
+    case META_BUTTON_FUNCTION_LAST:
+      return META_BUTTON_TYPE_LAST;
+    }
+
+  return META_BUTTON_TYPE_LAST;
+}
+
 static MetaButtonSpace*
 rect_for_function (MetaFrameGeometry *fgeom,
                    MetaFrameFlags     flags,
@@ -702,7 +734,9 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
 
   for (i = 0; i < n_left; i++)
     {
-      if (i == 0) /* prefer left background if only one button */
+      if (n_left == 1)
+        left_bg_rects[i] = &fgeom->left_single_background;
+      else if (i == 0)
         left_bg_rects[i] = &fgeom->left_left_background;
       else if (i == (n_left - 1))
         left_bg_rects[i] = &fgeom->left_right_background;
@@ -712,8 +746,9 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
 
   for (i = 0; i < n_right; i++)
     {
-      /* prefer right background if only one button */
-      if (i == (n_right - 1))
+      if (n_right == 1)
+        right_bg_rects[i] = &fgeom->right_single_background;
+      else if (i == (n_right - 1))
         right_bg_rects[i] = &fgeom->right_right_background;
       else if (i == 0)
         right_bg_rects[i] = &fgeom->right_left_background;
@@ -808,6 +843,11 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
                     n_left, n_right);
         }
     }
+
+  /* Save the button layout */
+  fgeom->button_layout = *button_layout;
+  fgeom->n_left_buttons = n_left;
+  fgeom->n_right_buttons = n_right;
   
   /* center buttons vertically */
   button_y = (fgeom->top_height -
@@ -833,7 +873,9 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
       rect->visible.width = button_width;
       rect->visible.height = button_height;
 
-      if (flags & META_FRAME_MAXIMIZED)
+      if (flags & META_FRAME_MAXIMIZED ||
+          flags & META_FRAME_TILED_LEFT ||
+          flags & META_FRAME_TILED_RIGHT)
         {
           rect->clickable.x = rect->visible.x;
           rect->clickable.y = 0;
@@ -4198,6 +4240,66 @@ meta_frame_style_unref (MetaFrameStyle *style)
     }
 }
 
+static MetaButtonState
+map_button_state (MetaButtonType           button_type,
+                  const MetaFrameGeometry *fgeom,
+                  int                      middle_bg_offset,
+                  MetaButtonState          button_states[META_BUTTON_TYPE_LAST])
+{
+  MetaButtonFunction function = META_BUTTON_FUNCTION_LAST;
+
+  switch (button_type)
+    {
+    /* First hande functions, which map directly */
+    case META_BUTTON_TYPE_SHADE:
+    case META_BUTTON_TYPE_ABOVE:
+    case META_BUTTON_TYPE_STICK:
+    case META_BUTTON_TYPE_UNSHADE:
+    case META_BUTTON_TYPE_UNABOVE:
+    case META_BUTTON_TYPE_UNSTICK:
+    case META_BUTTON_TYPE_MENU:
+    case META_BUTTON_TYPE_MINIMIZE:
+    case META_BUTTON_TYPE_MAXIMIZE:
+    case META_BUTTON_TYPE_CLOSE:
+      return button_states[button_type];
+
+    /* Map position buttons to the corresponding function */
+    case META_BUTTON_TYPE_RIGHT_LEFT_BACKGROUND:
+    case META_BUTTON_TYPE_RIGHT_SINGLE_BACKGROUND:
+      if (fgeom->n_right_buttons > 0)
+        function = fgeom->button_layout.right_buttons[0];
+      break;
+    case META_BUTTON_TYPE_RIGHT_RIGHT_BACKGROUND:
+      if (fgeom->n_right_buttons > 0)
+        function = fgeom->button_layout.right_buttons[fgeom->n_right_buttons - 1];
+      break;
+    case META_BUTTON_TYPE_RIGHT_MIDDLE_BACKGROUND:
+      if (middle_bg_offset + 1 < fgeom->n_right_buttons)
+        function = fgeom->button_layout.right_buttons[middle_bg_offset + 1];
+      break;
+    case META_BUTTON_TYPE_LEFT_LEFT_BACKGROUND:
+    case META_BUTTON_TYPE_LEFT_SINGLE_BACKGROUND:
+      if (fgeom->n_left_buttons > 0)
+        function = fgeom->button_layout.left_buttons[0];
+      break;
+    case META_BUTTON_TYPE_LEFT_RIGHT_BACKGROUND:
+      if (fgeom->n_left_buttons > 0)
+        function = fgeom->button_layout.left_buttons[fgeom->n_left_buttons - 1];
+      break;
+    case META_BUTTON_TYPE_LEFT_MIDDLE_BACKGROUND:
+      if (middle_bg_offset + 1 < fgeom->n_left_buttons)
+        function = fgeom->button_layout.left_buttons[middle_bg_offset + 1];
+      break;
+    case META_BUTTON_TYPE_LAST:
+      break;
+    }
+
+  if (function != META_BUTTON_FUNCTION_LAST)
+    return button_states[map_button_function_to_type (function)];
+
+  return META_BUTTON_STATE_LAST;
+}
+
 static MetaDrawOpList*
 get_button (MetaFrameStyle *style,
             MetaButtonType  type,
@@ -4214,9 +4316,18 @@ get_button (MetaFrameStyle *style,
       parent = parent->parent;
     }
 
-  /* We fall back to middle button backgrounds if we don't
-   * have the ones on the sides
+  /* We fall back to the side buttons if we don't have
+   * single button backgrounds, and to middle button
+   * backgrounds if we don't have the ones on the sides
    */
+
+  if (op_list == NULL &&
+      type == META_BUTTON_TYPE_LEFT_SINGLE_BACKGROUND)
+    return get_button (style, META_BUTTON_TYPE_LEFT_LEFT_BACKGROUND, state);
+
+  if (op_list == NULL &&
+      type == META_BUTTON_TYPE_RIGHT_SINGLE_BACKGROUND)
+    return get_button (style, META_BUTTON_TYPE_RIGHT_RIGHT_BACKGROUND, state);
 
   if (op_list == NULL &&
       (type == META_BUTTON_TYPE_LEFT_LEFT_BACKGROUND ||
@@ -4292,6 +4403,10 @@ button_rect (MetaButtonType           type,
     case META_BUTTON_TYPE_LEFT_RIGHT_BACKGROUND:
       *rect = fgeom->left_right_background;
       break;
+
+    case META_BUTTON_TYPE_LEFT_SINGLE_BACKGROUND:
+      *rect = fgeom->left_single_background;
+      break;
       
     case META_BUTTON_TYPE_RIGHT_LEFT_BACKGROUND:
       *rect = fgeom->right_left_background;
@@ -4303,6 +4418,10 @@ button_rect (MetaButtonType           type,
       
     case META_BUTTON_TYPE_RIGHT_RIGHT_BACKGROUND:
       *rect = fgeom->right_right_background;
+      break;
+
+    case META_BUTTON_TYPE_RIGHT_SINGLE_BACKGROUND:
+      *rect = fgeom->right_single_background;
       break;
       
     case META_BUTTON_TYPE_CLOSE:
@@ -4540,9 +4659,13 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
           j = 0;
           while (j < META_BUTTON_TYPE_LAST)
             {
+              MetaButtonState button_state;
+
               button_rect (j, fgeom, middle_bg_offset, &rect);
               
-              op_list = get_button (style, j, button_states[j]);
+              button_state = map_button_state (j, fgeom, middle_bg_offset, button_states);
+
+              op_list = get_button (style, j, button_state);
               
               if (op_list)
                 {
@@ -4659,7 +4782,11 @@ meta_frame_style_set_unref (MetaFrameStyleSet *style_set)
         }
 
       free_focus_styles (style_set->maximized_styles);
+      free_focus_styles (style_set->tiled_left_styles);
+      free_focus_styles (style_set->tiled_right_styles);
       free_focus_styles (style_set->maximized_and_shaded_styles);
+      free_focus_styles (style_set->tiled_left_and_shaded_styles);
+      free_focus_styles (style_set->tiled_right_and_shaded_styles);
 
       if (style_set->parent)
         meta_frame_style_set_unref (style_set->parent);
@@ -4711,8 +4838,20 @@ get_style (MetaFrameStyleSet *style_set,
           case META_FRAME_STATE_MAXIMIZED:
             styles = style_set->maximized_styles;
             break;
+          case META_FRAME_STATE_TILED_LEFT:
+            styles = style_set->tiled_left_styles;
+            break;
+          case META_FRAME_STATE_TILED_RIGHT:
+            styles = style_set->tiled_right_styles;
+            break;
           case META_FRAME_STATE_MAXIMIZED_AND_SHADED:
             styles = style_set->maximized_and_shaded_styles;
+            break;
+          case META_FRAME_STATE_TILED_LEFT_AND_SHADED:
+            styles = style_set->tiled_left_and_shaded_styles;
+            break;
+          case META_FRAME_STATE_TILED_RIGHT_AND_SHADED:
+            styles = style_set->tiled_right_and_shaded_styles;
             break;
           case META_FRAME_STATE_NORMAL:
           case META_FRAME_STATE_SHADED:
@@ -4722,6 +4861,19 @@ get_style (MetaFrameStyleSet *style_set,
           }
 
         style = styles[focus];
+
+        /* Tiled states are optional, try falling back to non-tiled states */
+        if (style == NULL)
+          {
+            if (state == META_FRAME_STATE_TILED_LEFT ||
+                state == META_FRAME_STATE_TILED_RIGHT)
+              style = get_style (style_set, META_FRAME_STATE_NORMAL,
+                                 resize, focus);
+            else if (state == META_FRAME_STATE_TILED_LEFT_AND_SHADED ||
+                     state == META_FRAME_STATE_TILED_RIGHT_AND_SHADED)
+              style = get_style (style_set, META_FRAME_STATE_SHADED,
+                                 resize, focus);
+          }
 
         /* Try parent if we failed here */
         if (style == NULL && style_set->parent)
@@ -5085,7 +5237,8 @@ theme_get_style (MetaTheme     *theme,
   if (style_set == NULL)
     return NULL;
   
-  switch (flags & (META_FRAME_MAXIMIZED | META_FRAME_SHADED))
+  switch (flags & (META_FRAME_MAXIMIZED | META_FRAME_SHADED |
+                   META_FRAME_TILED_LEFT | META_FRAME_TILED_RIGHT))
     {
     case 0:
       state = META_FRAME_STATE_NORMAL;
@@ -5093,11 +5246,23 @@ theme_get_style (MetaTheme     *theme,
     case META_FRAME_MAXIMIZED:
       state = META_FRAME_STATE_MAXIMIZED;
       break;
+    case META_FRAME_TILED_LEFT:
+      state = META_FRAME_STATE_TILED_LEFT;
+      break;
+    case META_FRAME_TILED_RIGHT:
+      state = META_FRAME_STATE_TILED_RIGHT;
+      break;
     case META_FRAME_SHADED:
       state = META_FRAME_STATE_SHADED;
       break;
     case (META_FRAME_MAXIMIZED | META_FRAME_SHADED):
       state = META_FRAME_STATE_MAXIMIZED_AND_SHADED;
+      break;
+    case (META_FRAME_TILED_LEFT | META_FRAME_SHADED):
+      state = META_FRAME_STATE_TILED_LEFT_AND_SHADED;
+      break;
+    case (META_FRAME_TILED_RIGHT | META_FRAME_SHADED):
+      state = META_FRAME_STATE_TILED_RIGHT_AND_SHADED;
       break;
     default:
       g_assert_not_reached ();
@@ -5774,12 +5939,16 @@ meta_button_type_from_string (const char *str, MetaTheme *theme)
     return META_BUTTON_TYPE_LEFT_MIDDLE_BACKGROUND;
   else if (strcmp ("left_right_background", str) == 0)
     return META_BUTTON_TYPE_LEFT_RIGHT_BACKGROUND;
+  else if (strcmp ("left_single_background", str) == 0)
+    return META_BUTTON_TYPE_LEFT_SINGLE_BACKGROUND;
   else if (strcmp ("right_left_background", str) == 0)
     return META_BUTTON_TYPE_RIGHT_LEFT_BACKGROUND;
   else if (strcmp ("right_middle_background", str) == 0)
     return META_BUTTON_TYPE_RIGHT_MIDDLE_BACKGROUND;
   else if (strcmp ("right_right_background", str) == 0)
     return META_BUTTON_TYPE_RIGHT_RIGHT_BACKGROUND;
+  else if (strcmp ("right_single_background", str) == 0)
+    return META_BUTTON_TYPE_RIGHT_SINGLE_BACKGROUND;
   else
     return META_BUTTON_TYPE_LAST;
 }
@@ -5815,12 +5984,16 @@ meta_button_type_to_string (MetaButtonType type)
       return "left_middle_background";
     case META_BUTTON_TYPE_LEFT_RIGHT_BACKGROUND:
       return "left_right_background";
+    case META_BUTTON_TYPE_LEFT_SINGLE_BACKGROUND:
+      return "left_single_background";
     case META_BUTTON_TYPE_RIGHT_LEFT_BACKGROUND:
       return "right_left_background";
     case META_BUTTON_TYPE_RIGHT_MIDDLE_BACKGROUND:
       return "right_middle_background";
     case META_BUTTON_TYPE_RIGHT_RIGHT_BACKGROUND:
       return "right_right_background";      
+    case META_BUTTON_TYPE_RIGHT_SINGLE_BACKGROUND:
+      return "right_single_background";
     case META_BUTTON_TYPE_LAST:
       break;
     }
@@ -5902,10 +6075,18 @@ meta_frame_state_from_string (const char *str)
     return META_FRAME_STATE_NORMAL;
   else if (strcmp ("maximized", str) == 0)
     return META_FRAME_STATE_MAXIMIZED;
+  else if (strcmp ("tiled_left", str) == 0)
+    return META_FRAME_STATE_TILED_LEFT;
+  else if (strcmp ("tiled_right", str) == 0)
+    return META_FRAME_STATE_TILED_RIGHT;
   else if (strcmp ("shaded", str) == 0)
     return META_FRAME_STATE_SHADED;
   else if (strcmp ("maximized_and_shaded", str) == 0)
     return META_FRAME_STATE_MAXIMIZED_AND_SHADED;
+  else if (strcmp ("tiled_left_and_shaded", str) == 0)
+    return META_FRAME_STATE_TILED_LEFT_AND_SHADED;
+  else if (strcmp ("tiled_right_and_shaded", str) == 0)
+    return META_FRAME_STATE_TILED_RIGHT_AND_SHADED;
   else
     return META_FRAME_STATE_LAST;
 }
@@ -5919,10 +6100,18 @@ meta_frame_state_to_string (MetaFrameState state)
       return "normal";
     case META_FRAME_STATE_MAXIMIZED:
       return "maximized";
+    case META_FRAME_STATE_TILED_LEFT:
+      return "tiled_left";
+    case META_FRAME_STATE_TILED_RIGHT:
+      return "tiled_right";
     case META_FRAME_STATE_SHADED:
       return "shaded";
     case META_FRAME_STATE_MAXIMIZED_AND_SHADED:
       return "maximized_and_shaded";
+    case META_FRAME_STATE_TILED_LEFT_AND_SHADED:
+      return "tiled_left_and_shaded";
+    case META_FRAME_STATE_TILED_RIGHT_AND_SHADED:
+      return "tiled_right_and_shaded";
     case META_FRAME_STATE_LAST:
       break;
     }
@@ -6693,6 +6882,10 @@ meta_theme_earliest_version_with_button (MetaButtonType type)
     case META_BUTTON_TYPE_UNABOVE:
     case META_BUTTON_TYPE_UNSTICK:
       return 2000;
+
+    case META_BUTTON_TYPE_LEFT_SINGLE_BACKGROUND:
+    case META_BUTTON_TYPE_RIGHT_SINGLE_BACKGROUND:
+      return 3003;
 
     default:
       meta_warning("Unknown button %d\n", type);

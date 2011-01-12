@@ -2,7 +2,7 @@ AC_PREREQ(2.50)
 
 m4_define([mutter_major_version], [2])
 m4_define([mutter_minor_version], [91])
-m4_define([mutter_micro_version], [3])
+m4_define([mutter_micro_version], [5])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -61,7 +61,7 @@ AC_CHECK_SIZEOF(__int64)
 ## byte order
 AC_C_BIGENDIAN
 
-GTK_MIN_VERSION=2.90.7
+GTK_MIN_VERSION=2.91.7
 CANBERRA_GTK=libcanberra-gtk3
 CANBERRA_GTK_VERSION=0.26
 

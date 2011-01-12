@@ -60,6 +60,16 @@ struct _MetaUI
 void
 meta_ui_init (int *argc, char ***argv)
 {
+  /* As of 2.91.7, Gdk uses XI2 by default, which conflicts with the
+   * direct X calls we use - in particular, events caused by calls to
+   * XGrabPointer/XGrabKeyboard are no longer understood by GDK, while
+   * GDK will no longer generate the core XEvents we process.
+   * So at least for now, enforce the previous behavior.
+   */
+#if GTK_CHECK_VERSION(2, 91, 7)
+  gdk_disable_multidevice ();
+#endif
+
   if (!gtk_init_check (argc, argv))
     meta_fatal ("Unable to open X display %s\n", XDisplayName (NULL));
 
@@ -91,6 +101,7 @@ static gboolean
 maybe_redirect_mouse_event (XEvent *xevent)
 {
   GdkDisplay *gdisplay;
+  GdkDeviceManager *gmanager;
   MetaUI *ui;
   GdkEvent *gevent;
   GdkWindow *gdk_window;
@@ -118,7 +129,7 @@ maybe_redirect_mouse_event (XEvent *xevent)
   if (!ui)
     return FALSE;
 
-  gdk_window = gdk_window_lookup_for_display (gdisplay, window);
+  gdk_window = gdk_x11_window_lookup_for_display (gdisplay, window);
   if (gdk_window == NULL)
     return FALSE;
 
@@ -196,7 +207,8 @@ maybe_redirect_mouse_event (XEvent *xevent)
     }
 
   /* If we've gotten here, we've created the gdk_event and should send it on */
-  gdk_event_set_device (gevent, gdk_display_get_core_pointer (gdisplay));
+  gmanager = gdk_display_get_device_manager (gdisplay);
+  gdk_event_set_device (gevent, gdk_device_manager_get_client_pointer (gmanager));
   gtk_main_do_event (gevent);
   gdk_event_free (gevent);
 
@@ -399,8 +411,10 @@ meta_ui_map_frame   (MetaUI *ui,
                      Window  xwindow)
 {
   GdkWindow *window;
+  GdkDisplay *display;
 
-  window = gdk_xid_table_lookup (xwindow);
+  display = gdk_x11_lookup_xdisplay (ui->xdisplay);
+  window = gdk_x11_window_lookup_for_display (display, xwindow);
 
   if (window)
     gdk_window_show_unraised (window);
@@ -411,8 +425,10 @@ meta_ui_unmap_frame (MetaUI *ui,
                      Window  xwindow)
 {
   GdkWindow *window;
+  GdkDisplay *display;
 
-  window = gdk_xid_table_lookup (xwindow);
+  display = gdk_x11_lookup_xdisplay (ui->xdisplay);
+  window = gdk_x11_window_lookup_for_display (display, xwindow);
 
   if (window)
     gdk_window_hide (window);
@@ -641,8 +657,10 @@ meta_ui_window_should_not_cause_focus (Display *xdisplay,
                                        Window   xwindow)
 {
   GdkWindow *window;
+  GdkDisplay *display;
 
-  window = gdk_xid_table_lookup (xwindow);
+  display = gdk_x11_lookup_xdisplay (xdisplay);
+  window = gdk_x11_window_lookup_for_display (display, xwindow);
 
   /* we shouldn't cause focus if we're an override redirect
    * toplevel which is not foreign
@@ -657,17 +675,20 @@ char*
 meta_text_property_to_utf8 (Display             *xdisplay,
                             const XTextProperty *prop)
 {
+  GdkDisplay *display;
   char **list;
   int count;
   char *retval;
   
   list = NULL;
 
-  count = gdk_text_property_to_utf8_list (gdk_x11_xatom_to_atom (prop->encoding),
-                                          prop->format,
-                                          prop->value,
-                                          prop->nitems,
-                                          &list);
+  display = gdk_x11_lookup_xdisplay (xdisplay);
+  count = gdk_text_property_to_utf8_list_for_display (display,
+                                                      gdk_x11_xatom_to_atom_for_display (display, prop->encoding),
+                                                      prop->format,
+                                                      prop->value,
+                                                      prop->nitems,
+                                                      &list);
 
   if (count == 0)
     retval = NULL;
@@ -740,14 +761,50 @@ meta_ui_accelerator_parse (const char      *accel,
                            guint           *keycode,
                            GdkModifierType *keymask)
 {
+  const char *above_tab;
+
   if (accel[0] == '0' && accel[1] == 'x')
     {
       *keysym = 0;
       *keycode = (guint) strtoul (accel, NULL, 16);
       *keymask = 0;
+
+      return;
     }
-  else
-    gtk_accelerator_parse (accel, keysym, keymask);
+
+  /* The key name 'Above_Tab' is special - it's not an actual keysym name,
+   * but rather refers to the key above the tab key. In order to use
+   * the GDK parsing for modifiers in combination with it, we substitute
+   * it with 'Tab' temporarily before calling gtk_accelerator_parse().
+   */
+#define is_word_character(c) (g_ascii_isalnum(c) || ((c) == '_'))
+#define ABOVE_TAB "Above_Tab"
+#define ABOVE_TAB_LEN 9
+
+  above_tab = strstr (accel, ABOVE_TAB);
+  if (above_tab &&
+      (above_tab == accel || !is_word_character (above_tab[-1])) &&
+      !is_word_character (above_tab[ABOVE_TAB_LEN]))
+    {
+      char *before = g_strndup (accel, above_tab - accel);
+      char *after = g_strdup (above_tab + ABOVE_TAB_LEN);
+      char *replaced = g_strconcat (before, "Tab", after, NULL);
+
+      gtk_accelerator_parse (replaced, NULL, keymask);
+
+      g_free (before);
+      g_free (after);
+      g_free (replaced);
+
+      *keysym = META_KEY_ABOVE_TAB;
+      return;
+    }
+
+#undef is_word_character
+#undef ABOVE_TAB
+#undef ABOVE_TAB_LEN
+
+  gtk_accelerator_parse (accel, keysym, keymask);
 }
 
 gboolean
@@ -892,9 +949,11 @@ gboolean
 meta_ui_window_is_widget (MetaUI *ui,
                           Window  xwindow)
 {
+  GdkDisplay *display;
   GdkWindow *window;
 
-  window = gdk_xid_table_lookup (xwindow);
+  display = gdk_x11_lookup_xdisplay (ui->xdisplay);
+  window = gdk_x11_window_lookup_for_display (display, xwindow);
 
   if (window)
     {
