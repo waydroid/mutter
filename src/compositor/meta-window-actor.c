@@ -24,6 +24,14 @@
 #include "meta-shaped-texture.h"
 #include "meta-window-actor-private.h"
 
+enum {
+  SIZE_CHANGED,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = {0};
+
+
 struct _MetaWindowActorPrivate
 {
   XWindowAttributes attrs;
@@ -275,6 +283,14 @@ meta_window_actor_class_init (MetaWindowActorClass *klass)
   g_object_class_install_property (object_class,
                                    PROP_SHADOW_CLASS,
                                    pspec);
+
+  signals[SIZE_CHANGED] =
+    g_signal_new ("size-changed",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
 }
 
 static void
@@ -301,7 +317,6 @@ window_decorated_notify (MetaWindow *mw,
   MetaDisplay            *display  = meta_screen_get_display (screen);
   Display                *xdisplay = meta_display_get_xdisplay (display);
   Window                  new_xwindow;
-  MetaCompScreen         *info;
   XWindowAttributes       attrs;
 
   /*
@@ -316,8 +331,6 @@ window_decorated_notify (MetaWindow *mw,
     new_xwindow = meta_window_get_xwindow (mw);
 
   meta_window_actor_detach (self);
-
-  info = meta_screen_get_compositor_data (screen);
 
   /*
    * First of all, clean up any resources we are currently using and will
@@ -362,9 +375,6 @@ meta_window_actor_constructed (GObject *object)
   Window                  xwindow  = priv->xwindow;
   Display                *xdisplay = meta_display_get_xdisplay (display);
   XRenderPictFormat      *format;
-  MetaCompositor         *compositor;
-
-  compositor = meta_display_get_compositor (display);
 
 #ifdef HAVE_SHAPE
   /* Listen for ShapeNotify events on the window */
@@ -881,6 +891,19 @@ ClutterActor *
 meta_window_actor_get_texture (MetaWindowActor *self)
 {
   return self->priv->actor;
+}
+
+/**
+ * meta_window_actor_is_destroyed:
+ *
+ * Gets whether the X window that the actor was displaying has been destroyed
+ *
+ * Return value: %TRUE when the window is destroyed, otherwise %FALSE
+ */
+gboolean
+meta_window_actor_is_destroyed (MetaWindowActor *self)
+{
+  return self->priv->disposed;
 }
 
 gboolean
@@ -1600,6 +1623,8 @@ meta_window_actor_update_bounding_region (MetaWindowActor *self,
    */
   if (!priv->shaped)
     meta_window_actor_invalidate_shadow (self);
+
+  g_signal_emit (self, signals[SIZE_CHANGED], 0);
 }
 
 static void
@@ -1764,7 +1789,6 @@ check_needs_pixmap (MetaWindowActor *self)
   MetaCompScreen      *info     = meta_screen_get_compositor_data (screen);
   MetaCompositor      *compositor;
   Window               xwindow  = priv->xwindow;
-  gboolean             full     = FALSE;
 
   if (!priv->needs_pixmap)
     return;
@@ -1837,8 +1861,6 @@ check_needs_pixmap (MetaWindowActor *self)
                     NULL);
 
       meta_window_actor_update_bounding_region (self, pxm_width, pxm_height);
-
-      full = TRUE;
     }
 
   meta_error_trap_pop (display);
