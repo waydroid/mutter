@@ -91,6 +91,10 @@ GType meta_maximize_flags_get_type (void) G_GNUC_CONST;
 GType meta_comp_effect_get_type (void) G_GNUC_CONST;
 #define MUTTER_TYPE_COMP_EFFECT (meta_comp_effect_get_type())
 
+/* enumerations from "include/screen.h" */
+GType meta_screen_corner_get_type (void) G_GNUC_CONST;
+#define MUTTER_TYPE_SCREEN_CORNER (meta_screen_corner_get_type())
+
 /* enumerations from "include/display.h" */
 GType meta_tab_list_get_type (void) G_GNUC_CONST;
 #define MUTTER_TYPE_TAB_LIST (meta_tab_list_get_type())

@@ -61,13 +61,6 @@ typedef enum {
 
 #define NUMBER_OF_QUEUES 3
 
-typedef enum {
-  META_TILE_NONE,
-  META_TILE_LEFT,
-  META_TILE_RIGHT,
-  META_TILE_MAXIMIZED
-} MetaTileMode;
-
 struct _MetaWindow
 {
   GObject parent_instance;
@@ -438,6 +431,7 @@ void        meta_window_unmanage           (MetaWindow  *window,
 void        meta_window_calc_showing       (MetaWindow  *window);
 void        meta_window_queue              (MetaWindow  *window,
                                             guint queuebits);
+void        meta_window_tile               (MetaWindow        *window);
 void        meta_window_maximize_internal  (MetaWindow        *window,
                                             MetaMaximizeFlags  directions,
                                             MetaRectangle     *saved_rect);

@@ -535,6 +535,9 @@ meta_display_get_keybinding_action (MetaDisplay  *display,
   mask = mask & 0xff & ~display->ignored_modifier_mask;
   binding = display_get_keybinding (display, keysym, keycode, mask);
 
+  if (!binding && keycode == meta_display_get_above_tab_keycode (display))
+    binding = display_get_keybinding (display, META_KEY_ABOVE_TAB, keycode, mask);
+
   if (binding)
     return meta_prefs_get_keybinding_action (binding->name);
   else
@@ -1548,15 +1551,24 @@ process_mouse_move_resize_grab (MetaDisplay *display,
 
   if (keysym == XK_Escape)
     {
+      /* Hide the tiling preview if necessary */
+      if (window->tile_mode != META_TILE_NONE)
+        meta_screen_tile_preview_hide (screen);
+
+      /* Restore the original tile mode */
+      window->tile_mode = display->grab_tile_mode;
+
       /* End move or resize and restore to original state.  If the
        * window was a maximized window that had been "shaken loose" we
        * need to remaximize it.  In normal cases, we need to do a
        * moveresize now to get the position back to the original.
        */
-      if (window->shaken_loose)
+      if (window->shaken_loose || window->tile_mode == META_TILE_MAXIMIZED)
         meta_window_maximize (window,
                               META_MAXIMIZE_HORIZONTAL |
                               META_MAXIMIZE_VERTICAL);
+      else if (window->tile_mode != META_TILE_NONE)
+        meta_window_tile (window);
       else
         meta_window_move_resize (display->grab_window,
                                  TRUE,
