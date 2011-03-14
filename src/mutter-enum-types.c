@@ -3,8 +3,8 @@
 
 #include "mutter-enum-types.h"
 
-/* enumerations from "include/boxes.h" */
-#include "include/boxes.h"
+/* enumerations from "meta/boxes.h" */
+#include "meta/boxes.h"
 
 GType
 meta_edge_type_get_type (void)
@@ -30,132 +30,8 @@ meta_edge_type_get_type (void)
   return g_enum_type_id__volatile;
 }
 
-/* enumerations from "ui/gradient.h" */
-#include "ui/gradient.h"
-
-GType
-meta_gradient_type_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_GRADIENT_VERTICAL, "META_GRADIENT_VERTICAL", "vertical" },
-        { META_GRADIENT_HORIZONTAL, "META_GRADIENT_HORIZONTAL", "horizontal" },
-        { META_GRADIENT_DIAGONAL, "META_GRADIENT_DIAGONAL", "diagonal" },
-        { META_GRADIENT_LAST, "META_GRADIENT_LAST", "last" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaGradientType"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-
-/* enumerations from "include/main.h" */
-#include "include/main.h"
-
-GType
-meta_exit_code_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_EXIT_SUCCESS, "META_EXIT_SUCCESS", "success" },
-        { META_EXIT_ERROR, "META_EXIT_ERROR", "error" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaExitCode"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-
-/* enumerations from "include/util.h" */
-#include "include/util.h"
-
-GType
-meta_debug_topic_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GFlagsValue values[] = {
-        { META_DEBUG_VERBOSE, "META_DEBUG_VERBOSE", "verbose" },
-        { META_DEBUG_FOCUS, "META_DEBUG_FOCUS", "focus" },
-        { META_DEBUG_WORKAREA, "META_DEBUG_WORKAREA", "workarea" },
-        { META_DEBUG_STACK, "META_DEBUG_STACK", "stack" },
-        { META_DEBUG_THEMES, "META_DEBUG_THEMES", "themes" },
-        { META_DEBUG_SM, "META_DEBUG_SM", "sm" },
-        { META_DEBUG_EVENTS, "META_DEBUG_EVENTS", "events" },
-        { META_DEBUG_WINDOW_STATE, "META_DEBUG_WINDOW_STATE", "window-state" },
-        { META_DEBUG_WINDOW_OPS, "META_DEBUG_WINDOW_OPS", "window-ops" },
-        { META_DEBUG_GEOMETRY, "META_DEBUG_GEOMETRY", "geometry" },
-        { META_DEBUG_PLACEMENT, "META_DEBUG_PLACEMENT", "placement" },
-        { META_DEBUG_PING, "META_DEBUG_PING", "ping" },
-        { META_DEBUG_XINERAMA, "META_DEBUG_XINERAMA", "xinerama" },
-        { META_DEBUG_KEYBINDINGS, "META_DEBUG_KEYBINDINGS", "keybindings" },
-        { META_DEBUG_SYNC, "META_DEBUG_SYNC", "sync" },
-        { META_DEBUG_ERRORS, "META_DEBUG_ERRORS", "errors" },
-        { META_DEBUG_STARTUP, "META_DEBUG_STARTUP", "startup" },
-        { META_DEBUG_PREFS, "META_DEBUG_PREFS", "prefs" },
-        { META_DEBUG_GROUPS, "META_DEBUG_GROUPS", "groups" },
-        { META_DEBUG_RESIZING, "META_DEBUG_RESIZING", "resizing" },
-        { META_DEBUG_SHAPES, "META_DEBUG_SHAPES", "shapes" },
-        { META_DEBUG_COMPOSITOR, "META_DEBUG_COMPOSITOR", "compositor" },
-        { META_DEBUG_EDGE_RESISTANCE, "META_DEBUG_EDGE_RESISTANCE", "edge-resistance" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_flags_register_static (g_intern_static_string ("MetaDebugTopic"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-GType
-meta_later_type_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_LATER_RESIZE, "META_LATER_RESIZE", "resize" },
-        { META_LATER_BEFORE_REDRAW, "META_LATER_BEFORE_REDRAW", "before-redraw" },
-        { META_LATER_IDLE, "META_LATER_IDLE", "idle" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaLaterType"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-
-/* enumerations from "include/common.h" */
-#include "include/common.h"
+/* enumerations from "meta/common.h" */
+#include "meta/common.h"
 
 GType
 meta_frame_flags_get_type (void)
@@ -596,8 +472,187 @@ meta_stack_layer_get_type (void)
   return g_enum_type_id__volatile;
 }
 
-/* enumerations from "include/prefs.h" */
-#include "include/prefs.h"
+/* enumerations from "meta/compositor.h" */
+#include "meta/compositor.h"
+
+GType
+meta_comp_effect_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { META_COMP_EFFECT_CREATE, "META_COMP_EFFECT_CREATE", "create" },
+        { META_COMP_EFFECT_UNMINIMIZE, "META_COMP_EFFECT_UNMINIMIZE", "unminimize" },
+        { META_COMP_EFFECT_DESTROY, "META_COMP_EFFECT_DESTROY", "destroy" },
+        { META_COMP_EFFECT_MINIMIZE, "META_COMP_EFFECT_MINIMIZE", "minimize" },
+        { META_COMP_EFFECT_NONE, "META_COMP_EFFECT_NONE", "none" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_enum_register_static (g_intern_static_string ("MetaCompEffect"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+
+/* enumerations from "meta/display.h" */
+#include "meta/display.h"
+
+GType
+meta_tab_list_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { META_TAB_LIST_NORMAL, "META_TAB_LIST_NORMAL", "normal" },
+        { META_TAB_LIST_DOCKS, "META_TAB_LIST_DOCKS", "docks" },
+        { META_TAB_LIST_GROUP, "META_TAB_LIST_GROUP", "group" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_enum_register_static (g_intern_static_string ("MetaTabList"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+GType
+meta_tab_show_type_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { META_TAB_SHOW_ICON, "META_TAB_SHOW_ICON", "icon" },
+        { META_TAB_SHOW_INSTANTLY, "META_TAB_SHOW_INSTANTLY", "instantly" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_enum_register_static (g_intern_static_string ("MetaTabShowType"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+GType
+meta_atom_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { META_ATOM_FIRST, "META_ATOM_FIRST", "first" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_enum_register_static (g_intern_static_string ("MetaAtom"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+
+/* enumerations from "meta/gradient.h" */
+#include "meta/gradient.h"
+
+GType
+meta_gradient_type_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { META_GRADIENT_VERTICAL, "META_GRADIENT_VERTICAL", "vertical" },
+        { META_GRADIENT_HORIZONTAL, "META_GRADIENT_HORIZONTAL", "horizontal" },
+        { META_GRADIENT_DIAGONAL, "META_GRADIENT_DIAGONAL", "diagonal" },
+        { META_GRADIENT_LAST, "META_GRADIENT_LAST", "last" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_enum_register_static (g_intern_static_string ("MetaGradientType"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+
+/* enumerations from "meta/main.h" */
+#include "meta/main.h"
+
+GType
+meta_exit_code_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { META_EXIT_SUCCESS, "META_EXIT_SUCCESS", "success" },
+        { META_EXIT_ERROR, "META_EXIT_ERROR", "error" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_enum_register_static (g_intern_static_string ("MetaExitCode"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+
+/* enumerations from "meta/meta-plugin.h" */
+#include "meta/meta-plugin.h"
+
+GType
+meta_modal_options_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { META_MODAL_POINTER_ALREADY_GRABBED, "META_MODAL_POINTER_ALREADY_GRABBED", "pointer-already-grabbed" },
+        { META_MODAL_KEYBOARD_ALREADY_GRABBED, "META_MODAL_KEYBOARD_ALREADY_GRABBED", "keyboard-already-grabbed" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_flags_register_static (g_intern_static_string ("MetaModalOptions"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+
+/* enumerations from "meta/prefs.h" */
+#include "meta/prefs.h"
 
 GType
 meta_preference_get_type (void)
@@ -637,7 +692,6 @@ meta_preference_get_type (void)
         { META_PREF_RESIZE_WITH_RIGHT_BUTTON, "META_PREF_RESIZE_WITH_RIGHT_BUTTON", "resize-with-right-button" },
         { META_PREF_EDGE_TILING, "META_PREF_EDGE_TILING", "edge-tiling" },
         { META_PREF_FORCE_FULLSCREEN, "META_PREF_FORCE_FULLSCREEN", "force-fullscreen" },
-        { META_PREF_CLUTTER_PLUGINS, "META_PREF_CLUTTER_PLUGINS", "clutter-plugins" },
         { META_PREF_LIVE_HIDDEN_WINDOWS, "META_PREF_LIVE_HIDDEN_WINDOWS", "live-hidden-windows" },
         { META_PREF_NO_TAB_POPUP, "META_PREF_NO_TAB_POPUP", "no-tab-popup" },
         { 0, NULL, NULL }
@@ -810,8 +864,106 @@ meta_visual_bell_type_get_type (void)
   return g_enum_type_id__volatile;
 }
 
-/* enumerations from "include/window.h" */
-#include "include/window.h"
+/* enumerations from "meta/screen.h" */
+#include "meta/screen.h"
+
+GType
+meta_screen_corner_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { META_SCREEN_TOPLEFT, "META_SCREEN_TOPLEFT", "topleft" },
+        { META_SCREEN_TOPRIGHT, "META_SCREEN_TOPRIGHT", "topright" },
+        { META_SCREEN_BOTTOMLEFT, "META_SCREEN_BOTTOMLEFT", "bottomleft" },
+        { META_SCREEN_BOTTOMRIGHT, "META_SCREEN_BOTTOMRIGHT", "bottomright" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_enum_register_static (g_intern_static_string ("MetaScreenCorner"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+
+/* enumerations from "meta/util.h" */
+#include "meta/util.h"
+
+GType
+meta_debug_topic_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { META_DEBUG_VERBOSE, "META_DEBUG_VERBOSE", "verbose" },
+        { META_DEBUG_FOCUS, "META_DEBUG_FOCUS", "focus" },
+        { META_DEBUG_WORKAREA, "META_DEBUG_WORKAREA", "workarea" },
+        { META_DEBUG_STACK, "META_DEBUG_STACK", "stack" },
+        { META_DEBUG_THEMES, "META_DEBUG_THEMES", "themes" },
+        { META_DEBUG_SM, "META_DEBUG_SM", "sm" },
+        { META_DEBUG_EVENTS, "META_DEBUG_EVENTS", "events" },
+        { META_DEBUG_WINDOW_STATE, "META_DEBUG_WINDOW_STATE", "window-state" },
+        { META_DEBUG_WINDOW_OPS, "META_DEBUG_WINDOW_OPS", "window-ops" },
+        { META_DEBUG_GEOMETRY, "META_DEBUG_GEOMETRY", "geometry" },
+        { META_DEBUG_PLACEMENT, "META_DEBUG_PLACEMENT", "placement" },
+        { META_DEBUG_PING, "META_DEBUG_PING", "ping" },
+        { META_DEBUG_XINERAMA, "META_DEBUG_XINERAMA", "xinerama" },
+        { META_DEBUG_KEYBINDINGS, "META_DEBUG_KEYBINDINGS", "keybindings" },
+        { META_DEBUG_SYNC, "META_DEBUG_SYNC", "sync" },
+        { META_DEBUG_ERRORS, "META_DEBUG_ERRORS", "errors" },
+        { META_DEBUG_STARTUP, "META_DEBUG_STARTUP", "startup" },
+        { META_DEBUG_PREFS, "META_DEBUG_PREFS", "prefs" },
+        { META_DEBUG_GROUPS, "META_DEBUG_GROUPS", "groups" },
+        { META_DEBUG_RESIZING, "META_DEBUG_RESIZING", "resizing" },
+        { META_DEBUG_SHAPES, "META_DEBUG_SHAPES", "shapes" },
+        { META_DEBUG_COMPOSITOR, "META_DEBUG_COMPOSITOR", "compositor" },
+        { META_DEBUG_EDGE_RESISTANCE, "META_DEBUG_EDGE_RESISTANCE", "edge-resistance" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_flags_register_static (g_intern_static_string ("MetaDebugTopic"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+GType
+meta_later_type_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { META_LATER_RESIZE, "META_LATER_RESIZE", "resize" },
+        { META_LATER_BEFORE_REDRAW, "META_LATER_BEFORE_REDRAW", "before-redraw" },
+        { META_LATER_IDLE, "META_LATER_IDLE", "idle" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_enum_register_static (g_intern_static_string ("MetaLaterType"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+
+/* enumerations from "meta/window.h" */
+#include "meta/window.h"
 
 GType
 meta_window_type_get_type (void)
@@ -865,159 +1017,6 @@ meta_maximize_flags_get_type (void)
 
       g_enum_type_id =
         g_flags_register_static (g_intern_static_string ("MetaMaximizeFlags"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-
-/* enumerations from "include/compositor.h" */
-#include "include/compositor.h"
-
-GType
-meta_comp_effect_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_COMP_EFFECT_CREATE, "META_COMP_EFFECT_CREATE", "create" },
-        { META_COMP_EFFECT_UNMINIMIZE, "META_COMP_EFFECT_UNMINIMIZE", "unminimize" },
-        { META_COMP_EFFECT_DESTROY, "META_COMP_EFFECT_DESTROY", "destroy" },
-        { META_COMP_EFFECT_MINIMIZE, "META_COMP_EFFECT_MINIMIZE", "minimize" },
-        { META_COMP_EFFECT_NONE, "META_COMP_EFFECT_NONE", "none" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaCompEffect"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-
-/* enumerations from "include/screen.h" */
-#include "include/screen.h"
-
-GType
-meta_screen_corner_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_SCREEN_TOPLEFT, "META_SCREEN_TOPLEFT", "topleft" },
-        { META_SCREEN_TOPRIGHT, "META_SCREEN_TOPRIGHT", "topright" },
-        { META_SCREEN_BOTTOMLEFT, "META_SCREEN_BOTTOMLEFT", "bottomleft" },
-        { META_SCREEN_BOTTOMRIGHT, "META_SCREEN_BOTTOMRIGHT", "bottomright" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaScreenCorner"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-
-/* enumerations from "include/display.h" */
-#include "include/display.h"
-
-GType
-meta_tab_list_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_TAB_LIST_NORMAL, "META_TAB_LIST_NORMAL", "normal" },
-        { META_TAB_LIST_DOCKS, "META_TAB_LIST_DOCKS", "docks" },
-        { META_TAB_LIST_GROUP, "META_TAB_LIST_GROUP", "group" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaTabList"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-GType
-meta_tab_show_type_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_TAB_SHOW_ICON, "META_TAB_SHOW_ICON", "icon" },
-        { META_TAB_SHOW_INSTANTLY, "META_TAB_SHOW_INSTANTLY", "instantly" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaTabShowType"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-GType
-meta_atom_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_ATOM_FIRST, "META_ATOM_FIRST", "first" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaAtom"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-
-/* enumerations from "include/meta-plugin.h" */
-#include "include/meta-plugin.h"
-
-GType
-meta_modal_options_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GFlagsValue values[] = {
-        { META_MODAL_POINTER_ALREADY_GRABBED, "META_MODAL_POINTER_ALREADY_GRABBED", "pointer-already-grabbed" },
-        { META_MODAL_KEYBOARD_ALREADY_GRABBED, "META_MODAL_KEYBOARD_ALREADY_GRABBED", "keyboard-already-grabbed" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_flags_register_static (g_intern_static_string ("MetaModalOptions"), values);
 
       g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
     }

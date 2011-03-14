@@ -28,19 +28,19 @@
 #include "window-private.h"
 #include "boxes-private.h"
 #include "edge-resistance.h"
-#include "util.h"
-#include "frame-private.h"
-#include "errors.h"
+#include <meta/util.h>
+#include "frame.h"
+#include <meta/errors.h>
 #include "workspace-private.h"
 #include "stack.h"
 #include "keybindings-private.h"
 #include "ui.h"
 #include "place.h"
 #include "session.h"
-#include "prefs.h"
+#include <meta/prefs.h>
 #include "resizepopup.h"
 #include "xprops.h"
-#include "group.h"
+#include <meta/group.h>
 #include "window-props.h"
 #include "constraints.h"
 #include "mutter-enum-types.h"
@@ -9459,6 +9459,14 @@ meta_window_is_skip_taskbar (MetaWindow *window)
   return window->skip_taskbar;
 }
 
+/**
+ * meta_window_get_rect:
+ * @window: a #MetaWindow
+ *
+ * Gets the rectangle that bounds @window, ignoring any window decorations.
+ *
+ * Return value: (transfer none): the #MetaRectangle for the window
+ */
 MetaRectangle *
 meta_window_get_rect (MetaWindow *window)
 {

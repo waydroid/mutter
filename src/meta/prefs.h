@@ -26,7 +26,7 @@
 #define META_PREFS_H
 
 /* This header is a "common" one between the UI and core side */
-#include "common.h"
+#include <meta/common.h>
 #include <pango/pango-font.h>
 
 typedef enum
@@ -61,7 +61,6 @@ typedef enum
   META_PREF_RESIZE_WITH_RIGHT_BUTTON,
   META_PREF_EDGE_TILING,
   META_PREF_FORCE_FULLSCREEN,
-  META_PREF_CLUTTER_PLUGINS,
   META_PREF_LIVE_HIDDEN_WINDOWS,
   META_PREF_NO_TAB_POPUP
 } MetaPreference;
@@ -134,29 +133,11 @@ void meta_prefs_set_compositing_manager (gboolean whether);
 
 void meta_prefs_set_force_fullscreen (gboolean whether);
 
-GSList * meta_prefs_get_clutter_plugins (void);
-
-/**
- * Sets the list of plugins persistently in GConf
- *
- * \param list   list of plugin:option pairs
- */
-void meta_prefs_set_clutter_plugins (GSList *list);
-
-/**
- * Sets the list of plugins temporarily for this process. The value
- * from GConf will be ignored.
- *
- * \param list   list of plugin:option pairs
- */
-void meta_prefs_override_clutter_plugins (GSList *list);
-
 gboolean meta_prefs_get_live_hidden_windows (void);
 void     meta_prefs_set_live_hidden_windows (gboolean whether);
 
 gboolean meta_prefs_get_no_tab_popup (void);
 void     meta_prefs_set_no_tab_popup (gboolean whether);
-void     meta_prefs_override_no_tab_popup (gboolean whether);
 
 /* XXX FIXME This should be x-macroed, but isn't yet because it would be
  * difficult (or perhaps impossible) to add the suffixes using the current
