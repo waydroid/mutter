@@ -25,7 +25,7 @@
 #define META_UI_H
 
 /* Don't include gtk.h or gdk.h here */
-#include "common.h"
+#include <meta/common.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <glib.h>
@@ -41,7 +41,7 @@ typedef enum
   META_UI_DIRECTION_RTL
 } MetaUIDirection;
 
-void meta_ui_init (int *argc, char ***argv);
+void meta_ui_init (void);
 
 Display* meta_ui_get_display (void);
 

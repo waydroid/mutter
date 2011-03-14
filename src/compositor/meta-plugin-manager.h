@@ -24,11 +24,11 @@
 #ifndef META_PLUGIN_MANAGER_H_
 #define META_PLUGIN_MANAGER_H_
 
-#include "types.h"
-#include "screen.h"
+#include <meta/types.h>
+#include <meta/screen.h>
 
 #define  META_PLUGIN_FROM_MANAGER_
-#include "meta-plugin.h"
+#include <meta/meta-plugin.h>
 #undef   META_PLUGIN_FROM_MANAGER_
 
 #define META_PLUGIN_MINIMIZE         (1<<0)
@@ -49,8 +49,12 @@ typedef struct MetaPluginManager MetaPluginManager;
 MetaPluginManager * meta_plugin_manager_get         (MetaScreen *screen);
 MetaPluginManager * meta_plugin_manager_get_default (void);
 
-gboolean meta_plugin_manager_load         (MetaPluginManager *mgr);
-gboolean meta_plugin_manager_initialize   (MetaPluginManager *plugin_mgr);
+void     meta_plugin_manager_load         (MetaPluginManager *mgr,
+                                           const gchar       *plugin_name);
+void     meta_plugin_manager_register     (MetaPluginManager *mgr,
+                                           GType              plugin_type);
+void     meta_plugin_manager_initialize   (MetaPluginManager *mgr);
+
 gboolean meta_plugin_manager_event_simple (MetaPluginManager *mgr,
                                            MetaWindowActor   *actor,
                                            unsigned long      event);

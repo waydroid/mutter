@@ -24,9 +24,9 @@
 #ifndef META_PLUGIN_H_
 #define META_PLUGIN_H_
 
-#include "types.h"
-#include "compositor.h"
-#include "compositor-mutter.h"
+#include <meta/types.h>
+#include <meta/compositor.h>
+#include <meta/compositor-mutter.h>
 
 #include <clutter/clutter.h>
 #include <X11/extensions/Xfixes.h>
@@ -219,6 +219,9 @@ struct _MetaPluginVersion
   {                                                                     \
     return object_name##_register_type (type_module);                   \
   }                                                                     \
+
+void
+meta_plugin_type_register (GType plugin_type);
 
 void
 meta_plugin_switch_workspace_completed (MetaPlugin *plugin);

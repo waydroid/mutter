@@ -45,14 +45,14 @@
 #define _SVID_SOURCE /* for putenv() and some signal-related functions */
 
 #include <config.h>
-#include "main.h"
-#include "util.h"
+#include <meta/main.h>
+#include <meta/util.h>
 #include "display-private.h"
-#include "errors.h"
+#include <meta/errors.h>
 #include "ui.h"
 #include "session.h"
-#include "prefs.h"
-#include "compositor.h"
+#include <meta/prefs.h>
+#include <meta/compositor.h>
 
 #include <glib-object.h>
 #include <gdk/gdkx.h>
@@ -75,7 +75,6 @@
 
 #ifdef HAVE_INTROSPECTION
 #include <girepository.h>
-#include "compositor/meta-plugin-manager.h"
 #endif
 
 /**
@@ -88,12 +87,6 @@ static MetaExitCode meta_exit_code = META_EXIT_SUCCESS;
  * down.
  */
 static GMainLoop *meta_main_loop = NULL;
-
-/**
- * If set, Mutter will spawn an identical copy of itself immediately
- * before quitting.
- */
-static gboolean meta_restart_after_quit = FALSE;
 
 static void prefs_changed_callback (MetaPreference pref,
                                     gpointer       data);
@@ -116,23 +109,6 @@ log_handler (const gchar   *log_domain,
 {
   meta_warning ("Log level %d: %s\n", log_level, message);
   meta_print_backtrace ();
-}
-
-/**
- * Prints the version notice. This is shown when Mutter is called
- * with the --version switch.
- */
-static void
-version (void)
-{
-  const int latest_year = 2010;
-
-  g_print (_("mutter %s\n"
-             "Copyright (C) 2001-%d Havoc Pennington, Red Hat, Inc., and others\n"
-             "This is free software; see the source for copying conditions.\n"
-             "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"),
-           VERSION, latest_year);
-  exit (0);
 }
 
 /**
@@ -214,131 +190,72 @@ meta_print_self_identity (void)
 
 /**
  * The set of possible options that can be set on Mutter's
- * command line. This type exists so that meta_parse_options() can
- * write to an instance of it.
+ * command line.
  */
-typedef struct
-{
-  gchar *save_file;
-  gchar *display_name;
-  gchar *client_id;
-  gchar *mutter_plugins;
-  gboolean replace_wm;
-  gboolean disable_sm;
-  gboolean print_version;
-  gboolean sync;
-  gboolean composite;
-  gboolean no_composite;
-  gboolean no_force_fullscreen;
-  gboolean no_tab_popup;
-  gchar *introspect;
-} MetaArguments;
+static gchar    *opt_save_file;
+static gchar    *opt_display_name;
+static gchar    *opt_client_id;
+static gboolean  opt_replace_wm;
+static gboolean  opt_disable_sm;
+static gboolean  opt_sync;
 
-#define COMPOSITE_OPTS_FLAGS 0
+static GOptionEntry meta_options[] = {
+  {
+    "sm-disable", 0, 0, G_OPTION_ARG_NONE,
+    &opt_disable_sm,
+    N_("Disable connection to session manager"),
+    NULL
+  },
+  {
+    "replace", 0, 0, G_OPTION_ARG_NONE,
+    &opt_replace_wm,
+    N_("Replace the running window manager"),
+    NULL
+  },
+  {
+    "sm-client-id", 0, 0, G_OPTION_ARG_STRING,
+    &opt_client_id,
+    N_("Specify session management ID"),
+    "ID"
+  },
+  {
+    "display", 'd', 0, G_OPTION_ARG_STRING,
+    &opt_display_name, N_("X Display to use"),
+    "DISPLAY"
+  },
+  {
+    "sm-save-file", 0, 0, G_OPTION_ARG_FILENAME,
+    &opt_save_file,
+    N_("Initialize session from savefile"),
+    "FILE"
+  },
+  {
+    "sync", 0, 0, G_OPTION_ARG_NONE,
+    &opt_sync,
+    N_("Make X calls synchronous"),
+    NULL
+  },
+  {NULL}
+};
 
 /**
- * Parses argc and argv and returns the
- * arguments that Mutter understands in meta_args.
+ * meta_get_option_context: (skip)
  *
- * The strange call signature has to be written like it is so
- * that g_option_context_parse() gets a chance to modify argc and
- * argv.
+ * Returns a #GOptionContext initialized with mutter-related options.
+ * Parse the command-line args with this before calling meta_init().
  *
- * \param argc  Pointer to the number of arguments Mutter was given
- * \param argv  Pointer to the array of arguments Mutter was given
- * \param meta_args  The result of parsing the arguments.
- **/
-static GOptionContext *
-meta_parse_options (int *argc, char ***argv,
-                    MetaArguments *meta_args)
+ * Return value: the #GOptionContext
+ */
+GOptionContext *
+meta_get_option_context (void)
 {
-  MetaArguments my_args = {NULL, NULL, NULL, NULL,
-                           FALSE, FALSE, FALSE, FALSE, FALSE};
-  GOptionEntry options[] = {
-    {
-      "sm-disable", 0, 0, G_OPTION_ARG_NONE,
-      &my_args.disable_sm,
-      N_("Disable connection to session manager"),
-      NULL
-    },
-    {
-      "replace", 0, 0, G_OPTION_ARG_NONE,
-      &my_args.replace_wm,
-      N_("Replace the running window manager with Mutter"),
-      NULL
-    },
-    {
-      "sm-client-id", 0, 0, G_OPTION_ARG_STRING,
-      &my_args.client_id,
-      N_("Specify session management ID"),
-      "ID"
-    },
-    {
-      "display", 'd', 0, G_OPTION_ARG_STRING,
-      &my_args.display_name, N_("X Display to use"),
-      "DISPLAY"
-    },
-    {
-      "sm-save-file", 0, 0, G_OPTION_ARG_FILENAME,
-      &my_args.save_file,
-      N_("Initialize session from savefile"),
-      "FILE"
-    },
-    {
-      "version", 0, 0, G_OPTION_ARG_NONE,
-      &my_args.print_version,
-      N_("Print version"),
-      NULL
-    },
-    {
-      "sync", 0, 0, G_OPTION_ARG_NONE,
-      &my_args.sync,
-      N_("Make X calls synchronous"),
-      NULL
-    },
-    {
-      "no-force-fullscreen", 0, COMPOSITE_OPTS_FLAGS, G_OPTION_ARG_NONE,
-      &my_args.no_force_fullscreen,
-      N_("Don't make fullscreen windows that are maximized and have no decorations"),
-      NULL
-    },
-    {
-      "mutter-plugins", 0, 0, G_OPTION_ARG_STRING,
-      &my_args.mutter_plugins,
-      N_("Comma-separated list of compositor plugins"),
-      "PLUGINS"
-    },
-    {
-      "no-tab-popup", 0, 0, G_OPTION_ARG_NONE,
-      &my_args.no_tab_popup,
-      N_("Whether window popup/frame should be shown when cycling windows."),
-      NULL
-    },
-#ifdef HAVE_INTROSPECTION
-    {
-      "introspect-dump", 0, 0, G_OPTION_ARG_STRING,
-      &my_args.introspect,
-      N_("Internal argument for GObject introspection"), "INTROSPECT"
-    },
-#endif
-    {NULL}
-  };
   GOptionContext *ctx;
-  GError *error = NULL;
 
   ctx = g_option_context_new (NULL);
-  g_option_context_add_main_entries (ctx, options, "mutter");
+  g_option_context_add_main_entries (ctx, meta_options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, clutter_get_option_group_without_init ());
   g_option_context_add_group (ctx, cogl_get_option_group ());
 
-  if (!g_option_context_parse (ctx, argc, argv, &error))
-    {
-      g_print ("mutter: %s\n", error->message);
-      exit(1);
-    }
-
-  /* Return the parsed options through the meta_args param. */
-  *meta_args = my_args;
   return ctx;
 }
 
@@ -387,12 +304,12 @@ static GSourceFuncs event_funcs = {
 };
 
 static void
-meta_clutter_init (GOptionContext *ctx, int *argc, char ***argv)
+meta_clutter_init (void)
 {
   clutter_x11_set_display (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()));
   clutter_x11_disable_event_retrieval ();
   
-  if (CLUTTER_INIT_SUCCESS == clutter_init (argc, argv))
+  if (CLUTTER_INIT_SUCCESS == clutter_init (NULL, NULL))
     {
       GSource *source = g_source_new (&event_funcs, sizeof (GSource));
       g_source_attach (source, NULL);
@@ -458,33 +375,18 @@ on_sigterm (void)
 }
 
 /**
- * This is where the story begins. It parses commandline options and
- * environment variables, sets up the screen, hands control off to
- * GTK, and cleans up afterwards.
+ * meta_init: (skip)
  *
- * \param argc Number of arguments (as usual)
- * \param argv Array of arguments (as usual)
- *
- * \bug It's a bit long. It would be good to split it out into separate
- * functions.
+ * Initialize mutter. Call this after meta_get_option_context() and
+ * meta_plugin_type_register(), and before meta_run().
  */
-int
-main (int argc, char **argv)
+void
+meta_init (void)
 {
   struct sigaction act;
   sigset_t empty_mask;
-  MetaArguments meta_args;
-  const gchar *log_domains[] = {
-    NULL, G_LOG_DOMAIN, "Gtk", "Gdk", "GLib",
-    "Pango", "GLib-GObject", "GThread"
-  };
-  guint i;
   GIOChannel *channel;
-  GOptionContext *ctx;
 
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-  
   if (setlocale (LC_ALL, "") == NULL)
     meta_warning ("Locale not understood by C library, internationalization will not work\n");
 
@@ -528,102 +430,60 @@ main (int argc, char **argv)
       meta_warning ("Could not change to home directory %s.\n",
                     g_get_home_dir ());
 
-  g_type_init ();
-
   meta_print_self_identity ();
   
   bindtextdomain (GETTEXT_PACKAGE, MUTTER_LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);
 
-  /* Parse command line arguments.*/
-  ctx = meta_parse_options (&argc, &argv, &meta_args);
-
-  /* This must come before the introspect below, so we load all the plugins
-   * in order to get their get_type functions.
-   */
-  if (meta_args.mutter_plugins)
-    {
-      char **plugins = g_strsplit (meta_args.mutter_plugins, ",", -1);
-      char **plugin;
-      GSList *plugins_list = NULL;
-
-      for (plugin = plugins; *plugin; plugin++)
-        {
-          g_strstrip (*plugin);
-          plugins_list = g_slist_prepend (plugins_list, *plugin);
-        }
-
-      plugins_list = g_slist_reverse (plugins_list);
-      meta_prefs_override_clutter_plugins (plugins_list);
-
-      g_slist_free(plugins_list);
-      g_strfreev (plugins);
-    }
-
 #ifdef HAVE_INTROSPECTION
   g_irepository_prepend_search_path (MUTTER_PKGLIBDIR);
-  if (meta_args.introspect)
-    {
-      GError *error = NULL;
-      if (meta_args.mutter_plugins)
-        {
-          /* We need to load all plugins so that we can call their
-           * get_type functions.  We do not call
-           * mutter_plugin_manager_initialize because almost nothing else
-           * is initialized at this point, and we don't plan to run any real
-           * plugin code.
-           */
-          MetaPluginManager *mgr = meta_plugin_manager_get_default ();
-          if (!meta_plugin_manager_load (mgr))
-            g_critical ("failed to load plugins");
-        }
-      if (!g_irepository_dump (meta_args.introspect, &error))
-        {
-          g_printerr ("failed to dump: %s\n", error->message);
-          return 1;
-        }
-      return 0;
-    }
 #endif
 
-  meta_set_syncing (meta_args.sync || (g_getenv ("MUTTER_SYNC") != NULL));
+  meta_set_syncing (opt_sync || (g_getenv ("MUTTER_SYNC") != NULL));
 
-  if (meta_args.print_version)
-    version ();
-
-  meta_select_display (meta_args.display_name);
+  meta_select_display (opt_display_name);
   
-  if (meta_args.replace_wm)
+  if (opt_replace_wm)
     meta_set_replace_current_wm (TRUE);
 
-  if (meta_args.save_file && meta_args.client_id)
+  if (opt_save_file && opt_client_id)
     meta_fatal ("Can't specify both SM save file and SM client id\n");
   
   meta_main_loop = g_main_loop_new (NULL, FALSE);
   
-  meta_ui_init (&argc, &argv);  
+  meta_ui_init ();
 
   /*
    * Clutter can only be initialized after the UI.
    */
-  meta_clutter_init (ctx, &argc, &argv);
+  meta_clutter_init ();
+}
 
-  g_option_context_free (ctx);
+/**
+ * meta_run: (skip)
+ *
+ * Runs mutter. Call this after completing your own initialization.
+ *
+ * Return value: mutter's exit status
+ */
+int
+meta_run (void)
+{
+  const gchar *log_domains[] = {
+    NULL, G_LOG_DOMAIN, "Gtk", "Gdk", "GLib",
+    "Pango", "GLib-GObject", "GThread"
+  };
+  guint i;
 
   /* Load prefs */
   meta_prefs_init ();
   meta_prefs_add_listener (prefs_changed_callback, NULL);
 
-
-#if 1
-
   for (i=0; i<G_N_ELEMENTS(log_domains); i++)
     g_log_set_handler (log_domains[i],
                        G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION,
                        log_handler, NULL);
-
-#endif
 
   if (g_getenv ("MUTTER_G_FATAL_WARNINGS") != NULL)
     g_log_set_always_fatal (G_LOG_LEVEL_MASK);
@@ -668,38 +528,30 @@ main (int argc, char **argv)
    * or we might try to manage a window before we have the session
    * info
    */
-  if (!meta_args.disable_sm)
+  if (!opt_disable_sm)
     {
-      if (meta_args.client_id == NULL)
+      if (opt_client_id == NULL)
         {
           const gchar *desktop_autostart_id;
   
           desktop_autostart_id = g_getenv ("DESKTOP_AUTOSTART_ID");
  
           if (desktop_autostart_id != NULL)
-            meta_args.client_id = g_strdup (desktop_autostart_id);
+            opt_client_id = g_strdup (desktop_autostart_id);
         }
 
       /* Unset DESKTOP_AUTOSTART_ID in order to avoid child processes to
        * use the same client id. */
       g_unsetenv ("DESKTOP_AUTOSTART_ID");
 
-      meta_session_init (meta_args.client_id, meta_args.save_file);
+      meta_session_init (opt_client_id, opt_save_file);
     }
   /* Free memory possibly allocated by the argument parsing which are
    * no longer needed.
    */
-  g_free (meta_args.save_file);
-  g_free (meta_args.display_name);
-  g_free (meta_args.client_id);
-
-  if (meta_args.no_force_fullscreen)
-    meta_prefs_set_force_fullscreen (FALSE);
-
-  if (meta_args.no_tab_popup)
-    {
-      meta_prefs_override_no_tab_popup (TRUE);
-    }
+  g_free (opt_save_file);
+  g_free (opt_display_name);
+  g_free (opt_client_id);
 
   if (!meta_display_open ())
     meta_exit (META_EXIT_ERROR);
@@ -708,36 +560,15 @@ main (int argc, char **argv)
 
   meta_finalize ();
 
-  if (meta_restart_after_quit)
-    {
-      GError *err;
-
-      err = NULL;
-      if (!g_spawn_async (NULL,
-                          argv,
-                          NULL,
-                          G_SPAWN_SEARCH_PATH,
-                          NULL,
-                          NULL,
-                          NULL,
-                          &err))
-        {
-          meta_fatal (_("Failed to restart: %s\n"),
-                      err->message);
-          g_error_free (err); /* not reached anyhow */
-          meta_exit_code = META_EXIT_ERROR;
-        }
-    }
-  
   return meta_exit_code;
 }
 
 /**
- * Stops Mutter. This tells the event loop to stop processing; it is rather
- * dangerous to use this rather than meta_restart() because this will leave
- * the user with no window manager. We generally do this only if, for example,
- * the session manager asks us to; we assume the session manager knows what
- * it's talking about.
+ * Stops Mutter. This tells the event loop to stop processing; it is
+ * rather dangerous to use this because this will leave the user with
+ * no window manager. We generally do this only if, for example, the
+ * session manager asks us to; we assume the session manager knows
+ * what it's talking about.
  *
  * \param code The success or failure code to return to the calling process.
  */
@@ -748,19 +579,6 @@ meta_quit (MetaExitCode code)
 
   if (g_main_loop_is_running (meta_main_loop))
     g_main_loop_quit (meta_main_loop);
-}
-
-/**
- * Restarts Mutter. In practice, this tells the event loop to stop
- * processing, having first set the meta_restart_after_quit flag which
- * tells Mutter to spawn an identical copy of itself before quitting.
- * This happens on receipt of a _MUTTER_RESTART_MESSAGE client event.
- */
-void
-meta_restart (void)
-{
-  meta_restart_after_quit = TRUE;
-  meta_quit (META_EXIT_SUCCESS);
 }
 
 /**
