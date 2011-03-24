@@ -2,7 +2,7 @@ AC_PREREQ(2.50)
 
 m4_define([mutter_major_version], [2])
 m4_define([mutter_minor_version], [91])
-m4_define([mutter_micro_version], [91])
+m4_define([mutter_micro_version], [92])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -510,8 +510,7 @@ doc/Makefile
 doc/man/Makefile
 src/Makefile
 src/wm-tester/Makefile
-src/libmutter-private.pc
-src/libmutter-wm.pc
+src/libmutter.pc
 src/mutter-plugins.pc
 src/tools/Makefile
 src/compositor/plugins/Makefile

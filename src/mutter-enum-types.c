@@ -693,6 +693,7 @@ meta_preference_get_type (void)
         { META_PREF_EDGE_TILING, "META_PREF_EDGE_TILING", "edge-tiling" },
         { META_PREF_FORCE_FULLSCREEN, "META_PREF_FORCE_FULLSCREEN", "force-fullscreen" },
         { META_PREF_LIVE_HIDDEN_WINDOWS, "META_PREF_LIVE_HIDDEN_WINDOWS", "live-hidden-windows" },
+        { META_PREF_WORKSPACES_ONLY_ON_PRIMARY, "META_PREF_WORKSPACES_ONLY_ON_PRIMARY", "workspaces-only-on-primary" },
         { META_PREF_NO_TAB_POPUP, "META_PREF_NO_TAB_POPUP", "no-tab-popup" },
         { 0, NULL, NULL }
       };

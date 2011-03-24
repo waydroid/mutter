@@ -99,6 +99,7 @@ struct _MetaScreen
   guint32 wm_sn_timestamp;
   
   MetaMonitorInfo *monitor_infos;
+  int primary_monitor_index;
   int n_monitor_infos;
 
   /* Cache the current monitor */
@@ -141,6 +142,7 @@ struct _MetaScreenClass
 
   void (*restacked)         (MetaScreen *);
   void (*workareas_changed) (MetaScreen *);
+  void (*monitors_changed)  (MetaScreen *);
 };
 
 MetaScreen*   meta_screen_new                 (MetaDisplay                *display,
