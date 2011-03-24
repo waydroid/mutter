@@ -42,16 +42,15 @@ noinst_PROGRAMS = testboxes$(EXEEXT) testgradient$(EXEEXT) \
 	testasyncgetprop$(EXEEXT)
 subdir = src
 DIST_COMMON = $(libmutterinclude_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/libmutter-private.pc.in \
-	$(srcdir)/libmutter-wm.pc.in $(srcdir)/mutter-plugins.pc.in
+	$(srcdir)/Makefile.in $(srcdir)/libmutter.pc.in \
+	$(srcdir)/mutter-plugins.pc.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = libmutter-private.pc libmutter-wm.pc \
-	mutter-plugins.pc
+CONFIG_CLEAN_FILES = libmutter.pc mutter-plugins.pc
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -81,23 +80,9 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(libmutterincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libmutter_private_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_libmutter_private_la_OBJECTS = libmutter_private_la-boxes.lo \
-	libmutter_private_la-gradient.lo libmutter_private_la-util.lo \
-	libmutter_private_la-preview-widget.lo \
-	libmutter_private_la-theme-parser.lo \
-	libmutter_private_la-theme.lo
-libmutter_private_la_OBJECTS = $(am_libmutter_private_la_OBJECTS)
-AM_V_lt = $(am__v_lt_$(V))
-am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
-am__v_lt_0 = --silent
-libmutter_private_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(libmutter_private_la_CFLAGS) $(CFLAGS) \
-	$(libmutter_private_la_LDFLAGS) $(LDFLAGS) -o $@
-libmutter_wm_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libmutter_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = mutter-marshal.lo mutter-enum-types.lo
-am_libmutter_wm_la_OBJECTS = async-getprop.lo bell.lo boxes.lo \
+am_libmutter_la_OBJECTS = async-getprop.lo bell.lo boxes.lo \
 	cogl-utils.lo compositor.lo meta-background-actor.lo \
 	meta-module.lo meta-plugin.lo meta-plugin-manager.lo \
 	meta-shadow-factory.lo meta-shaped-texture.lo \
@@ -111,29 +96,30 @@ am_libmutter_wm_la_OBJECTS = async-getprop.lo bell.lo boxes.lo \
 	window-props.lo window.lo workspace.lo xprops.lo fixedtip.lo \
 	frames.lo menu.lo metaaccellabel.lo resizepopup.lo tabpopup.lo \
 	tile-preview.lo theme-parser.lo theme.lo ui.lo \
-	$(am__objects_1)
-libmutter_wm_la_OBJECTS = $(am_libmutter_wm_la_OBJECTS)
-libmutter_wm_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(libmutter_wm_la_LDFLAGS) $(LDFLAGS) \
-	-o $@
+	preview-widget.lo $(am__objects_1)
+libmutter_la_OBJECTS = $(am_libmutter_la_OBJECTS)
+AM_V_lt = $(am__v_lt_$(V))
+am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
+am__v_lt_0 = --silent
+libmutter_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(libmutter_la_LDFLAGS) $(LDFLAGS) -o $@
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_mutter_OBJECTS = mutter.$(OBJEXT)
 mutter_OBJECTS = $(am_mutter_OBJECTS)
-mutter_DEPENDENCIES = libmutter-wm.la
+mutter_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
 am_mutter_theme_viewer_OBJECTS = theme-viewer.$(OBJEXT)
 mutter_theme_viewer_OBJECTS = $(am_mutter_theme_viewer_OBJECTS)
-mutter_theme_viewer_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	libmutter-private.la
+mutter_theme_viewer_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
 am_testasyncgetprop_OBJECTS = testasyncgetprop.$(OBJEXT)
 testasyncgetprop_OBJECTS = $(am_testasyncgetprop_OBJECTS)
-testasyncgetprop_DEPENDENCIES = libmutter-wm.la
+testasyncgetprop_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
 am_testboxes_OBJECTS = testboxes.$(OBJEXT)
 testboxes_OBJECTS = $(am_testboxes_OBJECTS)
-testboxes_DEPENDENCIES = libmutter-wm.la
+testboxes_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
 am_testgradient_OBJECTS = testgradient.$(OBJEXT)
 testgradient_OBJECTS = $(am_testgradient_OBJECTS)
-testgradient_DEPENDENCIES = libmutter-wm.la
+testgradient_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -160,12 +146,10 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(libmutter_private_la_SOURCES) $(libmutter_wm_la_SOURCES) \
-	$(mutter_SOURCES) $(mutter_theme_viewer_SOURCES) \
-	$(testasyncgetprop_SOURCES) $(testboxes_SOURCES) \
-	$(testgradient_SOURCES)
-DIST_SOURCES = $(libmutter_private_la_SOURCES) \
-	$(libmutter_wm_la_SOURCES) $(mutter_SOURCES) \
+SOURCES = $(libmutter_la_SOURCES) $(mutter_SOURCES) \
+	$(mutter_theme_viewer_SOURCES) $(testasyncgetprop_SOURCES) \
+	$(testboxes_SOURCES) $(testgradient_SOURCES)
+DIST_SOURCES = $(libmutter_la_SOURCES) $(mutter_SOURCES) \
 	$(mutter_theme_viewer_SOURCES) $(testasyncgetprop_SOURCES) \
 	$(testboxes_SOURCES) $(testgradient_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -410,7 +394,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-lib_LTLIBRARIES = libmutter-private.la libmutter-wm.la
+lib_LTLIBRARIES = libmutter.la
 SUBDIRS = wm-tester tools compositor/plugins
 INCLUDES = \
 	$(MUTTER_CFLAGS)						\
@@ -439,7 +423,7 @@ mutter_built_sources = \
 	mutter-enum-types.h \
 	mutter-enum-types.c
 
-libmutter_wm_la_SOURCES = \
+libmutter_la_SOURCES = \
 	core/async-getprop.c			\
 	core/async-getprop.h			\
 	core/bell.c				\
@@ -557,30 +541,12 @@ libmutter_wm_la_SOURCES = \
 	ui/theme-private.h			\
 	ui/ui.c					\
 	core/all-keybindings.h			\
+	meta/preview-widget.h			\
+	ui/preview-widget.c			\
 	$(mutter_built_sources)
 
-libmutter_wm_la_LDFLAGS = -no-undefined
-libmutter_wm_la_LIBADD = $(MUTTER_LIBS)
-
-# by setting libmutter_private_la_CFLAGS, the files shared with
-# mutter proper will be compiled with different names.
-libmutter_private_la_CFLAGS = 
-libmutter_private_la_SOURCES = \
-	core/boxes.c				\
-	meta/boxes.h				\
-	ui/gradient.c				\
-	meta/gradient.h				\
-	core/util.c				\
-	meta/util.h				\
-	meta/common.h				\
-	ui/preview-widget.c			\
-	meta/preview-widget.h			\
-	ui/theme-parser.c			\
-	ui/theme.c				\
-	meta/theme.h
-
-libmutter_private_la_LDFLAGS = -no-undefined
-libmutter_private_la_LIBADD = $(MUTTER_LIBS)
+libmutter_la_LDFLAGS = -no-undefined
+libmutter_la_LIBADD = $(MUTTER_LIBS)
 
 # Headers installed for plugins; introspected information will
 # be extracted into Mutter-<version>.gir
@@ -608,7 +574,6 @@ libmutterinclude_base_headers = \
 
 
 # Excluded from scanning for introspection but installed
-# preview-widget.h: only part of libmutter-private
 # atomnames.h: macros cause problems for scanning process
 libmutterinclude_extra_headers = \
 	meta/preview-widget.h			\
@@ -623,7 +588,7 @@ mutter_theme_viewer_SOURCES = \
 	ui/theme-viewer.c
 
 mutter_SOURCES = core/mutter.c
-mutter_LDADD = libmutter-wm.la
+mutter_LDADD = $(MUTTER_LIBS) libmutter.la
 @HAVE_INTROSPECTION_TRUE@api_version = $(MUTTER_MAJOR_VERSION).$(MUTTER_MINOR_VERSION)
 
 # These files are in package-private directories, even though they may be used
@@ -637,20 +602,20 @@ mutter_LDADD = libmutter-wm.la
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_INCLUDES = GObject-2.0 Gdk-3.0 Gtk-3.0 Clutter-1.0 xlib-2.0 xfixes-4.0
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_PACKAGES = clutter-1.0 gtk+-3.0
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_CFLAGS = $(INCLUDES)
-@HAVE_INTROSPECTION_TRUE@@META_GIR@_LIBS = libmutter-wm.la
+@HAVE_INTROSPECTION_TRUE@@META_GIR@_LIBS = libmutter.la
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_FILES = \
 @HAVE_INTROSPECTION_TRUE@	mutter-enum-types.h			\
 @HAVE_INTROSPECTION_TRUE@	$(libmutterinclude_base_headers)	\
-@HAVE_INTROSPECTION_TRUE@	$(filter %.c,$(libmutter_wm_la_SOURCES))
+@HAVE_INTROSPECTION_TRUE@	$(filter %.c,$(libmutter_la_SOURCES))
 
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_SCANNERFLAGS = --warn-all --warn-error
-mutter_theme_viewer_LDADD = $(MUTTER_LIBS) libmutter-private.la
+mutter_theme_viewer_LDADD = $(MUTTER_LIBS) libmutter.la
 testboxes_SOURCES = core/testboxes.c
 testgradient_SOURCES = ui/testgradient.c
 testasyncgetprop_SOURCES = core/testasyncgetprop.c
-testboxes_LDADD = libmutter-wm.la
-testgradient_LDADD = libmutter-wm.la
-testasyncgetprop_LDADD = libmutter-wm.la
+testboxes_LDADD = $(MUTTER_LIBS) libmutter.la
+testgradient_LDADD = $(MUTTER_LIBS) libmutter.la
+testasyncgetprop_LDADD = $(MUTTER_LIBS) libmutter.la
 desktopfilesdir = $(datadir)/applications
 desktopfiles_in_files = mutter.desktop.in
 desktopfiles_files = $(desktopfiles_in_files:.desktop.in=.desktop)
@@ -672,15 +637,14 @@ CLEANFILES = inlinepixbufs.h mutter.desktop mutter-wm.desktop \
 	mutter.schemas $(mutter_built_sources) $(typelib_DATA) \
 	$(gir_DATA) $(MUTTER_STAMP_FILES)
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libmutter-private.pc libmutter-wm.pc mutter-plugins.pc
+pkgconfig_DATA = libmutter.pc mutter-plugins.pc
 EXTRA_DIST = $(desktopfiles_files) 	\
 	$(wmproperties_files)		\
 	$(IMAGES) 			\
 	$(desktopfiles_in_files)	\
 	$(wmproperties_in_files)	\
 	$(schema_in_files)		\
-	libmutter-private.pc.in	\
-	libmutter-wm.pc.in \
+	libmutter.pc.in \
 	mutter-plugins.pc.in  \
 	mutter-enum-types.h.in \
 	mutter-enum-types.c.in \
@@ -722,9 +686,7 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-libmutter-private.pc: $(top_builddir)/config.status $(srcdir)/libmutter-private.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-libmutter-wm.pc: $(top_builddir)/config.status $(srcdir)/libmutter-wm.pc.in
+libmutter.pc: $(top_builddir)/config.status $(srcdir)/libmutter.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 mutter-plugins.pc: $(top_builddir)/config.status $(srcdir)/mutter-plugins.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
@@ -759,10 +721,8 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libmutter-private.la: $(libmutter_private_la_OBJECTS) $(libmutter_private_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libmutter_private_la_LINK) -rpath $(libdir) $(libmutter_private_la_OBJECTS) $(libmutter_private_la_LIBADD) $(LIBS)
-libmutter-wm.la: $(libmutter_wm_la_OBJECTS) $(libmutter_wm_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libmutter_wm_la_LINK) -rpath $(libdir) $(libmutter_wm_la_OBJECTS) $(libmutter_wm_la_LIBADD) $(LIBS)
+libmutter.la: $(libmutter_la_OBJECTS) $(libmutter_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libmutter_la_LINK) -rpath $(libdir) $(libmutter_la_OBJECTS) $(libmutter_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
@@ -859,12 +819,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/group.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iconcache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keybindings.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmutter_private_la-boxes.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmutter_private_la-gradient.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmutter_private_la-preview-widget.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmutter_private_la-theme-parser.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmutter_private_la-theme.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmutter_private_la-util.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/menu.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-background-actor.Plo@am__quote@
@@ -883,6 +837,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/place.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/prefs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/preview-widget.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/region-utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resizepopup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/screen.Plo@am__quote@
@@ -927,54 +882,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-libmutter_private_la-boxes.lo: core/boxes.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -MT libmutter_private_la-boxes.lo -MD -MP -MF $(DEPDIR)/libmutter_private_la-boxes.Tpo -c -o libmutter_private_la-boxes.lo `test -f 'core/boxes.c' || echo '$(srcdir)/'`core/boxes.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmutter_private_la-boxes.Tpo $(DEPDIR)/libmutter_private_la-boxes.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='core/boxes.c' object='libmutter_private_la-boxes.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -c -o libmutter_private_la-boxes.lo `test -f 'core/boxes.c' || echo '$(srcdir)/'`core/boxes.c
-
-libmutter_private_la-gradient.lo: ui/gradient.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -MT libmutter_private_la-gradient.lo -MD -MP -MF $(DEPDIR)/libmutter_private_la-gradient.Tpo -c -o libmutter_private_la-gradient.lo `test -f 'ui/gradient.c' || echo '$(srcdir)/'`ui/gradient.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmutter_private_la-gradient.Tpo $(DEPDIR)/libmutter_private_la-gradient.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ui/gradient.c' object='libmutter_private_la-gradient.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -c -o libmutter_private_la-gradient.lo `test -f 'ui/gradient.c' || echo '$(srcdir)/'`ui/gradient.c
-
-libmutter_private_la-util.lo: core/util.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -MT libmutter_private_la-util.lo -MD -MP -MF $(DEPDIR)/libmutter_private_la-util.Tpo -c -o libmutter_private_la-util.lo `test -f 'core/util.c' || echo '$(srcdir)/'`core/util.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmutter_private_la-util.Tpo $(DEPDIR)/libmutter_private_la-util.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='core/util.c' object='libmutter_private_la-util.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -c -o libmutter_private_la-util.lo `test -f 'core/util.c' || echo '$(srcdir)/'`core/util.c
-
-libmutter_private_la-preview-widget.lo: ui/preview-widget.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -MT libmutter_private_la-preview-widget.lo -MD -MP -MF $(DEPDIR)/libmutter_private_la-preview-widget.Tpo -c -o libmutter_private_la-preview-widget.lo `test -f 'ui/preview-widget.c' || echo '$(srcdir)/'`ui/preview-widget.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmutter_private_la-preview-widget.Tpo $(DEPDIR)/libmutter_private_la-preview-widget.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ui/preview-widget.c' object='libmutter_private_la-preview-widget.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -c -o libmutter_private_la-preview-widget.lo `test -f 'ui/preview-widget.c' || echo '$(srcdir)/'`ui/preview-widget.c
-
-libmutter_private_la-theme-parser.lo: ui/theme-parser.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -MT libmutter_private_la-theme-parser.lo -MD -MP -MF $(DEPDIR)/libmutter_private_la-theme-parser.Tpo -c -o libmutter_private_la-theme-parser.lo `test -f 'ui/theme-parser.c' || echo '$(srcdir)/'`ui/theme-parser.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmutter_private_la-theme-parser.Tpo $(DEPDIR)/libmutter_private_la-theme-parser.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ui/theme-parser.c' object='libmutter_private_la-theme-parser.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -c -o libmutter_private_la-theme-parser.lo `test -f 'ui/theme-parser.c' || echo '$(srcdir)/'`ui/theme-parser.c
-
-libmutter_private_la-theme.lo: ui/theme.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -MT libmutter_private_la-theme.lo -MD -MP -MF $(DEPDIR)/libmutter_private_la-theme.Tpo -c -o libmutter_private_la-theme.lo `test -f 'ui/theme.c' || echo '$(srcdir)/'`ui/theme.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmutter_private_la-theme.Tpo $(DEPDIR)/libmutter_private_la-theme.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ui/theme.c' object='libmutter_private_la-theme.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmutter_private_la_CFLAGS) $(CFLAGS) -c -o libmutter_private_la-theme.lo `test -f 'ui/theme.c' || echo '$(srcdir)/'`ui/theme.c
 
 async-getprop.lo: core/async-getprop.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT async-getprop.lo -MD -MP -MF $(DEPDIR)/async-getprop.Tpo -c -o async-getprop.lo `test -f 'core/async-getprop.c' || echo '$(srcdir)/'`core/async-getprop.c
@@ -1399,6 +1306,14 @@ ui.lo: ui/ui.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ui/ui.c' object='ui.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ui.lo `test -f 'ui/ui.c' || echo '$(srcdir)/'`ui/ui.c
+
+preview-widget.lo: ui/preview-widget.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT preview-widget.lo -MD -MP -MF $(DEPDIR)/preview-widget.Tpo -c -o preview-widget.lo `test -f 'ui/preview-widget.c' || echo '$(srcdir)/'`ui/preview-widget.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/preview-widget.Tpo $(DEPDIR)/preview-widget.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ui/preview-widget.c' object='preview-widget.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o preview-widget.lo `test -f 'ui/preview-widget.c' || echo '$(srcdir)/'`ui/preview-widget.c
 
 mutter.o: core/mutter.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mutter.o -MD -MP -MF $(DEPDIR)/mutter.Tpo -c -o mutter.o `test -f 'core/mutter.c' || echo '$(srcdir)/'`core/mutter.c
@@ -1971,7 +1886,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-desktopfilesDATA \
 
 @HAVE_INTROSPECTION_TRUE@include $(INTROSPECTION_MAKEFILE)
 
-@HAVE_INTROSPECTION_TRUE@Meta-$(api_version).gir: libmutter-wm.la
+@HAVE_INTROSPECTION_TRUE@Meta-$(api_version).gir: libmutter.la
 
 @INTLTOOL_DESKTOP_RULE@
 

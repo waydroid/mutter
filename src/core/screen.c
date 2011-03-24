@@ -84,8 +84,11 @@ enum
   WORKSPACE_ADDED,
   WORKSPACE_REMOVED,
   WORKSPACE_SWITCHED,
+  WINDOW_ENTERED_MONITOR,
+  WINDOW_LEFT_MONITOR,
   STARTUP_SEQUENCE_CHANGED,
   WORKAREAS_CHANGED,
+  MONITORS_CHANGED,
 
   LAST_SIGNAL
 };
@@ -200,6 +203,28 @@ meta_screen_class_init (MetaScreenClass *klass)
                   G_TYPE_INT,
                   MUTTER_TYPE_MOTION_DIRECTION);
 
+  screen_signals[WINDOW_ENTERED_MONITOR] =
+    g_signal_new ("window-entered-monitor",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  _mutter_marshal_VOID__INT_OBJECT,
+                  G_TYPE_NONE, 2,
+                  G_TYPE_INT,
+                  META_TYPE_WINDOW);
+
+  screen_signals[WINDOW_LEFT_MONITOR] =
+    g_signal_new ("window-left-monitor",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  _mutter_marshal_VOID__INT_OBJECT,
+                  G_TYPE_NONE, 2,
+                  G_TYPE_INT,
+                  META_TYPE_WINDOW);
+
   screen_signals[STARTUP_SEQUENCE_CHANGED] =
     g_signal_new ("startup-sequence-changed",
                   G_TYPE_FROM_CLASS (klass),
@@ -226,6 +251,15 @@ meta_screen_class_init (MetaScreenClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
+
+  screen_signals[MONITORS_CHANGED] =
+    g_signal_new ("monitors-changed",
+		  G_TYPE_FROM_CLASS (object_class),
+		  G_SIGNAL_RUN_LAST,
+		  G_STRUCT_OFFSET (MetaScreenClass, monitors_changed),
+		  NULL, NULL,
+		  g_cclosure_marshal_VOID__VOID,
+		  G_TYPE_NONE, 0);
 
   g_object_class_install_property (object_class,
                                    PROP_N_WORKSPACES,
@@ -341,6 +375,18 @@ reload_monitor_infos (MetaScreen *screen)
   screen->monitor_infos = NULL;
   screen->n_monitor_infos = 0;
   screen->last_monitor_index = 0;
+
+  /* Xinerama doesn't have a concept of primary monitor, however XRandR
+   * does. However, the XRandR xinerama compat code always sorts the
+   * primary output first, so we rely on that here. We could use the
+   * native XRandR calls instead of xinerama, but that would be
+   * slightly problematic for _NET_WM_FULLSCREEN_MONITORS support, as
+   * that is defined in terms of xinerama monitor indexes.
+   * So, since we don't need anything in xrandr except the primary
+   * we can keep using xinerama and use the first monitor as the
+   * primary.
+   */
+  screen->primary_monitor_index = 0;
 
   screen->display->monitor_cache_invalidated = TRUE;
 
@@ -2131,6 +2177,22 @@ meta_screen_get_n_monitors (MetaScreen *screen)
 }
 
 /**
+ * meta_screen_get_primary_monitor:
+ * @screen: a #MetaScreen
+ *
+ * Gets the index of the primary monitor on this @screen.
+ *
+ * Return value: a monitor index
+ */
+int
+meta_screen_get_primary_monitor (MetaScreen *screen)
+{
+  g_return_val_if_fail (META_IS_SCREEN (screen), 0);
+
+  return screen->primary_monitor_index;
+}
+
+/**
  * meta_screen_get_monitor_geometry:
  * @screen: a #MetaScreen
  * @monitor: the monitor number
@@ -2778,9 +2840,26 @@ void
 meta_screen_resize (MetaScreen *screen,
                     int         width,
                     int         height)
-{  
+{
+  GSList *windows, *tmp;
+
   screen->rect.width = width;
   screen->rect.height = height;
+
+  /* Clear monitor for all windows on this screen, as it will become
+   * invalid. */
+  windows = meta_display_list_windows (screen->display,
+                                       META_LIST_INCLUDE_OVERRIDE_REDIRECT);
+  for (tmp = windows; tmp != NULL; tmp = tmp->next)
+    {
+      MetaWindow *window = tmp->data;
+
+      if (window->screen == screen)
+        {
+          g_signal_emit_by_name (screen, "window-left-monitor", window->monitor->number, window);
+          window->monitor = NULL;
+        }
+    }
 
   reload_monitor_infos (screen);
   set_desktop_geometry_hint (screen);
@@ -2791,6 +2870,21 @@ meta_screen_resize (MetaScreen *screen,
 
   /* Queue a resize on all the windows */
   meta_screen_foreach_window (screen, meta_screen_resize_func, 0);
+
+  /* Fix up monitor for all windows on this screen */
+  windows = meta_display_list_windows (screen->display,
+                                       META_LIST_INCLUDE_OVERRIDE_REDIRECT);
+  for (tmp = windows; tmp != NULL; tmp = tmp->next)
+    {
+      MetaWindow *window = tmp->data;
+
+      if (window->screen == screen)
+        meta_window_update_monitor (window);
+    }
+
+  g_slist_free (windows);
+
+  g_signal_emit (screen, screen_signals[MONITORS_CHANGED], 0, index);
 }
 
 void
