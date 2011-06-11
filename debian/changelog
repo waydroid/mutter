@@ -1,3 +1,16 @@
+mutter (3.0.2.1-1) experimental; urgency=low
+
+  [ Rico Tzschichholz ]
+  * New upstream release
+  * debian/watch:
+    - Look for bzip2 tarballs
+
+  [ Josselin Mouette ]
+  * Depend on libgnome2-common for the GConf schemas. This will be 
+    necessary until mutter is ported to GSettings.
+
+ -- Laurent Bigonville <bigon@debian.org>  Sat, 11 Jun 2011 14:39:59 +0200
+
 mutter (3.0.1-1) experimental; urgency=low
 
   * New upstream release (3.0.0).
