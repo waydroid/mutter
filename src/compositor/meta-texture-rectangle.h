@@ -1,8 +1,11 @@
-/* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 /*
- * Utilities for use with Cogl
+ * texture rectangle
  *
- * Copyright 2010 Red Hat, Inc.
+ * A small utility function to help create a rectangle texture
+ *
+ * Authored By Neil Roberts  <neil@linux.intel.com>
+ *
+ * Copyright (C) 2011 Intel Corporation
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -20,16 +23,23 @@
  * 02111-1307, USA.
  */
 
-#ifndef __META_COGL_UTILS_H__
-#define __META_COGL_UTILS_H__
+#ifndef __META_TEXTURE_RECTANGLE_H__
+#define __META_TEXTURE_RECTANGLE_H__
 
 #include <cogl/cogl.h>
 
-CoglHandle meta_create_color_texture_4ub (guint8           red,
-                                          guint8           green,
-                                          guint8           blue,
-                                          guint8           alpha,
-                                          CoglTextureFlags flags);
-CoglHandle meta_create_texture_material  (CoglHandle src_texture);
+G_BEGIN_DECLS
 
-#endif /* __META_COGL_UTILS_H__ */
+CoglHandle
+meta_texture_rectangle_new (unsigned int width,
+                            unsigned int height,
+                            CoglTextureFlags flags,
+                            CoglPixelFormat format,
+                            GLenum internal_gl_format,
+                            GLenum internal_format,
+                            unsigned int rowstride,
+                            const guint8 *data);
+
+G_END_DECLS
+
+#endif /* __META_TEXTURE_RECTANGLE_H__ */

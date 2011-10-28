@@ -217,10 +217,7 @@ struct _MetaButtonSpace
  */
 struct _MetaFrameGeometry
 {
-  int left_width;
-  int right_width;
-  int top_height;
-  int bottom_height;
+  MetaFrameBorders borders;
 
   int width;
   int height;  
@@ -281,6 +278,7 @@ typedef enum
 {
   META_COLOR_SPEC_BASIC,
   META_COLOR_SPEC_GTK,
+  META_COLOR_SPEC_GTK_CUSTOM,
   META_COLOR_SPEC_BLEND,
   META_COLOR_SPEC_SHADE
 } MetaColorSpecType;
@@ -304,24 +302,28 @@ struct _MetaColorSpec
   union
   {
     struct {
-      GdkColor color;
+      GdkRGBA color;
     } basic;
     struct {
       MetaGtkColorComponent component;
-      GtkStateType state;
+      GtkStateFlags state;
     } gtk;
+    struct {
+      char *color_name;
+      MetaColorSpec *fallback;
+    } gtkcustom;
     struct {
       MetaColorSpec *foreground;
       MetaColorSpec *background;
       double alpha;
 
-      GdkColor color;
+      GdkRGBA color;
     } blend;
     struct {
       MetaColorSpec *base;
       double factor;
 
-      GdkColor color;
+      GdkRGBA color;
     } shade;
   } data;
 };
@@ -553,7 +555,7 @@ struct _MetaDrawOp
     } image;
     
     struct {
-      GtkStateType state;
+      GtkStateFlags state;
       GtkShadowType shadow;
       GtkArrowType arrow;
       gboolean filled;
@@ -565,7 +567,7 @@ struct _MetaDrawOp
     } gtk_arrow;
 
     struct {
-      GtkStateType state;
+      GtkStateFlags state;
       GtkShadowType shadow;
       MetaDrawSpec *x;
       MetaDrawSpec *y;
@@ -574,7 +576,7 @@ struct _MetaDrawOp
     } gtk_box;
 
     struct {
-      GtkStateType state;
+      GtkStateFlags state;
       MetaDrawSpec *x;
       MetaDrawSpec *y1;
       MetaDrawSpec *y2;  
@@ -720,8 +722,6 @@ typedef enum
   /* Used to get size of the enum */
   META_FRAME_PIECE_LAST
 } MetaFramePiece;
-
-#define N_GTK_STATES 5
 
 /**
  * How to draw a frame in a particular state (say, a focussed, non-maximised,
@@ -923,16 +923,15 @@ void             meta_frame_layout_unref         (MetaFrameLayout       *layout)
 void             meta_frame_layout_get_borders   (const MetaFrameLayout *layout,
                                                   int                    text_height,
                                                   MetaFrameFlags         flags,
-                                                  int                   *top_height,
-                                                  int                   *bottom_height,
-                                                  int                   *left_width,
-                                                  int                   *right_width);
+                                                  MetaFrameType          type,
+                                                  MetaFrameBorders      *borders);
 void             meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
                                                   int                     text_height,
                                                   MetaFrameFlags          flags,
                                                   int                     client_width,
                                                   int                     client_height,
                                                   const MetaButtonLayout *button_layout,
+                                                  MetaFrameType           type,
                                                   MetaFrameGeometry      *fgeom,
                                                   MetaTheme              *theme);
 
@@ -958,11 +957,11 @@ MetaColorSpec* meta_color_spec_new             (MetaColorSpecType  type);
 MetaColorSpec* meta_color_spec_new_from_string (const char        *str,
                                                 GError           **err);
 MetaColorSpec* meta_color_spec_new_gtk         (MetaGtkColorComponent component,
-                                                GtkStateType          state);
+                                                GtkStateFlags         state);
 void           meta_color_spec_free            (MetaColorSpec     *spec);
 void           meta_color_spec_render          (MetaColorSpec     *spec,
-                                                GtkWidget         *widget,
-                                                GdkColor          *color);
+                                                GtkStyleContext   *style_gtk,
+                                                GdkRGBA           *color);
 
 
 MetaDrawOp*    meta_draw_op_new  (MetaDrawType        type);
@@ -1006,7 +1005,7 @@ gboolean       meta_draw_op_list_contains (MetaDrawOpList    *op_list,
 MetaGradientSpec* meta_gradient_spec_new    (MetaGradientType        type);
 void              meta_gradient_spec_free   (MetaGradientSpec       *desc);
 GdkPixbuf*        meta_gradient_spec_render (const MetaGradientSpec *desc,
-                                             GtkWidget              *widget,
+                                             GtkStyleContext        *gtk_style,
                                              int                     width,
                                              int                     height);
 gboolean          meta_gradient_spec_validate (MetaGradientSpec     *spec,
@@ -1086,20 +1085,6 @@ void meta_theme_draw_frame (MetaTheme              *theme,
                             GdkPixbuf              *mini_icon,
                             GdkPixbuf              *icon);
 
-void meta_theme_draw_frame_by_name (MetaTheme              *theme,
-                                    GtkWidget              *widget,
-                                    cairo_t                *cr,
-                                    const gchar             *style_name,
-                                    MetaFrameFlags          flags,
-                                    int                     client_width,
-                                    int                     client_height,
-                                    PangoLayout            *title_layout,
-                                    int                     text_height,
-                                    const MetaButtonLayout *button_layout,
-                                    MetaButtonState         button_states[META_BUTTON_TYPE_LAST],
-                                    GdkPixbuf              *mini_icon,
-                                    GdkPixbuf              *icon);
-
 void meta_theme_draw_frame_with_style (MetaTheme              *theme,
                                        GtkStyleContext        *style_gtk,
                                        GtkWidget              *widget,
@@ -1119,10 +1104,8 @@ void meta_theme_get_frame_borders (MetaTheme         *theme,
                                    MetaFrameType      type,
                                    int                text_height,
                                    MetaFrameFlags     flags,
-                                   int               *top_height,
-                                   int               *bottom_height,
-                                   int               *left_width,
-                                   int               *right_width);
+                                   MetaFrameBorders  *borders);
+
 void meta_theme_calc_geometry (MetaTheme              *theme,
                                MetaFrameType           type,
                                int                     text_height,
@@ -1131,7 +1114,7 @@ void meta_theme_calc_geometry (MetaTheme              *theme,
                                int                     client_height,
                                const MetaButtonLayout *button_layout,
                                MetaFrameGeometry      *fgeom);
-                                   
+
 MetaFrameLayout*   meta_theme_lookup_layout       (MetaTheme         *theme,
                                                    const char        *name);
 void               meta_theme_insert_layout       (MetaTheme         *theme,
@@ -1208,14 +1191,21 @@ const char*           meta_frame_focus_to_string       (MetaFrameFocus         f
 MetaFrameType         meta_frame_type_from_string      (const char            *str);
 MetaGradientType      meta_gradient_type_from_string   (const char            *str);
 const char*           meta_gradient_type_to_string     (MetaGradientType       type);
-GtkStateType          meta_gtk_state_from_string       (const char            *str);
-const char*           meta_gtk_state_to_string         (GtkStateType           state);
+GtkStateFlags         meta_gtk_state_from_string       (const char            *str);
+const char*           meta_gtk_state_to_string         (GtkStateFlags          state);
 GtkShadowType         meta_gtk_shadow_from_string      (const char            *str);
 const char*           meta_gtk_shadow_to_string        (GtkShadowType          shadow);
 GtkArrowType          meta_gtk_arrow_from_string       (const char            *str);
 const char*           meta_gtk_arrow_to_string         (GtkArrowType           arrow);
 MetaImageFillType     meta_image_fill_type_from_string (const char            *str);
 const char*           meta_image_fill_type_to_string   (MetaImageFillType      fill_type);
+
+void                  meta_gtk_style_get_light_color   (GtkStyleContext      *style,
+                                                        GtkStateFlags         state,
+                                                        GdkRGBA              *color);
+void                  meta_gtk_style_get_dark_color    (GtkStyleContext      *style,
+                                                        GtkStateFlags         state,
+                                                        GdkRGBA              *color);
 
 guint meta_theme_earliest_version_with_button (MetaButtonType type);
 

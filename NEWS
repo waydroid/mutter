@@ -1,8 +1,191 @@
+3.2.1
+=====
+* Allow keyboard window switching (alt-Tab) during drag-and-drop
+  [Matthias, #660457]
+* Don't add invisible resize borders to fullscreen windows
+  [Jasper, Owen; #659854]
+* Fix crash when toplevel windows were set to unexpected window types
+  [Owen; #599988]
+* Correct problems with windows moving when restarting or switching
+  window managers [Jasper; #660848]
+* Fix interaction of tiled windows with multiple monitors
+  [Rui; #642580, #657519]
+* Make meta_display_unmanage_screen() public [Jasper; #660848]
+* Fix problem with turning off window decorations on the fly [Rui; #660773]
+* Fix spurious assertion failures with themes such as Nodoka [Sandro; #661286]
+* Misc bug fixes [Adel, Jasper, Rui; #660464, #660854, #662053]
+
+Contributors:
+ Matthias Clasen, Sandro Mani, Rui Matos, Jasper St. Pierre, Owen Taylor
+
+Translations:
+ Tommi Vainikainen [fi], Miroslav Nikolić [sr, sr@latin], Muhammet Kara [tr]
+
+3.2.0
+=====
+* Fix _NET_WM_FRAME_EXTENTS not to include invisible borders [Jasper; #659848]
+* Fix application-specified window placement (-geometry) for
+  invisible borders [Jasper; #659848]
+
+Contributors:
+ Jasper St. Pierre
+
+Translations:
+ Nilamdyuti Goswami [as], Carles Ferrando [ca@valencia], Petr Kovar [cz],
+ Mario Blättermann [de], Inaki Larranaga [eu], Gabor Kelemen [hu],
+ Takayoshi Okano [ja], Changwoo Ryu [ko], Djavan Fagundes [pt_BR]
+
+3.1.92
+======
+* Fix bug with unredirecting full-screen windows on multi-monitor -
+  notably affected gnome-screensaver [Adel; #657869]
+* Disable top resizing of attached dialogs [Jasper; #657795]
+* Code cleanup [Jasper, Rui]
+* Misc bug fixes [Adel, Florian, Jasper, Rui;
+  #658069, #659266, #659523, #659477]
+
+Contributors:
+ Adel Gadllah, Rui Matos, Florian Müllner, Jasper St. Pierre
+
+Translations:
+ Joan Duran [ca], Joe Hansen [dk], Jiro Matsuzawa [ja], Daniel Korostil [uk]
+
+3.1.91.1
+========
+* Fix problem where certain application updates would get lost [#657071, Owen]
+* Fix a problem where after resuming from the screensaver, things got
+  slow [#658228, Jasper, Adel]
+* When a monitor is plugged or unplugged, keep existing windows on their
+  current monitor [#645408, Alex]
+* Remove 'Mutter' title from alerts such as
+  "The widow '%s' is not responding" [Matthias]
+* Remove pointless warning:
+   Received a _NET_WM_MOVERESIZE message for %s; these
+   messages lack timestamps and therefore suck.
+  [Rui]
+* Misc bug fixes [Jasper]
+* Build fixes [Javier]
+
+Contributors:
+ Matthias Clasen, Adel Gadllah, Javier Jardón, Alex Larsson, Rui Matos,
+ Jasper St. Pierre, Owen Taylor
+
+Translations:
+ Ihar Hrachyshka [be], Bruce Cowan [en_FB], Daniel Mustieles [es],
+ Claude Paroz [fr], Andika Triwidada [id], Luca Ferretti [it],
+ Rudolfs Mazurs [lt], Piotr Drąg [pl], Duarte Loreto [pt],
+ Matej Urbančič [sl], Tirumurti Vasudevan [ta], Chao-Hsiung Liao [zh_KH, TW]
+
+3.1.90.1
+========
+* Fix crash when no windows are open [Adel; #657692]
+* Fix annotations for new strictness in gobject-introspection [Jasper, Owen]
+* Fix some errors with rounded frame drawing [Jasper; #657661]
+
+Contributors:
+ Adel Gadllah, Jasper St. Pierre, Owen Taylor
+
+3.1.90
+======
+* Extend the draggable portion of window borders outside the visible frame
+  for easy resizing with thin borders. (New draggable_border_width GConf key
+  controls the total width of visible and invisible borders.)
+  [Jasper; #644930]
+* Draw rounded window corners with antialising [Jasper; #628195]
+* Unredirect override-redirect fullscreen windows, such as full-screen
+  3D games to avoid any performance impact [Adel; #597014]
+* Add :resizable and :above properties to MetaWindow. [Tim; #653858]
+* Add MUTTER_DISABLE_FALLBACK_COLOR environment variable to allow visualizing
+  places where a color is missing for gtk:custom() colors [Florian; #656112]
+* Don't attach modal dialogs to special windows like the desktop;
+  add meta_window_is_attached_dialog() [Dan, #646761]
+* Make MetaBackgroundActor public, allow creating multiple instances
+  (sharing a common texture), and add a :dim-factor property
+  [Rui, Owen; #656433]
+* Fix attached dialogs to not be resizable from the top and to be
+  position correctly [Jasper; #656619]
+* Misc bug fixes [Jasper, Rui; #656335, #657583]
+
+Contributors:
+ Tim Cuthbertson, Adel Gadllah, Rui Matos, Florian Müllner, Jasper St. Pierre,
+ Owen Taylor, Dan Winship
+
+Translations:
+ Alexander Shopov [bg], Jorge González [es], Fran Dieguez [gl],
+ Yaron Shahrabani [he], Takeshi Aihana [ja], Aurimas Černius [lt],
+ Kjartan Maraas [nb], A S Alam [pa], Yuri Kozlov [ru], Daniel Nylander [se],
+ Theppitak Karoonboonyanan [th], Abduxukur Abdurixit [ug], Aron Xu [zh_CN]
+
+3.1.4
+=====
+* Use better, much more subtle shadow definitions [Jakub; #649374]
+* Add the ability to use named GTK+ colors in theme files as
+  gtk:custom(name,fallback) [Florian; #648709]
+* Port from GdkColor to GdkRGBA and from GtkStyle to GtkStyleContext
+  [Florian; #650586]
+* Try to fix window bindings using the Super key [Owen; #624869]
+* Update to using more modern Cogl and Clutter APIs
+  [Adel, Emmanuele, Neil; #654551 #654729 #654730 #655064]
+* Fix for srcdir != builddir builds [Thierry; #624910]
+* Make handling of focus appearance for attached dialogs more robust
+  [Dan; #647712]
+* Misc bug fixes
+  [Dan, Florian, Jasper, Owen, Rui; #642957 #649374 #650661 #654489 #654539]
+
+Contributors:
+ Emmanuele Bassi, Adel Gadllah, Rui Matos, Florian Müllner, Neil Roberts,
+ Jasper St. Pierre, Jakub Steiner, Owen Taylor
+
+Translations:
+ Ihar Hrachyshka [be], Jorge González, Daniel Mustieles [es],
+ Fran Dieguez [gl], Yaron Shahrabani [he], Takeshi Aihana [ja],
+ Kjartan Maraas [nb], Rudolfs Mazurs [lv], Matej Urbančič [sl],
+ Abduxukur Abdurixit [ug], Nguyễn Thái Ngọc Duy [vi]
+
+3.1.3.1
+=======
+* Back API version down to "3.0" - the change to Meta-3.1.gir
+  was unintentional [Owen]
+
+Translations:
+ Yaron Shahrabani [he], Kjartan Maraas [nb], Muhammet Kara [tr]
+
+3.1.3
+=====
+* Support dark window theme variants for windows with a dark
+  widget theme; this is selected by the _GTK_THEME_VARIANT
+  property [Florian, #645355]
+* Don't draw a shadow under windows with an alpha-channel - this
+  fixes transparency for GNOME Terminal [Owen, Jasper; #635268]
+* Add a MetaWindow:wm-class property for notification [Jasper; #649315]
+* Add a MetaWindow:minimized property for notification [Florian]
+* Fix handing of unusual window shapes that Wine was setting
+  causing some applications to draw wrong [Jasper; #627880]
+* Improve replacing another compositor and being replaced:
+  release compositor selection in the right order and wait for
+  compositors that get it wrong. [Colin, Owen; #653121]
+* Remove behavior where left clicking on a window border with
+  the titlebar offscreen gave the window menu [Florian; #652369]
+* Don't set the global default textdomain, since Mutter is
+  a library as well as an application [Dan; #649202]
+* Exit with the right (success or failure) exit status [Dan]
+* Code cleanup [Florian]
+* Miscellaneous bug fixes [Owen; #649114, #652507]
+
+Contributors:
+ Florian Müllner, Jasper St. Pierre, Owen Taylor, Colin Walters, Dan Winship
+
+Translations:
+ Ihar Hrachyshka [be], Daniel Mustieles [es], Yaron Shahrabani [he],
+ Carles Ferrando [ca@valencia], Takeshi Aihana [ja], Fran Diéguez [gl],
+ Matej Urbančič [sl], Miroslav Nikolic [sr], Muhammet Kara [tr],
+ Daniel Korostil [uk]
+
 3.0.2.1
 =======
 * When saving the session, use the "program name" rather than
   harcoding mutter, fixing session saving for gnome-shell [Matthias]
-  https://bugzilla.gnome.org/show_bug.cgi?id=648828 
+  https://bugzilla.gnome.org/show_bug.cgi?id=648828
 
 Contributors:
  Matthias Clasen

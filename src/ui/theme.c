@@ -56,6 +56,7 @@
 #include "theme-private.h"
 #include <meta/util.h>
 #include <meta/gradient.h>
+#include <meta/prefs.h>
 #include <gtk/gtk.h>
 #include <string.h>
 #include <stdlib.h>
@@ -63,14 +64,14 @@
 
 #define GDK_COLOR_RGBA(color)                                           \
                          ((guint32) (0xff                         |     \
-                                     (((color).red / 256) << 24)   |    \
-                                     (((color).green / 256) << 16) |    \
-                                     (((color).blue / 256) << 8)))
+                                     ((int)((color).red * 255) << 24)   |    \
+                                     ((int)((color).green * 255) << 16) |    \
+                                     ((int)((color).blue * 255) << 8)))
 
 #define GDK_COLOR_RGB(color)                                            \
-                         ((guint32) ((((color).red / 256) << 16)   |    \
-                                     (((color).green / 256) << 8)  |    \
-                                     (((color).blue / 256))))
+                         ((guint32) (((int)((color).red * 255) << 16)   |    \
+                                     ((int)((color).green * 255) << 8)  |    \
+                                     ((int)((color).blue * 255))))
 
 #define ALPHA_TO_UCHAR(d) ((unsigned char) ((d) * 255))
 
@@ -78,8 +79,8 @@
 #define CLAMP_UCHAR(v) ((guchar) (CLAMP (((int)v), (int)0, (int)255)))
 #define INTENSITY(r, g, b) ((r) * 0.30 + (g) * 0.59 + (b) * 0.11)
 
-static void gtk_style_shade		(GdkColor	 *a,
-					 GdkColor	 *b,
+static void gtk_style_shade		(GdkRGBA	 *a,
+					 GdkRGBA	 *b,
 					 gdouble	  k);
 static void rgb_to_hls			(gdouble	 *r,
 					 gdouble	 *g,
@@ -95,7 +96,7 @@ static MetaTheme *meta_current_theme = NULL;
 
 static GdkPixbuf *
 colorize_pixbuf (GdkPixbuf *orig,
-                 GdkColor  *new_color)
+                 GdkRGBA   *new_color)
 {
   GdkPixbuf *pixbuf;
   double intensity;
@@ -138,16 +139,16 @@ colorize_pixbuf (GdkPixbuf *orig,
           if (intensity <= 0.5)
             {
               /* Go from black at intensity = 0.0 to new_color at intensity = 0.5 */
-              dr = (new_color->red * intensity * 2.0) / 65535.0;
-              dg = (new_color->green * intensity * 2.0) / 65535.0;
-              db = (new_color->blue * intensity * 2.0) / 65535.0;
+              dr = new_color->red * intensity * 2.0;
+              dg = new_color->green * intensity * 2.0;
+              db = new_color->blue * intensity * 2.0;
             }
           else
             {
               /* Go from new_color at intensity = 0.5 to white at intensity = 1.0 */
-              dr = (new_color->red + (65535 - new_color->red) * (intensity - 0.5) * 2.0) / 65535.0;
-              dg = (new_color->green + (65535 - new_color->green) * (intensity - 0.5) * 2.0) / 65535.0;
-              db = (new_color->blue + (65535 - new_color->blue) * (intensity - 0.5) * 2.0) / 65535.0;
+              dr = new_color->red + (1.0 - new_color->red) * (intensity - 0.5) * 2.0;
+              dg = new_color->green + (1.0 - new_color->green) * (intensity - 0.5) * 2.0;
+              db = new_color->blue + (1.0 - new_color->blue) * (intensity - 0.5) * 2.0;
             }
           
           dest[0] = CLAMP_UCHAR (255 * dr);
@@ -172,18 +173,15 @@ colorize_pixbuf (GdkPixbuf *orig,
 }
 
 static void
-color_composite (const GdkColor *bg,
-                 const GdkColor *fg,
-                 double          alpha_d,
-                 GdkColor       *color)
+color_composite (const GdkRGBA *bg,
+                 const GdkRGBA *fg,
+                 double         alpha,
+                 GdkRGBA       *color)
 {
-  guint16 alpha;
-
   *color = *bg;
-  alpha = alpha_d * 0xffff;
-  color->red = color->red + (((fg->red - color->red) * alpha + 0x8000) >> 16);
-  color->green = color->green + (((fg->green - color->green) * alpha + 0x8000) >> 16);
-  color->blue = color->blue + (((fg->blue - color->blue) * alpha + 0x8000) >> 16);
+  color->red = color->red + (fg->red - color->red) * alpha;
+  color->green = color->green + (fg->green - color->green) * alpha;
+  color->blue = color->blue + (fg->blue - color->blue) * alpha;
 }
 
 /**
@@ -403,13 +401,17 @@ void
 meta_frame_layout_get_borders (const MetaFrameLayout *layout,
                                int                    text_height,
                                MetaFrameFlags         flags,
-                               int                   *top_height,
-                               int                   *bottom_height,
-                               int                   *left_width,
-                               int                   *right_width)
+                               MetaFrameType          type,
+                               MetaFrameBorders      *borders)
 {
-  int buttons_height, title_height;
+  int buttons_height, title_height, draggable_borders;
   
+  meta_frame_borders_clear (borders);
+
+  /* For a full-screen window, we don't have any borders, visible or not. */
+  if (flags & META_FRAME_FULLSCREEN)
+    return;
+
   g_return_if_fail (layout != NULL);
 
   if (!layout->has_title)
@@ -421,35 +423,34 @@ meta_frame_layout_get_borders (const MetaFrameLayout *layout,
     layout->title_vertical_pad +
     layout->title_border.top + layout->title_border.bottom;
 
-  if (top_height)
+  borders->visible.top    = MAX (buttons_height, title_height);
+  borders->visible.left   = layout->left_width;
+  borders->visible.right  = layout->right_width;
+  borders->visible.bottom = layout->bottom_height;
+
+  draggable_borders = meta_prefs_get_draggable_border_width ();
+
+  if (flags & META_FRAME_ALLOWS_HORIZONTAL_RESIZE)
     {
-      *top_height = MAX (buttons_height, title_height);
+      borders->invisible.left   = MAX (0, draggable_borders - borders->visible.left);
+      borders->invisible.right  = MAX (0, draggable_borders - borders->visible.right);
     }
 
-  if (left_width)
-    *left_width = layout->left_width;
-  if (right_width)
-    *right_width = layout->right_width;
-
-  if (bottom_height)
+  if (flags & META_FRAME_ALLOWS_VERTICAL_RESIZE)
     {
-      if (flags & META_FRAME_SHADED)
-        *bottom_height = 0;
-      else
-        *bottom_height = layout->bottom_height;
+      borders->invisible.bottom = MAX (0, draggable_borders - borders->visible.bottom);
+
+      /* borders.visible.top is the height of the *title bar*. We can't do the same
+       * algorithm here, titlebars are expectedly much bigger. Just subtract a couple
+       * pixels to get a proper feel. */
+      if (type != META_FRAME_TYPE_ATTACHED)
+        borders->invisible.top    = MAX (0, draggable_borders - 2);
     }
 
-  if (flags & META_FRAME_FULLSCREEN)
-    {
-      if (top_height)
-        *top_height = 0;
-      if (bottom_height)
-        *bottom_height = 0;
-      if (left_width)
-        *left_width = 0;
-      if (right_width)
-        *right_width = 0;
-    }
+  borders->total.left   = borders->invisible.left   + borders->visible.left;
+  borders->total.right  = borders->invisible.right  + borders->visible.right;
+  borders->total.bottom = borders->invisible.bottom + borders->visible.bottom;
+  borders->total.top    = borders->invisible.top    + borders->visible.top;
 }
 
 static MetaButtonType
@@ -617,6 +618,7 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
                                  int                     client_width,
                                  int                     client_height,
                                  const MetaButtonLayout *button_layout,
+                                 MetaFrameType           type,
                                  MetaFrameGeometry      *fgeom,
                                  MetaTheme              *theme)
 {
@@ -637,18 +639,19 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
   gboolean left_buttons_has_spacer[MAX_BUTTONS_PER_CORNER];
   GdkRectangle *right_bg_rects[MAX_BUTTONS_PER_CORNER];
   gboolean right_buttons_has_spacer[MAX_BUTTONS_PER_CORNER];
+
+  MetaFrameBorders borders;
   
   meta_frame_layout_get_borders (layout, text_height,
-                                 flags,
-                                 &fgeom->top_height,
-                                 &fgeom->bottom_height,
-                                 &fgeom->left_width,
-                                 &fgeom->right_width);
+                                 flags, type,
+                                 &borders);
 
-  width = client_width + fgeom->left_width + fgeom->right_width;
+  fgeom->borders = borders;
+
+  width = client_width + borders.total.left + borders.total.right;
 
   height = ((flags & META_FRAME_SHADED) ? 0: client_height) +
-    fgeom->top_height + fgeom->bottom_height;
+    borders.total.top + borders.total.bottom;
 
   fgeom->width = width;
   fgeom->height = height;
@@ -665,7 +668,7 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
   switch (layout->button_sizing)
     {
     case META_BUTTON_SIZING_ASPECT:
-      button_height = fgeom->top_height - layout->button_border.top - layout->button_border.bottom;
+      button_height = borders.visible.top - layout->button_border.top - layout->button_border.bottom;
       button_width = button_height / layout->button_aspect;
       break;
     case META_BUTTON_SIZING_FIXED:
@@ -850,11 +853,11 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
   fgeom->n_right_buttons = n_right;
   
   /* center buttons vertically */
-  button_y = (fgeom->top_height -
-              (button_height + layout->button_border.top + layout->button_border.bottom)) / 2 + layout->button_border.top;
+  button_y = (borders.visible.top -
+              (button_height + layout->button_border.top + layout->button_border.bottom)) / 2 + layout->button_border.top + borders.invisible.top;
 
   /* right edge of farthest-right button */
-  x = width - layout->right_titlebar_edge;
+  x = width - layout->right_titlebar_edge - borders.invisible.right;
   
   i = n_right - 1;
   while (i >= 0)
@@ -902,7 +905,7 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
   /* Now x changes to be position from the left and we go through
    * the left-side buttons
    */
-  x = layout->left_titlebar_edge;
+  x = layout->left_titlebar_edge + borders.invisible.left;
   for (i = 0; i < n_left; i++)
     {
       MetaButtonSpace *rect;
@@ -945,9 +948,9 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
    * rather than centering it like the buttons
    */
   fgeom->title_rect.x = x + layout->title_border.left;
-  fgeom->title_rect.y = layout->title_border.top;
+  fgeom->title_rect.y = layout->title_border.top + borders.invisible.top;
   fgeom->title_rect.width = title_right_edge - fgeom->title_rect.x;
-  fgeom->title_rect.height = fgeom->top_height - layout->title_border.top - layout->title_border.bottom;
+  fgeom->title_rect.height = borders.visible.top - layout->title_border.top - layout->title_border.bottom;
 
   /* Nuke title if it won't fit */
   if (fgeom->title_rect.width < 0 ||
@@ -967,14 +970,14 @@ meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
   fgeom->bottom_left_corner_rounded_radius = 0;
   fgeom->bottom_right_corner_rounded_radius = 0;
 
-  if (fgeom->top_height + fgeom->left_width >= min_size_for_rounding)
+  if (borders.visible.top + borders.visible.left >= min_size_for_rounding)
     fgeom->top_left_corner_rounded_radius = layout->top_left_corner_rounded_radius;
-  if (fgeom->top_height + fgeom->right_width >= min_size_for_rounding)
+  if (borders.visible.top + borders.visible.right >= min_size_for_rounding)
     fgeom->top_right_corner_rounded_radius = layout->top_right_corner_rounded_radius;
 
-  if (fgeom->bottom_height + fgeom->left_width >= min_size_for_rounding)
+  if (borders.visible.bottom + borders.visible.left >= min_size_for_rounding)
     fgeom->bottom_left_corner_rounded_radius = layout->bottom_left_corner_rounded_radius;
-  if (fgeom->bottom_height + fgeom->right_width >= min_size_for_rounding)
+  if (borders.visible.bottom + borders.visible.right >= min_size_for_rounding)
     fgeom->bottom_right_corner_rounded_radius = layout->bottom_right_corner_rounded_radius;
 }
 
@@ -1015,12 +1018,12 @@ meta_gradient_spec_free (MetaGradientSpec *spec)
 
 GdkPixbuf*
 meta_gradient_spec_render (const MetaGradientSpec *spec,
-                           GtkWidget              *widget,
+                           GtkStyleContext        *style,
                            int                     width,
                            int                     height)
 {
   int n_colors;
-  GdkColor *colors;
+  GdkRGBA *colors;
   GSList *tmp;
   int i;
   GdkPixbuf *pixbuf;
@@ -1030,13 +1033,13 @@ meta_gradient_spec_render (const MetaGradientSpec *spec,
   if (n_colors == 0)
     return NULL;
 
-  colors = g_new (GdkColor, n_colors);
+  colors = g_new (GdkRGBA, n_colors);
 
   i = 0;
   tmp = spec->color_specs;
   while (tmp != NULL)
     {
-      meta_color_spec_render (tmp->data, widget, &colors[i]);
+      meta_color_spec_render (tmp->data, style, &colors[i]);
 
       tmp = tmp->next;
       ++i;
@@ -1121,6 +1124,10 @@ meta_color_spec_new (MetaColorSpecType type)
       size += sizeof (dummy.data.gtk);
       break;
 
+    case META_COLOR_SPEC_GTK_CUSTOM:
+      size += sizeof (dummy.data.gtkcustom);
+      break;
+
     case META_COLOR_SPEC_BLEND:
       size += sizeof (dummy.data.blend);
       break;
@@ -1150,6 +1157,14 @@ meta_color_spec_free (MetaColorSpec *spec)
 
     case META_COLOR_SPEC_GTK:
       DEBUG_FILL_STRUCT (&spec->data.gtk);
+      break;
+
+    case META_COLOR_SPEC_GTK_CUSTOM:
+      if (spec->data.gtkcustom.color_name)
+        g_free (spec->data.gtkcustom.color_name);
+      if (spec->data.gtkcustom.fallback)
+        meta_color_spec_free (spec->data.gtkcustom.fallback);
+      DEBUG_FILL_STRUCT (&spec->data.gtkcustom);
       break;
 
     case META_COLOR_SPEC_BLEND:
@@ -1182,13 +1197,90 @@ meta_color_spec_new_from_string (const char *str,
 
   spec = NULL;
   
-  if (str[0] == 'g' && str[1] == 't' && str[2] == 'k' && str[3] == ':')
+  if (str[0] == 'g' && str[1] == 't' && str[2] == 'k' && str[3] == ':' &&
+      str[4] == 'c' && str[5] == 'u' && str[6] == 's' && str[7] == 't' &&
+      str[8] == 'o' && str[9] == 'm')
+    {
+      const char *color_name_start, *fallback_str_start, *end;
+      char *color_name;
+      MetaColorSpec *fallback = NULL;
+      static gboolean debug, debug_set = FALSE;
+
+      if (!debug_set)
+        {
+          debug = g_getenv ("MUTTER_DISABLE_FALLBACK_COLOR") != NULL;
+          debug_set = TRUE;
+        }
+
+      if (str[10] != '(')
+        {
+          g_set_error (err, META_THEME_ERROR,
+                       META_THEME_ERROR_FAILED,
+                       _("GTK custom color specification must have color name and fallback in parentheses, e.g. gtk:custom(foo,bar); could not parse \"%s\""),
+                       str);
+          return NULL;
+        }
+
+      color_name_start = str + 11;
+
+      fallback_str_start = color_name_start;
+      while (*fallback_str_start && *fallback_str_start != ',')
+        {
+          if (!(g_ascii_isalnum (*fallback_str_start)
+                || *fallback_str_start == '-'
+                || *fallback_str_start == '_'))
+            {
+              g_set_error (err, META_THEME_ERROR,
+                           META_THEME_ERROR_FAILED,
+                           _("Invalid character '%c' in color_name parameter of gtk:custom, only A-Za-z0-9-_ are valid"),
+                           *fallback_str_start);
+              return NULL;
+            }
+          fallback_str_start++;
+        }
+      fallback_str_start++;
+
+      end = strrchr (str, ')');
+
+      if (color_name_start == NULL || fallback_str_start == NULL || end == NULL)
+        {
+          g_set_error (err, META_THEME_ERROR,
+                       META_THEME_ERROR_FAILED,
+                       _("Gtk:custom format is \"gtk:custom(color_name,fallback)\", \"%s\" does not fit the format"),
+                       str);
+          return NULL;
+        }
+
+      if (!debug)
+        {
+          char *fallback_str;
+          fallback_str = g_strndup (fallback_str_start,
+                                    end - fallback_str_start);
+          fallback = meta_color_spec_new_from_string (fallback_str, err);
+          g_free (fallback_str);
+        }
+      else
+        {
+          fallback = meta_color_spec_new_from_string ("pink", err);
+        }
+
+      if (fallback == NULL)
+        return NULL;
+
+      color_name = g_strndup (color_name_start,
+                              fallback_str_start - color_name_start - 1);
+
+      spec = meta_color_spec_new (META_COLOR_SPEC_GTK_CUSTOM);
+      spec->data.gtkcustom.color_name = color_name;
+      spec->data.gtkcustom.fallback = fallback;
+    }
+  else if (str[0] == 'g' && str[1] == 't' && str[2] == 'k' && str[3] == ':')
     {
       /* GTK color */
       const char *bracket;
       const char *end_bracket;
       char *tmp;
-      GtkStateType state;
+      GtkStateFlags state;
       MetaGtkColorComponent component;
       
       bracket = str;
@@ -1247,7 +1339,6 @@ meta_color_spec_new_from_string (const char *str,
       spec = meta_color_spec_new (META_COLOR_SPEC_GTK);
       spec->data.gtk.state = state;
       spec->data.gtk.component = component;
-      g_assert (spec->data.gtk.state < N_GTK_STATES);
       g_assert (spec->data.gtk.component < META_GTK_COLOR_LAST);
     }
   else if (str[0] == 'b' && str[1] == 'l' && str[2] == 'e' && str[3] == 'n' &&
@@ -1381,7 +1472,7 @@ meta_color_spec_new_from_string (const char *str,
     {
       spec = meta_color_spec_new (META_COLOR_SPEC_BASIC);
       
-      if (!gdk_color_parse (str, &spec->data.basic.color))
+      if (!gdk_rgba_parse (&spec->data.basic.color, str))
         {
           g_set_error (err, META_THEME_ERROR,
                        META_THEME_ERROR_FAILED,
@@ -1403,7 +1494,7 @@ meta_color_spec_new_from_string (const char *str,
  */
 MetaColorSpec*
 meta_color_spec_new_gtk (MetaGtkColorComponent component,
-                         GtkStateType          state)
+                         GtkStateFlags         state)
 {
   MetaColorSpec *spec;
 
@@ -1415,18 +1506,90 @@ meta_color_spec_new_gtk (MetaGtkColorComponent component,
   return spec;
 }
 
+/* Based on set_color() in gtkstyle.c */
+#define LIGHTNESS_MULT 1.3
+#define DARKNESS_MULT  0.7
 void
-meta_color_spec_render (MetaColorSpec *spec,
-                        GtkWidget     *widget,
-                        GdkColor      *color)
+meta_gtk_style_get_light_color (GtkStyleContext *style,
+                                GtkStateFlags    state,
+                                GdkRGBA         *color)
 {
-  GtkStyle *style;
+  gtk_style_context_get_background_color (style, state, color);
+  gtk_style_shade (color, color, LIGHTNESS_MULT);
+}
 
-  style = gtk_widget_get_style (widget);
+void
+meta_gtk_style_get_dark_color (GtkStyleContext *style,
+                               GtkStateFlags    state,
+                               GdkRGBA         *color)
+{
+  gtk_style_context_get_background_color (style, state, color);
+  gtk_style_shade (color, color, DARKNESS_MULT);
+}
 
+static void
+meta_set_color_from_style (GdkRGBA               *color,
+                           GtkStyleContext       *context,
+                           GtkStateFlags          state,
+                           MetaGtkColorComponent  component)
+{
+  GdkRGBA other;
+
+  switch (component)
+    {
+    case META_GTK_COLOR_BG:
+    case META_GTK_COLOR_BASE:
+      gtk_style_context_get_background_color (context, state, color);
+      break;
+    case META_GTK_COLOR_FG:
+    case META_GTK_COLOR_TEXT:
+      gtk_style_context_get_color (context, state, color);
+      break;
+    case META_GTK_COLOR_TEXT_AA:
+      gtk_style_context_get_color (context, state, color);
+      meta_set_color_from_style (&other, context, state, META_GTK_COLOR_BASE);
+
+      color->red = (color->red + other.red) / 2;
+      color->green = (color->green + other.green) / 2;
+      color->blue = (color->blue + other.blue) / 2;
+      break;
+    case META_GTK_COLOR_MID:
+      meta_gtk_style_get_light_color (context, state, color);
+      meta_gtk_style_get_dark_color (context, state, &other);
+
+      color->red = (color->red + other.red) / 2;
+      color->green = (color->green + other.green) / 2;
+      color->blue = (color->blue + other.blue) / 2;
+      break;
+    case META_GTK_COLOR_LIGHT:
+      meta_gtk_style_get_light_color (context, state, color);
+      break;
+    case META_GTK_COLOR_DARK:
+      meta_gtk_style_get_dark_color (context, state, color);
+      break;
+    case META_GTK_COLOR_LAST:
+      g_assert_not_reached ();
+      break;
+    }
+}
+
+static void
+meta_set_custom_color_from_style (GdkRGBA         *color,
+                                  GtkStyleContext *context,
+                                  char            *color_name,
+                                  MetaColorSpec   *fallback)
+{
+  if (!gtk_style_context_lookup_color (context, color_name, color))
+    meta_color_spec_render (fallback, context, color);
+}
+
+void
+meta_color_spec_render (MetaColorSpec   *spec,
+                        GtkStyleContext *context,
+                        GdkRGBA         *color)
+{
   g_return_if_fail (spec != NULL);
-  g_return_if_fail (GTK_IS_WIDGET (widget));
-  g_return_if_fail (style != NULL);
+  g_return_if_fail (GTK_IS_STYLE_CONTEXT (context));
 
   switch (spec->type)
     {
@@ -1435,44 +1598,25 @@ meta_color_spec_render (MetaColorSpec *spec,
       break;
 
     case META_COLOR_SPEC_GTK:
-      switch (spec->data.gtk.component)
-        {
-        case META_GTK_COLOR_BG:
-          *color = style->bg[spec->data.gtk.state];
-          break;
-        case META_GTK_COLOR_FG:
-          *color = style->fg[spec->data.gtk.state];
-          break;
-        case META_GTK_COLOR_BASE:
-          *color = style->base[spec->data.gtk.state];
-          break;
-        case META_GTK_COLOR_TEXT:
-          *color = style->text[spec->data.gtk.state];
-          break;
-        case META_GTK_COLOR_LIGHT:
-          *color = style->light[spec->data.gtk.state];
-          break;
-        case META_GTK_COLOR_DARK:
-          *color = style->dark[spec->data.gtk.state];
-          break;
-        case META_GTK_COLOR_MID:
-          *color = style->mid[spec->data.gtk.state];
-          break;
-        case META_GTK_COLOR_TEXT_AA:
-          *color = style->text_aa[spec->data.gtk.state];
-          break;
-        case META_GTK_COLOR_LAST:
-          g_assert_not_reached ();
-          break;
-        }
+      meta_set_color_from_style (color,
+                                 context,
+                                 spec->data.gtk.state,
+                                 spec->data.gtk.component);
+      break;
+
+    case META_COLOR_SPEC_GTK_CUSTOM:
+      meta_set_custom_color_from_style (color,
+                                        context,
+                                        spec->data.gtkcustom.color_name,
+                                        spec->data.gtkcustom.fallback);
       break;
 
     case META_COLOR_SPEC_BLEND:
       {
-        GdkColor bg, fg;
+        GdkRGBA bg, fg;
 
-        meta_color_spec_render (spec->data.blend.background, widget, &bg);
-        meta_color_spec_render (spec->data.blend.foreground, widget, &fg);
+        meta_color_spec_render (spec->data.blend.background, context, &bg);
+        meta_color_spec_render (spec->data.blend.foreground, context, &fg);
 
         color_composite (&bg, &fg, spec->data.blend.alpha, 
                          &spec->data.blend.color);
@@ -1483,7 +1627,7 @@ meta_color_spec_render (MetaColorSpec *spec,
 
     case META_COLOR_SPEC_SHADE:
       {
-        meta_color_spec_render (spec->data.shade.base, widget, 
+        meta_color_spec_render (spec->data.shade.base, context,
                                 &spec->data.shade.color);
             
         gtk_style_shade (&spec->data.shade.color, 
@@ -3255,7 +3399,7 @@ scale_and_alpha_pixbuf (GdkPixbuf             *src,
 
 static GdkPixbuf*
 draw_op_as_pixbuf (const MetaDrawOp    *op,
-                   GtkWidget           *widget,
+                   GtkStyleContext     *context,
                    const MetaDrawInfo  *info,
                    int                  width,
                    int                  height)
@@ -3276,10 +3420,10 @@ draw_op_as_pixbuf (const MetaDrawOp    *op,
     case META_DRAW_RECTANGLE:
       if (op->data.rectangle.filled)
         {
-          GdkColor color;
+          GdkRGBA color;
 
           meta_color_spec_render (op->data.rectangle.color_spec,
-                                  widget,
+                                  context,
                                   &color);
 
           pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB,
@@ -3298,12 +3442,12 @@ draw_op_as_pixbuf (const MetaDrawOp    *op,
       
     case META_DRAW_TINT:
       {
-        GdkColor color;
+        GdkRGBA color;
         guint32 rgba;
         gboolean has_alpha;
 
         meta_color_spec_render (op->data.rectangle.color_spec,
-                                widget,
+                                context,
                                 &color);
 
         has_alpha =
@@ -3346,7 +3490,7 @@ draw_op_as_pixbuf (const MetaDrawOp    *op,
     case META_DRAW_GRADIENT:
       {
         pixbuf = meta_gradient_spec_render (op->data.gradient.gradient_spec,
-                                            widget, width, height);
+                                            context, width, height);
 
         pixbuf = apply_alpha (pixbuf,
                               op->data.gradient.alpha_spec,
@@ -3359,10 +3503,10 @@ draw_op_as_pixbuf (const MetaDrawOp    *op,
       {
 	if (op->data.image.colorize_spec)
 	  {
-	    GdkColor color;
+	    GdkRGBA color;
 
             meta_color_spec_render (op->data.image.colorize_spec,
-                                    widget, &color);
+                                    context, &color);
             
             if (op->data.image.colorize_cache_pixbuf == NULL ||
                 op->data.image.colorize_cache_pixel != GDK_COLOR_RGB (color))
@@ -3447,10 +3591,10 @@ fill_env (MetaPositionExprEnv *env,
   env->object_height = -1;
   if (info->fgeom)
     {
-      env->left_width = info->fgeom->left_width;
-      env->right_width = info->fgeom->right_width;
-      env->top_height = info->fgeom->top_height;
-      env->bottom_height = info->fgeom->bottom_height;
+      env->left_width = info->fgeom->borders.visible.left;
+      env->right_width = info->fgeom->borders.visible.right;
+      env->top_height = info->fgeom->borders.visible.top;
+      env->bottom_height = info->fgeom->borders.visible.bottom;
       env->frame_x_center = info->fgeom->width / 2 - logical_region.x;
       env->frame_y_center = info->fgeom->height / 2 - logical_region.y;
     }
@@ -3474,29 +3618,6 @@ fill_env (MetaPositionExprEnv *env,
   env->theme = meta_current_theme;
 }
 
-static GtkStateFlags
-state_flags_from_gtk_state (GtkStateType state)
-{
-  switch (state)
-    {
-    case GTK_STATE_NORMAL:
-      return 0;
-    case GTK_STATE_PRELIGHT:
-      return GTK_STATE_FLAG_PRELIGHT;
-    case GTK_STATE_ACTIVE:
-      return GTK_STATE_FLAG_ACTIVE;
-    case GTK_STATE_SELECTED:
-      return GTK_STATE_FLAG_SELECTED;
-    case GTK_STATE_INSENSITIVE:
-      return GTK_STATE_FLAG_INSENSITIVE;
-    case GTK_STATE_INCONSISTENT:
-      return GTK_STATE_FLAG_INCONSISTENT;
-    case GTK_STATE_FOCUSED:
-      return GTK_STATE_FLAG_FOCUSED;
-    }
-  return 0;
-}
-
 
 /* This code was originally rendering anti-aliased using X primitives, and
  * now has been switched to draw anti-aliased using cairo. In general, the
@@ -3518,7 +3639,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
                             MetaRectangle        rect,
                             MetaPositionExprEnv *env)
 {
-  GdkColor color;
+  GdkRGBA color;
 
   cairo_save (cr);
   gtk_style_context_save (style_gtk);
@@ -3531,8 +3652,8 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
       {
         int x1, x2, y1, y2;
 
-        meta_color_spec_render (op->data.line.color_spec, widget, &color);
-        gdk_cairo_set_source_color (cr, &color);
+        meta_color_spec_render (op->data.line.color_spec, style_gtk, &color);
+        gdk_cairo_set_source_rgba (cr, &color);
 
         if (op->data.line.width > 0)
           cairo_set_line_width (cr, op->data.line.width);
@@ -3606,8 +3727,9 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
       {
         int rx, ry, rwidth, rheight;
 
-        meta_color_spec_render (op->data.rectangle.color_spec, widget, &color);
-        gdk_cairo_set_source_color (cr, &color);
+        meta_color_spec_render (op->data.rectangle.color_spec,
+                                style_gtk, &color);
+        gdk_cairo_set_source_rgba (cr, &color);
 
         rx = parse_x_position_unchecked (op->data.rectangle.x, env);
         ry = parse_y_position_unchecked (op->data.rectangle.y, env);
@@ -3636,8 +3758,8 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
         double start_angle, end_angle;
         double center_x, center_y;
 
-        meta_color_spec_render (op->data.arc.color_spec, widget, &color);
-        gdk_cairo_set_source_color (cr, &color);
+        meta_color_spec_render (op->data.arc.color_spec, style_gtk, &color);
+        gdk_cairo_set_source_rgba (cr, &color);
 
         rx = parse_x_position_unchecked (op->data.arc.x, env);
         ry = parse_y_position_unchecked (op->data.arc.y, env);
@@ -3691,8 +3813,9 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
 
         if (!needs_alpha)
           {
-            meta_color_spec_render (op->data.tint.color_spec, widget, &color);
-            gdk_cairo_set_source_color (cr, &color);
+            meta_color_spec_render (op->data.tint.color_spec,
+                                    style_gtk, &color);
+            gdk_cairo_set_source_rgba (cr, &color);
 
             cairo_rectangle (cr, rx, ry, rwidth, rheight);
             cairo_fill (cr);
@@ -3701,7 +3824,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
           {
             GdkPixbuf *pixbuf;
 
-            pixbuf = draw_op_as_pixbuf (op, widget, info,
+            pixbuf = draw_op_as_pixbuf (op, style_gtk, info,
                                         rwidth, rheight);
 
             if (pixbuf)
@@ -3725,7 +3848,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
         rwidth = parse_size_unchecked (op->data.gradient.width, env);
         rheight = parse_size_unchecked (op->data.gradient.height, env);
 
-        pixbuf = draw_op_as_pixbuf (op, widget, info,
+        pixbuf = draw_op_as_pixbuf (op, style_gtk, info,
                                     rwidth, rheight);
 
         if (pixbuf)
@@ -3752,7 +3875,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
         rwidth = parse_size_unchecked (op->data.image.width, env);
         rheight = parse_size_unchecked (op->data.image.height, env);
         
-        pixbuf = draw_op_as_pixbuf (op, widget, info,
+        pixbuf = draw_op_as_pixbuf (op, style_gtk, info,
                                     rwidth, rheight);
 
         if (pixbuf)
@@ -3798,8 +3921,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
             return;
           }
 
-        gtk_style_context_set_state (style_gtk,
-                                     state_flags_from_gtk_state (op->data.gtk_arrow.state));
+        gtk_style_context_set_state (style_gtk, op->data.gtk_arrow.state);
         gtk_render_arrow (style_gtk, cr, angle, rx, ry, size);
       }
       break;
@@ -3813,8 +3935,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
         rwidth = parse_size_unchecked (op->data.gtk_box.width, env);
         rheight = parse_size_unchecked (op->data.gtk_box.height, env);
 
-        gtk_style_context_set_state (style_gtk,
-                                     state_flags_from_gtk_state (op->data.gtk_box.state));
+        gtk_style_context_set_state (style_gtk, op->data.gtk_box.state);
         gtk_render_background (style_gtk, cr, rx, ry, rwidth, rheight);
         gtk_render_frame (style_gtk, cr, rx, ry, rwidth, rheight);
       }
@@ -3828,8 +3949,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
         ry1 = parse_y_position_unchecked (op->data.gtk_vline.y1, env);
         ry2 = parse_y_position_unchecked (op->data.gtk_vline.y2, env);
         
-        gtk_style_context_set_state (style_gtk,
-                                     state_flags_from_gtk_state (op->data.gtk_vline.state));
+        gtk_style_context_set_state (style_gtk, op->data.gtk_vline.state);
         gtk_render_line (style_gtk, cr, rx, ry1, rx, ry2);
       }
       break;
@@ -3842,7 +3962,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
         rwidth = parse_size_unchecked (op->data.icon.width, env);
         rheight = parse_size_unchecked (op->data.icon.height, env);
         
-        pixbuf = draw_op_as_pixbuf (op, widget, info,
+        pixbuf = draw_op_as_pixbuf (op, style_gtk, info,
                                     rwidth, rheight);
 
         if (pixbuf)
@@ -3864,8 +3984,9 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
           int rx, ry;
           PangoRectangle ink_rect, logical_rect;
 
-          meta_color_spec_render (op->data.title.color_spec, widget, &color);
-          gdk_cairo_set_source_color (cr, &color);
+          meta_color_spec_render (op->data.title.color_spec,
+                                  style_gtk, &color);
+          gdk_cairo_set_source_rgba (cr, &color);
 
           rx = parse_x_position_unchecked (op->data.title.x, env);
           ry = parse_y_position_unchecked (op->data.title.y, env);
@@ -4522,6 +4643,7 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
                                   GdkPixbuf               *icon)
 {
   int i, j;
+  GdkRectangle visible_rect;
   GdkRectangle titlebar_rect;
   GdkRectangle left_titlebar_edge;
   GdkRectangle right_titlebar_edge;
@@ -4530,11 +4652,19 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
   GdkRectangle left_edge, right_edge, bottom_edge;
   PangoRectangle logical_rect;
   MetaDrawInfo draw_info;
-  
-  titlebar_rect.x = 0;
-  titlebar_rect.y = 0;
-  titlebar_rect.width = fgeom->width;
-  titlebar_rect.height = fgeom->top_height;
+  const MetaFrameBorders *borders;
+
+  borders = &fgeom->borders;
+
+  visible_rect.x = borders->invisible.left;
+  visible_rect.y = borders->invisible.top;
+  visible_rect.width = fgeom->width - borders->invisible.left - borders->invisible.right;
+  visible_rect.height = fgeom->height - borders->invisible.top - borders->invisible.bottom;
+
+  titlebar_rect.x = visible_rect.x;
+  titlebar_rect.y = visible_rect.y;
+  titlebar_rect.width = visible_rect.width;
+  titlebar_rect.height = borders->visible.top;
 
   left_titlebar_edge.x = titlebar_rect.x;
   left_titlebar_edge.y = titlebar_rect.y + fgeom->top_titlebar_edge;
@@ -4556,20 +4686,20 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
   bottom_titlebar_edge.height = fgeom->bottom_titlebar_edge;
   bottom_titlebar_edge.y = titlebar_rect.y + titlebar_rect.height - bottom_titlebar_edge.height;
 
-  left_edge.x = 0;
-  left_edge.y = fgeom->top_height;
-  left_edge.width = fgeom->left_width;
-  left_edge.height = fgeom->height - fgeom->top_height - fgeom->bottom_height;
+  left_edge.x = visible_rect.x;
+  left_edge.y = visible_rect.y + borders->visible.top;
+  left_edge.width = borders->visible.left;
+  left_edge.height = visible_rect.height - borders->visible.top - borders->visible.bottom;
 
-  right_edge.x = fgeom->width - fgeom->right_width;
-  right_edge.y = fgeom->top_height;
-  right_edge.width = fgeom->right_width;
-  right_edge.height = fgeom->height - fgeom->top_height - fgeom->bottom_height;
+  right_edge.x = visible_rect.x + visible_rect.width - borders->visible.right;
+  right_edge.y = visible_rect.y + borders->visible.top;
+  right_edge.width = borders->visible.right;
+  right_edge.height = visible_rect.height - borders->visible.top - borders->visible.bottom;
 
-  bottom_edge.x = 0;
-  bottom_edge.y = fgeom->height - fgeom->bottom_height;
-  bottom_edge.width = fgeom->width;
-  bottom_edge.height = fgeom->bottom_height;
+  bottom_edge.x = visible_rect.x;
+  bottom_edge.y = visible_rect.y + visible_rect.height - borders->visible.bottom;
+  bottom_edge.width = visible_rect.width;
+  bottom_edge.height = borders->visible.bottom;
 
   if (title_layout)
     pango_layout_get_pixel_extents (title_layout,
@@ -4591,10 +4721,7 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
       switch ((MetaFramePiece) i)
         {
         case META_FRAME_PIECE_ENTIRE_BACKGROUND:
-          rect.x = 0;
-          rect.y = 0;
-          rect.width = fgeom->width;
-          rect.height = fgeom->height;
+          rect = visible_rect;
           break;
 
         case META_FRAME_PIECE_TITLEBAR:
@@ -4642,10 +4769,7 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
           break;
 
         case META_FRAME_PIECE_OVERLAY:
-          rect.x = 0;
-          rect.y = 0;
-          rect.width = fgeom->width;
-          rect.height = fgeom->height;
+          rect = visible_rect;
           break;
 
         case META_FRAME_PIECE_LAST:
@@ -5403,6 +5527,7 @@ meta_theme_draw_frame_with_style (MetaTheme              *theme,
                                    flags,
                                    client_width, client_height,
                                    button_layout,
+                                   type,
                                    &fgeom,
                                    theme);  
 
@@ -5442,82 +5567,28 @@ meta_theme_draw_frame (MetaTheme              *theme,
 }
 
 void
-meta_theme_draw_frame_by_name (MetaTheme              *theme,
-                               GtkWidget              *widget,
-                               cairo_t                *cr,
-                               const gchar             *style_name,
-                               MetaFrameFlags          flags,
-                               int                     client_width,
-                               int                     client_height,
-                               PangoLayout            *title_layout,
-                               int                     text_height,
-                               const MetaButtonLayout *button_layout,
-                               MetaButtonState         button_states[META_BUTTON_TYPE_LAST],
-                               GdkPixbuf              *mini_icon,
-                               GdkPixbuf              *icon)
-{
-  MetaFrameGeometry fgeom;
-  MetaFrameStyle *style;
-
-  style = meta_theme_lookup_style (theme, style_name);
-  
-  /* Parser is not supposed to allow this currently */
-  if (style == NULL)
-    return;
-  
-  meta_frame_layout_calc_geometry (style->layout,
-                                   text_height,
-                                   flags,
-                                   client_width, client_height,
-                                   button_layout,
-                                   &fgeom,
-                                   theme);  
-
-  meta_frame_style_draw (style,
-                         widget,
-                         cr,
-                         &fgeom,
-                         client_width, client_height,
-                         title_layout,
-                         text_height,
-                         button_states,
-                         mini_icon, icon);
-}
-
-void
-meta_theme_get_frame_borders (MetaTheme      *theme,
-                              MetaFrameType   type,
-                              int             text_height,
-                              MetaFrameFlags  flags,
-                              int            *top_height,
-                              int            *bottom_height,
-                              int            *left_width,
-                              int            *right_width)
+meta_theme_get_frame_borders (MetaTheme        *theme,
+                              MetaFrameType     type,
+                              int               text_height,
+                              MetaFrameFlags    flags,
+                              MetaFrameBorders *borders)
 {
   MetaFrameStyle *style;
 
   g_return_if_fail (type < META_FRAME_TYPE_LAST);
-  
-  if (top_height)
-    *top_height = 0;
-  if (bottom_height)
-    *bottom_height = 0;
-  if (left_width)
-    *left_width = 0;
-  if (right_width)
-    *right_width = 0;
-  
+
   style = theme_get_style (theme, type, flags);
-  
+
+  meta_frame_borders_clear (borders);
+
   /* Parser is not supposed to allow this currently */
   if (style == NULL)
     return;
 
   meta_frame_layout_get_borders (style->layout,
                                  text_height,
-                                 flags,
-                                 top_height, bottom_height,
-                                 left_width, right_width);
+                                 flags, type,
+                                 borders);
 }
 
 void
@@ -5545,6 +5616,7 @@ meta_theme_calc_geometry (MetaTheme              *theme,
                                    flags,
                                    client_width, client_height,
                                    button_layout,
+                                   type,
                                    fgeom,
                                    theme);
 }
@@ -6314,45 +6386,45 @@ meta_gradient_type_to_string (MetaGradientType type)
   return "<unknown>";
 }
 
-GtkStateType
+GtkStateFlags
 meta_gtk_state_from_string (const char *str)
 {
   if (g_ascii_strcasecmp ("normal", str) == 0)
-    return GTK_STATE_NORMAL;
+    return GTK_STATE_FLAG_NORMAL;
   else if (g_ascii_strcasecmp ("prelight", str) == 0)
-    return GTK_STATE_PRELIGHT;
+    return GTK_STATE_FLAG_PRELIGHT;
   else if (g_ascii_strcasecmp ("active", str) == 0)
-    return GTK_STATE_ACTIVE;
+    return GTK_STATE_FLAG_ACTIVE;
   else if (g_ascii_strcasecmp ("selected", str) == 0)
-    return GTK_STATE_SELECTED;
+    return GTK_STATE_FLAG_SELECTED;
   else if (g_ascii_strcasecmp ("insensitive", str) == 0)
-    return GTK_STATE_INSENSITIVE;
+    return GTK_STATE_FLAG_INSENSITIVE;
   else if (g_ascii_strcasecmp ("inconsistent", str) == 0)
-    return GTK_STATE_INCONSISTENT;
+    return GTK_STATE_FLAG_INCONSISTENT;
   else if (g_ascii_strcasecmp ("focused", str) == 0)
-    return GTK_STATE_FOCUSED;
+    return GTK_STATE_FLAG_FOCUSED;
   else
     return -1; /* hack */
 }
 
 const char*
-meta_gtk_state_to_string (GtkStateType state)
+meta_gtk_state_to_string (GtkStateFlags state)
 {
   switch (state)
     {
-    case GTK_STATE_NORMAL:
+    case GTK_STATE_FLAG_NORMAL:
       return "NORMAL";
-    case GTK_STATE_PRELIGHT:
+    case GTK_STATE_FLAG_PRELIGHT:
       return "PRELIGHT";
-    case GTK_STATE_ACTIVE:
+    case GTK_STATE_FLAG_ACTIVE:
       return "ACTIVE";
-    case GTK_STATE_SELECTED:
+    case GTK_STATE_FLAG_SELECTED:
       return "SELECTED";
-    case GTK_STATE_INSENSITIVE:
+    case GTK_STATE_FLAG_INSENSITIVE:
       return "INSENSITIVE";
-    case GTK_STATE_INCONSISTENT:
+    case GTK_STATE_FLAG_INCONSISTENT:
       return "INCONSISTENT";
-    case GTK_STATE_FOCUSED:
+    case GTK_STATE_FLAG_FOCUSED:
       return "FOCUSED";
     }
 
@@ -6482,17 +6554,17 @@ meta_image_fill_type_to_string (MetaImageFillType fill_type)
  * \param k  amount to scale lightness and saturation by
  */ 
 static void
-gtk_style_shade (GdkColor *a,
-                 GdkColor *b,
+gtk_style_shade (GdkRGBA *a,
+                 GdkRGBA *b,
                  gdouble   k)
 {
   gdouble red;
   gdouble green;
   gdouble blue;
   
-  red = (gdouble) a->red / 65535.0;
-  green = (gdouble) a->green / 65535.0;
-  blue = (gdouble) a->blue / 65535.0;
+  red = a->red;
+  green = a->green;
+  blue = a->blue;
   
   rgb_to_hls (&red, &green, &blue);
   
@@ -6510,9 +6582,9 @@ gtk_style_shade (GdkColor *a,
   
   hls_to_rgb (&red, &green, &blue);
   
-  b->red = red * 65535.0;
-  b->green = green * 65535.0;
-  b->blue = blue * 65535.0;
+  b->red = red;
+  b->green = green;
+  b->blue = blue;
 }
 
 /**
@@ -6699,7 +6771,7 @@ draw_bg_solid_composite (const MetaTextureSpec *bg,
                          int                    width,
                          int                    height)
 {
-  GdkColor bg_color;
+  GdkRGBA bg_color;
 
   g_assert (bg->type == META_TEXTURE_SOLID);
   g_assert (fg->type != META_TEXTURE_COMPOSITE);
@@ -6713,7 +6785,7 @@ draw_bg_solid_composite (const MetaTextureSpec *bg,
     {
     case META_TEXTURE_SOLID:
       {
-        GdkColor fg_color;
+        GdkRGBA fg_color;
 
         meta_color_spec_render (fg->data.solid.color_spec,
                                 widget,

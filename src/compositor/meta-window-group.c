@@ -7,9 +7,10 @@
 
 #include <gdk/gdk.h> /* for gdk_rectangle_intersect() */
 
+#include "compositor-private.h"
 #include "meta-window-actor-private.h"
 #include "meta-window-group.h"
-#include "meta-background-actor.h"
+#include "meta-background-actor-private.h"
 
 struct _MetaWindowGroupClass
 {
@@ -103,12 +104,19 @@ actor_is_untransformed (ClutterActor *actor,
 static void
 meta_window_group_paint (ClutterActor *actor)
 {
-  MetaWindowGroup *window_group = META_WINDOW_GROUP (actor);
   cairo_region_t *visible_region;
-  GLboolean scissor_test;
-  cairo_rectangle_int_t screen_rect = { 0 };
-  cairo_rectangle_int_t scissor_rect;
-  GList *children, *l;
+  cairo_region_t *unredirected_window_region = NULL;
+  ClutterActor *stage;
+  cairo_rectangle_int_t visible_rect, unredirected_rect;
+  GList *children, *l, *effects;
+
+  MetaWindowGroup *window_group = META_WINDOW_GROUP (actor);
+  MetaCompScreen *info = meta_screen_get_compositor_data (window_group->screen);
+  if (info->unredirected_window != NULL)
+    {
+      meta_window_actor_get_shape_bounds (META_WINDOW_ACTOR (info->unredirected_window), &unredirected_rect);
+      unredirected_window_region = cairo_region_create_rectangle (&unredirected_rect);
+    }
 
   /* We walk the list from top to bottom (opposite of painting order),
    * and subtract the opaque area of each window out of the visible
@@ -117,44 +125,47 @@ meta_window_group_paint (ClutterActor *actor)
   children = clutter_container_get_children (CLUTTER_CONTAINER (actor));
   children = g_list_reverse (children);
 
-  /* Start off with the full screen area (for a multihead setup, we
-   * might want to use a more accurate union of the monitors to avoid
-   * painting in holes from mismatched monitor sizes. That's just an
-   * optimization, however.)
-   */
-  meta_screen_get_size (window_group->screen, &screen_rect.width, &screen_rect.height);
+  /* Get the clipped redraw bounds from Clutter so that we can avoid
+   * painting shadows on windows that don't need to be painted in this
+   * frame. In the case of a multihead setup with mismatched monitor
+   * sizes, we could intersect this with an accurate union of the
+   * monitors to avoid painting shadows that are visible only in the
+   * holes. */
+  stage = clutter_actor_get_stage (actor);
+  clutter_stage_get_redraw_clip_bounds (CLUTTER_STAGE (stage),
+                                        &visible_rect);
 
-  /* When doing a partial stage paint, Clutter will set the GL scissor
-   * box to the clip rectangle for the partial repaint. We combine the screen
-   * rectangle with the scissor box to get the region we need to
-   * paint. (Strangely, the scissor box sometimes seems to be bigger
-   * than the stage ... Clutter should probably be clampimg)
-   */
-  glGetBooleanv (GL_SCISSOR_TEST, &scissor_test);
+  visible_region = cairo_region_create_rectangle (&visible_rect);
 
-  if (scissor_test)
-    {
-      GLint scissor_box[4];
-      glGetIntegerv (GL_SCISSOR_BOX, scissor_box);
-
-      scissor_rect.x = scissor_box[0];
-      scissor_rect.y = screen_rect.height - (scissor_box[1] + scissor_box[3]);
-      scissor_rect.width = scissor_box[2];
-      scissor_rect.height = scissor_box[3];
-
-      gdk_rectangle_intersect (&scissor_rect, &screen_rect, &scissor_rect);
-    }
-  else
-    {
-      scissor_rect = screen_rect;
-    }
-
-  visible_region = cairo_region_create_rectangle (&scissor_rect);
+  if (unredirected_window_region)
+    cairo_region_subtract (visible_region, unredirected_window_region);
 
   for (l = children; l; l = l->next)
     {
       if (!CLUTTER_ACTOR_IS_VISIBLE (l->data))
         continue;
+
+      /* If an actor has effects applied, then that can change the area
+       * it paints and the opacity, so we no longer can figure out what
+       * portion of the actor is obscured and what portion of the screen
+       * it obscures, so we skip the actor.
+       *
+       * This has a secondary beneficial effect: if a ClutterOffscreenEffect
+       * is applied to an actor, then our clipped redraws interfere with the
+       * caching of the FBO - even if we only need to draw a small portion
+       * of the window right now, ClutterOffscreenEffect may use other portions
+       * of the FBO later. So, skipping actors with effects applied also
+       * prevents these bugs.
+       *
+       * Theoretically, we should check clutter_actor_get_offscreen_redirect()
+       * as well for the same reason, but omitted for simplicity in the
+       * hopes that no-one will do that.
+       */
+      if ((effects = clutter_actor_get_effects (l->data)) != NULL)
+        {
+          g_list_free (effects);
+          continue;
+        }
 
       if (META_IS_WINDOW_ACTOR (l->data))
         {
@@ -187,6 +198,9 @@ meta_window_group_paint (ClutterActor *actor)
     }
 
   cairo_region_destroy (visible_region);
+
+  if (unredirected_window_region)
+    cairo_region_destroy (unredirected_window_region);
 
   CLUTTER_ACTOR_CLASS (meta_window_group_parent_class)->paint (actor);
 

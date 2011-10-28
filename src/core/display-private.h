@@ -73,9 +73,11 @@ typedef enum {
 /* This is basically a bogus number, just has to be large enough
  * to handle the expected case of the alt+tab operation, where
  * we want to ignore serials from UnmapNotify on the tab popup,
- * and the LeaveNotify/EnterNotify from the pointer ungrab
+ * and the LeaveNotify/EnterNotify from the pointer ungrab. It
+ * also has to be big enough to hold ignored serials from the point
+ * where we reshape the stage to the point where we get events back.
  */
-#define N_IGNORED_SERIALS           4
+#define N_IGNORED_CROSSING_SERIALS  10
 
 typedef enum {
   META_TILE_NONE,
@@ -153,7 +155,7 @@ struct _MetaDisplay
    * correspond to an enter event we should
    * ignore
    */
-  unsigned long ignored_serials[N_IGNORED_SERIALS];
+  unsigned long ignored_crossing_serials[N_IGNORED_CROSSING_SERIALS];
   Window ungrab_should_not_cause_focus_window;
   
   guint32 current_time;
@@ -187,6 +189,7 @@ struct _MetaDisplay
   int         grab_anchor_root_y;
   MetaRectangle grab_anchor_window_pos;
   MetaTileMode  grab_tile_mode;
+  int           grab_tile_monitor_number;
   int         grab_latest_motion_x;
   int         grab_latest_motion_y;
   gulong      grab_mask;
@@ -340,10 +343,6 @@ MetaScreen*   meta_display_screen_for_xwindow  (MetaDisplay *display,
                                                 Window       xindow);
 void          meta_display_grab                (MetaDisplay *display);
 void          meta_display_ungrab              (MetaDisplay *display);
-
-void          meta_display_unmanage_screen     (MetaDisplay *display,
-                                                MetaScreen  *screen,
-                                                guint32      timestamp);
 
 void          meta_display_unmanage_windows_for_screen (MetaDisplay *display,
                                                         MetaScreen  *screen,

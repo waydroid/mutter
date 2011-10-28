@@ -45,7 +45,7 @@ libmutter_la_SOURCES =				\
 	compositor/compositor.c			\
 	compositor/compositor-private.h		\
 	compositor/meta-background-actor.c	\
-	compositor/meta-background-actor.h	\
+	compositor/meta-background-actor-private.h	\
 	compositor/meta-module.c		\
 	compositor/meta-module.h		\
 	compositor/meta-plugin.c		\
@@ -55,6 +55,8 @@ libmutter_la_SOURCES =				\
 	compositor/meta-shadow-factory-private.h	\
 	compositor/meta-shaped-texture.c	\
 	compositor/meta-shaped-texture.h	\
+	compositor/meta-texture-rectangle.c	\
+	compositor/meta-texture-rectangle.h	\
 	compositor/meta-texture-tower.c		\
 	compositor/meta-texture-tower.h		\
 	compositor/meta-window-actor.c		\
@@ -66,6 +68,7 @@ libmutter_la_SOURCES =				\
 	compositor/region-utils.c		\
 	compositor/region-utils.h		\
 	meta/compositor.h			\
+	meta/meta-background-actor.h		\
 	meta/meta-plugin.h			\
 	meta/meta-shadow-factory.h		\
 	meta/meta-window-actor.h		\
@@ -170,6 +173,7 @@ libmutterinclude_base_headers =		\
 	meta/group.h				\
 	meta/keybindings.h			\
 	meta/main.h				\
+	meta/meta-background-actor.h		\
 	meta/meta-plugin.h			\
 	meta/meta-shadow-factory.h		\
 	meta/meta-window-actor.h		\
@@ -204,7 +208,11 @@ mutter_LDADD = $(MUTTER_LIBS) libmutter.la
 if HAVE_INTROSPECTION
 include $(INTROSPECTION_MAKEFILE)
 
-api_version = $(MUTTER_MAJOR_VERSION).$(MUTTER_MINOR_VERSION)
+# Since we don't make any guarantees about stability and we don't support
+# parallel install, there's no real reason to change directories, filenames,
+# etc. as we change the Mutter tarball version.
+#api_version = $(MUTTER_MAJOR_VERSION).$(MUTTER_MINOR_VERSION)
+api_version = 3.0
 
 # These files are in package-private directories, even though they may be used
 # by plugins.  If you're writing a plugin, use g-ir-compiler --add-include-path
@@ -332,7 +340,7 @@ mutter-enum-types.h: stamp-mutter-enum-types.h Makefile
 stamp-mutter-enum-types.h: $(libmutterinclude_base_headers) mutter-enum-types.h.in
 	$(AM_V_GEN) ( cd $(srcdir) && \
 	  $(GLIB_MKENUMS) \
-	    --template $(srcdir)/mutter-enum-types.h.in \
+	    --template mutter-enum-types.h.in \
 	  $(libmutterinclude_base_headers) ) >> xgen-teth && \
 	(cmp -s xgen-teth mutter-enum-types.h || cp xgen-teth mutter-enum-types.h) && \
 	rm -f xgen-teth && \
@@ -341,7 +349,7 @@ stamp-mutter-enum-types.h: $(libmutterinclude_base_headers) mutter-enum-types.h.
 mutter-enum-types.c: stamp-mutter-enum-types.h mutter-enum-types.c.in
 	  $(AM_V_GEN) ( cd $(srcdir) && \
 	  $(GLIB_MKENUMS) \
-	    --template $(srcdir)/mutter-enum-types.c.in \
+	    --template mutter-enum-types.c.in \
 	  $(libmutterinclude_base_headers) ) >> xgen-tetc && \
 	cp xgen-tetc mutter-enum-types.c && \
 	rm -f xgen-tetc

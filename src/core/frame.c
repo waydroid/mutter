@@ -67,7 +67,6 @@ meta_window_ensure_frame (MetaWindow *window)
   frame->current_cursor = 0;
 
   frame->mapped = FALSE;
-  frame->need_reapply_frame_shape = TRUE;
   frame->is_flashing = FALSE;
   
   meta_verbose ("Framing window %s: visual %s default, depth %d default depth %d\n",
@@ -117,11 +116,6 @@ meta_window_ensure_frame (MetaWindow *window)
   
   meta_display_register_x_window (window->display, &frame->xwindow, window);
 
-  /* Now that frame->xwindow is registered with window, we can set its
-   * background.
-   */
-  meta_ui_reset_frame_bg (window->screen->ui, frame->xwindow);
-
   /* Reparent the client window; it may be destroyed,
    * thus the error trap. We'll get a destroy notify later
    * and free everything. Comment in FVWM source code says
@@ -157,6 +151,12 @@ meta_window_ensure_frame (MetaWindow *window)
   
   /* stick frame to the window */
   window->frame = frame;
+
+  /* Now that frame->xwindow is registered with window, we can set its
+   * style and background.
+   */
+  meta_ui_update_frame_style (window->screen->ui, frame->xwindow);
+  meta_ui_reset_frame_bg (window->screen->ui, frame->xwindow);
   
   if (window->title)
     meta_ui_set_frame_title (window->screen->ui,
@@ -166,14 +166,6 @@ meta_window_ensure_frame (MetaWindow *window)
   /* Move keybindings to frame instead of window */
   meta_window_grab_keys (window);
 
-  /* Shape mask */
-  meta_ui_apply_frame_shape (frame->window->screen->ui,
-                             frame->xwindow,
-                             frame->rect.width,
-                             frame->rect.height,
-                             frame->window->has_shape);
-  frame->need_reapply_frame_shape = FALSE;
-  
   meta_display_ungrab (window->display);
 }
 
@@ -181,6 +173,7 @@ void
 meta_window_destroy_frame (MetaWindow *window)
 {
   MetaFrame *frame;
+  MetaFrameBorders borders;
   
   if (window->frame == NULL)
     return;
@@ -188,6 +181,8 @@ meta_window_destroy_frame (MetaWindow *window)
   meta_verbose ("Unframing window %s\n", window->desc);
   
   frame = window->frame;
+
+  meta_frame_calc_borders (frame, &borders);
   
   meta_bell_notify_frame_destroy (frame);
   
@@ -215,8 +210,8 @@ meta_window_destroy_frame (MetaWindow *window)
                     * coordinates here means we'll need to ensure a configure
                     * notify event is sent; see bug 399552.
                     */
-                   window->frame->rect.x,
-                   window->frame->rect.y);
+                   window->frame->rect.x + borders.invisible.left,
+                   window->frame->rect.y + borders.invisible.top);
   meta_error_trap_pop (window->display);
 
   meta_ui_destroy_frame_window (window->screen->ui, frame->xwindow);
@@ -225,6 +220,11 @@ meta_window_destroy_frame (MetaWindow *window)
                                     frame->xwindow);
   
   window->frame = NULL;
+  if (window->frame_bounds)
+    {
+      cairo_region_destroy (window->frame_bounds);
+      window->frame_bounds = NULL;
+    }
 
   /* Move keybindings to window instead of frame */
   meta_window_grab_keys (window);
@@ -310,50 +310,42 @@ meta_frame_get_flags (MetaFrame *frame)
 }
 
 void
-meta_frame_calc_geometry (MetaFrame         *frame,
-                          MetaFrameGeometry *geomp)
+meta_frame_borders_clear (MetaFrameBorders *self)
 {
-  MetaFrameGeometry geom;
-  MetaWindow *window;
-
-  window = frame->window;
-
-  meta_ui_get_frame_geometry (window->screen->ui,
-                              frame->xwindow,
-                              &geom.top_height,
-                              &geom.bottom_height,
-                              &geom.left_width,
-                              &geom.right_width);
-  
-  *geomp = geom;
-}
-
-static void
-update_shape (MetaFrame *frame)
-{
-  if (frame->need_reapply_frame_shape)
-    {
-      meta_ui_apply_frame_shape (frame->window->screen->ui,
-                                 frame->xwindow,
-                                 frame->rect.width,
-                                 frame->rect.height,
-                                 frame->window->has_shape);
-      frame->need_reapply_frame_shape = FALSE;
-    }
+  self->visible.top    = self->invisible.top    = self->total.top    = 0;
+  self->visible.bottom = self->invisible.bottom = self->total.bottom = 0;
+  self->visible.left   = self->invisible.left   = self->total.left   = 0;
+  self->visible.right  = self->invisible.right  = self->total.right  = 0;
 }
 
 void
+meta_frame_calc_borders (MetaFrame        *frame,
+                         MetaFrameBorders *borders)
+{
+  meta_ui_get_frame_borders (frame->window->screen->ui,
+                             frame->xwindow,
+                             borders);
+}
+
+void
+meta_frame_get_corner_radiuses (MetaFrame *frame,
+                                float     *top_left,
+                                float     *top_right,
+                                float     *bottom_left,
+                                float     *bottom_right)
+{
+  meta_ui_get_corner_radiuses (frame->window->screen->ui,
+                               frame->xwindow,
+                               top_left, top_right,
+                               bottom_left, bottom_right);
+}
+
+gboolean
 meta_frame_sync_to_window (MetaFrame *frame,
                            int        resize_gravity,
                            gboolean   need_move,
                            gboolean   need_resize)
 {
-  if (!(need_move || need_resize))
-    {
-      update_shape (frame);
-      return;
-    }
-
   meta_topic (META_DEBUG_GEOMETRY,
               "Syncing frame geometry %d,%d %dx%d (SE: %d,%d)\n",
               frame->rect.x, frame->rect.y,
@@ -368,19 +360,8 @@ meta_frame_sync_to_window (MetaFrame *frame,
                                   frame->xwindow,
                                   frame->rect.width,
                                   frame->rect.height);
-
-      /* we need new shape if we're resized */
-      frame->need_reapply_frame_shape = TRUE;
     }
 
-  /* Done before the window resize, because doing it before means
-   * part of the window being resized becomes unshaped, which may
-   * be sort of hard to see with bg = None. If we did it after
-   * window resize, part of the window being resized would become
-   * shaped, which might be more visible.
-   */
-  update_shape (frame);
-  
   meta_ui_move_resize_frame (frame->window->screen->ui,
 			     frame->xwindow,
 			     frame->rect.x,
@@ -401,6 +382,17 @@ meta_frame_sync_to_window (MetaFrame *frame,
         meta_ui_repaint_frame (frame->window->screen->ui,
                                frame->xwindow);
     }
+
+  return need_resize;
+}
+
+cairo_region_t *
+meta_frame_get_frame_bounds (MetaFrame *frame)
+{
+  return meta_ui_get_frame_bounds (frame->window->screen->ui,
+                                   frame->xwindow,
+                                   frame->rect.width,
+                                   frame->rect.height);
 }
 
 void

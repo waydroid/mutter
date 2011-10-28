@@ -1,8 +1,8 @@
 AC_PREREQ(2.50)
 
 m4_define([mutter_major_version], [3])
-m4_define([mutter_minor_version], [0])
-m4_define([mutter_micro_version], [2.1])
+m4_define([mutter_minor_version], [2])
+m4_define([mutter_micro_version], [1])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -15,9 +15,9 @@ AC_INIT([mutter], [mutter_version],
 AC_CONFIG_SRCDIR(src/core/display.c)
 AC_CONFIG_HEADERS(config.h)
 
-AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip])
+AM_INIT_AUTOMAKE([1.11 no-dist-gzip dist-xz tar-ustar])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
-AM_MAINTAINER_MODE
+AM_MAINTAINER_MODE([enable])
 
 MUTTER_MAJOR_VERSION=mutter_major_version
 MUTTER_MINOR_VERSION=mutter_minor_version
@@ -185,26 +185,13 @@ else
   AC_MSG_ERROR([no. Mutter requires the Xcomposite extension to build.])
 fi
 
-CLUTTER_VERSION=1.2.0
+CLUTTER_VERSION=1.7.5
 CLUTTER_PACKAGE=clutter-1.0
 AC_SUBST(CLUTTER_PACKAGE)
 if $PKG_CONFIG --atleast-version $CLUTTER_VERSION $CLUTTER_PACKAGE ; then
   MUTTER_PC_MODULES="$MUTTER_PC_MODULES $CLUTTER_PACKAGE "
   PKG_CHECK_MODULES(CLUTTER, $CLUTTER_PACKAGE)
   AC_DEFINE(WITH_CLUTTER, , [Building with Clutter compositor])
-
-  dnl Check for the clutter-glx-texture-pixmap header
-  mutter_save_cppflags="$CPPFLAGS"
-  CPPFLAGS="$CPPFLAGS $CLUTTER_CFLAGS"
-  AC_CHECK_HEADER([clutter/glx/clutter-glx-texture-pixmap.h],
-                  [have_glx_texture_pixmap=yes],
-                  [have_glx_texture_pixmap=no])
-  CPPFLAGS="$mutter_save_cppflags"
-
-  if test x$have_glx_texture_pixmap = xyes; then
-    AC_DEFINE(HAVE_GLX_TEXTURE_PIXMAP, ,
-              [Is ClutterGLXTexturePixmap available?])
-  fi
 else
   AC_MSG_ERROR([no. Mutter requires Clutter version $CLUTTER_VERSION.])
 fi
@@ -215,7 +202,12 @@ GOBJECT_INTROSPECTION_CHECK([$INTROSPECTION_VERSION])
 if test x$found_introspection != xno; then
   AC_DEFINE(HAVE_INTROSPECTION, 1, [Define if GObject introspection is available])
   MUTTER_PC_MODULES="$MUTTER_PC_MODULES gobject-introspection-1.0"
-  META_GIR=[Meta_]mutter_major_version[_]mutter_minor_version[_gir]
+  # Since we don't make any guarantees about stability and we don't support
+  # parallel install, there's no real reason to change directories, filenames,
+  # etc. as we change the Mutter tarball version. Note that this must match
+  # api_version in src/Makefile.am
+  META_GIR=Meta_3_0_gir
+  # META_GIR=[Meta_]mutter_major_version[_]mutter_minor_version[_gir]
   AC_SUBST(META_GIR)
 fi
 

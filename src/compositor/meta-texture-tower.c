@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "meta-texture-tower.h"
+#include "meta-texture-rectangle.h"
 
 #ifndef M_LOG2E
 #define M_LOG2E 1.4426950408889634074
@@ -109,25 +110,9 @@ texture_is_rectangle (CoglHandle texture)
 }
 #endif /* GL_TEXTURE_RECTANGLE_ARB */
 
-static void
-free_texture (CoglHandle texture)
-{
-#ifdef GL_TEXTURE_RECTANGLE_ARB
-  GLuint gl_tex;
-  GLenum gl_target;
-
-  cogl_texture_get_gl_texture (texture, &gl_tex, &gl_target);
-
-  if (gl_target == GL_TEXTURE_RECTANGLE_ARB)
-    glDeleteTextures (1, &gl_tex);
-#endif /* GL_TEXTURE_RECTANGLE_ARB */
-
-  cogl_handle_unref (texture);
-}
-
 /**
- * meta_texture_tower_update_area:
- * @tower: a MetaTextureTower
+ * meta_texture_tower_set_base_texture:
+ * @tower: a #MetaTextureTower
  * @texture: the new texture used as a base for scaled down versions
  *
  * Sets the base texture that is the scaled texture that the
@@ -152,7 +137,7 @@ meta_texture_tower_set_base_texture (MetaTextureTower *tower,
         {
           if (tower->textures[i] != COGL_INVALID_HANDLE)
             {
-              free_texture (tower->textures[i]);
+              cogl_handle_unref (tower->textures[i]);
               tower->textures[i] = COGL_INVALID_HANDLE;
             }
 
@@ -190,7 +175,7 @@ meta_texture_tower_set_base_texture (MetaTextureTower *tower,
 
 /**
  * meta_texture_tower_update_area:
- * @tower: a MetaTextureTower
+ * @tower: a #MetaTextureTower
  * @x: X coordinate of upper left of rectangle that changed
  * @y: Y coordinate of upper left of rectangle that changed
  * @width: width of rectangle that changed
@@ -384,23 +369,18 @@ texture_tower_create_texture (MetaTextureTower *tower,
   if ((!is_power_of_two (width) || !is_power_of_two (height)) &&
       texture_is_rectangle (tower->textures[level - 1]))
     {
-      GLuint tex = 0;
-
-      glGenTextures (1, &tex);
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0,
-                    GL_RGBA, width,height,
-#if TEXTURE_FORMAT == COGL_PIXEL_FORMAT_BGRA_8888_PRE
-                    0, GL_BGRA, GL_UNSIGNED_BYTE,
-#else /* assume big endian */
-                    0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-#endif
-                    NULL);
-
-      tower->textures[level] = cogl_texture_new_from_foreign (tex, GL_TEXTURE_RECTANGLE_ARB,
-                                                              width, height,
-                                                              0, 0,
-                                                              TEXTURE_FORMAT);
+      tower->textures[level] =
+        meta_texture_rectangle_new (width, height,
+                                    0, /* flags */
+                                    /* data format */
+                                    TEXTURE_FORMAT,
+                                    /* internal GL format */
+                                    GL_RGBA,
+                                    /* internal cogl format */
+                                    TEXTURE_FORMAT,
+                                    /* rowstride */
+                                    width * 4,
+                                    NULL);
     }
   else
 #endif /* GL_TEXTURE_RECTANGLE_ARB */
@@ -430,12 +410,7 @@ texture_tower_revalidate_fbo (MetaTextureTower *tower,
   CoglMatrix modelview;
 
   if (tower->fbos[level] == COGL_INVALID_HANDLE)
-    {
-      /* Work around http://bugzilla.openedhand.com/show_bug.cgi?id=2110 */
-      cogl_flush();
-
-      tower->fbos[level] = cogl_offscreen_new_to_texture (dest_texture);
-    }
+    tower->fbos[level] = cogl_offscreen_new_to_texture (dest_texture);
 
   if (tower->fbos[level] == COGL_INVALID_HANDLE)
     return FALSE;
@@ -604,7 +579,7 @@ texture_tower_revalidate (MetaTextureTower *tower,
 
 /**
  * meta_texture_tower_get_paint_texture:
- * @tower: a MetaTextureTower
+ * @tower: a #MetaTextureTower
  *
  * Gets the texture from the tower that best matches the current
  * rendering scale. (On the assumption here the texture is going to

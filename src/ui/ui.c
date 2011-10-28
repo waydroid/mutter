@@ -306,14 +306,25 @@ meta_ui_free (MetaUI *ui)
 }
 
 void
-meta_ui_get_frame_geometry (MetaUI *ui,
-                            Window frame_xwindow,
-                            int *top_height, int *bottom_height,
-                            int *left_width, int *right_width)
+meta_ui_get_frame_borders (MetaUI *ui,
+                           Window frame_xwindow,
+                           MetaFrameBorders *borders)
 {
-  meta_frames_get_geometry (ui->frames, frame_xwindow,
-                            top_height, bottom_height,
-                            left_width, right_width);
+  meta_frames_get_borders (ui->frames, frame_xwindow,
+                           borders);
+}
+
+void
+meta_ui_get_corner_radiuses (MetaUI *ui,
+                             Window  xwindow,
+                             float  *top_left,
+                             float  *top_right,
+                             float  *bottom_left,
+                             float  *bottom_right)
+{
+  meta_frames_get_corner_radiuses (ui->frames, xwindow,
+                                   top_left, top_right,
+                                   bottom_left, bottom_right);
 }
 
 Window
@@ -445,6 +456,13 @@ meta_ui_unflicker_frame_bg (MetaUI *ui,
 }
 
 void
+meta_ui_update_frame_style (MetaUI  *ui,
+                            Window   xwindow)
+{
+  meta_frames_update_frame_style (ui->frames, xwindow);
+}
+
+void
 meta_ui_repaint_frame (MetaUI *ui,
                        Window xwindow)
 {
@@ -458,16 +476,14 @@ meta_ui_reset_frame_bg (MetaUI *ui,
   meta_frames_reset_bg (ui->frames, xwindow);
 }
 
-void
-meta_ui_apply_frame_shape  (MetaUI  *ui,
-                            Window   xwindow,
-                            int      new_window_width,
-                            int      new_window_height,
-                            gboolean window_has_shape)
+cairo_region_t *
+meta_ui_get_frame_bounds (MetaUI  *ui,
+                          Window   xwindow,
+                          int      window_width,
+                          int      window_height)
 {
-  meta_frames_apply_shapes (ui->frames, xwindow,
-                            new_window_width, new_window_height,
-                            window_has_shape);
+  return meta_frames_get_frame_bounds (ui->frames, xwindow,
+                                       window_width, window_height);
 }
 
 void
@@ -476,7 +492,6 @@ meta_ui_queue_frame_draw (MetaUI *ui,
 {
   meta_frames_queue_draw (ui->frames, xwindow);
 }
-
 
 void
 meta_ui_set_frame_title (MetaUI     *ui,
@@ -707,10 +722,7 @@ void
 meta_ui_theme_get_frame_borders (MetaUI *ui,
                                  MetaFrameType      type,
                                  MetaFrameFlags     flags,
-                                 int               *top_height,
-                                 int               *bottom_height,
-                                 int               *left_width,
-                                 int               *right_width)
+                                 MetaFrameBorders  *borders)
 {
   int text_height;
   GtkStyleContext *style = NULL;
@@ -732,12 +744,11 @@ meta_ui_theme_get_frame_borders (MetaUI *ui,
 
       meta_theme_get_frame_borders (meta_theme_get_current (),
                                     type, text_height, flags,
-                                    top_height, bottom_height,
-                                    left_width, right_width);
+                                    borders);
     }
   else
     {
-      *top_height = *bottom_height = *left_width = *right_width = 0;
+      meta_frame_borders_clear (borders);
     }
 
   if (style != NULL)

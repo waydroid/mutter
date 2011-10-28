@@ -27,13 +27,13 @@
 
 #include "meta-shaped-texture.h"
 #include "meta-texture-tower.h"
+#include "meta-texture-rectangle.h"
 
 #include <clutter/clutter.h>
 #include <cogl/cogl.h>
 #include <string.h>
 
 static void meta_shaped_texture_dispose  (GObject    *object);
-static void meta_shaped_texture_finalize (GObject    *object);
 static void meta_shaped_texture_notify   (GObject    *object,
 					  GParamSpec *pspec);
 
@@ -49,13 +49,8 @@ static void meta_shaped_texture_update_area (ClutterX11TexturePixmap *texture,
 
 static void meta_shaped_texture_dirty_mask (MetaShapedTexture *stex);
 
-#ifdef HAVE_GLX_TEXTURE_PIXMAP
-G_DEFINE_TYPE (MetaShapedTexture, meta_shaped_texture,
-               CLUTTER_GLX_TYPE_TEXTURE_PIXMAP);
-#else /* HAVE_GLX_TEXTURE_PIXMAP */
 G_DEFINE_TYPE (MetaShapedTexture, meta_shaped_texture,
                CLUTTER_X11_TYPE_TEXTURE_PIXMAP);
-#endif /* HAVE_GLX_TEXTURE_PIXMAP */
 
 #define META_SHAPED_TEXTURE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), META_TYPE_SHAPED_TEXTURE, \
@@ -69,10 +64,14 @@ struct _MetaShapedTexturePrivate
   CoglHandle material_unshaped;
 
   cairo_region_t *clip_region;
+  cairo_region_t *shape_region;
+
+  cairo_region_t *overlay_region;
+  cairo_path_t *overlay_path;
+
+  cairo_region_t *visible_pixels_region;
 
   guint mask_width, mask_height;
-
-  GArray *rectangles;
 
   guint create_mipmaps : 1;
 };
@@ -85,7 +84,6 @@ meta_shaped_texture_class_init (MetaShapedTextureClass *klass)
   ClutterX11TexturePixmapClass *x11_texture_class = (ClutterX11TexturePixmapClass *) klass;
 
   gobject_class->dispose = meta_shaped_texture_dispose;
-  gobject_class->finalize = meta_shaped_texture_finalize;
   gobject_class->notify = meta_shaped_texture_notify;
 
   actor_class->paint = meta_shaped_texture_paint;
@@ -103,8 +101,10 @@ meta_shaped_texture_init (MetaShapedTexture *self)
 
   priv = self->priv = META_SHAPED_TEXTURE_GET_PRIVATE (self);
 
-  priv->rectangles = g_array_new (FALSE, FALSE, sizeof (XRectangle));
-
+  priv->shape_region = NULL;
+  priv->overlay_path = NULL;
+  priv->overlay_region = NULL;
+  priv->visible_pixels_region = NULL;
   priv->paint_tower = meta_texture_tower_new ();
   priv->mask_texture = COGL_INVALID_HANDLE;
   priv->create_mipmaps = TRUE;
@@ -133,20 +133,11 @@ meta_shaped_texture_dispose (GObject *object)
       priv->material_unshaped = COGL_INVALID_HANDLE;
     }
 
+  meta_shaped_texture_set_shape_region (self, NULL);
   meta_shaped_texture_set_clip_region (self, NULL);
+  meta_shaped_texture_set_overlay_path (self, NULL, NULL);
 
   G_OBJECT_CLASS (meta_shaped_texture_parent_class)->dispose (object);
-}
-
-static void
-meta_shaped_texture_finalize (GObject *object)
-{
-  MetaShapedTexture *self = (MetaShapedTexture *) object;
-  MetaShapedTexturePrivate *priv = self->priv;
-
-  g_array_free (priv->rectangles, TRUE);
-
-  G_OBJECT_CLASS (meta_shaped_texture_parent_class)->finalize (object);
 }
 
 static void
@@ -179,25 +170,137 @@ meta_shaped_texture_dirty_mask (MetaShapedTexture *stex)
 {
   MetaShapedTexturePrivate *priv = stex->priv;
 
-  if (priv->mask_texture != COGL_INVALID_HANDLE)
+  if (priv->visible_pixels_region != NULL)
     {
-      GLuint mask_gl_tex;
-      GLenum mask_gl_target;
+      cairo_region_destroy (priv->visible_pixels_region);
+      priv->visible_pixels_region = NULL;
 
-      cogl_texture_get_gl_texture (priv->mask_texture,
-                                   &mask_gl_tex, &mask_gl_target);
-
-#ifdef GL_TEXTURE_RECTANGLE_ARB
-      if (mask_gl_target == GL_TEXTURE_RECTANGLE_ARB)
-        glDeleteTextures (1, &mask_gl_tex);
-#endif
-
-      cogl_handle_unref (priv->mask_texture);
-      priv->mask_texture = COGL_INVALID_HANDLE;
+      if (priv->mask_texture != COGL_INVALID_HANDLE)
+        {
+          cogl_handle_unref (priv->mask_texture);
+          priv->mask_texture = COGL_INVALID_HANDLE;
+        }
 
       if (priv->material != COGL_INVALID_HANDLE)
         cogl_material_set_layer (priv->material, 1, COGL_INVALID_HANDLE);
     }
+}
+
+static void
+scan_visible_region (MetaShapedTexture *stex,
+                     guchar            *mask_data,
+                     int                stride)
+{
+  MetaShapedTexturePrivate *priv = stex->priv;
+  cairo_region_t *visible_pixels_region;
+  cairo_region_t *overlay_region;
+  int i, n_rects;
+
+  /* The visible pixels region contains all pixel values above 0.
+   * This is somewhat complicated when there's an overlay: we
+   * need to scan all regions potentially modified by it.
+   */
+
+  if (priv->visible_pixels_region)
+    cairo_region_destroy (priv->visible_pixels_region);
+
+  priv->visible_pixels_region = cairo_region_copy (priv->shape_region);
+
+  visible_pixels_region = priv->visible_pixels_region;
+  overlay_region = priv->overlay_region;
+
+  /* With no overlay region, the visible region is defined
+   * by the mask region, so we don't need to scan anything. */
+  if (overlay_region == NULL)
+      return;
+
+  /* Subtract all the rectangles in the overlay region so that we can
+   * scan all the pixels potentially added by the overlay path. */
+  cairo_region_subtract (visible_pixels_region, overlay_region);
+
+  n_rects = cairo_region_num_rectangles (overlay_region);
+
+  for (i = 0; i < n_rects; i++)
+    {
+      int x, y;
+      cairo_rectangle_int_t rect;
+
+      cairo_region_get_rectangle (overlay_region, i, &rect);
+
+      for (y = rect.y; y < (rect.y + rect.height); y++)
+        {
+          for (x = rect.x; x < (rect.x + rect.width); x++)
+            {
+              int w = x;
+              while (mask_data[y * stride + w] > 0 && w < (rect.x + rect.width))
+                w++;
+
+              if (w > 0)
+                {
+                  cairo_rectangle_int_t tmp;
+                  tmp.x = x;
+                  tmp.y = y;
+                  tmp.width = w - x;
+                  tmp.height = 1;
+                  cairo_region_union_rectangle (visible_pixels_region, &tmp);
+                  x = w;
+                }
+            }
+        }
+    }
+}
+
+static void
+install_overlay_path (MetaShapedTexture *stex,
+                      guchar            *mask_data,
+                      int                tex_width,
+                      int                tex_height,
+                      int                stride)
+{
+  MetaShapedTexturePrivate *priv = stex->priv;
+  int i, n_rects;
+  cairo_t *cr;
+  cairo_rectangle_int_t rect;
+  cairo_surface_t *surface;
+
+  if (priv->overlay_region == NULL)
+    return;
+
+  surface = cairo_image_surface_create_for_data (mask_data,
+                                                 CAIRO_FORMAT_A8,
+                                                 tex_width,
+                                                 tex_height,
+                                                 stride);
+
+  cr = cairo_create (surface);
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+
+  n_rects = cairo_region_num_rectangles (priv->overlay_region);
+  for (i = 0; i < n_rects; i++)
+    {
+      cairo_region_get_rectangle (priv->overlay_region, i, &rect);
+      cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+    }
+
+  cairo_fill_preserve (cr);
+  if (priv->overlay_path == NULL)
+    {
+      /* If we have an overlay region but not an overlay path, then we
+       * just need to clear the rectangles in the overlay region. */
+      goto out;
+    }
+
+  cairo_clip (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_set_source_rgba (cr, 1, 1, 1, 1);
+
+  cairo_append_path (cr, priv->overlay_path);
+  cairo_fill (cr);
+
+ out:
+  cairo_destroy (cr);
+  cairo_surface_destroy (surface);
 }
 
 static void
@@ -222,22 +325,42 @@ meta_shaped_texture_ensure_mask (MetaShapedTexture *stex)
     meta_shaped_texture_dirty_mask (stex);
 
   /* If we don't have a mask texture yet then create one */
-  if (priv->mask_texture == COGL_INVALID_HANDLE)
+  if (priv->visible_pixels_region == NULL)
     {
       guchar *mask_data;
-      const XRectangle *rect;
+      int i;
+      int n_rects;
+      int stride;
       GLenum paint_gl_target;
 
-      /* Create data for an empty image */
-      mask_data = g_malloc0 (tex_width * tex_height);
-
-      /* Cut out a hole for each rectangle */
-      for (rect = (XRectangle *) priv->rectangles->data
-             + priv->rectangles->len;
-           rect-- > (XRectangle *) priv->rectangles->data;)
+      /* If we have no shape region and no (or an empty) overlay region, we
+       * don't need to create a full mask texture, so quit early. */
+      if (priv->shape_region == NULL &&
+          (priv->overlay_region == NULL ||
+           cairo_region_num_rectangles (priv->overlay_region) == 0))
         {
-          gint x1 = rect->x, x2 = x1 + rect->width;
-          gint y1 = rect->y, y2 = y1 + rect->height;
+          /* With no mask, the visible region is just
+           * {0, 0, tex_width, tex_height}. */
+          cairo_rectangle_int_t rect = { 0, 0, tex_width, tex_height };
+          priv->visible_pixels_region = cairo_region_create_rectangle (&rect);
+          return;
+        }
+
+      stride = cairo_format_stride_for_width (CAIRO_FORMAT_A8, tex_width);
+
+      /* Create data for an empty image */
+      mask_data = g_malloc0 (stride * tex_height);
+
+      n_rects = cairo_region_num_rectangles (priv->shape_region);
+
+      /* Fill in each rectangle. */
+      for (i = 0; i < n_rects; i ++)
+        {
+          cairo_rectangle_int_t rect;
+          cairo_region_get_rectangle (priv->shape_region, i, &rect);
+
+          gint x1 = rect.x, x2 = x1 + rect.width;
+          gint y1 = rect.y, y2 = y1 + rect.height;
           guchar *p;
 
           /* Clip the rectangle to the size of the texture */
@@ -247,35 +370,32 @@ meta_shaped_texture_ensure_mask (MetaShapedTexture *stex)
           y2 = CLAMP (y2, y1, (gint) tex_height);
 
           /* Fill the rectangle */
-          for (p = mask_data + y1 * tex_width + x1;
+          for (p = mask_data + y1 * stride + x1;
                y1 < y2;
-               y1++, p += tex_width)
+               y1++, p += stride)
             memset (p, 255, x2 - x1);
         }
+
+      install_overlay_path (stex, mask_data, tex_width, tex_height, stride);
+      scan_visible_region (stex, mask_data, stride);
 
       cogl_texture_get_gl_texture (paint_tex, NULL, &paint_gl_target);
 
 #ifdef GL_TEXTURE_RECTANGLE_ARB
       if (paint_gl_target == GL_TEXTURE_RECTANGLE_ARB)
         {
-          GLuint tex;
-
-          glGenTextures (1, &tex);
-          glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
-          glPixelStorei (GL_UNPACK_ROW_LENGTH, tex_width);
-          glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
-          glPixelStorei (GL_UNPACK_SKIP_ROWS, 0);
-          glPixelStorei (GL_UNPACK_SKIP_PIXELS, 0);
-          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0,
-                        GL_ALPHA, tex_width, tex_height,
-                        0, GL_ALPHA, GL_UNSIGNED_BYTE, mask_data);
-
           priv->mask_texture
-            = cogl_texture_new_from_foreign (tex,
-                                             GL_TEXTURE_RECTANGLE_ARB,
-                                             tex_width, tex_height,
-                                             0, 0,
-                                             COGL_PIXEL_FORMAT_A_8);
+            = meta_texture_rectangle_new (tex_width, tex_height,
+                                          0, /* flags */
+                                          /* data format */
+                                          COGL_PIXEL_FORMAT_A_8,
+                                          /* internal GL format */
+                                          GL_ALPHA,
+                                          /* internal cogl format */
+                                          COGL_PIXEL_FORMAT_A_8,
+                                          /* rowstride */
+                                          stride,
+                                          mask_data);
         }
       else
 #endif /* GL_TEXTURE_RECTANGLE_ARB */
@@ -283,7 +403,7 @@ meta_shaped_texture_ensure_mask (MetaShapedTexture *stex)
                                                          COGL_TEXTURE_NONE,
                                                          COGL_PIXEL_FORMAT_A_8,
                                                          COGL_PIXEL_FORMAT_ANY,
-                                                         tex_width,
+                                                         stride,
                                                          mask_data);
 
       g_free (mask_data);
@@ -342,9 +462,9 @@ meta_shaped_texture_paint (ClutterActor *actor)
   if (tex_width == 0 || tex_height == 0) /* no contents yet */
     return;
 
-  if (priv->rectangles->len < 1)
+  if (priv->shape_region == NULL)
     {
-      /* If there are no rectangles use a single-layer texture */
+      /* No region means an unclipped shape. Use a single-layer texture. */
 
       if (priv->material_unshaped == COGL_INVALID_HANDLE) 
         {
@@ -444,8 +564,8 @@ meta_shaped_texture_pick (ClutterActor       *actor,
   MetaShapedTexture *stex = (MetaShapedTexture *) actor;
   MetaShapedTexturePrivate *priv = stex->priv;
 
-  /* If there are no rectangles then use the regular pick */
-  if (priv->rectangles->len < 1)
+  /* If there is no region then use the regular pick */
+  if (priv->shape_region == NULL)
     CLUTTER_ACTOR_CLASS (meta_shaped_texture_parent_class)
       ->pick (actor, color);
   else if (clutter_actor_should_pick_paint (actor))
@@ -565,7 +685,8 @@ meta_shaped_texture_clear (MetaShapedTexture *stex)
 }
 
 void
-meta_shaped_texture_clear_rectangles (MetaShapedTexture *stex)
+meta_shaped_texture_set_shape_region (MetaShapedTexture *stex,
+                                      cairo_region_t    *region)
 {
   MetaShapedTexturePrivate *priv;
 
@@ -573,40 +694,85 @@ meta_shaped_texture_clear_rectangles (MetaShapedTexture *stex)
 
   priv = stex->priv;
 
-  g_array_set_size (priv->rectangles, 0);
-  meta_shaped_texture_dirty_mask (stex);
-  clutter_actor_queue_redraw (CLUTTER_ACTOR (stex));
-}
+  if (priv->shape_region != NULL)
+    {
+      cairo_region_destroy (priv->shape_region);
+      priv->shape_region = NULL;
+    }
 
-void
-meta_shaped_texture_add_rectangle (MetaShapedTexture *stex,
-				   const XRectangle  *rect)
-{
-  g_return_if_fail (META_IS_SHAPED_TEXTURE (stex));
-
-  meta_shaped_texture_add_rectangles (stex, 1, rect);
-}
-
-void
-meta_shaped_texture_add_rectangles (MetaShapedTexture *stex,
-				    size_t             num_rects,
-				    const XRectangle  *rects)
-{
-  MetaShapedTexturePrivate *priv;
-
-  g_return_if_fail (META_IS_SHAPED_TEXTURE (stex));
-
-  priv = stex->priv;
-
-  g_array_append_vals (priv->rectangles, rects, num_rects);
+  if (region != NULL)
+    {
+      cairo_region_reference (region);
+      priv->shape_region = region;
+    }
 
   meta_shaped_texture_dirty_mask (stex);
   clutter_actor_queue_redraw (CLUTTER_ACTOR (stex));
 }
 
 /**
+ * meta_shaped_texture_get_visible_pixels_region:
+ * @stex: a #MetaShapedTexture
+ *
+ * Return a region enclosing only visible pixels: those with
+ * alpha values above 0.
+ *
+ * Returns: a #cairo_region_t
+ */
+cairo_region_t *
+meta_shaped_texture_get_visible_pixels_region (MetaShapedTexture *stex)
+{
+  g_return_val_if_fail (META_IS_SHAPED_TEXTURE (stex), NULL);
+
+  meta_shaped_texture_ensure_mask (stex);
+  return stex->priv->visible_pixels_region;
+}
+
+/**
+ * meta_shaped_texture_set_overlay_path:
+ * @stex: a #MetaShapedTexture
+ * @overlay_region: A region containing the parts of the mask to overlay.
+ *   All rectangles in this region are wiped clear to full transparency,
+ *   and the overlay path is clipped to this region.
+ * @overlay_path (transfer full): This path will be painted onto the mask
+ *   texture with a fully opaque source. Due to the lack of refcounting
+ *   in #cairo_path_t, ownership of the path is assumed.
+ */
+void
+meta_shaped_texture_set_overlay_path (MetaShapedTexture *stex,
+                                      cairo_region_t    *overlay_region,
+                                      cairo_path_t      *overlay_path)
+{
+  MetaShapedTexturePrivate *priv;
+
+  g_return_if_fail (META_IS_SHAPED_TEXTURE (stex));
+
+  priv = stex->priv;
+
+  if (priv->overlay_region != NULL)
+    {
+      cairo_region_destroy (priv->overlay_region);
+      priv->overlay_region = NULL;
+    }
+
+  if (priv->overlay_path != NULL)
+    {
+      cairo_path_destroy (priv->overlay_path);
+      priv->overlay_path = NULL;
+    }
+
+  cairo_region_reference (overlay_region);
+  priv->overlay_region = overlay_region;
+
+  /* cairo_path_t does not have refcounting. */
+  priv->overlay_path = overlay_path;
+
+  meta_shaped_texture_dirty_mask (stex);
+}
+
+/**
  * meta_shaped_texture_set_clip_region:
- * @frame: a #TidyTextureframe
+ * @frame: a #MetaShapedTexture
  * @clip_region: (transfer full): the region of the texture that
  *   is visible and should be painted. OWNERSHIP IS ASSUMED BY
  *   THE FUNCTION (for efficiency to avoid a copy.)

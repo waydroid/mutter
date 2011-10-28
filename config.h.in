@@ -33,9 +33,6 @@
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
 
-/* Is ClutterGLXTexturePixmap available? */
-#undef HAVE_GLX_TEXTURE_PIXMAP
-
 /* Define if GObject introspection is available */
 #undef HAVE_INTROSPECTION
 
