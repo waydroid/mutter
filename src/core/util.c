@@ -254,6 +254,10 @@ utf8_fputs (const char *str,
   return retval;
 }
 
+/**
+ * meta_free_gslist_and_elements: (skip)
+ *
+ */
 void
 meta_free_gslist_and_elements (GSList *list_to_deep_free)
 {
@@ -584,6 +588,29 @@ meta_gravity_to_string (int gravity)
     }
 }
 
+/* Command line arguments are passed in the locale encoding; in almost
+ * all cases, we'd hope that is UTF-8 and no conversion is necessary.
+ * If it's not UTF-8, then it's possible that the message isn't
+ * representable in the locale encoding.
+ */
+static void
+append_argument (GPtrArray  *args,
+                 const char *arg)
+{
+  char *locale_arg = g_locale_from_utf8 (arg, -1, NULL, NULL, NULL);
+
+  /* This is cheesy, but it's better to have a few ???'s in the dialog
+   * for an unresponsive application than no dialog at all appear */
+  if (!locale_arg)
+    locale_arg = g_strdup ("???");
+
+  g_ptr_array_add (args, locale_arg);
+}
+
+/**
+ * meta_show_dialog: (skip)
+ *
+ */
 GPid
 meta_show_dialog (const char *type,
                   const char *message,
@@ -597,59 +624,56 @@ meta_show_dialog (const char *type,
 {
   GError *error = NULL;
   GSList *tmp;
-  int i=0;
   GPid child_pid;
-  const char **argvl = g_malloc(sizeof (char*) *
-                                (17 +
-                                 g_slist_length (columns)*2 +
-                                 g_slist_length (entries)));
+  GPtrArray *args;
 
-  argvl[i++] = "zenity";
-  argvl[i++] = type;
-  argvl[i++] = "--display";
-  argvl[i++] = display;
-  argvl[i++] = "--class";
-  argvl[i++] = "mutter-dialog";
-  argvl[i++] = "--title";
-  /* Translators: This is the title used on dialog boxes */
-  argvl[i++] = _("Mutter");
-  argvl[i++] = "--text";
-  argvl[i++] = message;
-  
+  args = g_ptr_array_new ();
+
+  append_argument (args, "zenity");
+  append_argument (args, type);
+  append_argument (args, "--display");
+  append_argument (args, display);
+  append_argument (args, "--class");
+  append_argument (args, "mutter-dialog");
+  append_argument (args, "--title");
+  append_argument (args, "");
+  append_argument (args, "--text");
+  append_argument (args, message);
+
   if (timeout)
     {
-      argvl[i++] = "--timeout";
-      argvl[i++] = timeout;
+      append_argument (args, "--timeout");
+      append_argument (args, timeout);
     }
 
   if (ok_text)
     {
-      argvl[i++] = "--ok-label";
-      argvl[i++] = ok_text;
+      append_argument (args, "--ok-label");
+      append_argument (args, ok_text);
      }
 
   if (cancel_text)
     {
-      argvl[i++] = "--cancel-label";
-      argvl[i++] = cancel_text;
+      append_argument (args, "--cancel-label");
+      append_argument (args, cancel_text);
     }
-  
+
   tmp = columns;
   while (tmp)
     {
-      argvl[i++] = "--column";
-      argvl[i++] = tmp->data;
+      append_argument (args, "--column");
+      append_argument (args, tmp->data);
       tmp = tmp->next;
     }
 
   tmp = entries;
   while (tmp)
     {
-      argvl[i++] = tmp->data;
+      append_argument (args, tmp->data);
       tmp = tmp->next;
     }
-    
-  argvl[i] = NULL;
+
+  g_ptr_array_add (args, NULL); /* NULL-terminate */
 
   if (transient_for)
     {
@@ -660,7 +684,7 @@ meta_show_dialog (const char *type,
 
   g_spawn_async (
                  "/",
-                 (gchar**) argvl, /* ugh */
+                 (gchar**) args->pdata,
                  NULL,
                  G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
                  NULL, NULL,
@@ -671,7 +695,7 @@ meta_show_dialog (const char *type,
   if (transient_for)
     unsetenv ("WINDOWID");
 
-  g_free (argvl);
+  g_ptr_array_free (args, TRUE);
 
   if (error)
     {
@@ -691,6 +715,7 @@ static guint last_later_id = 0;
 typedef struct
 {
   guint id;
+  guint ref_count;
   MetaLaterType when;
   GSourceFunc func;
   gpointer data;
@@ -707,13 +732,29 @@ static guint later_repaint_func = 0;
 static void ensure_later_repaint_func (void);
 
 static void
+unref_later (MetaLater *later)
+{
+  if (--later->ref_count == 0)
+    {
+      if (later->notify)
+        {
+          later->notify (later->data);
+          later->notify = NULL;
+        }
+      g_slice_free (MetaLater, later);
+    }
+}
+
+static void
 destroy_later (MetaLater *later)
 {
   if (later->source)
-    g_source_remove (later->source);
-  if (later->notify)
-    later->notify (later->data);
-  g_slice_free (MetaLater, later);
+    {
+      g_source_remove (later->source);
+      later->source = 0;
+    }
+  later->func = NULL;
+  unref_later (later);
 }
 
 /* Used to sort the list of laters with the highest priority
@@ -729,34 +770,41 @@ compare_laters (gconstpointer a,
 static gboolean
 run_repaint_laters (gpointer data)
 {
-  GSList *old_laters = laters;
+  GSList *laters_copy;
   GSList *l;
   gboolean keep_timeline_running = FALSE;
-  laters = NULL;
 
-  for (l = old_laters; l; l = l->next)
+  laters_copy = NULL;
+  for (l = laters; l; l = l->next)
     {
       MetaLater *later = l->data;
       if (later->source == 0 ||
           (later->when <= META_LATER_BEFORE_REDRAW && !later->run_once))
         {
-          if (later->func (later->data))
-            {
-              if (later->source == 0)
-                keep_timeline_running = TRUE;
-              laters = g_slist_insert_sorted (laters, later, compare_laters);
-            }
-          else
-            destroy_later (later);
+          later->ref_count++;
+          laters_copy = g_slist_prepend (laters_copy, later);
+        }
+    }
+  laters_copy = g_slist_reverse (laters_copy);
+
+  for (l = laters_copy; l; l = l->next)
+    {
+      MetaLater *later = l->data;
+
+      if (later->func && later->func (later->data))
+        {
+          if (later->source == 0)
+            keep_timeline_running = TRUE;
         }
       else
-        laters = g_slist_insert_sorted (laters, later, compare_laters);
+        meta_later_remove (later->id);
+      unref_later (later);
     }
 
   if (!keep_timeline_running)
     clutter_timeline_stop (later_timeline);
 
-  g_slist_free (old_laters);
+  g_slist_free (laters_copy);
 
   /* Just keep the repaint func around - it's cheap if the list is empty */
   return TRUE;
@@ -783,9 +831,7 @@ call_idle_later (gpointer data)
 
   if (!later->func (later->data))
     {
-      laters = g_slist_remove (laters, later);
-      later->source = 0;
-      destroy_later (later);
+      meta_later_remove (later->id);
       return FALSE;
     }
   else
@@ -821,6 +867,7 @@ meta_later_add (MetaLaterType  when,
   MetaLater *later = g_slice_new0 (MetaLater);
 
   later->id = ++last_later_id;
+  later->ref_count = 1;
   later->when = when;
   later->func = func;
   later->data = data;

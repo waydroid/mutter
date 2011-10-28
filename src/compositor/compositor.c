@@ -11,10 +11,11 @@
 #include <meta/compositor-mutter.h>
 #include "xprops.h"
 #include <meta/prefs.h>
+#include <meta/main.h>
 #include <meta/meta-shadow-factory.h>
 #include "meta-window-actor-private.h"
 #include "meta-window-group.h"
-#include "meta-background-actor.h"
+#include "meta-background-actor-private.h"
 #include "window-private.h" /* to check window->hidden */
 #include "display-private.h" /* for meta_display_lookup_x_window() */
 #include <X11/extensions/shape.h>
@@ -108,28 +109,6 @@ process_damage (MetaCompositor     *compositor,
   meta_window_actor_process_damage (window_actor, event);
 }
 
-#ifdef HAVE_SHAPE
-static void
-process_shape (MetaCompositor *compositor,
-               XShapeEvent    *event,
-               MetaWindow     *window)
-{
-  MetaWindowActor *window_actor;
-
-  if (window == NULL)
-    return;
-
-  window_actor = META_WINDOW_ACTOR (meta_window_get_compositor_private (window));
-  if (window_actor == NULL)
-    return;
-
-  if (event->kind == ShapeBounding)
-    {
-      meta_window_actor_update_shape (window_actor, event->shaped);
-    }
-}
-#endif
-
 static void
 process_property_notify (MetaCompositor	*compositor,
                          XPropertyEvent *event,
@@ -146,8 +125,7 @@ process_property_notify (MetaCompositor	*compositor,
 	  MetaScreen  *screen = l->data;
           if (event->window == meta_screen_get_xroot (screen))
             {
-              MetaCompScreen *info = meta_screen_get_compositor_data (screen);
-              meta_background_actor_update (META_BACKGROUND_ACTOR (info->background_actor));
+              meta_background_actor_update (screen);
               return;
             }
         }
@@ -301,6 +279,12 @@ do_set_stage_input_region (MetaScreen   *screen,
   Window        xstage = clutter_x11_get_stage_window (CLUTTER_STAGE (info->stage));
 
   XFixesSetWindowShapeRegion (xdpy, xstage, ShapeInput, 0, 0, region);
+
+  /* It's generally a good heuristic that when a crossing event is generated because
+   * we reshape the overlay, we don't want it to affect focus-follows-mouse focus -
+   * it's not the user doing something, it's the environment changing under the user.
+   */
+  meta_display_add_ignored_crossing_serial (display, XNextRequest (xdpy));
   XFixesSetWindowShapeRegion (xdpy, info->output, ShapeInput, 0, 0, region);
 }
 
@@ -474,20 +458,43 @@ meta_compositor_manage_screen (MetaCompositor *compositor,
   gint            width, height;
   XWindowAttributes attr;
   long            event_mask;
+  guint           n_retries;
+  guint           max_retries;
 
   /* Check if the screen is already managed */
   if (meta_screen_get_compositor_data (screen))
     return;
 
-  meta_error_trap_push_with_return (display);
-  XCompositeRedirectSubwindows (xdisplay, xroot, CompositeRedirectManual);
-  XSync (xdisplay, FALSE);
+  if (meta_get_replace_current_wm ())
+    max_retries = 5;
+  else
+    max_retries = 1;
 
-  if (meta_error_trap_pop_with_return (display))
+  n_retries = 0;
+
+  /* Some compositors (like old versions of Mutter) might not properly unredirect
+   * subwindows before destroying the WM selection window; so we wait a while
+   * for such a compositor to exit before giving up.
+   */
+  while (TRUE)
     {
-      g_warning ("Another compositing manager is running on screen %i",
-                 screen_number);
-      return;
+      meta_error_trap_push_with_return (display);
+      XCompositeRedirectSubwindows (xdisplay, xroot, CompositeRedirectManual);
+      XSync (xdisplay, FALSE);
+
+      if (!meta_error_trap_pop_with_return (display))
+        break;
+
+      if (n_retries == max_retries)
+        {
+          /* This probably means that a non-WM compositor like xcompmgr is running;
+           * we have no way to get it to exit */
+          meta_fatal (_("Another compositing manager is already running on screen %i on display \"%s\"."),
+                      screen_number, display->name);
+        }
+
+      n_retries++;
+      g_usleep (G_USEC_PER_SEC);
     }
 
   info = g_new0 (MetaCompScreen, 1);
@@ -532,7 +539,7 @@ meta_compositor_manage_screen (MetaCompositor *compositor,
   XSelectInput (xdisplay, xwin, event_mask);
 
   info->window_group = meta_window_group_new (screen);
-  info->background_actor = meta_background_actor_new (screen);
+  info->background_actor = meta_background_actor_new_for_screen (screen);
   info->overlay_group = clutter_group_new ();
   info->hidden_group = clutter_group_new ();
 
@@ -587,6 +594,55 @@ void
 meta_compositor_unmanage_screen (MetaCompositor *compositor,
                                  MetaScreen     *screen)
 {
+  MetaDisplay    *display       = meta_screen_get_display (screen);
+  Display        *xdisplay      = meta_display_get_xdisplay (display);
+  Window          xroot         = meta_screen_get_xroot (screen);
+
+  /* This is the most important part of cleanup - we have to do this
+   * before giving up the window manager selection or the next
+   * window manager won't be able to redirect subwindows */
+  XCompositeUnredirectSubwindows (xdisplay, xroot, CompositeRedirectManual);
+}
+
+/*
+ * Shapes the cow so that the given window is exposed,
+ * when metaWindow is NULL it clears the shape again
+ */
+static void
+meta_shape_cow_for_window (MetaScreen *screen,
+                           MetaWindow *metaWindow)
+{
+  MetaCompScreen *info = meta_screen_get_compositor_data (screen);
+  Display *xdisplay = meta_display_get_xdisplay (meta_screen_get_display (screen));
+
+  if (metaWindow == NULL)
+      XFixesSetWindowShapeRegion (xdisplay, info->output, ShapeBounding, 0, 0, None);
+  else
+    {
+      XserverRegion output_region;
+      XRectangle screen_rect, window_bounds;
+      int width, height;
+      MetaRectangle rect;
+
+      meta_window_get_outer_rect (metaWindow, &rect);
+
+      window_bounds.x = rect.x;
+      window_bounds.y = rect.y;
+      window_bounds.width = rect.width;
+      window_bounds.height = rect.height;
+
+      meta_screen_get_size (screen, &width, &height);
+      screen_rect.x = 0;
+      screen_rect.y = 0;
+      screen_rect.width = width;
+      screen_rect.height = height;
+
+      output_region = XFixesCreateRegion (xdisplay, &window_bounds, 1);
+
+      XFixesInvertRegion (xdisplay, output_region, &screen_rect, output_region);
+      XFixesSetWindowShapeRegion (xdisplay, info->output, ShapeBounding, 0, 0, output_region);
+      XFixesDestroyRegion (xdisplay, output_region);
+    }
 }
 
 void
@@ -609,11 +665,24 @@ meta_compositor_remove_window (MetaCompositor *compositor,
                                MetaWindow     *window)
 {
   MetaWindowActor         *window_actor     = NULL;
+  MetaScreen *screen;
+  MetaCompScreen *info;
 
   DEBUG_TRACE ("meta_compositor_remove_window\n");
   window_actor = META_WINDOW_ACTOR (meta_window_get_compositor_private (window));
   if (!window_actor)
     return;
+
+  screen = meta_window_get_screen (window);
+  info = meta_screen_get_compositor_data (screen);
+
+  if (window_actor == info->unredirected_window)
+    {
+      meta_window_actor_set_redirected (window_actor, TRUE);
+      meta_shape_cow_for_window (meta_window_get_screen (meta_window_actor_get_meta_window (info->unredirected_window)),
+                                 NULL);
+      info->unredirected_window = NULL;
+    }
 
   meta_window_actor_destroy (window_actor);
 }
@@ -642,6 +711,16 @@ is_grabbed_event (XEvent *event)
 
   return FALSE;
 }
+
+void
+meta_compositor_window_shape_changed (MetaCompositor *compositor,
+                                      MetaWindow     *window)
+{
+  MetaWindowActor *window_actor;
+  window_actor = META_WINDOW_ACTOR (meta_window_get_compositor_private (window));
+  meta_window_actor_update_shape (window_actor);
+}
+
 /**
  * meta_compositor_process_event: (skip)
  *
@@ -721,13 +800,6 @@ meta_compositor_process_event (MetaCompositor *compositor,
 	  DEBUG_TRACE ("meta_compositor_process_event (process_damage)\n");
           process_damage (compositor, (XDamageNotifyEvent *) event, window);
         }
-#ifdef HAVE_SHAPE
-      else if (event->type == meta_display_get_shape_event_base (compositor->display) + ShapeNotify)
-	{
-	  DEBUG_TRACE ("meta_compositor_process_event (process_shape)\n");
-	  process_shape (compositor, (XShapeEvent *) event, window);
-	}
-#endif /* HAVE_SHAPE */
       break;
     }
 
@@ -1074,7 +1146,7 @@ meta_compositor_sync_screen_size (MetaCompositor  *compositor,
 
   clutter_actor_set_size (info->stage, width, height);
 
-  meta_background_actor_screen_size_changed (META_BACKGROUND_ACTOR (info->background_actor));
+  meta_background_actor_screen_size_changed (screen);
 
   meta_verbose ("Changed size for stage on screen %d to %dx%d\n",
 		meta_screen_get_screen_number (screen),
@@ -1085,6 +1157,36 @@ static void
 pre_paint_windows (MetaCompScreen *info)
 {
   GList *l;
+  MetaWindowActor *top_window;
+  MetaWindowActor *expected_unredirected_window = NULL;
+
+  if (info->windows == NULL)
+    return;
+
+  top_window = g_list_last (info->windows)->data;
+
+  if (meta_window_actor_should_unredirect (top_window) &&
+      info->disable_unredirect_count == 0)
+    expected_unredirected_window = top_window;
+
+  if (info->unredirected_window != expected_unredirected_window)
+    {
+      if (info->unredirected_window != NULL)
+        {
+          meta_window_actor_set_redirected (info->unredirected_window, TRUE);
+          meta_shape_cow_for_window (meta_window_get_screen (meta_window_actor_get_meta_window (info->unredirected_window)),
+                                     NULL);
+        }
+
+      if (expected_unredirected_window != NULL)
+        {
+          meta_shape_cow_for_window (meta_window_get_screen (meta_window_actor_get_meta_window (top_window)),
+                                     meta_window_actor_get_meta_window (top_window));
+          meta_window_actor_set_redirected (top_window, FALSE);
+        }
+
+      info->unredirected_window = expected_unredirected_window;
+    }
 
   for (l = info->windows; l; l = l->next)
     meta_window_actor_pre_paint (l->data);
@@ -1186,6 +1288,37 @@ meta_get_overlay_window (MetaScreen *screen)
   MetaCompScreen *info = meta_screen_get_compositor_data (screen);
 
   return info->output;
+}
+
+/**
+ * meta_disable_unredirect_for_screen:
+ * @screen: a #MetaScreen
+ *
+ * Disables unredirection, can be usefull in situations where having
+ * unredirected windows is undesireable like when recording a video.
+ *
+ */
+void
+meta_disable_unredirect_for_screen (MetaScreen *screen)
+{
+  MetaCompScreen *info = meta_screen_get_compositor_data (screen);
+  if (info != NULL)
+    info->disable_unredirect_count = info->disable_unredirect_count + 1;
+}
+
+/**
+ * meta_enable_unredirect_for_screen:
+ * @screen: a #MetaScreen
+ *
+ * Enables unredirection which reduces the overhead for apps like games.
+ *
+ */
+void
+meta_enable_unredirect_for_screen (MetaScreen *screen)
+{
+  MetaCompScreen *info = meta_screen_get_compositor_data (screen);
+  if (info != NULL)
+   info->disable_unredirect_count = MAX(0, info->disable_unredirect_count - 1);
 }
 
 #define FLASH_TIME_MS 50

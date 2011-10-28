@@ -355,14 +355,15 @@ border_only_contents (void)
   GtkWidget *event_box;
   GtkWidget *vbox;
   GtkWidget *w;
-  GdkColor color;
+  GdkRGBA color;
 
   event_box = gtk_event_box_new ();
 
-  color.red = 40000;
+  color.red = 0.6;
   color.green = 0;
-  color.blue = 40000;
-  gtk_widget_modify_bg (event_box, GTK_STATE_NORMAL, &color);
+  color.blue = 0.6;
+  color.alpha = 1.0;
+  gtk_widget_override_background_color (event_box, 0, &color);
   
   vbox = gtk_vbox_new (FALSE, 0);
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 3);
@@ -477,7 +478,7 @@ preview_collection (int font_size,
 {
   GtkWidget *box;
   GtkWidget *sw;
-  GdkColor desktop_color;
+  GdkRGBA desktop_color;
   int i;
   GtkWidget *eventbox;
 
@@ -495,11 +496,12 @@ preview_collection (int font_size,
   
   gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (sw), eventbox);
 
-  desktop_color.red = 0x5144;
-  desktop_color.green = 0x75D6;
-  desktop_color.blue = 0xA699;
+  desktop_color.red = 0.32;
+  desktop_color.green = 0.46;
+  desktop_color.blue = 0.65;
+  desktop_color.alpha = 1.0;
 
-  gtk_widget_modify_bg (eventbox, GTK_STATE_NORMAL, &desktop_color);
+  gtk_widget_override_background_color (eventbox, 0, &desktop_color);
 
   i = 0;
   while (i < META_FRAME_TYPE_LAST)
@@ -694,7 +696,7 @@ previews_of_button_layouts (void)
   static gboolean initted = FALSE;
   GtkWidget *box;
   GtkWidget *sw;
-  GdkColor desktop_color;
+  GdkRGBA desktop_color;
   int i;
   GtkWidget *eventbox;
   
@@ -718,11 +720,12 @@ previews_of_button_layouts (void)
   
   gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (sw), eventbox);
 
-  desktop_color.red = 0x5144;
-  desktop_color.green = 0x75D6;
-  desktop_color.blue = 0xA699;
+  desktop_color.red = 0.32;
+  desktop_color.green = 0.46;
+  desktop_color.blue = 0.65;
+  desktop_color.alpha = 1.0;
 
-  gtk_widget_modify_bg (eventbox, GTK_STATE_NORMAL, &desktop_color);
+  gtk_widget_override_background_color (eventbox, 0, &desktop_color);
 
   i = 0;
   while (i < BUTTON_LAYOUT_COMBINATIONS)
@@ -956,7 +959,7 @@ run_theme_benchmark (void)
 {
   GtkWidget* widget;
   cairo_surface_t *pixmap;
-  int top_height, bottom_height, left_width, right_width;
+  MetaFrameBorders borders;
   MetaButtonState button_states[META_BUTTON_TYPE_LAST] =
   {
     META_BUTTON_STATE_NORMAL,
@@ -983,10 +986,7 @@ run_theme_benchmark (void)
                                 META_FRAME_TYPE_NORMAL,
                                 get_text_height (widget),
                                 get_flags (widget),
-                                &top_height,
-                                &bottom_height,
-                                &left_width,
-                                &right_width);
+                                &borders);
   
   layout = create_title_layout (widget);
   
@@ -1021,8 +1021,8 @@ run_theme_benchmark (void)
        */
       pixmap = gdk_window_create_similar_surface (gtk_widget_get_window (widget),
                                                   CAIRO_CONTENT_COLOR,
-                                                  client_width + left_width + right_width,
-                                                  client_height + top_height + bottom_height);
+                                                  client_width + borders.visible.left + borders.visible.right,
+                                                  client_height + borders.visible.top + borders.visible.bottom);
 
       cr = cairo_create (pixmap);
 

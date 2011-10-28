@@ -42,6 +42,7 @@
 #include "stack.h"
 #include "iconcache.h"
 #include <X11/Xutil.h>
+#include <cairo.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 typedef struct _MetaWindowQueue MetaWindowQueue;
@@ -98,6 +99,7 @@ struct _MetaWindow
   char *wm_client_machine;
   char *startup_id;
   char *mutter_hints;
+  char *gtk_theme_variant;
 
   int net_wm_pid;
   
@@ -127,6 +129,7 @@ struct _MetaWindow
    * this is the current mode. If not, it is the mode which will be
    * requested after the window grab is released */
   guint tile_mode : 2;
+  int tile_monitor_number;
 
   /* Whether we're shaded */
   guint shaded : 1;
@@ -316,6 +319,12 @@ struct _MetaWindow
   /* if TRUE, application is buggy and SYNC resizing is turned off */
   guint disable_sync : 1;
 
+  /* if TRUE, window is attached to its parent */
+  guint attached : 1;
+
+  /* if non-NULL, the bounds of the window frame */
+  cairo_region_t *frame_bounds;
+
   /* Note: can be NULL */
   GSList *struts;
 
@@ -417,6 +426,8 @@ struct _MetaWindowClass
                                        (w)->tile_mode == META_TILE_LEFT)
 #define META_WINDOW_TILED_RIGHT(w)    (META_WINDOW_TILED_SIDE_BY_SIDE(w) && \
                                        (w)->tile_mode == META_TILE_RIGHT)
+#define META_WINDOW_TILED_MAXIMIZED(w)(META_WINDOW_MAXIMIZED(w) && \
+                                       (w)->tile_mode == META_TILE_MAXIMIZED)
 #define META_WINDOW_ALLOWS_MOVE(w)     ((w)->has_move_func && !(w)->fullscreen)
 #define META_WINDOW_ALLOWS_RESIZE_EXCEPT_HINTS(w)   ((w)->has_resize_func && !META_WINDOW_MAXIMIZED (w) && !META_WINDOW_TILED_SIDE_BY_SIDE(w) && !(w)->fullscreen && !(w)->shaded)
 #define META_WINDOW_ALLOWS_RESIZE(w)   (META_WINDOW_ALLOWS_RESIZE_EXCEPT_HINTS (w) &&                \
@@ -632,10 +643,12 @@ void meta_window_update_icon_now (MetaWindow *window);
 
 void meta_window_update_role (MetaWindow *window);
 void meta_window_update_net_wm_type (MetaWindow *window);
-void meta_window_update_monitor (MetaWindow *window);
+void meta_window_update_for_monitors_changed (MetaWindow *window);
 void meta_window_update_on_all_workspaces (MetaWindow *window);
 
 void meta_window_propagate_focus_appearance (MetaWindow *window,
                                              gboolean    focused);
+
+gboolean meta_window_should_attach_to_parent (MetaWindow *window);
 
 #endif

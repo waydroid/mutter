@@ -29,11 +29,7 @@
 #include <config.h>
 
 #include <clutter/clutter.h>
-#ifdef HAVE_GLX_TEXTURE_PIXMAP
-#include <clutter/glx/clutter-glx.h>
-#else
 #include <clutter/x11/clutter-x11.h>
-#endif /* HAVE_GLX_TEXTURE_PIXMAP */
 
 G_BEGIN_DECLS
 
@@ -50,20 +46,12 @@ typedef struct _MetaShapedTexturePrivate MetaShapedTexturePrivate;
 
 struct _MetaShapedTextureClass
 {
-#ifdef HAVE_GLX_TEXTURE_PIXMAP
-  ClutterGLXTexturePixmapClass parent_class;
-#else
   ClutterX11TexturePixmapClass parent_class;
-#endif
 };
 
 struct _MetaShapedTexture
 {
-#ifdef HAVE_GLX_TEXTURE_PIXMAP
-  ClutterGLXTexturePixmap parent;
-#else
   ClutterX11TexturePixmap parent;
-#endif
 
   MetaShapedTexturePrivate *priv;
 };
@@ -77,13 +65,14 @@ void meta_shaped_texture_set_create_mipmaps (MetaShapedTexture *stex,
 
 void meta_shaped_texture_clear (MetaShapedTexture *stex);
 
-void meta_shaped_texture_clear_rectangles (MetaShapedTexture *stex);
+void meta_shaped_texture_set_shape_region (MetaShapedTexture *stex,
+                                           cairo_region_t    *region);
 
-void meta_shaped_texture_add_rectangle  (MetaShapedTexture *stex,
-					 const XRectangle  *rect);
-void meta_shaped_texture_add_rectangles (MetaShapedTexture *stex,
-					 size_t             num_rects,
-					 const XRectangle  *rects);
+cairo_region_t *meta_shaped_texture_get_visible_pixels_region (MetaShapedTexture *stex);
+
+void meta_shaped_texture_set_overlay_path (MetaShapedTexture *stex,
+                                           cairo_region_t    *overlay_region,
+                                           cairo_path_t      *overlay_path);
 
 /* Assumes ownership of clip_region */
 void meta_shaped_texture_set_clip_region (MetaShapedTexture *stex,

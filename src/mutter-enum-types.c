@@ -695,6 +695,7 @@ meta_preference_get_type (void)
         { META_PREF_LIVE_HIDDEN_WINDOWS, "META_PREF_LIVE_HIDDEN_WINDOWS", "live-hidden-windows" },
         { META_PREF_WORKSPACES_ONLY_ON_PRIMARY, "META_PREF_WORKSPACES_ONLY_ON_PRIMARY", "workspaces-only-on-primary" },
         { META_PREF_NO_TAB_POPUP, "META_PREF_NO_TAB_POPUP", "no-tab-popup" },
+        { META_PREF_DRAGGABLE_BORDER_WIDTH, "META_PREF_DRAGGABLE_BORDER_WIDTH", "draggable-border-width" },
         { 0, NULL, NULL }
       };
       GType g_enum_type_id;

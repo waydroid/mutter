@@ -532,9 +532,9 @@ meta_display_open (void)
                                           meta_unsigned_long_equal);
   
   i = 0;
-  while (i < N_IGNORED_SERIALS)
+  while (i < N_IGNORED_CROSSING_SERIALS)
     {
-      the_display->ignored_serials[i] = 0;
+      the_display->ignored_crossing_serials[i] = 0;
       ++i;
     }
   the_display->ungrab_should_not_cause_focus_window = None;
@@ -554,6 +554,7 @@ meta_display_open (void)
   the_display->grab_screen = NULL;
   the_display->grab_resize_popup = NULL;
   the_display->grab_tile_mode = META_TILE_NONE;
+  the_display->grab_tile_monitor_number = -1;
 
   the_display->grab_edge_resistance_data = NULL;
 
@@ -1383,37 +1384,48 @@ meta_display_get_current_time_roundtrip (MetaDisplay *display)
   return timestamp;
 }
 
-static void
-add_ignored_serial (MetaDisplay  *display,
-                    unsigned long serial)
+/**
+ * meta_display_add_ignored_crossing_serial:
+ * @display: a #MetaDisplay
+ * @serial: the serial to ignore
+ *
+ * Save the specified serial and ignore crossing events with that
+ * serial for the purpose of focus-follows-mouse. This can be used
+ * for certain changes to the window hierarchy that we don't want
+ * to change the focus window, even if they cause the pointer to
+ * end up in a new window.
+ */
+void
+meta_display_add_ignored_crossing_serial (MetaDisplay  *display,
+                                          unsigned long serial)
 {
   int i;
 
   /* don't add the same serial more than once */
-  if (display->ignored_serials[N_IGNORED_SERIALS-1] == serial)
+  if (display->ignored_crossing_serials[N_IGNORED_CROSSING_SERIALS-1] == serial)
     return;
   
   /* shift serials to the left */
   i = 0;
-  while (i < (N_IGNORED_SERIALS - 1))
+  while (i < (N_IGNORED_CROSSING_SERIALS - 1))
     {
-      display->ignored_serials[i] = display->ignored_serials[i+1];
+      display->ignored_crossing_serials[i] = display->ignored_crossing_serials[i+1];
       ++i;
     }
   /* put new one on the end */
-  display->ignored_serials[i] = serial;
+  display->ignored_crossing_serials[i] = serial;
 }
 
 static gboolean
-serial_is_ignored (MetaDisplay  *display,
-                   unsigned long serial)
+crossing_serial_is_ignored (MetaDisplay  *display,
+                            unsigned long serial)
 {
   int i;
 
   i = 0;
-  while (i < N_IGNORED_SERIALS)
+  while (i < N_IGNORED_CROSSING_SERIALS)
     {
-      if (display->ignored_serials[i] == serial)
+      if (display->ignored_crossing_serials[i] == serial)
         return TRUE;
       ++i;
     }
@@ -1421,14 +1433,14 @@ serial_is_ignored (MetaDisplay  *display,
 }
 
 static void
-reset_ignores (MetaDisplay *display)
+reset_ignored_crossing_serials (MetaDisplay *display)
 {
   int i;
 
   i = 0;
-  while (i < N_IGNORED_SERIALS)
+  while (i < N_IGNORED_CROSSING_SERIALS)
     {
-      display->ignored_serials[i] = 0;
+      display->ignored_crossing_serials[i] = 0;
       ++i;
     }
 
@@ -1603,7 +1615,7 @@ event_callback (XEvent   *event,
       if (meta_ui_window_should_not_cause_focus (display->xdisplay,
                                                  modified))
         {
-          add_ignored_serial (display, event->xany.serial);
+          meta_display_add_ignored_crossing_serial (display, event->xany.serial);
           meta_topic (META_DEBUG_FOCUS,
                       "Adding EnterNotify serial %lu to ignored focus serials\n",
                       event->xany.serial);
@@ -1613,7 +1625,7 @@ event_callback (XEvent   *event,
            event->xcrossing.mode == NotifyUngrab &&
            modified == display->ungrab_should_not_cause_focus_window)
     {
-      add_ignored_serial (display, event->xany.serial);
+      meta_display_add_ignored_crossing_serial (display, event->xany.serial);
       meta_topic (META_DEBUG_FOCUS,
                   "Adding LeaveNotify serial %lu to ignored focus serials\n",
                   event->xany.serial);
@@ -1697,12 +1709,9 @@ event_callback (XEvent   *event,
                               window->desc);
                 }
 
-              if (window->frame)
-                {
-                  window->frame->need_reapply_frame_shape = TRUE;
-		  meta_warning("from event callback\n");		  
-                  meta_window_queue (window, META_QUEUE_MOVE_RESIZE);
-                }
+              if (display->compositor)
+                meta_compositor_window_shape_changed (display->compositor,
+                                                      window);
             }
         }
       else
@@ -1992,7 +2001,7 @@ event_callback (XEvent   *event,
       /* Check if we've entered a window; do this even if window->has_focus to
        * avoid races.
        */
-      if (window && !serial_is_ignored (display, event->xany.serial) &&
+      if (window && !crossing_serial_is_ignored (display, event->xany.serial) &&
                event->xcrossing.mode != NotifyGrab && 
                event->xcrossing.mode != NotifyUngrab &&
                event->xcrossing.detail != NotifyInferior &&
@@ -2017,7 +2026,7 @@ event_callback (XEvent   *event,
                   meta_window_focus (window, event->xcrossing.time);
 
                   /* stop ignoring stuff */
-                  reset_ignores (display);
+                  reset_ignored_crossing_serials (display);
                   
                   if (meta_prefs_get_auto_raise ()) 
                     {
@@ -2286,11 +2295,8 @@ event_callback (XEvent   *event,
         screen = meta_display_screen_for_root (display,
                                                event->xconfigure.event);
         if (screen)
-          {
-            if (screen)
-              meta_stack_tracker_reparent_event (screen->stack_tracker,
-                                                 &event->xreparent);
-          }
+          meta_stack_tracker_reparent_event (screen->stack_tracker,
+                                             &event->xreparent);
       }
       break;
     case ConfigureNotify:
@@ -3527,8 +3533,7 @@ meta_display_begin_grab_op (MetaDisplay *display,
   /* If window is a modal dialog attached to its parent,
    * grab the parent instead for moving.
    */
-  if (meta_prefs_get_attach_modal_dialogs () &&
-      window && window->type == META_WINDOW_MODAL_DIALOG &&
+  if (window && meta_window_is_attached_dialog (window) &&
       meta_grab_op_is_moving (op))
     grab_window = meta_window_get_transient_for (window);
 
@@ -3554,7 +3559,7 @@ meta_display_begin_grab_op (MetaDisplay *display,
   meta_display_set_grab_op_cursor (display, screen, op, FALSE, grab_xwindow,
                                    timestamp);
 
-  if (!display->grab_have_pointer)
+  if (!display->grab_have_pointer && !grab_op_is_keyboard (op))
     {
       meta_topic (META_DEBUG_WINDOW_OPS,
                   "XGrabPointer() failed\n");
@@ -3589,9 +3594,15 @@ meta_display_begin_grab_op (MetaDisplay *display,
   display->grab_button = button;
   display->grab_mask = modmask;
   if (window)
-    display->grab_tile_mode = window->tile_mode;
+    {
+      display->grab_tile_mode = window->tile_mode;
+      display->grab_tile_monitor_number = window->tile_monitor_number;
+    }
   else
-    display->grab_tile_mode = META_TILE_NONE;
+    {
+      display->grab_tile_mode = META_TILE_NONE;
+      display->grab_tile_monitor_number = -1;
+    }
   display->grab_anchor_root_x = root_x;
   display->grab_anchor_root_y = root_y;
   display->grab_latest_motion_x = root_x;
@@ -3789,6 +3800,7 @@ meta_display_end_grab_op (MetaDisplay *display,
   display->grab_screen = NULL;
   display->grab_xwindow = None;
   display->grab_tile_mode = META_TILE_NONE;
+  display->grab_tile_monitor_number = -1;
   display->grab_op = META_GRAB_OP_NONE;
 
   if (display->grab_resize_popup)
@@ -4100,8 +4112,6 @@ meta_display_queue_retheme_all_windows (MetaDisplay *display)
       meta_window_queue (window, META_QUEUE_MOVE_RESIZE);
       if (window->frame)
         {
-          window->frame->need_reapply_frame_shape = TRUE;
-          
           meta_frame_queue_draw (window->frame);
         }
       
@@ -4316,11 +4326,7 @@ process_request_frame_extents (MetaDisplay    *display,
                                          &hints);
   if ((hints_set && hints->decorations) || !hints_set)
     {
-      int top = 0;
-      int bottom = 0;
-      int left = 0;
-      int right = 0;
-
+      MetaFrameBorders borders;
       MetaScreen *screen;
 
       screen = meta_display_screen_for_xwindow (display,
@@ -4338,15 +4344,11 @@ process_request_frame_extents (MetaDisplay    *display,
       meta_ui_theme_get_frame_borders (screen->ui,
                                        META_FRAME_TYPE_NORMAL,
                                        0,
-                                       &top,
-                                       &bottom,
-                                       &left,
-                                       &right);
-
-      data[0] = left;
-      data[1] = right;
-      data[2] = top;
-      data[3] = bottom;
+                                       &borders);
+      data[0] = borders.visible.left;
+      data[1] = borders.visible.right;
+      data[2] = borders.visible.top;
+      data[3] = borders.visible.bottom;
     }
 
   meta_topic (META_DEBUG_GEOMETRY,
@@ -5072,7 +5074,7 @@ meta_display_stack_cmp (const void *a,
  * An example of using this would be to sort the list of transient dialogs for a
  * window into their current stacking order.
  *
- * Returns: (transfer container): Input windows sorted by stacking order, from lowest to highest
+ * Returns: (transfer container) (element-type MetaWindow): Input windows sorted by stacking order, from lowest to highest
  */
 GSList *
 meta_display_sort_windows_by_stacking (MetaDisplay *display,
@@ -5179,34 +5181,6 @@ prefs_changed_callback (MetaPreference pref,
   else if (pref == META_PREF_AUDIBLE_BELL)
     {
       meta_bell_set_audible (display, meta_prefs_bell_is_audible ());
-    }
-  else if (pref == META_PREF_ATTACH_MODAL_DIALOGS)
-    {
-      MetaDisplay *display = data;
-      GSList *windows;
-      GSList *tmp;
-
-      windows = meta_display_list_windows (display, META_LIST_DEFAULT);
-
-      for (tmp = windows; tmp != NULL; tmp = tmp->next)
-        {
-          MetaWindow *w = tmp->data;
-          MetaWindow *parent = meta_window_get_transient_for (w);
-          meta_window_recalc_features (w);
-
-          if (w->type == META_WINDOW_MODAL_DIALOG && parent && parent != w)
-            {
-              int x, y;
-              /* Forcing a call to move_resize() does two things: first, it handles
-               * resizing the dialog frame window to the correct size when we remove
-               * or add the decorations. Second, it will take care of positioning the
-               * dialog as "attached" to the parent when we turn the preference on
-               * via the constrain_modal_dialog() constraint.
-               **/
-              meta_window_get_position (w, &x, &y);
-              meta_window_move (w, FALSE, x, y);
-            }
-        }
     }
 }
 

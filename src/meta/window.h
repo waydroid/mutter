@@ -23,6 +23,7 @@
 #define META_WINDOW_H
 
 #include <glib-object.h>
+#include <cairo.h>
 #include <X11/Xlib.h>
 
 #include <meta/boxes.h>
@@ -74,6 +75,7 @@ gboolean meta_window_is_shaded (MetaWindow *window);
 gboolean meta_window_is_override_redirect (MetaWindow *window);
 gboolean meta_window_is_skip_taskbar (MetaWindow *window);
 MetaRectangle *meta_window_get_rect (MetaWindow *window);
+void meta_window_get_input_rect (const MetaWindow *window, MetaRectangle *rect);
 void meta_window_get_outer_rect (const MetaWindow *window, MetaRectangle *rect);
 MetaScreen *meta_window_get_screen (MetaWindow *window);
 MetaDisplay *meta_window_get_display (MetaWindow *window);
@@ -152,8 +154,11 @@ int         meta_window_get_pid (MetaWindow *window);
 const char *meta_window_get_client_machine (MetaWindow *window);
 gboolean    meta_window_is_remote (MetaWindow *window);
 gboolean    meta_window_is_modal (MetaWindow *window);
+gboolean    meta_window_is_attached_dialog (MetaWindow *window);
 const char *meta_window_get_mutter_hints (MetaWindow *window);
 
 MetaFrameType meta_window_get_frame_type (MetaWindow *window);
+
+cairo_region_t *meta_window_get_frame_bounds (MetaWindow *window);
 
 #endif

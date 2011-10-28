@@ -35,7 +35,6 @@ typedef enum
   META_CORE_WINDOW_HAS_FRAME,
   META_CORE_GET_CLIENT_WIDTH,
   META_CORE_GET_CLIENT_HEIGHT,
-  META_CORE_IS_TITLEBAR_ONSCREEN,
   META_CORE_GET_CLIENT_XWINDOW,
   META_CORE_GET_FRAME_FLAGS,
   META_CORE_GET_FRAME_TYPE,
@@ -48,6 +47,7 @@ typedef enum
   META_CORE_GET_FRAME_Y,
   META_CORE_GET_FRAME_WIDTH,
   META_CORE_GET_FRAME_HEIGHT,
+  META_CORE_GET_THEME_VARIANT,
   META_CORE_GET_SCREEN_WIDTH,
   META_CORE_GET_SCREEN_HEIGHT,
 } MetaCoreGetType;
@@ -116,9 +116,9 @@ void meta_core_user_focus   (Display *xdisplay,
                              Window   frame_xwindow,
                              guint32  timestamp);
 
-void meta_core_lower_beneath_focus_window (Display *xdisplay,
-                                           Window   xwindow,
-                                           guint32  timestamp);
+void meta_core_lower_beneath_grab_window (Display *xdisplay,
+                                          Window   xwindow,
+                                          guint32  timestamp);
 
 void meta_core_minimize         (Display *xdisplay,
                                  Window   frame_xwindow);

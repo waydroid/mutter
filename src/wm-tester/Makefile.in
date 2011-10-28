@@ -36,7 +36,7 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = wm-tester$(EXEEXT) test-gravity$(EXEEXT) \
 	test-resizing$(EXEEXT) focus-window$(EXEEXT) \
-	test-size-hints$(EXEEXT)
+	test-size-hints$(EXEEXT) test-attached$(EXEEXT)
 subdir = src/wm-tester
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -54,6 +54,9 @@ focus_window_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
+am_test_attached_OBJECTS = test-attached.$(OBJEXT)
+test_attached_OBJECTS = $(am_test_attached_OBJECTS)
+test_attached_DEPENDENCIES =
 am_test_gravity_OBJECTS = test-gravity.$(OBJEXT)
 test_gravity_OBJECTS = $(am_test_gravity_OBJECTS)
 test_gravity_DEPENDENCIES =
@@ -92,12 +95,12 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(focus_window_SOURCES) $(test_gravity_SOURCES) \
-	$(test_resizing_SOURCES) $(test_size_hints_SOURCES) \
-	$(wm_tester_SOURCES)
-DIST_SOURCES = $(focus_window_SOURCES) $(test_gravity_SOURCES) \
-	$(test_resizing_SOURCES) $(test_size_hints_SOURCES) \
-	$(wm_tester_SOURCES)
+SOURCES = $(focus_window_SOURCES) $(test_attached_SOURCES) \
+	$(test_gravity_SOURCES) $(test_resizing_SOURCES) \
+	$(test_size_hints_SOURCES) $(wm_tester_SOURCES)
+DIST_SOURCES = $(focus_window_SOURCES) $(test_attached_SOURCES) \
+	$(test_gravity_SOURCES) $(test_resizing_SOURCES) \
+	$(test_size_hints_SOURCES) $(wm_tester_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -315,11 +318,15 @@ test_resizing_SOURCES = \
 test_size_hints_SOURCES = \
 	test-size-hints.c
 
+test_attached_SOURCES = \
+	test-attached.c
+
 wm_tester_LDADD = @MUTTER_LIBS@
 test_gravity_LDADD = @MUTTER_LIBS@
 test_resizing_LDADD = @MUTTER_LIBS@
 test_size_hints_LDADD = @MUTTER_LIBS@
 focus_window_LDADD = @MUTTER_LIBS@
+test_attached_LDADD = @MUTTER_LIBS@
 all: all-am
 
 .SUFFIXES:
@@ -366,6 +373,9 @@ clean-noinstPROGRAMS:
 focus-window$(EXEEXT): $(focus_window_OBJECTS) $(focus_window_DEPENDENCIES) 
 	@rm -f focus-window$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(focus_window_OBJECTS) $(focus_window_LDADD) $(LIBS)
+test-attached$(EXEEXT): $(test_attached_OBJECTS) $(test_attached_DEPENDENCIES) 
+	@rm -f test-attached$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_attached_OBJECTS) $(test_attached_LDADD) $(LIBS)
 test-gravity$(EXEEXT): $(test_gravity_OBJECTS) $(test_gravity_DEPENDENCIES) 
 	@rm -f test-gravity$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_gravity_OBJECTS) $(test_gravity_LDADD) $(LIBS)
@@ -387,6 +397,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/focus-window.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-attached.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-gravity.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-resizing.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-size-hints.Po@am__quote@
