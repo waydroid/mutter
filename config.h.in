@@ -15,9 +15,6 @@
 /* Define to 1 if you have the `bind_textdomain_codeset' function. */
 #undef HAVE_BIND_TEXTDOMAIN_CODESET
 
-/* Building with compositing manager support */
-#undef HAVE_COMPOSITE_EXTENSIONS
-
 /* Define to 1 if you have the `dcgettext' function. */
 #undef HAVE_DCGETTEXT
 
@@ -26,9 +23,6 @@
 
 /* Define to 1 if you have the <execinfo.h> header file. */
 #undef HAVE_EXECINFO_H
-
-/* Build with gconf support */
-#undef HAVE_GCONF
 
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
@@ -156,9 +150,6 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Building with Clutter compositor */
-#undef WITH_CLUTTER
 
 /* Build with verbose mode support */
 #undef WITH_VERBOSE_MODE

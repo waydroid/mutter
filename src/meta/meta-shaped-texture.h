@@ -26,10 +26,8 @@
 #ifndef __META_SHAPED_TEXTURE_H__
 #define __META_SHAPED_TEXTURE_H__
 
-#include <config.h>
-
 #include <clutter/clutter.h>
-#include <clutter/x11/clutter-x11.h>
+#include <X11/Xlib.h>
 
 G_BEGIN_DECLS
 
@@ -46,12 +44,12 @@ typedef struct _MetaShapedTexturePrivate MetaShapedTexturePrivate;
 
 struct _MetaShapedTextureClass
 {
-  ClutterX11TexturePixmapClass parent_class;
+  ClutterActorClass parent_class;
 };
 
 struct _MetaShapedTexture
 {
-  ClutterX11TexturePixmap parent;
+  ClutterActor parent;
 
   MetaShapedTexturePrivate *priv;
 };
@@ -63,12 +61,19 @@ ClutterActor *meta_shaped_texture_new (void);
 void meta_shaped_texture_set_create_mipmaps (MetaShapedTexture *stex,
 					     gboolean           create_mipmaps);
 
-void meta_shaped_texture_clear (MetaShapedTexture *stex);
+void meta_shaped_texture_update_area (MetaShapedTexture *stex,
+                                      int                x,
+                                      int                y,
+                                      int                width,
+                                      int                height);
+
+void meta_shaped_texture_set_pixmap (MetaShapedTexture *stex,
+                                     Pixmap             pixmap);
+
+CoglHandle meta_shaped_texture_get_texture (MetaShapedTexture *stex);
 
 void meta_shaped_texture_set_shape_region (MetaShapedTexture *stex,
                                            cairo_region_t    *region);
-
-cairo_region_t *meta_shaped_texture_get_visible_pixels_region (MetaShapedTexture *stex);
 
 void meta_shaped_texture_set_overlay_path (MetaShapedTexture *stex,
                                            cairo_region_t    *overlay_region,
@@ -77,6 +82,9 @@ void meta_shaped_texture_set_overlay_path (MetaShapedTexture *stex,
 /* Assumes ownership of clip_region */
 void meta_shaped_texture_set_clip_region (MetaShapedTexture *stex,
 					  cairo_region_t    *clip_region);
+
+cairo_surface_t * meta_shaped_texture_get_image (MetaShapedTexture     *stex,
+                                                 cairo_rectangle_int_t *clip);
 
 G_END_DECLS
 
