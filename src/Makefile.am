@@ -27,8 +27,6 @@ INCLUDES=								\
 	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\"
 
 mutter_built_sources = \
-	mutter-marshal.h \
-	mutter-marshal.c \
 	mutter-enum-types.h \
 	mutter-enum-types.c
 
@@ -54,7 +52,6 @@ libmutter_la_SOURCES =				\
 	compositor/meta-shadow-factory.c	\
 	compositor/meta-shadow-factory-private.h	\
 	compositor/meta-shaped-texture.c	\
-	compositor/meta-shaped-texture.h	\
 	compositor/meta-texture-rectangle.c	\
 	compositor/meta-texture-rectangle.h	\
 	compositor/meta-texture-tower.c		\
@@ -133,8 +130,6 @@ libmutter_la_SOURCES =				\
 	core/core.h				\
 	ui/ui.h					\
 	inlinepixbufs.h				\
-	ui/fixedtip.c				\
-	ui/fixedtip.h				\
 	ui/frames.c				\
 	ui/frames.h				\
 	ui/menu.c				\
@@ -152,7 +147,6 @@ libmutter_la_SOURCES =				\
 	meta/theme.h				\
 	ui/theme-private.h			\
 	ui/ui.c					\
-	core/all-keybindings.h			\
 	meta/preview-widget.h			\
 	ui/preview-widget.c			\
 	$(mutter_built_sources)
@@ -175,6 +169,7 @@ libmutterinclude_base_headers =		\
 	meta/main.h				\
 	meta/meta-background-actor.h		\
 	meta/meta-plugin.h			\
+	meta/meta-shaped-texture.h		\
 	meta/meta-shadow-factory.h		\
 	meta/meta-window-actor.h		\
 	meta/prefs.h				\
@@ -226,7 +221,7 @@ typelib_DATA = Meta-$(api_version).typelib
 INTROSPECTION_GIRS = Meta-$(api_version).gir
 
 Meta-$(api_version).gir: libmutter.la
-@META_GIR@_INCLUDES = GObject-2.0 Gdk-3.0 Gtk-3.0 Clutter-1.0 xlib-2.0 xfixes-4.0
+@META_GIR@_INCLUDES = GObject-2.0 GDesktopEnums-3.0 Gdk-3.0 Gtk-3.0 Clutter-1.0 xlib-2.0 xfixes-4.0
 @META_GIR@_PACKAGES = clutter-1.0 gtk+-3.0
 @META_GIR@_CFLAGS = $(INCLUDES)
 @META_GIR@_LIBS = libmutter.la
@@ -262,20 +257,17 @@ wmproperties_in_files=mutter-wm.desktop.in
 wmproperties_files=$(wmproperties_in_files:.desktop.in=.desktop)
 wmproperties_DATA = $(wmproperties_files)
 
-schemadir   = $(GCONF_SCHEMA_FILE_DIR)
-schema_in_files = mutter.schemas.in
-schema_DATA = $(schema_in_files:.schemas.in=.schemas)
+xmldir       = @GNOME_KEYBINDINGS_KEYSDIR@
+xml_in_files = \
+        50-mutter-windows.xml.in
+xml_DATA     = $(xml_in_files:.xml.in=.xml)
 
+gsettings_SCHEMAS = org.gnome.mutter.gschema.xml
 @INTLTOOL_XML_NOMERGE_RULE@
+@GSETTINGS_RULES@
 
-@INTLTOOL_SCHEMAS_RULE@
-
-if GCONF_SCHEMAS_INSTALL
-install-data-local:
-	GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) $(GCONFTOOL) --makefile-install-rule $(schema_DATA)
-else
-install-data-local:
-endif
+convertdir = $(datadir)/GConf/gsettings
+convert_DATA = mutter-schemas.convert
 
 IMAGES=stock_maximize.png stock_minimize.png stock_delete.png
 VARIABLES=stock_maximize_data $(srcdir)/stock_maximize.png \
@@ -287,7 +279,8 @@ CLEANFILES =					\
 	inlinepixbufs.h				\
 	mutter.desktop				\
 	mutter-wm.desktop			\
-	mutter.schemas				\
+	org.gnome.mutter.gschema.xml		\
+	$(xml_DATA)				\
 	$(mutter_built_sources)			\
 	$(typelib_DATA)				\
 	$(gir_DATA)
@@ -304,36 +297,17 @@ EXTRA_DIST=$(desktopfiles_files) 	\
 	$(IMAGES) 			\
 	$(desktopfiles_in_files)	\
 	$(wmproperties_in_files)	\
-	$(schema_in_files)		\
+	$(xml_in_files)			\
+	org.gnome.mutter.gschema.xml.in \
+	mutter-schemas.convert \
 	libmutter.pc.in \
 	mutter-plugins.pc.in  \
 	mutter-enum-types.h.in \
-	mutter-enum-types.c.in \
-	mutter-marshal.list
+	mutter-enum-types.c.in
 
 BUILT_SOURCES += $(mutter_built_sources)
-MUTTER_STAMP_FILES = stamp-mutter-marshal.h stamp-mutter-enum-types.h
+MUTTER_STAMP_FILES = stamp-mutter-enum-types.h
 CLEANFILES += $(MUTTER_STAMP_FILES)
-
-mutter-marshal.h: stamp-mutter-marshal.h
-	@true
-stamp-mutter-marshal.h: Makefile mutter-marshal.list
-	$(AM_V_GEN) $(GLIB_GENMARSHAL) \
-		--prefix=_mutter_marshal \
-		--header \
-	$(srcdir)/mutter-marshal.list > xgen-tmh && \
-	(cmp -s xgen-tmh mutter-marshal.h || cp -f xgen-tmh mutter-marshal.h) && \
-	rm -f xgen-tmh && \
-	echo timestamp > $(@F)
-
-mutter-marshal.c: Makefile mutter-marshal.list
-	 $(AM_V_GEN) (echo "#include \"mutter-marshal.h\"" ; \
-	 $(GLIB_GENMARSHAL) \
-		--prefix=_mutter_marshal \
-		--body \
-	 $(srcdir)/mutter-marshal.list ) > xgen-tmc && \
-	cp -f xgen-tmc mutter-marshal.c && \
-	rm -f xgen-tmc
 
 mutter-enum-types.h: stamp-mutter-enum-types.h Makefile
 	@true

@@ -29,7 +29,28 @@
 #ifndef META_KEYBINDINGS_PRIVATE_H
 #define META_KEYBINDINGS_PRIVATE_H
 
+#include <gio/gio.h>
 #include <meta/keybindings.h>
+
+struct _MetaKeyHandler
+{
+  char *name;
+  MetaKeyHandlerFunc func;
+  MetaKeyHandlerFunc default_func;
+  gint data, flags;
+  gpointer user_data;
+  GDestroyNotify user_data_free_func;
+};
+
+struct _MetaKeyBinding
+{
+  const char *name;
+  KeySym keysym;
+  KeyCode keycode;
+  unsigned int mask;
+  MetaVirtualModifier modifiers;
+  MetaKeyHandler *handler;
+};
 
 void     meta_display_init_keys             (MetaDisplay *display);
 void     meta_display_shutdown_keys         (MetaDisplay *display);
@@ -51,6 +72,14 @@ gboolean meta_display_process_key_event     (MetaDisplay *display,
 void     meta_set_keybindings_disabled      (gboolean     setting);
 void     meta_display_process_mapping_event (MetaDisplay *display,
                                              XEvent      *event);
+
+gboolean meta_prefs_add_keybinding          (const char           *name,
+                                             GSettings            *settings,
+                                             MetaKeyBindingAction  action,
+                                             MetaKeyBindingFlags   flags);
+
+gboolean meta_prefs_remove_keybinding       (const char    *name);
+
 
 #endif
 

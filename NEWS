@@ -1,13 +1,159 @@
-3.2.2
+3.4.1
 =====
-* Fix a crash that could occur when unredirected full-screen windows [Adel]
-* Fix a memory leak [Jasper; #642652]
+* API change: the meta_display_add_keybinding() function added in 3.4
+  wasn't usable from a GNOME Shell extension, so has been changed to take
+  a GSettings object rather than the name of a schema [Jasper; #673014]
+* Don't try to auto-maximize not-maximizable windows; this fixes the problem
+  with the Nautilus desktop window being mis-positioned when enabled
+  [Owen; #673566]
+* Fix a crash in the default plugin (not used in GNOME) [Giovanni; #673809]
+* Make the <Super> key work when set as the mouse button modifier
+  [Florian; #662476]
 
 Contributors:
- Jasper St. Pierre, Adel Gadllah
+ Giovanni Campagna, Florian Muellner, Jasper St. Pierre, Owen Taylor
 
-Translations
- Krishnababu Krothapalli [te], Nguyễn Thái Ngọc Duy [vi]
+Translations:
+ Khaled Hosny [ar], Jordi Serratosa [ca], Carles Ferrando [ca@valencia],
+ Christian Kirbach [de], Kristjan Schmidt [eo], Arash Mousavi [fa],
+ Jiro Matsuzawa [ja], Shankar Prasad [kn], Aurimas Černius [lt],
+ Yinghua Wang [zh_CN]
+
+3.4.0
+=====
+* Fix crash when a full-screen window is opened [Jasper; #672797]
+* Fix memory leaks [Pavel; #672640]
+
+Contributors:
+ Jasper St. Pierre, Pavel Vasin
+
+Translations:
+ Marek Černocký, Petr Kovar [cz], Bruno Brouard [fr], Sweta Kothari [gu],
+ Yaron Shahrabani [he], Changwoo Ryu [kr], Enrico Nicoletto [pt_BR],
+ Yuri Myasoedov [ru], Muhammet Kara [tr], Nguyễn Thái Ngọc Duy [vi]
+
+3.3.92
+======
+* Automaximize large windows on map [Adel; #671677]
+* When unmaximizing windows, make sure the unminimized size
+  is signficantly less than the maximized size [Adel; #671677]
+* Don't offer maximize option for windows larger than the screen
+  [Jasper; #643606]
+* Always focus the window immediately underneath without restacking
+  when closing a window [Jasper; #620744]
+* Avoid drawing shadows when two windows are tiled together [Rui; #643075]
+* Remove tooltips for window decorations [Florian; #645101]
+* Add org.gnome.mutter.dynamic-workspaces GSetting - when this is set
+  to true, workspace counts are never saved to GSettings, avoiding
+  pointless disk traffic for GNOME dynamic workspaces [Florian; #671568]
+* Add ::grab-op-begin, ::grab-op-end signals to MetaDisplay [Jasper; #670658]
+* Add meta_display_get_ignored_modifier_mask() [Florian; #665215]
+* Remove pointless wrapper methods on MetaPlugin [Jasper; #671103]
+* Fix frame drawing with 3.3.x GTK+ releases [Florian; #671796]
+* Build fixes [Jasper, Rico, Rui]
+* Misc bug fixes [Damien, Jasper, Lionel, Marius, Owen, Rui;
+  #661256, #667437, #671601, #671087, #672374]
+
+Contributors:
+ Stefano Facchini, Adel Gadllah, Lionel Landwerlin, Mariusz Libera,
+ Rui Matos, Florian Müllner, Jasper St. Pierre, Damien Radtke, Owen Taylor,
+ Rico Tzschichholz
+
+Translations:
+ Nilamdyuti Goswami [as], Ihar Hrachyshka [be], Alexander Shopov [bg],
+ David Planella [ca], Carles Ferrando [ca@valencia], Kenneth Nielsen [dk],
+ Bruce Cowan [en_GB], Daniel Mustieles [es], Mattias Põldaru [et],
+ Inaki Larranaga Murgoitio [eu], Timo Jyrinki [fi], Fran Diéguez [gl],
+ Gabor Kelemen [hu], Changwoo Ryu [ko], Anita Reitere [lv],
+ Kjartan Maraas [nb], Wouter Bolsterlee [nl], A S Alam [pa], Piotr Drąg [pl],
+ Duarte Loreto [pt], Yuri Myasoedov [ru], Daniel Nylander [se],
+ Matej Urbančič [sl], Miroslav Nikolić [sr], Tirumurti Vasudevan [ta],
+ Sasi Bhushan [te], Daniel Korostil [uk], Nguyễn Thái Ngọc Duy [vi],
+ YunQiang Su [zh_CN], Chao-Hsiung Liao [zh_HK, zh_TW]
+
+3.3.90
+======
+* Update for Cogl API changes [Robert]
+* Bug fixes [Adel, Jasper;  #659643]
+* Build fixes [Jasper, Owen]
+
+Contributors:
+ Robert Bragg, Adel Gadllah, Jasper St. Pierre, Owen Taylor
+
+Translations:
+ Ask H. Larsen [dk], Miroslav Nikolić [sr]
+
+3.3.5
+=====
+* MetaShapedTexture no longer is a ClutterTexture subclass [Jasper; #660941]
+* Add meta_shaped_texture_get_image() [Jasper; #660941]
+* Cleanups [Rui, Jasper; #657639]
+* Depend on GTK+ 3.3.7 [Rico]
+
+Contributors:
+ Rui Matos, Jasper St. Pierre, Rico Tzschichholz
+
+Translations:
+ Kjartan Maraas [nb], Chao-Hsiung Liao [zh_HK, zh_TW]
+
+3.3.4
+=====
+* Adapt to changes in GtkStateFlags [Owen]
+* Redo properties for applications menu corresponding to GTK+ changes -
+  they are now _GTK_* not DBUS_*. [Ryan]
+* Fix crash on gnome-shell restart when a modal dialog is open [Owen; #668299]
+* Code cleanup [Florian; #666039]
+
+Contributors:
+ Ryan Lortie, Florian Müllner, Owen Taylor
+
+Translations:
+ Alexander Shopov [bg], Fran Diéguez [gl]
+
+3.3.3
+=====
+* Add keybindings for tiling to left or right [Florian; #648700]
+* Support GTK+'s hide-titlebar-when-maximized hint [Florian; #665617]
+* Load _DBUS_APPLICATION_ID, _DBUS_UNIQUE_NAME, _DBUS_OBJECT_PATH
+  property [Colin, Ryan; #664851]
+* Handle changes to workspaces-only-on-primary GSetting [Florian; #664853]
+* Don't use the Clutter default stage [Jasper; #664028]
+* Fix compilation with --disable-introspection [Lionel; #661871]
+* Fix problem where stage could end up mis-sized on startup with
+  multiple monitors [Lionel]
+* Misc bug fixes [Adel, Lionel, Jasper; #666015]
+
+Contributors:
+ Adel Gadllah, Lionel Landwerlin, Florian Müllner, Jasper St. Pierre
+
+Translations:
+ Daniel Mustieles [es], Yaron Shahrabani [he], Kjartan Maraas [nb],
+ Matej Urbančič [sk], Muhammet Kara [tr]
+
+3.3.2
+=====
+
+* Move from GConf to GSettings for preferences [Florian; #635378]
+* Add meta_display_add_keybinding()/meta_display_remove_keybinding()
+  to allow creating new keybindings at runtime [Florian; #663428]
+* Add suport for new _NET_WM_STATE_FOCUSED atom in _NET_WM_STATE
+  to allow applications to draw unfocused windows differently
+  [Rui; #661427]
+* Add meta_window_move_resize_frame() to allow specifying the
+  size and position of a window via the outside dimensions of the
+  window frame.
+* Don't activate window tiling when moving in snap mode
+  [Rui; #662270]
+* Remove the ability to resize a window from the inner edge of
+  the titlebar [Jasper; #660129]
+* Fix for deprecations in GTK+ [Jasper, Rico; #662574, #662895]
+* Misc bug fixes [Jasper, Rico, Rui; #662895, #642652, #660941, #662225]
+
+Contributors:
+ Tim Cuthbertson, Rui Matos, Florian Müllner, Jasper St. Pierre, Rico Tzschichholz
+
+Translations:
+ Jorge González (es), Kjartan Maraas (nb), Krishnababu Krothapalli (te), Nguyễn Thái Ngọc Duy (vi)
 
 3.2.1
 =====
@@ -27,7 +173,7 @@ Translations
 * Misc bug fixes [Adel, Jasper, Rui; #660464, #660854, #662053]
 
 Contributors:
- Matthias Clasen, Adel Gadllah, Sandro Mani, Rui Matos, Jasper St. Pierre, Owen Taylor
+ Matthias Clasen, Sandro Mani, Rui Matos, Jasper St. Pierre, Owen Taylor
 
 Translations:
  Tommi Vainikainen [fi], Miroslav Nikolić [sr, sr@latin], Muhammet Kara [tr]

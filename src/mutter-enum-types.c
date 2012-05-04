@@ -200,80 +200,6 @@ meta_cursor_get_type (void)
   return g_enum_type_id__volatile;
 }
 GType
-meta_focus_mode_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_FOCUS_MODE_CLICK, "META_FOCUS_MODE_CLICK", "click" },
-        { META_FOCUS_MODE_SLOPPY, "META_FOCUS_MODE_SLOPPY", "sloppy" },
-        { META_FOCUS_MODE_MOUSE, "META_FOCUS_MODE_MOUSE", "mouse" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaFocusMode"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-GType
-meta_focus_new_windows_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_FOCUS_NEW_WINDOWS_SMART, "META_FOCUS_NEW_WINDOWS_SMART", "smart" },
-        { META_FOCUS_NEW_WINDOWS_STRICT, "META_FOCUS_NEW_WINDOWS_STRICT", "strict" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaFocusNewWindows"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-GType
-meta_action_titlebar_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_ACTION_TITLEBAR_TOGGLE_SHADE, "META_ACTION_TITLEBAR_TOGGLE_SHADE", "toggle-shade" },
-        { META_ACTION_TITLEBAR_TOGGLE_MAXIMIZE, "META_ACTION_TITLEBAR_TOGGLE_MAXIMIZE", "toggle-maximize" },
-        { META_ACTION_TITLEBAR_TOGGLE_MAXIMIZE_HORIZONTALLY, "META_ACTION_TITLEBAR_TOGGLE_MAXIMIZE_HORIZONTALLY", "toggle-maximize-horizontally" },
-        { META_ACTION_TITLEBAR_TOGGLE_MAXIMIZE_VERTICALLY, "META_ACTION_TITLEBAR_TOGGLE_MAXIMIZE_VERTICALLY", "toggle-maximize-vertically" },
-        { META_ACTION_TITLEBAR_MINIMIZE, "META_ACTION_TITLEBAR_MINIMIZE", "minimize" },
-        { META_ACTION_TITLEBAR_NONE, "META_ACTION_TITLEBAR_NONE", "none" },
-        { META_ACTION_TITLEBAR_LOWER, "META_ACTION_TITLEBAR_LOWER", "lower" },
-        { META_ACTION_TITLEBAR_MENU, "META_ACTION_TITLEBAR_MENU", "menu" },
-        { META_ACTION_TITLEBAR_LAST, "META_ACTION_TITLEBAR_LAST", "last" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaActionTitlebar"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
-GType
 meta_frame_type_get_type (void)
 {
   static volatile gsize g_enum_type_id__volatile = 0;
@@ -515,6 +441,7 @@ meta_tab_list_get_type (void)
         { META_TAB_LIST_NORMAL, "META_TAB_LIST_NORMAL", "normal" },
         { META_TAB_LIST_DOCKS, "META_TAB_LIST_DOCKS", "docks" },
         { META_TAB_LIST_GROUP, "META_TAB_LIST_GROUP", "group" },
+        { META_TAB_LIST_NORMAL_ALL, "META_TAB_LIST_NORMAL_ALL", "normal-all" },
         { 0, NULL, NULL }
       };
       GType g_enum_type_id;
@@ -675,11 +602,10 @@ meta_preference_get_type (void)
         { META_PREF_THEME, "META_PREF_THEME", "theme" },
         { META_PREF_TITLEBAR_FONT, "META_PREF_TITLEBAR_FONT", "titlebar-font" },
         { META_PREF_NUM_WORKSPACES, "META_PREF_NUM_WORKSPACES", "num-workspaces" },
+        { META_PREF_DYNAMIC_WORKSPACES, "META_PREF_DYNAMIC_WORKSPACES", "dynamic-workspaces" },
         { META_PREF_APPLICATION_BASED, "META_PREF_APPLICATION_BASED", "application-based" },
         { META_PREF_KEYBINDINGS, "META_PREF_KEYBINDINGS", "keybindings" },
         { META_PREF_DISABLE_WORKAROUNDS, "META_PREF_DISABLE_WORKAROUNDS", "disable-workarounds" },
-        { META_PREF_COMMANDS, "META_PREF_COMMANDS", "commands" },
-        { META_PREF_TERMINAL_COMMAND, "META_PREF_TERMINAL_COMMAND", "terminal-command" },
         { META_PREF_BUTTON_LAYOUT, "META_PREF_BUTTON_LAYOUT", "button-layout" },
         { META_PREF_WORKSPACE_NAMES, "META_PREF_WORKSPACE_NAMES", "workspace-names" },
         { META_PREF_VISUAL_BELL, "META_PREF_VISUAL_BELL", "visual-bell" },
@@ -751,45 +677,12 @@ meta_key_binding_action_get_type (void)
         { META_KEYBINDING_ACTION_PANEL_MAIN_MENU, "META_KEYBINDING_ACTION_PANEL_MAIN_MENU", "panel-main-menu" },
         { META_KEYBINDING_ACTION_PANEL_RUN_DIALOG, "META_KEYBINDING_ACTION_PANEL_RUN_DIALOG", "panel-run-dialog" },
         { META_KEYBINDING_ACTION_TOGGLE_RECORDING, "META_KEYBINDING_ACTION_TOGGLE_RECORDING", "toggle-recording" },
-        { META_KEYBINDING_ACTION_COMMAND_1, "META_KEYBINDING_ACTION_COMMAND_1", "command-1" },
-        { META_KEYBINDING_ACTION_COMMAND_2, "META_KEYBINDING_ACTION_COMMAND_2", "command-2" },
-        { META_KEYBINDING_ACTION_COMMAND_3, "META_KEYBINDING_ACTION_COMMAND_3", "command-3" },
-        { META_KEYBINDING_ACTION_COMMAND_4, "META_KEYBINDING_ACTION_COMMAND_4", "command-4" },
-        { META_KEYBINDING_ACTION_COMMAND_5, "META_KEYBINDING_ACTION_COMMAND_5", "command-5" },
-        { META_KEYBINDING_ACTION_COMMAND_6, "META_KEYBINDING_ACTION_COMMAND_6", "command-6" },
-        { META_KEYBINDING_ACTION_COMMAND_7, "META_KEYBINDING_ACTION_COMMAND_7", "command-7" },
-        { META_KEYBINDING_ACTION_COMMAND_8, "META_KEYBINDING_ACTION_COMMAND_8", "command-8" },
-        { META_KEYBINDING_ACTION_COMMAND_9, "META_KEYBINDING_ACTION_COMMAND_9", "command-9" },
-        { META_KEYBINDING_ACTION_COMMAND_10, "META_KEYBINDING_ACTION_COMMAND_10", "command-10" },
-        { META_KEYBINDING_ACTION_COMMAND_11, "META_KEYBINDING_ACTION_COMMAND_11", "command-11" },
-        { META_KEYBINDING_ACTION_COMMAND_12, "META_KEYBINDING_ACTION_COMMAND_12", "command-12" },
-        { META_KEYBINDING_ACTION_COMMAND_13, "META_KEYBINDING_ACTION_COMMAND_13", "command-13" },
-        { META_KEYBINDING_ACTION_COMMAND_14, "META_KEYBINDING_ACTION_COMMAND_14", "command-14" },
-        { META_KEYBINDING_ACTION_COMMAND_15, "META_KEYBINDING_ACTION_COMMAND_15", "command-15" },
-        { META_KEYBINDING_ACTION_COMMAND_16, "META_KEYBINDING_ACTION_COMMAND_16", "command-16" },
-        { META_KEYBINDING_ACTION_COMMAND_17, "META_KEYBINDING_ACTION_COMMAND_17", "command-17" },
-        { META_KEYBINDING_ACTION_COMMAND_18, "META_KEYBINDING_ACTION_COMMAND_18", "command-18" },
-        { META_KEYBINDING_ACTION_COMMAND_19, "META_KEYBINDING_ACTION_COMMAND_19", "command-19" },
-        { META_KEYBINDING_ACTION_COMMAND_20, "META_KEYBINDING_ACTION_COMMAND_20", "command-20" },
-        { META_KEYBINDING_ACTION_COMMAND_21, "META_KEYBINDING_ACTION_COMMAND_21", "command-21" },
-        { META_KEYBINDING_ACTION_COMMAND_22, "META_KEYBINDING_ACTION_COMMAND_22", "command-22" },
-        { META_KEYBINDING_ACTION_COMMAND_23, "META_KEYBINDING_ACTION_COMMAND_23", "command-23" },
-        { META_KEYBINDING_ACTION_COMMAND_24, "META_KEYBINDING_ACTION_COMMAND_24", "command-24" },
-        { META_KEYBINDING_ACTION_COMMAND_25, "META_KEYBINDING_ACTION_COMMAND_25", "command-25" },
-        { META_KEYBINDING_ACTION_COMMAND_26, "META_KEYBINDING_ACTION_COMMAND_26", "command-26" },
-        { META_KEYBINDING_ACTION_COMMAND_27, "META_KEYBINDING_ACTION_COMMAND_27", "command-27" },
-        { META_KEYBINDING_ACTION_COMMAND_28, "META_KEYBINDING_ACTION_COMMAND_28", "command-28" },
-        { META_KEYBINDING_ACTION_COMMAND_29, "META_KEYBINDING_ACTION_COMMAND_29", "command-29" },
-        { META_KEYBINDING_ACTION_COMMAND_30, "META_KEYBINDING_ACTION_COMMAND_30", "command-30" },
-        { META_KEYBINDING_ACTION_COMMAND_31, "META_KEYBINDING_ACTION_COMMAND_31", "command-31" },
-        { META_KEYBINDING_ACTION_COMMAND_32, "META_KEYBINDING_ACTION_COMMAND_32", "command-32" },
-        { META_KEYBINDING_ACTION_COMMAND_SCREENSHOT, "META_KEYBINDING_ACTION_COMMAND_SCREENSHOT", "command-screenshot" },
-        { META_KEYBINDING_ACTION_COMMAND_WINDOW_SCREENSHOT, "META_KEYBINDING_ACTION_COMMAND_WINDOW_SCREENSHOT", "command-window-screenshot" },
-        { META_KEYBINDING_ACTION_COMMAND_TERMINAL, "META_KEYBINDING_ACTION_COMMAND_TERMINAL", "command-terminal" },
         { META_KEYBINDING_ACTION_SET_SPEW_MARK, "META_KEYBINDING_ACTION_SET_SPEW_MARK", "set-spew-mark" },
         { META_KEYBINDING_ACTION_ACTIVATE_WINDOW_MENU, "META_KEYBINDING_ACTION_ACTIVATE_WINDOW_MENU", "activate-window-menu" },
         { META_KEYBINDING_ACTION_TOGGLE_FULLSCREEN, "META_KEYBINDING_ACTION_TOGGLE_FULLSCREEN", "toggle-fullscreen" },
         { META_KEYBINDING_ACTION_TOGGLE_MAXIMIZED, "META_KEYBINDING_ACTION_TOGGLE_MAXIMIZED", "toggle-maximized" },
+        { META_KEYBINDING_ACTION_TOGGLE_TILED_LEFT, "META_KEYBINDING_ACTION_TOGGLE_TILED_LEFT", "toggle-tiled-left" },
+        { META_KEYBINDING_ACTION_TOGGLE_TILED_RIGHT, "META_KEYBINDING_ACTION_TOGGLE_TILED_RIGHT", "toggle-tiled-right" },
         { META_KEYBINDING_ACTION_TOGGLE_ABOVE, "META_KEYBINDING_ACTION_TOGGLE_ABOVE", "toggle-above" },
         { META_KEYBINDING_ACTION_MAXIMIZE, "META_KEYBINDING_ACTION_MAXIMIZE", "maximize" },
         { META_KEYBINDING_ACTION_UNMAXIMIZE, "META_KEYBINDING_ACTION_UNMAXIMIZE", "unmaximize" },
@@ -843,22 +736,24 @@ meta_key_binding_action_get_type (void)
   return g_enum_type_id__volatile;
 }
 GType
-meta_visual_bell_type_get_type (void)
+meta_key_binding_flags_get_type (void)
 {
   static volatile gsize g_enum_type_id__volatile = 0;
 
   if (g_once_init_enter (&g_enum_type_id__volatile))
     {
-      static const GEnumValue values[] = {
-        { META_VISUAL_BELL_INVALID, "META_VISUAL_BELL_INVALID", "invalid" },
-        { META_VISUAL_BELL_FULLSCREEN_FLASH, "META_VISUAL_BELL_FULLSCREEN_FLASH", "fullscreen-flash" },
-        { META_VISUAL_BELL_FRAME_FLASH, "META_VISUAL_BELL_FRAME_FLASH", "frame-flash" },
+      static const GFlagsValue values[] = {
+        { META_KEY_BINDING_NONE, "META_KEY_BINDING_NONE", "none" },
+        { META_KEY_BINDING_PER_WINDOW, "META_KEY_BINDING_PER_WINDOW", "per-window" },
+        { META_KEY_BINDING_BUILTIN, "META_KEY_BINDING_BUILTIN", "builtin" },
+        { META_KEY_BINDING_REVERSES, "META_KEY_BINDING_REVERSES", "reverses" },
+        { META_KEY_BINDING_IS_REVERSED, "META_KEY_BINDING_IS_REVERSED", "is-reversed" },
         { 0, NULL, NULL }
       };
       GType g_enum_type_id;
 
       g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaVisualBellType"), values);
+        g_flags_register_static (g_intern_static_string ("MetaKeyBindingFlags"), values);
 
       g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
     }
