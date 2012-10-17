@@ -39,15 +39,7 @@
 #define META_IS_PLUGIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  META_TYPE_PLUGIN))
 #define META_PLUGIN_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  META_TYPE_PLUGIN, MetaPluginClass))
 
-/**
- * MetaPlugin: (skip)
- *
- */
 typedef struct _MetaPlugin        MetaPlugin;
-/**
- * MetaPluginClass: (skip)
- *
- */
 typedef struct _MetaPluginClass   MetaPluginClass;
 typedef struct _MetaPluginVersion MetaPluginVersion;
 typedef struct _MetaPluginInfo    MetaPluginInfo;
@@ -106,6 +98,10 @@ struct _MetaPluginClass
   /* General XEvent filter. This is fired *before* meta itself handles
    * an event. Return TRUE to block any further processing.
    */
+  /**
+   * MetaPluginClass::xevent_filter:
+   * @event: (type xlib.XEvent):
+   */
   gboolean (*xevent_filter) (MetaPlugin       *plugin,
                              XEvent           *event);
 
@@ -123,8 +119,6 @@ struct _MetaPluginInfo
 
 GType meta_plugin_get_type (void);
 
-gulong        meta_plugin_features            (MetaPlugin *plugin);
-gboolean      meta_plugin_disabled            (MetaPlugin *plugin);
 gboolean      meta_plugin_running             (MetaPlugin *plugin);
 gboolean      meta_plugin_debug_mode          (MetaPlugin *plugin);
 
@@ -221,9 +215,6 @@ struct _MetaPluginVersion
   }                                                                     \
 
 void
-meta_plugin_type_register (GType plugin_type);
-
-void
 meta_plugin_switch_workspace_completed (MetaPlugin *plugin);
 
 void
@@ -275,5 +266,8 @@ MetaScreen *meta_plugin_get_screen        (MetaPlugin *plugin);
 
 void
 _meta_plugin_effect_started (MetaPlugin *plugin);
+
+/* XXX: Putting this in here so it's in the public header. */
+void     meta_plugin_manager_set_plugin_type (GType gtype);
 
 #endif /* META_PLUGIN_H_ */

@@ -599,6 +599,7 @@ meta_preference_get_type (void)
         { META_PREF_ACTION_RIGHT_CLICK_TITLEBAR, "META_PREF_ACTION_RIGHT_CLICK_TITLEBAR", "action-right-click-titlebar" },
         { META_PREF_AUTO_RAISE, "META_PREF_AUTO_RAISE", "auto-raise" },
         { META_PREF_AUTO_RAISE_DELAY, "META_PREF_AUTO_RAISE_DELAY", "auto-raise-delay" },
+        { META_PREF_FOCUS_CHANGE_ON_POINTER_REST, "META_PREF_FOCUS_CHANGE_ON_POINTER_REST", "focus-change-on-pointer-rest" },
         { META_PREF_THEME, "META_PREF_THEME", "theme" },
         { META_PREF_TITLEBAR_FONT, "META_PREF_TITLEBAR_FONT", "titlebar-font" },
         { META_PREF_NUM_WORKSPACES, "META_PREF_NUM_WORKSPACES", "num-workspaces" },
@@ -618,7 +619,6 @@ meta_preference_get_type (void)
         { META_PREF_RESIZE_WITH_RIGHT_BUTTON, "META_PREF_RESIZE_WITH_RIGHT_BUTTON", "resize-with-right-button" },
         { META_PREF_EDGE_TILING, "META_PREF_EDGE_TILING", "edge-tiling" },
         { META_PREF_FORCE_FULLSCREEN, "META_PREF_FORCE_FULLSCREEN", "force-fullscreen" },
-        { META_PREF_LIVE_HIDDEN_WINDOWS, "META_PREF_LIVE_HIDDEN_WINDOWS", "live-hidden-windows" },
         { META_PREF_WORKSPACES_ONLY_ON_PRIMARY, "META_PREF_WORKSPACES_ONLY_ON_PRIMARY", "workspaces-only-on-primary" },
         { META_PREF_NO_TAB_POPUP, "META_PREF_NO_TAB_POPUP", "no-tab-popup" },
         { META_PREF_DRAGGABLE_BORDER_WIDTH, "META_PREF_DRAGGABLE_BORDER_WIDTH", "draggable-border-width" },
@@ -722,6 +722,7 @@ meta_key_binding_action_get_type (void)
         { META_KEYBINDING_ACTION_MOVE_TO_SIDE_E, "META_KEYBINDING_ACTION_MOVE_TO_SIDE_E", "move-to-side-e" },
         { META_KEYBINDING_ACTION_MOVE_TO_SIDE_W, "META_KEYBINDING_ACTION_MOVE_TO_SIDE_W", "move-to-side-w" },
         { META_KEYBINDING_ACTION_MOVE_TO_CENTER, "META_KEYBINDING_ACTION_MOVE_TO_CENTER", "move-to-center" },
+        { META_KEYBINDING_ACTION_OVERLAY_KEY, "META_KEYBINDING_ACTION_OVERLAY_KEY", "overlay-key" },
         { META_KEYBINDING_ACTION_LAST, "META_KEYBINDING_ACTION_LAST", "last" },
         { 0, NULL, NULL }
       };

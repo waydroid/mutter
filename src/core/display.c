@@ -25,9 +25,10 @@
  */
 
 /**
- * \file display.c Handles operations on an X display.
+ * SECTION:MetaDisplay
+ * @short_description: Handles operations on an X display.
  *
- * The display is represented as a MetaDisplay struct.
+ * The display is represented as a #MetaDisplay struct.
  */
 
 #define _XOPEN_SOURCE 600 /* for gethostname() */
@@ -49,16 +50,11 @@
 #include "workspace-private.h"
 #include "bell.h"
 #include <meta/compositor.h>
+#include <meta/compositor-mutter.h>
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 #include "mutter-enum-types.h"
 
-#ifdef HAVE_SOLARIS_XINERAMA
-#include <X11/extensions/xinerama.h>
-#endif
-#ifdef HAVE_XFREE_XINERAMA
-#include <X11/extensions/Xinerama.h>
-#endif
 #ifdef HAVE_RANDR
 #include <X11/extensions/Xrandr.h>
 #endif
@@ -87,7 +83,7 @@
          g == META_GRAB_OP_KEYBOARD_ESCAPING_GROUP)
 
 /**
- * \defgroup pings Pings
+ * SECTION:pings
  *
  * Sometimes we want to see whether a window is responding,
  * so we send it a "ping" message and see whether it sends us back a "pong"
@@ -102,13 +98,13 @@
  */
 
 /**
+ * MetaPingData:
+ *
  * Describes a ping on a window. When we send a ping to a window, we build
  * one of these structs, and it eventually gets passed to the timeout function
  * or to the function which handles the response from the window. If the window
  * does or doesn't respond to the ping, we use this information to deal with
  * these facts; we have a handler function for each.
- *
- * \ingroup pings
  */
 typedef struct 
 {
@@ -126,6 +122,15 @@ typedef struct
   MetaDisplay *display;
   Window xwindow;
 } MetaAutoRaiseData;
+
+typedef struct
+{
+  MetaDisplay *display;
+  MetaWindow *window;
+  int pointer_x;
+  int pointer_y;
+} MetaFocusData;
+
 
 G_DEFINE_TYPE(MetaDisplay, meta_display, G_TYPE_OBJECT);
 
@@ -150,13 +155,19 @@ enum {
 
 static guint display_signals [LAST_SIGNAL] = { 0 };
 
-/**
+/*
  * The display we're managing.  This is a singleton object.  (Historically,
  * this was a list of displays, but there was never any way to add more
  * than one element to it.)  The goofy name is because we don't want it
  * to shadow the parameter in its object methods.
  */
 static MetaDisplay *the_display = NULL;
+
+
+/* By default, the GNOME keybindings capplet should include both the Mutter
+ * and Metacity keybindings */
+static const char *gnome_wm_keybindings = "Mutter,Metacity";
+static const char *net_wm_name = "Mutter";
 
 #ifdef WITH_VERBOSE_MODE
 static void   meta_spew_event           (MetaDisplay    *display,
@@ -185,7 +196,7 @@ static void    prefs_changed_callback    (MetaPreference pref,
 
 static void    sanity_check_timestamps   (MetaDisplay *display,
                                           guint32      known_good_timestamp);
-
+ 
 MetaGroup*     get_focussed_group (MetaDisplay *display);
 
 static void
@@ -295,10 +306,10 @@ meta_display_class_init (MetaDisplayClass *klass)
 
 
 /**
- * Destructor for MetaPingData structs. Will destroy the
- * event source for the struct as well.
+ * ping_data_free:
  *
- * \ingroup pings
+ * Destructor for #MetaPingData structs. Will destroy the
+ * event source for the struct as well.
  */
 static void
 ping_data_free (MetaPingData *ping_data)
@@ -311,14 +322,12 @@ ping_data_free (MetaPingData *ping_data)
 }
 
 /**
+ * remove_pending_pings_for_window:
+ * @display: The display the window appears on
+ * @xwindow: The X ID of the window whose pings we should remove
+ *
  * Frees every pending ping structure for the given X window on the
  * given display. This means that we also destroy the timeouts.
- *
- * \param display The display the window appears on
- * \param xwindow The X ID of the window whose pings we should remove
- *
- * \ingroup pings
- *
  */
 static void
 remove_pending_pings_for_window (MetaDisplay *display, Window xwindow)
@@ -417,20 +426,51 @@ meta_display_init (MetaDisplay *disp)
 }
 
 /**
+ * meta_set_wm_name: (skip)
+ * @wm_name: value for _NET_WM_NAME
+ *
+ * Set the value to use for the _NET_WM_NAME property. To take effect,
+ * it is necessary to call this function before meta_init().
+ */
+void
+meta_set_wm_name (const char *wm_name)
+{
+  g_return_if_fail (the_display == NULL);
+
+  net_wm_name = wm_name;
+}
+
+/**
+ * meta_set_gnome_wm_keybindings: (skip)
+ * @wm_keybindings: value for _GNOME_WM_KEYBINDINGS
+ *
+ * Set the value to use for the _GNOME_WM_KEYBINDINGS property. To take
+ * effect, it is necessary to call this function before meta_init().
+ */
+void
+meta_set_gnome_wm_keybindings (const char *wm_keybindings)
+{
+  g_return_if_fail (the_display == NULL);
+
+  gnome_wm_keybindings = wm_keybindings;
+}
+
+/**
+ * meta_display_open:
+ *
  * Opens a new display, sets it up, initialises all the X extensions
  * we will need, and adds it to the list of displays.
  *
- * \return True if the display was opened successfully, and False
+ * Returns: %TRUE if the display was opened successfully, and %FALSE
  * otherwise-- that is, if the display doesn't exist or it already
  * has a window manager.
- *
- * \ingroup main
  */
 gboolean
 meta_display_open (void)
 {
   Display *xdisplay;
   GSList *screens;
+  MetaScreen *screen;
   GSList *tmp;
   int i;
   guint32 timestamp;
@@ -474,6 +514,8 @@ meta_display_open (void)
       buf[sizeof(buf)-1] = '\0';
       the_display->hostname = g_strdup (buf);
     }
+  else
+    the_display->hostname = NULL;
   the_display->error_trap_synced_at_last_pop = TRUE;
   the_display->error_traps = 0;
   the_display->error_trap_handler = NULL;
@@ -767,14 +809,12 @@ meta_display_open (void)
     meta_prop_set_utf8_string_hint (the_display,
                                     the_display->leader_window,
                                     the_display->atom__NET_WM_NAME,
-                                    "Mutter");
+                                    net_wm_name);
 
-    /* The GNOME keybindings capplet should include both the Mutter and Metacity
-     * keybindings */
     meta_prop_set_utf8_string_hint (the_display,
                                     the_display->leader_window,
                                     the_display->atom__GNOME_WM_KEYBINDINGS,
-                                    "Mutter,Metacity");
+                                    gnome_wm_keybindings);
     
     meta_prop_set_utf8_string_hint (the_display,
                                     the_display->leader_window,
@@ -815,19 +855,18 @@ meta_display_open (void)
   the_display->last_user_time = timestamp;
   the_display->compositor = NULL;
   
+  /* Mutter used to manage all X screens of the display in a single process, but
+   * now it always manages exactly one screen as specified by the DISPLAY
+   * environment variable. The screens GSList is left for simplicity.
+   */
   screens = NULL;
-  
-  i = 0;
-  while (i < ScreenCount (xdisplay))
-    {
-      MetaScreen *screen;
 
-      screen = meta_screen_new (the_display, i, timestamp);
+  i = meta_ui_get_screen_number ();
 
-      if (screen)
-        screens = g_slist_prepend (screens, screen);
-      ++i;
-    }
+  screen = meta_screen_new (the_display, i, timestamp);
+
+  if (screen)
+    screens = g_slist_prepend (screens, screen);
   
   the_display->screens = screens;
   
@@ -1010,6 +1049,10 @@ meta_display_close (MetaDisplay *display,
   
   meta_display_remove_autoraise_callback (display);
 
+  if (display->focus_timeout_id);
+    g_source_remove (display->focus_timeout_id);
+  display->focus_timeout_id = 0;
+
   if (display->grab_old_window_stacking)
     g_list_free (display->grab_old_window_stacking);
   
@@ -1051,6 +1094,7 @@ meta_display_close (MetaDisplay *display,
   meta_display_free_window_prop_hooks (display);
   meta_display_free_group_prop_hooks (display);
   
+  g_free (display->hostname);
   g_free (display->name);
 
   meta_display_shutdown_keys (display);
@@ -1168,14 +1212,16 @@ meta_display_ungrab (MetaDisplay *display)
 }
 
 /**
- * Returns the singleton MetaDisplay if "xdisplay" matches the X display it's
- * managing; otherwise gives a warning and returns NULL.  When we were claiming
+ * meta_display_for_x_display:
+ * @xdisplay: An X display
+ *
+ * Returns the singleton MetaDisplay if @xdisplay matches the X display it's
+ * managing; otherwise gives a warning and returns %NULL.  When we were claiming
  * to be able to manage multiple displays, this was supposed to find the
  * display out of the list which matched that display.  Now it's merely an
  * extra sanity check.
  *
- * \param xdisplay  An X display
- * \return  The singleton X display, or NULL if "xdisplay" isn't the one
+ * Returns: The singleton X display, or %NULL if @xdisplay isn't the one
  *          we're managing.
  */
 MetaDisplay*
@@ -1191,9 +1237,11 @@ meta_display_for_x_display (Display *xdisplay)
 }
 
 /**
+ * meta_get_display:
+ *
  * Accessor for the singleton MetaDisplay.
  *
- * \return  The only MetaDisplay there is.  This can be NULL, but only
+ * Returns: The only #MetaDisplay there is.  This can be %NULL, but only
  *          during startup.
  */
 MetaDisplay*
@@ -1535,6 +1583,103 @@ window_raise_with_delay_callback (void *data)
   return FALSE;
 }
 
+static void
+meta_display_mouse_mode_focus (MetaDisplay *display,
+                               MetaWindow  *window,
+                               guint32      timestamp) {
+  if (window->type != META_WINDOW_DESKTOP)
+    {
+      meta_topic (META_DEBUG_FOCUS,
+                  "Focusing %s at time %u.\n", window->desc, timestamp);
+
+      meta_window_focus (window, timestamp);
+
+      if (meta_prefs_get_auto_raise ())
+        meta_display_queue_autoraise_callback (display, window);
+      else
+        meta_topic (META_DEBUG_FOCUS, "Auto raise is disabled\n");
+    }
+  else
+    {
+      /* In mouse focus mode, we defocus when the mouse *enters*
+       * the DESKTOP window, instead of defocusing on LeaveNotify.
+       * This is because having the mouse enter override-redirect
+       * child windows unfortunately causes LeaveNotify events that
+       * we can't distinguish from the mouse actually leaving the
+       * toplevel window as we expect.  But, since we filter out
+       * EnterNotify events on override-redirect windows, this
+       * alternative mechanism works great.
+       */
+      if (meta_prefs_get_focus_mode() == G_DESKTOP_FOCUS_MODE_MOUSE &&
+          display->expected_focus_window != NULL)
+        {
+          meta_topic (META_DEBUG_FOCUS,
+                      "Unsetting focus from %s due to mouse entering "
+                      "the DESKTOP window\n",
+                      display->expected_focus_window->desc);
+          meta_display_focus_the_no_focus_window (display,
+                                                  window->screen,
+                                                  timestamp);
+        }
+    }
+}
+
+static gboolean
+window_focus_on_pointer_rest_callback (gpointer data) {
+  MetaFocusData *focus_data;
+  MetaDisplay *display;
+  MetaScreen *screen;
+  MetaWindow *window;
+  Window root, child;
+  int root_x, root_y, x, y;
+  guint32 timestamp;
+  guint mask;
+
+  focus_data = data;
+  display = focus_data->display;
+  screen = focus_data->window->screen;
+
+  if (meta_prefs_get_focus_mode () == G_DESKTOP_FOCUS_MODE_CLICK)
+    goto out;
+
+  meta_error_trap_push (display);
+  XQueryPointer (display->xdisplay,
+                 screen->xroot,
+                 &root, &child,
+                 &root_x, &root_y, &x, &y, &mask);
+  meta_error_trap_pop (display);
+
+  if (root_x != focus_data->pointer_x ||
+      root_y != focus_data->pointer_y)
+    {
+      focus_data->pointer_x = root_x;
+      focus_data->pointer_y = root_y;
+      return TRUE;
+    }
+
+  /* Explicitly check for the overlay window, as get_focus_window_at_point()
+   * may return windows that extend underneath the chrome (like
+   * override-redirect or DESKTOP windows)
+   */
+  if (child == meta_get_overlay_window (screen))
+    goto out;
+
+  window =
+      meta_stack_get_default_focus_window_at_point (screen->stack,
+                                                    screen->active_workspace,
+                                                    None, root_x, root_y);
+
+  if (window == NULL)
+    goto out;
+
+  timestamp = meta_display_get_current_time_roundtrip (display);
+  meta_display_mouse_mode_focus (display, window, timestamp);
+
+out:
+  display->focus_timeout_id = 0;
+  return FALSE;
+}
+
 void
 meta_display_queue_autoraise_callback (MetaDisplay *display,
                                        MetaWindow  *window)
@@ -1560,6 +1705,37 @@ meta_display_queue_autoraise_callback (MetaDisplay *display,
                         auto_raise_data,
                         g_free);
   display->autoraise_window = window;
+}
+
+/* The interval, in milliseconds, we use in focus-follows-mouse
+ * mode to check whether the pointer has stopped moving after a
+ * crossing event.
+ */
+#define FOCUS_TIMEOUT_DELAY 25
+
+static void
+meta_display_queue_focus_callback (MetaDisplay *display,
+                                   MetaWindow  *window,
+                                   int          pointer_x,
+                                   int          pointer_y)
+{
+  MetaFocusData *focus_data;
+
+  focus_data = g_new (MetaFocusData, 1);
+  focus_data->display = display;
+  focus_data->window = window;
+  focus_data->pointer_x = pointer_x;
+  focus_data->pointer_y = pointer_y;
+
+  if (display->focus_timeout_id != 0)
+    g_source_remove (display->focus_timeout_id);
+
+  display->focus_timeout_id =
+    g_timeout_add_full (G_PRIORITY_DEFAULT,
+                        FOCUS_TIMEOUT_DELAY,
+                        window_focus_on_pointer_rest_callback,
+                        focus_data,
+                        g_free);
 }
 
 #if 0
@@ -1601,19 +1777,18 @@ handle_net_restack_window (MetaDisplay* display,
 #endif
 
 /**
+ * event_callback:
+ * @event: The event that just happened
+ * @data: The #MetaDisplay that events are coming from, cast to a gpointer
+ *        so that it can be sent to a callback
+ *
  * This is the most important function in the whole program. It is the heart,
  * it is the nexus, it is the Grand Central Station of Mutter's world.
- * When we create a MetaDisplay, we ask GDK to pass *all* events for *all*
+ * When we create a #MetaDisplay, we ask GDK to pass *all* events for *all*
  * windows to this function. So every time anything happens that we might
  * want to know about, this function gets called. You see why it gets a bit
  * busy around here. Most of this function is a ginormous switch statement
  * dealing with all the kinds of events that might turn up.
- *
- * \param event The event that just happened
- * \param data  The MetaDisplay that events are coming from, cast to a gpointer
- *              so that it can be sent to a callback
- *
- * \ingroup main
  */
 static gboolean
 event_callback (XEvent   *event,
@@ -2051,52 +2226,26 @@ event_callback (XEvent   *event,
             case G_DESKTOP_FOCUS_MODE_SLOPPY:
             case G_DESKTOP_FOCUS_MODE_MOUSE:
               display->mouse_mode = TRUE;
-              if (window->type != META_WINDOW_DOCK &&
-                  window->type != META_WINDOW_DESKTOP)
+              if (window->type != META_WINDOW_DOCK)
                 {
                   meta_topic (META_DEBUG_FOCUS,
-                              "Focusing %s due to enter notify with serial %lu "
-                              "at time %lu, and setting display->mouse_mode to "
-                              "TRUE.\n",
-                              window->desc, 
+                              "Queuing a focus change for %s due to "
+                              "enter notify with serial %lu at time %lu, "
+                              "and setting display->mouse_mode to TRUE.\n",
+                              window->desc,
                               event->xany.serial,
                               event->xcrossing.time);
 
-                  meta_window_focus (window, event->xcrossing.time);
+                  if (meta_prefs_get_focus_change_on_pointer_rest())
+                    meta_display_queue_focus_callback (display, window,
+                                                       event->xcrossing.x_root,
+                                                       event->xcrossing.y_root);
+                  else
+                    meta_display_mouse_mode_focus (display, window,
+                                                   event->xcrossing.time);
 
                   /* stop ignoring stuff */
                   reset_ignored_crossing_serials (display);
-                  
-                  if (meta_prefs_get_auto_raise ()) 
-                    {
-                      meta_display_queue_autoraise_callback (display, window);
-                    }
-                  else
-                    {
-                      meta_topic (META_DEBUG_FOCUS,
-                                  "Auto raise is disabled\n");		      
-                    }
-                }
-              /* In mouse focus mode, we defocus when the mouse *enters*
-               * the DESKTOP window, instead of defocusing on LeaveNotify.
-               * This is because having the mouse enter override-redirect
-               * child windows unfortunately causes LeaveNotify events that
-               * we can't distinguish from the mouse actually leaving the
-               * toplevel window as we expect.  But, since we filter out
-               * EnterNotify events on override-redirect windows, this
-               * alternative mechanism works great.
-               */
-              if (window->type == META_WINDOW_DESKTOP &&
-                  meta_prefs_get_focus_mode() == G_DESKTOP_FOCUS_MODE_MOUSE &&
-                  display->expected_focus_window != NULL)
-                {
-                  meta_topic (META_DEBUG_FOCUS,
-                              "Unsetting focus from %s due to mouse entering "
-                              "the DESKTOP window\n",
-                              display->expected_focus_window->desc);
-                  meta_display_focus_the_no_focus_window (display, 
-                                                          window->screen,
-                                                          event->xcrossing.time);
                 }
               break;
             case G_DESKTOP_FOCUS_MODE_CLICK:
@@ -4197,21 +4346,23 @@ meta_display_set_cursor_theme (const char *theme,
 #endif
 }
 
-/**
+/*
  * Stores whether syncing is currently enabled.
  */
 static gboolean is_syncing = FALSE;
 
 /**
+ * meta_is_syncing:
+ *
  * Returns whether X synchronisation is currently enabled.
  *
- * \return true if we must wait for events whenever we send X requests;
- * false otherwise.
- *
- * \bug This is *only* called by meta_display_open, but by that time
+ * FIXME: This is *only* called by meta_display_open(), but by that time
  * we have already turned syncing on or off on startup, and we don't
  * have any way to do so while Mutter is running, so it's rather
  * pointless.
+ *
+ * Returns: %TRUE if we must wait for events whenever we send X requests;
+ * %FALSE otherwise.
  */
 gboolean
 meta_is_syncing (void)
@@ -4220,10 +4371,9 @@ meta_is_syncing (void)
 }
 
 /**
- * A handy way to turn on synchronisation on or off for every display.
+ * meta_set_syncing:
  *
- * \bug Of course there is only one display ever anyway, so this can
- * be rather hugely simplified.
+ * A handy way to turn on synchronisation on or off for every display.
  */
 void
 meta_set_syncing (gboolean setting)
@@ -4236,26 +4386,25 @@ meta_set_syncing (gboolean setting)
     }
 }
 
-/**
+/*
  * How long, in milliseconds, we should wait after pinging a window
  * before deciding it's not going to get back to us.
  */
 #define PING_TIMEOUT_DELAY 5000
 
 /**
+ * meta_display_ping_timeout:
+ * @data: All the information about this ping. It is a #MetaPingData
+ *        cast to a #gpointer in order to be passable to a timeout function.
+ *        This function will also free this parameter.
+ *
  * Does whatever it is we decided to do when a window didn't respond
  * to a ping. We also remove the ping from the display's list of
  * pending pings. This function is called by the event loop when the timeout
  * times out which we created at the start of the ping.
  *
- * \param data All the information about this ping. It is a MetaPingData
- *             cast to a void* in order to be passable to a timeout function.
- *             This function will also free this parameter.
- *
- * \return Always returns false, because this function is called as a
- *         timeout and we don't want to run the timer again.
- *
- * \ingroup pings
+ * Returns: Always returns %FALSE, because this function is called as a
+ *          timeout and we don't want to run the timer again.
  */
 static gboolean
 meta_display_ping_timeout (gpointer data)
@@ -4282,6 +4431,17 @@ meta_display_ping_timeout (gpointer data)
 }
 
 /**
+ * meta_display_ping_window:
+ * @display: The #MetaDisplay that the window is on
+ * @window: The #MetaWindow to send the ping to
+ * @timestamp: The timestamp of the ping. Used for uniqueness.
+ *             Cannot be CurrentTime; use a real timestamp!
+ * @ping_reply_func: The callback to call if we get a response.
+ * @ping_timeout_func: The callback to call if we don't get a response.
+ * @user_data: Arbitrary data that will be passed to the callback
+ *             function. (In practice it's often a pointer to
+ *             the window.)
+ *
  * Sends a ping request to a window. The window must respond to
  * the request within a certain amount of time. If it does, we
  * will call one callback; if the time passes and we haven't had
@@ -4291,20 +4451,9 @@ meta_display_ping_timeout (gpointer data)
  * This function returns straight away after setting things up;
  * the callbacks will be called from the event loop.
  *
- * \param display  The MetaDisplay that the window is on
- * \param window   The MetaWindow to send the ping to
- * \param timestamp The timestamp of the ping. Used for uniqueness.
- *                  Cannot be CurrentTime; use a real timestamp!
- * \param ping_reply_func The callback to call if we get a response.
- * \param ping_timeout_func The callback to call if we don't get a response.
- * \param user_data Arbitrary data that will be passed to the callback
- *                  function. (In practice it's often a pointer to
- *                  the window.)
+ * FIXME: This should probably be a method on windows, rather than displays
+ *        for one of their windows.
  *
- * \bug This should probably be a method on windows, rather than displays
- *      for one of their windows.
- *
- * \ingroup pings
  */
 void
 meta_display_ping_window (MetaDisplay       *display,
@@ -4412,16 +4561,15 @@ process_request_frame_extents (MetaDisplay    *display,
 }
 
 /**
+ * process_pong_message:
+ * @display: the display we got the pong from
+ * @event: the #XEvent which is a pong; we can tell which
+ *         ping it corresponds to because it bears the
+ *         same timestamp.
+ *
  * Process the pong (the response message) from the ping we sent
  * to the window. This involves removing the timeout, calling the
  * reply handler function, and freeing memory.
- *
- * \param display  the display we got the pong from
- * \param event    the XEvent which is a pong; we can tell which
- *                 ping it corresponds to because it bears the
- *                 same timestamp.
- *
- * \ingroup pings
  */
 static void
 process_pong_message (MetaDisplay    *display,
@@ -4468,18 +4616,17 @@ process_pong_message (MetaDisplay    *display,
 }
 
 /**
+ * meta_display_window_has_pending_pings:
+ * @display: The #MetaDisplay of the window.
+ * @window: The #MetaWindow whose pings we want to know about.
+ *
  * Finds whether a window has any pings waiting on it.
  *
- * \param display The MetaDisplay of the window.
- * \param window  The MetaWindow whose pings we want to know about.
+ * FIXME: This should probably be a method on windows, rather than displays
+ *        for one of their windows.
  *
- * \return True if there is at least one ping which has been sent
- *         to the window without getting a response; false otherwise.
- *
- * \bug This should probably be a method on windows, rather than displays
- *      for one of their windows.
- *
- * \ingroup pings
+ * Returns: %TRUE if there is at least one ping which has been sent
+ *          to the window without getting a response; %FALSE otherwise.
  */
 gboolean
 meta_display_window_has_pending_pings (MetaDisplay *display,
@@ -5335,7 +5482,6 @@ timestamp_too_old (MetaDisplay *display,
       meta_warning ("Got a request to focus %s with a timestamp of 0.  This "
                     "shouldn't happen!\n",
                     window ? window->desc : "the no_focus_window");
-      meta_print_backtrace ();
       *timestamp = meta_display_get_current_time_roundtrip (display);
       return FALSE;
     }
@@ -5538,4 +5684,19 @@ Window
 meta_display_get_leader_window (MetaDisplay *display)
 {
   return display->leader_window;
+}
+
+/**
+ * meta_display_clear_mouse_mode:
+ * @display: a #MetaDisplay
+ *
+ * Sets the mouse-mode flag to %FALSE, which means that motion events are
+ * no longer ignored in mouse or sloppy focus.
+ * This is an internal function. It should be used only for reimplementing
+ * keybindings, and only in a manner compatible with core code.
+ */
+void
+meta_display_clear_mouse_mode (MetaDisplay *display)
+{
+  display->mouse_mode = FALSE;
 }

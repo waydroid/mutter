@@ -198,12 +198,18 @@ prefs_changed_callback (MetaPreference pref,
 {
   MetaWindow *window = data;
 
-  if (pref != META_PREF_WORKSPACES_ONLY_ON_PRIMARY)
-    return;
-
-  meta_window_update_on_all_workspaces (window);
-
-  meta_window_queue (window, META_QUEUE_CALC_SHOWING);
+  if (pref == META_PREF_WORKSPACES_ONLY_ON_PRIMARY)
+    {
+      meta_window_update_on_all_workspaces (window);
+      meta_window_queue (window, META_QUEUE_CALC_SHOWING);
+    }
+  else if (pref == META_PREF_ATTACH_MODAL_DIALOGS &&
+           window->type == META_WINDOW_MODAL_DIALOG)
+    {
+      window->attached = meta_window_should_attach_to_parent (window);
+      recalc_window_features (window);
+      meta_window_queue (window, META_QUEUE_MOVE_RESIZE);
+    }
 }
 
 static void
@@ -2225,7 +2231,7 @@ implement_showing (MetaWindow *window,
        * so we should place the window even if we're hiding it rather
        * than showing it.
        */
-      if (!window->placed && meta_prefs_get_live_hidden_windows ())
+      if (!window->placed)
         meta_window_force_placement (window);
 
       meta_window_hide (window);
@@ -2828,20 +2834,6 @@ map_frame (MetaWindow *window)
 }
 
 static gboolean
-unmap_frame (MetaWindow *window)
-{
-  if (window->frame && window->frame->mapped)
-    {
-      meta_topic (META_DEBUG_WINDOW_STATE, "Frame actually needs unmap\n");
-      window->frame->mapped = FALSE;
-      meta_ui_unmap_frame (window->screen->ui, window->frame->xwindow);
-      return TRUE;
-    }
-  else
-    return FALSE;
-}
-
-static gboolean
 map_client_window (MetaWindow *window)
 {
   if (!window->mapped)
@@ -3108,15 +3100,12 @@ meta_window_show (MetaWindow *window)
       if (map_client_window (window))
         did_show = TRUE;
 
-      if (meta_prefs_get_live_hidden_windows ())
+      if (window->hidden)
         {
-          if (window->hidden)
-            {
-              meta_stack_freeze (window->screen->stack);
-              window->hidden = FALSE;
-              meta_stack_thaw (window->screen->stack);
-              did_show = TRUE;
-            }
+          meta_stack_freeze (window->screen->stack);
+          window->hidden = FALSE;
+          meta_stack_thaw (window->screen->stack);
+          did_show = TRUE;
         }
 
       if (window->iconic)
@@ -3251,32 +3240,19 @@ meta_window_hide (MetaWindow *window)
 
   did_hide = FALSE;
 
-  if (meta_prefs_get_live_hidden_windows ())
-    {
-      /* If this is the first time that we've calculating the showing
-       * state of the window, the frame and client window might not
-       * yet be mapped, so we need to map them now */
-      map_frame (window);
-      map_client_window (window);
+  /* If this is the first time that we've calculating the showing
+   * state of the window, the frame and client window might not
+   * yet be mapped, so we need to map them now */
+  map_frame (window);
+  map_client_window (window);
 
-      if (!window->hidden)
-        {
-          meta_stack_freeze (window->screen->stack);
-          window->hidden = TRUE;
-          meta_stack_thaw (window->screen->stack);
-
-          did_hide = TRUE;
-        }
-    }
-  else
+  if (!window->hidden)
     {
-      /* Unmapping the frame is enough to make the window disappear,
-       * but we need to hide the window itself so the client knows
-       * it has been hidden */
-      if (unmap_frame (window))
-        did_hide = TRUE;
-      if (unmap_client_window (window, " (hiding)"))
-        did_hide = TRUE;
+      meta_stack_freeze (window->screen->stack);
+      window->hidden = TRUE;
+      meta_stack_thaw (window->screen->stack);
+
+      did_hide = TRUE;
     }
 
   if (!window->iconic)
@@ -3452,10 +3428,11 @@ meta_window_save_rect (MetaWindow *window)
 }
 
 /**
+ * force_save_user_window_placement:
+ * @window: Store current position of this window for future reference
+ *
  * Save the user_rect regardless of whether the window is maximized or
  * fullscreen. See save_user_window_placement() for most uses.
- *
- * \param window  Store current position of this window for future reference
  */
 static void
 force_save_user_window_placement (MetaWindow *window)
@@ -3464,11 +3441,12 @@ force_save_user_window_placement (MetaWindow *window)
 }
 
 /**
+ * save_user_window_placement:
+ * @window: Store current position of this window for future reference
+ *
  * Save the user_rect, but only if the window is neither maximized nor
  * fullscreen, otherwise the window may snap back to those dimensions
  * (bug #461927).
- *
- * \param window  Store current position of this window for future reference
  */
 static void
 save_user_window_placement (MetaWindow *window)
@@ -3702,7 +3680,7 @@ meta_window_can_tile_maximized (MetaWindow *window)
 gboolean
 meta_window_can_tile_side_by_side (MetaWindow *window)
 {
-  const MetaMonitorInfo *monitor;
+  int monitor;
   MetaRectangle tile_area;
   MetaFrameBorders borders;
 
@@ -3710,7 +3688,7 @@ meta_window_can_tile_side_by_side (MetaWindow *window)
     return FALSE;
 
   monitor = meta_screen_get_current_monitor (window->screen);
-  meta_window_get_work_area_for_monitor (window, monitor->number, &tile_area);
+  meta_window_get_work_area_for_monitor (window, monitor, &tile_area);
 
   /* Do not allow tiling in portrait orientation */
   if (tile_area.height > tile_area.width)
@@ -3911,15 +3889,6 @@ void
 meta_window_unmaximize (MetaWindow        *window,
                         MetaMaximizeFlags  directions)
 {
-  /* Restore tiling if necessary */
-  if (window->tile_mode == META_TILE_LEFT ||
-      window->tile_mode == META_TILE_RIGHT)
-    {
-      window->maximized_horizontally = FALSE;
-      meta_window_tile (window);
-      return;
-    }
-
   meta_window_unmaximize_internal (window, directions, &window->saved_rect,
                                    NorthWestGravity);
 }
@@ -4485,6 +4454,9 @@ meta_window_update_for_monitors_changed (MetaWindow *window)
   const MetaMonitorInfo *old, *new;
   int i;
 
+  if (window->type == META_WINDOW_DESKTOP)
+    return;
+
   old = window->monitor;
 
   /* Start on primary */
@@ -4607,8 +4579,6 @@ meta_window_move_resize_internal (MetaWindow          *window,
   gboolean need_move_frame = FALSE;
   gboolean need_resize_client = FALSE;
   gboolean need_resize_frame = FALSE;
-  int frame_size_dx;
-  int frame_size_dy;
   int size_dx;
   int size_dy;
   gboolean frame_shape_changed = FALSE;
@@ -4709,6 +4679,7 @@ meta_window_move_resize_internal (MetaWindow          *window,
 
   if (window->frame)
     {
+      int frame_size_dx, frame_size_dy;
       int new_w, new_h;
 
       new_w = window->rect.width + borders.total.left + borders.total.right;
@@ -4730,11 +4701,6 @@ meta_window_move_resize_internal (MetaWindow          *window,
                   "Calculated frame size %dx%d\n",
                   window->frame->rect.width,
                   window->frame->rect.height);
-    }
-  else
-    {
-      frame_size_dx = 0;
-      frame_size_dy = 0;
     }
 
   /* For nice effect, when growing the window we want to move/resize
@@ -5108,18 +5074,20 @@ meta_window_move_frame (MetaWindow  *window,
 {
   int x = root_x_nw;
   int y = root_y_nw;
-  MetaFrameBorders borders;
 
-  meta_frame_calc_borders (window->frame, &borders);
+  if (window->frame)
+    {
+      MetaFrameBorders borders;
+      meta_frame_calc_borders (window->frame, &borders);
 
-  /* root_x_nw and root_y_nw correspond to where the top of
-   * the visible frame should be. Offset by the distance between
-   * the origin of the window and the origin of the enclosing
-   * window decorations.
-   */
-  x += window->frame->child_x - borders.invisible.left;
-  y += window->frame->child_y - borders.invisible.top;
-
+      /* root_x_nw and root_y_nw correspond to where the top of
+       * the visible frame should be. Offset by the distance between
+       * the origin of the window and the origin of the enclosing
+       * window decorations.
+       */
+      x += window->frame->child_x - borders.invisible.left;
+      y += window->frame->child_y - borders.invisible.top;
+    }
   meta_window_move (window, user_op, x, y);
 }
 
@@ -5709,6 +5677,9 @@ meta_window_change_workspace (MetaWindow    *window,
 {
   g_return_if_fail (!window->override_redirect);
 
+  if (window->always_sticky)
+    return;
+
   meta_window_change_workspace_without_transients (window, workspace);
 
   meta_window_foreach_transient (window, change_workspace_foreach,
@@ -5825,7 +5796,7 @@ update_net_frame_extents (MetaWindow *window)
 
   meta_topic (META_DEBUG_GEOMETRY,
               "Setting _NET_FRAME_EXTENTS on managed window 0x%lx "
-              "to left = %lu, right = %lu, top = %lu, bottom = %lu\n",
+ "to left = %lu, right = %lu, top = %lu, bottom = %lu\n",
               window->xwindow, data[0], data[1], data[2], data[3]);
 
   meta_error_trap_push (window->display);
@@ -8241,10 +8212,6 @@ menu_callback (MetaWindowMenu *menu,
 	{
 	  meta_window_change_workspace (window,
 					workspace);
-#if 0
-	  meta_workspace_activate (workspace);
-	  meta_window_raise (window);
-#endif
 	}
     }
   else
@@ -8334,13 +8301,6 @@ meta_window_show_menu (MetaWindow *window,
   else
     ops |= META_MENU_OP_MAXIMIZE;
 
-#if 0
-  if (window->shaded)
-    ops |= META_MENU_OP_UNSHADE;
-  else
-    ops |= META_MENU_OP_SHADE;
-#endif
-
   if (window->wm_state_above)
     ops |= META_MENU_OP_UNABOVE;
   else
@@ -8369,7 +8329,8 @@ meta_window_show_menu (MetaWindow *window,
 
   if ((window->type == META_WINDOW_DESKTOP) ||
       (window->type == META_WINDOW_DOCK) ||
-      (window->type == META_WINDOW_SPLASHSCREEN))
+      (window->type == META_WINDOW_SPLASHSCREEN ||
+      META_WINDOW_MAXIMIZED (window)))
     insensitive |= META_MENU_OP_ABOVE | META_MENU_OP_UNABOVE;
 
   /* If all operations are disabled, just quit without showing the menu.
@@ -8662,7 +8623,7 @@ update_move (MetaWindow  *window,
        * refers to the monitor which contains the largest part of the window,
        * the latter to the one where the pointer is located.
        */
-      monitor = meta_screen_get_current_monitor (window->screen);
+      monitor = meta_screen_get_current_monitor_info (window->screen);
       meta_window_get_work_area_for_monitor (window,
                                              monitor->number,
                                              &work_area);
@@ -8956,12 +8917,15 @@ update_resize (MetaWindow *window,
   dx = x - window->display->grab_anchor_root_x;
   dy = y - window->display->grab_anchor_root_y;
 
-  /* Attached modal dialogs are special in that horizontal
-   * size changes apply to both sides, so that the dialog
+  /* Attached modal dialogs are special in that size
+   * changes apply to both sides, so that the dialog
    * remains centered to the parent.
    */
   if (meta_window_is_attached_dialog (window))
-    dx *= 2;
+    {
+      dx *= 2;
+      dy *= 2;
+    }
 
   new_w = window->display->grab_anchor_window_pos.width;
   new_h = window->display->grab_anchor_window_pos.height;
@@ -10681,7 +10645,8 @@ meta_window_get_frame_type (MetaWindow *window)
       return META_FRAME_TYPE_LAST;
     }
   else if ((window->border_only && base_type != META_FRAME_TYPE_ATTACHED) ||
-           (window->hide_titlebar_when_maximized && META_WINDOW_MAXIMIZED (window)))
+           (window->hide_titlebar_when_maximized && META_WINDOW_MAXIMIZED (window)) ||
+           (window->hide_titlebar_when_maximized && META_WINDOW_TILED_SIDE_BY_SIDE (window)))
     {
       /* override base frame type */
       return META_FRAME_TYPE_BORDER;

@@ -116,6 +116,8 @@ void meta_window_change_workspace_by_index (MetaWindow *window,
                                             gint        space_index,
                                             gboolean    append,
                                             guint32     timestamp);
+void meta_window_change_workspace          (MetaWindow  *window,
+                                            MetaWorkspace *workspace);
 GObject *meta_window_get_compositor_private (MetaWindow *window);
 void meta_window_set_compositor_private (MetaWindow *window, GObject *priv);
 void meta_window_configure_notify (MetaWindow *window, XConfigureEvent *event);
@@ -170,5 +172,25 @@ MetaFrameType meta_window_get_frame_type (MetaWindow *window);
 cairo_region_t *meta_window_get_frame_bounds (MetaWindow *window);
 
 MetaWindow *meta_window_get_tile_match (MetaWindow *window);
+
+void        meta_window_make_fullscreen    (MetaWindow  *window);
+void        meta_window_unmake_fullscreen  (MetaWindow  *window);
+void        meta_window_make_above         (MetaWindow  *window);
+void        meta_window_unmake_above       (MetaWindow  *window);
+void        meta_window_shade              (MetaWindow  *window,
+                                            guint32      timestamp);
+void        meta_window_unshade            (MetaWindow  *window,
+                                            guint32      timestamp);
+void        meta_window_stick              (MetaWindow  *window);
+void        meta_window_unstick            (MetaWindow  *window);
+
+void        meta_window_kill               (MetaWindow  *window);
+void        meta_window_focus              (MetaWindow  *window,
+                                            guint32      timestamp);
+
+void meta_window_begin_grab_op (MetaWindow *window,
+                                MetaGrabOp  op,
+                                gboolean    frame_action,
+                                guint32     timestamp);
 
 #endif

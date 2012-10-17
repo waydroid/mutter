@@ -1,3 +1,157 @@
+3.6.1
+=====
+* Fix crash when opening large popup menus [Jasper; #681676]
+* window: Don't move the desktop window after monitor hotplug [Jasper; #681159]
+* Expose MetaPlugin to introspection [Evan; #671098]
+* Optionally delay focus changes in focus-follows-mouse mode [Florian; #678169]
+* Resize the guard window when the X screen is resized [Benjamin; #670396]
+* display: Only manage the default X screen [Jürg; #648156]
+* Misc cleanups: [Owen; #587255]
+
+Contributors:
+  Benjamin Berg, Jürg Billeter, Evan Broder, Florian Müllner, Jasper St. Pierre,
+  Owen Taylor
+
+Translations:
+  Alexandre Franke [fr], Theppitak Karoonboonyanan [th], Sayak Sarkar [bn_IN],
+  Sandeep Sheshrao Shedmake [mr], Ask H. Larsen [da], Shankar Prasad [kn],
+  Alexander Shopov [bg], Aurimas Černius [lt], Ihar Hrachyshka [be],
+  Kjartan Maraas [nb], Daniel Mustieles [es], Changwoo Ryu [ko],
+  Yuri Myasoedov [ru], Tom Tryfonidis [el], Rūdolfs Mazurs [lv],
+  Chris Leonard [en_GB], Piotr Drąg [pl], Fran Diéguez [gl], Gil Forcada [ca],
+  Matej Urbančič [sl], Andika Triwidada [id], Carles Ferrando [ca]
+
+3.6.0
+=====
+
+Translations:
+  Alexander Shopov [bg], Daniel Korostil [uk], Rajesh Ranjan [hi],
+  Krishnababu Krothapalli [te], Ani Peter [ml], Rūdolfs Mazurs [lv],
+  Sweta Kothari [gu], Ihar Hrachyshka [be], Noriko Mizumoto [ja],
+  Timo Jyrinki [fi], Mattias Põldaru [et]
+
+3.5.92
+======
+* screen: Allow NULL out arguments in meta_screen_get_size [Tomeu]
+* display: Add API to set wm_name / wm_keybindings [Florian; #671010]
+* Improve the not responding dialog [Jon, Florian; #684306]
+* Misc. bugfixes [Jasper]
+
+Contributors:
+  William Jon McCann, Florian Müllner, Jasper St. Pierre, Tomeu Vizoso
+
+Translations:
+  Gabor Kelemen [hu], Piotr Drąg [pl], Dr.T.Vasudevan [ta], Bruce Cowan [en_GB],
+  Alexandre Franke [fr], Theppitak Karoonboonyanan [th], Gil Forcada [ca],
+  Carles Ferrando [ca@valencia], Tobias Endrigkeit [de], Tom Tryfonidis [el],
+  Nguyễn Thái Ngọc Duy [vi], Changwoo Ryu [ko], Ask H. Larsen [da],
+  Rafael Ferreira [pt_BR], Marek Černocký [cs]
+
+3.5.91
+======
+* Do not include markup in app not responding dialog [Alex]
+* Fix subtracting unredirected windows from visible region [Jasper; #677116]
+* Minor improvements and bugfixes [Jasper, Florian; #682648, #682993]
+
+Contributors:
+  Alexander Larsson, Florian Müllner, Jasper St. Pierre
+
+Translations:
+  Dirgita [id], Piotr Drąg [pl], A S Alam [pa], Yuri Myasoedov [ru],
+  Milo Casagrande [it], Nilamdyuti Goswami [as], Tom Tryfonidis [el],
+  Duarte Loreto [pt], Fran Diéguez [gl], Nguyễn Thái Ngọc Duy [vi],
+  Aurimas Černius [lt], Daniel Nylander [sv]
+
+3.5.90
+======
+* Fix logic for handling translations of the windows group [Owen; #681221]
+* Handle painting inside a Clutter clone [Owen; #681953]
+* Update overlay-key on settings changes [Florian; #681906]
+* Add keybinding for overlay-key [Florian; #665547]
+* Minor fixes and improvements [Javier, Florian]
+
+Contributors:
+  Javier Jardón, Florian Müllner, Owen Taylor
+
+Translations:
+  Sweta Kothari [gu], Muhammet Kara [tr], Khaled Hosny [ar],
+  Sandeep Sheshrao Shedmake [mr]
+
+3.5.5
+=====
+* Fix flickering around windows when using window group [Tom; #681221]
+
+Contributor(s):
+  Tom Beckmann
+
+Translations:
+  Chao-Hsiung Liao [zh_HK, zh_TW], Matej Urbančič [sl], Fran Diéguez [gl],
+  Мирослав Николић [sr, sr@latin], Yaron Shahrabani [he], Kjartan Maraas [nb]
+
+3.5.4
+=====
+* Make it possible to reimplement move-to-workspace keybindings from plugins
+  [Giovanni; #674104]
+* Add a preference to ignore hide-titlebar-when-maximized hint [Rico; #678947]
+* window: Also use hide-titlebar-when-maximized when tiled [Florian; #679290]
+* Center modal dialogs on their parent instead [Florian; #674499]
+* Reduce amount of markup in translated messages [Matthias; #679660]
+* Fix focus problem after closing a window with focus-follows-mouse
+  [Jasper; #675982]
+* Handle changes of the attach-modal-dialogs preference [Florian; #679904]
+* Do not restore tiling on unmaximize [Florian; #677565]
+* Misc. fixes and cleanups [Jasper Adriaanse, Jasper, Debarshi, Pavel;
+  #679153, 673824]
+
+Contributors:
+ Jasper Lievisse Adriaanse, Giovanni Campagna, Matthias Clasen, Florian Müllner,
+ Debarshi Ray, Jasper St. Pierre, Rico Tzschichholz, Pavel Vasin
+
+Translations:
+ Alexander Shopov [bg], Kjartan Maraas [nb], Yaron Shahrabani [he],
+ Nilamdyuti Goswami [as], Ihar Hrachyshka [be], Daniel Mustieles [es]
+
+3.5.3
+=====
+* Simplify plugin system [Jasper; #676855]
+* meta-window-actor: Don't unredirect shaped windows [Jasper; #677657]
+* screen: Add new public meta_screen_get_current_monitor API [Tim; #642591]
+* frames: Increase the size of resize corners [Jasper; #677669]
+* window: Make some window methods public [Jasper; #678126]
+* Fix crash when running mutter stand-alone [Jasper; #678238]
+* meta-window-actor: Fix potential crash in shaping code [Jasper; #677977]
+* Misc. fixes [Jasper, Marc-Antoine, Rico]
+
+Contributors:
+ Tim L, Marc-Antoine Perennou, Jasper St. Pierre, Rico Tzschichholz
+
+Translations:
+
+ Daniel Mustieles [es], Matej Urbančič [sl], Khaled Hosny [ar],
+ Bruno Brouard [fr], Fran Diéguez [gl]
+
+3.5.2
+=====
+* keybindings: Remove 'toggle-recording' binding [Florian; #674376]
+* Switch to gtk-doc syntax [Jasper; #673752]
+* shaped-texture: never slice shape mask texture [Robert; #674731]
+* Make Mutter stop relying on Cogl including a GL header [Neil; #672711]
+* Make support for "XFree86" Xinerama mandatory [Owen; #674727]
+* meta_window_move_frame(): fix crash when frame is NULL [Owen; #675254]
+* Fix memory leaks [Pavel; #672640]
+* Code cleanups [Jasper; #671104 #674876 #676052]
+* Look for themes in XDG user data dir [Jasper; #675316]
+* Remove frame pixel caching [Jasper; #675111]
+* stack: Ignore keep-on-top property on maximized windows [Florian; #673581]
+* Misc. fixes [Javier, Jasper, Owen, Rico]
+
+Contributors:
+ Robert Bragg, Javier Járdon, Florian Müllner, Neil Roberts, Jasper St. Pierre, 
+ Owen Taylor, Rico Tzschichholz, Pavel Vasin
+
+Translations:
+ Praveen Illa [te], Luca Ferretti [it], Daniel Mustieles [es]
+
 3.4.1
 =====
 * API change: the meta_display_add_keybinding() function added in 3.4

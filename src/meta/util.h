@@ -90,8 +90,6 @@ gint  meta_unsigned_long_equal (gconstpointer v1,
                                 gconstpointer v2);
 guint meta_unsigned_long_hash  (gconstpointer v);
 
-void meta_print_backtrace (void);
-
 const char* meta_frame_type_to_string (MetaFrameType type);
 const char* meta_gravity_to_string (int gravity);
 
@@ -109,6 +107,7 @@ GPid meta_show_dialog (const char *type,
                        const char *display,
                        const char *ok_text,
                        const char *cancel_text,
+                       const char *icon_name,
                        const int transient_for,
                        GSList *columns,
                        GSList *entries);

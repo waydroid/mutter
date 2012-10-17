@@ -47,37 +47,6 @@ meta_topic_real_valist (MetaDebugTopic topic,
                         va_list        args);
 #endif
 
-#ifdef HAVE_BACKTRACE
-#include <execinfo.h>
-void
-meta_print_backtrace (void)
-{
-  void *bt[500];
-  int bt_size;
-  int i;
-  char **syms;
-  
-  bt_size = backtrace (bt, 500);
-
-  syms = backtrace_symbols (bt, bt_size);
-  
-  i = 0;
-  while (i < bt_size)
-    {
-      meta_verbose ("  %s\n", syms[i]);
-      ++i;
-    }
-
-  free (syms);
-}
-#else
-void
-meta_print_backtrace (void)
-{
-  meta_verbose ("Not compiled with backtrace support\n");
-}
-#endif
-
 static gint verbose_topics = 0;
 static gboolean is_debugging = FALSE;
 static gboolean replace_current = FALSE;
@@ -441,8 +410,6 @@ meta_bug (const char *format, ...)
   fflush (out);
   
   g_free (str);
-
-  meta_print_backtrace ();
   
   /* stop us in a debugger */
   abort ();
@@ -588,6 +555,23 @@ meta_gravity_to_string (int gravity)
     }
 }
 
+static gboolean
+zenity_supports_option (const char *section, const char *option)
+{
+  char *command, *out;
+  gboolean rv;
+
+  command = g_strdup_printf ("zenity %s", section);
+  g_spawn_command_line_sync (command, &out, NULL, NULL, NULL);
+
+  rv = (out && strstr (out, option));
+
+  g_free (command);
+  g_free (out);
+
+  return rv;
+}
+
 /* Command line arguments are passed in the locale encoding; in almost
  * all cases, we'd hope that is UTF-8 and no conversion is necessary.
  * If it's not UTF-8, then it's possible that the message isn't
@@ -618,6 +602,7 @@ meta_show_dialog (const char *type,
                   const char *display,
                   const char *ok_text,
                   const char *cancel_text,
+                  const char *icon_name,
                   const int transient_for,
                   GSList *columns,
                   GSList *entries)
@@ -658,6 +643,17 @@ meta_show_dialog (const char *type,
       append_argument (args, cancel_text);
     }
 
+  if (icon_name)
+    {
+      char *option = g_strdup_printf ("--help%s", type + 1);
+      if (zenity_supports_option (option, "--icon-name"))
+        {
+          append_argument (args, "--icon-name");
+          append_argument (args, icon_name);
+        }
+      g_free (option);
+    }
+
   tmp = columns;
   while (tmp)
     {
@@ -673,14 +669,17 @@ meta_show_dialog (const char *type,
       tmp = tmp->next;
     }
 
-  g_ptr_array_add (args, NULL); /* NULL-terminate */
-
   if (transient_for)
     {
       gchar *env = g_strdup_printf("%d", transient_for);
       setenv ("WINDOWID", env, 1);
       g_free (env);
+
+      if (zenity_supports_option ("--help-general", "--modal"))
+        append_argument (args, "--modal");
     }
+
+  g_ptr_array_add (args, NULL); /* NULL-terminate */
 
   g_spawn_async (
                  "/",

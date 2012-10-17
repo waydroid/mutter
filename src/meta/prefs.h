@@ -45,6 +45,7 @@ typedef enum
   META_PREF_ACTION_RIGHT_CLICK_TITLEBAR,
   META_PREF_AUTO_RAISE,
   META_PREF_AUTO_RAISE_DELAY,
+  META_PREF_FOCUS_CHANGE_ON_POINTER_REST,
   META_PREF_THEME,
   META_PREF_TITLEBAR_FONT,
   META_PREF_NUM_WORKSPACES,
@@ -64,7 +65,6 @@ typedef enum
   META_PREF_RESIZE_WITH_RIGHT_BUTTON,
   META_PREF_EDGE_TILING,
   META_PREF_FORCE_FULLSCREEN,
-  META_PREF_LIVE_HIDDEN_WINDOWS,
   META_PREF_WORKSPACES_ONLY_ON_PRIMARY,
   META_PREF_NO_TAB_POPUP,
   META_PREF_DRAGGABLE_BORDER_WIDTH
@@ -101,15 +101,10 @@ gboolean                    meta_prefs_get_application_based  (void);
 gboolean                    meta_prefs_get_disable_workarounds (void);
 gboolean                    meta_prefs_get_auto_raise         (void);
 int                         meta_prefs_get_auto_raise_delay   (void);
+gboolean                    meta_prefs_get_focus_change_on_pointer_rest (void);
 gboolean                    meta_prefs_get_gnome_accessibility (void);
 gboolean                    meta_prefs_get_gnome_animations   (void);
 gboolean                    meta_prefs_get_edge_tiling        (void);
-
-const char*                 meta_prefs_get_screenshot_command (void);
-
-const char*                 meta_prefs_get_window_screenshot_command (void);
-
-const char*                 meta_prefs_get_terminal_command   (void);
 
 void                        meta_prefs_get_button_layout (MetaButtonLayout *button_layout);
 
@@ -129,17 +124,7 @@ int         meta_prefs_get_cursor_size       (void);
 gboolean    meta_prefs_get_compositing_manager (void);
 gboolean    meta_prefs_get_force_fullscreen  (void);
 
-/**
- * Sets whether the compositor is turned on.
- *
- * \param whether   TRUE to turn on, FALSE to turn off
- */
-void meta_prefs_set_compositing_manager (gboolean whether);
-
 void meta_prefs_set_force_fullscreen (gboolean whether);
-
-gboolean meta_prefs_get_live_hidden_windows (void);
-void     meta_prefs_set_live_hidden_windows (gboolean whether);
 
 gboolean meta_prefs_get_workspaces_only_on_primary (void);
 
@@ -147,6 +132,9 @@ gboolean meta_prefs_get_no_tab_popup (void);
 void     meta_prefs_set_no_tab_popup (gboolean whether);
 
 int      meta_prefs_get_draggable_border_width (void);
+
+gboolean meta_prefs_get_ignore_request_hide_titlebar (void);
+void     meta_prefs_set_ignore_request_hide_titlebar (gboolean whether);
 
 /* XXX FIXME This should be x-macroed, but isn't yet because it would be
  * difficult (or perhaps impossible) to add the suffixes using the current
@@ -235,6 +223,7 @@ typedef enum _MetaKeyBindingAction
   META_KEYBINDING_ACTION_MOVE_TO_SIDE_E,
   META_KEYBINDING_ACTION_MOVE_TO_SIDE_W,
   META_KEYBINDING_ACTION_MOVE_TO_CENTER,
+  META_KEYBINDING_ACTION_OVERLAY_KEY,
 
   META_KEYBINDING_ACTION_LAST
 } MetaKeyBindingAction;
@@ -276,7 +265,7 @@ typedef struct
 
   MetaKeyBindingAction action;
 
-  /**
+  /*
    * A list of MetaKeyCombos. Each of them is bound to
    * this keypref. If one has keysym==modifiers==0, it is
    * ignored.

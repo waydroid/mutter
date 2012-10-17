@@ -156,8 +156,6 @@ void          meta_screen_manage_all_windows  (MetaScreen                 *scree
 void          meta_screen_foreach_window      (MetaScreen                 *screen,
                                                MetaScreenWindowFunc        func,
                                                gpointer                    data);
-void          meta_screen_queue_frame_redraws (MetaScreen                 *screen);
-void          meta_screen_queue_window_resizes (MetaScreen                 *screen);
 
 void          meta_screen_set_cursor          (MetaScreen                 *screen,
                                                MetaCursor                  cursor);
@@ -186,7 +184,7 @@ void          meta_screen_tile_preview_hide            (MetaScreen    *screen);
 MetaWindow*   meta_screen_get_mouse_window     (MetaScreen                 *screen,
                                                 MetaWindow                 *not_this_one);
 
-const MetaMonitorInfo* meta_screen_get_current_monitor    (MetaScreen    *screen);
+const MetaMonitorInfo* meta_screen_get_current_monitor_info   (MetaScreen    *screen);
 const MetaMonitorInfo* meta_screen_get_monitor_for_rect   (MetaScreen    *screen,
                                                            MetaRectangle *rect);
 const MetaMonitorInfo* meta_screen_get_monitor_for_window (MetaScreen    *screen,

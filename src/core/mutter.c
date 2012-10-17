@@ -45,7 +45,7 @@ print_version (const gchar    *option_name,
   exit (0);
 }
 
-static gchar *mutter_plugins;
+static gchar *plugin = "default";
 
 GOptionEntry mutter_options[] = {
   {
@@ -55,10 +55,10 @@ GOptionEntry mutter_options[] = {
     NULL
   },
   {
-    "mutter-plugins", 0, 0, G_OPTION_ARG_STRING,
-    &mutter_plugins,
-    N_("Comma-separated list of compositor plugins"),
-    "PLUGINS"
+    "mutter-plugin", 0, 0, G_OPTION_ARG_STRING,
+    &plugin,
+    N_("Mutter plugin to use"),
+    "PLUGIN",
   },
   { NULL }
 };
@@ -69,6 +69,8 @@ main (int argc, char **argv)
   GOptionContext *ctx;
   GError *error = NULL;
 
+  g_type_init ();
+
   ctx = meta_get_option_context ();
   g_option_context_add_main_entries (ctx, mutter_options, GETTEXT_PACKAGE);
   if (!g_option_context_parse (ctx, &argc, &argv, &error))
@@ -77,20 +79,8 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  if (mutter_plugins)
-    {
-      MetaPluginManager *mgr;
-      char **plugins = g_strsplit (mutter_plugins, ",", -1); 
-      char **plugin;
-
-      mgr = meta_plugin_manager_get_default ();
-      for (plugin = plugins; *plugin; plugin++)
-        {
-          g_strstrip (*plugin);
-          meta_plugin_manager_load (mgr, *plugin);
-        }
-      g_strfreev (plugins);
-    }
+  if (plugin)
+    meta_plugin_manager_load (plugin);
 
   meta_init ();
   return meta_run ();

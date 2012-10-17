@@ -71,18 +71,10 @@ meta_key_binding_copy (MetaKeyBinding *binding)
   return g_slice_dup (MetaKeyBinding, binding);
 }
 
-GType
-meta_key_binding_get_type (void)
-{
-  static GType type_id = 0;
-
-  if (G_UNLIKELY (type_id == 0))
-    type_id = g_boxed_type_register_static (g_intern_static_string ("MetaKeyBinding"),
-                                            (GBoxedCopyFunc)meta_key_binding_copy,
-                                            (GBoxedFreeFunc)meta_key_binding_free);
-
-  return type_id;
-}
+G_DEFINE_BOXED_TYPE(MetaKeyBinding,
+                    meta_key_binding,
+                    meta_key_binding_copy,
+                    meta_key_binding_free)
 
 const char *
 meta_key_binding_get_name (MetaKeyBinding *binding)
@@ -300,6 +292,10 @@ reload_keycodes (MetaDisplay *display)
       display->overlay_key_combo.keycode =
         keysym_to_keycode (display, display->overlay_key_combo.keysym);
     }
+  else
+    {
+      display->overlay_key_combo.keycode = 0;
+    }
   
   if (display->key_bindings)
     {
@@ -477,11 +473,7 @@ rebuild_special_bindings (MetaDisplay *display)
   MetaKeyCombo combo;
   
   meta_prefs_get_overlay_binding (&combo);
-
-  if (combo.keysym != None || combo.keycode != 0)
-    {
-      display->overlay_key_combo = combo;
-    }
+  display->overlay_key_combo = combo;
 }
 
 static void
@@ -672,6 +664,15 @@ meta_display_get_keybinding_action (MetaDisplay  *display,
 {
   MetaKeyBinding *binding;
   KeySym keysym;
+
+  /* This is much more vague than the MetaDisplay::overlay-key signal,
+   * which is only emitted if the overlay-key is the only key pressed;
+   * as this method is primarily intended for plugins to allow processing
+   * of mutter keybindings while holding a grab, the overlay-key-only-pressed
+   * tracking is left to the plugin here.
+   */
+  if (keycode == (unsigned int)display->overlay_key_combo.keycode)
+    return META_KEYBINDING_ACTION_OVERLAY_KEY;
 
   keysym = XKeycodeToKeysym (display->xdisplay, keycode, 0);
   mask = mask & 0xff & ~display->ignored_modifier_mask;
@@ -2973,17 +2974,6 @@ handle_panel (MetaDisplay    *display,
 }
 
 static void
-handle_toggle_recording (MetaDisplay    *display,
-                         MetaScreen     *screen,
-                         MetaWindow     *window,
-                         XEvent         *event,
-                         MetaKeyBinding *binding,
-                         gpointer        dummy)
-{
-  g_signal_emit_by_name (screen, "toggle-recording");
-}
-
-static void
 handle_activate_window_menu (MetaDisplay    *display,
                       MetaScreen     *screen,
                       MetaWindow     *event_window,
@@ -3445,7 +3435,7 @@ handle_move_to_workspace  (MetaDisplay    *display,
           meta_topic (META_DEBUG_FOCUS,
                       "Resetting mouse_mode to FALSE due to "
                       "handle_move_to_workspace() call with flip set.\n");
-          workspace->screen->display->mouse_mode = FALSE;
+          meta_display_clear_mouse_mode (workspace->screen->display);
           meta_workspace_activate_with_focus (workspace,
                                               window,
                                               event->xkey.time);
@@ -3601,6 +3591,19 @@ meta_set_keybindings_disabled (gboolean setting)
               "Keybindings %s\n", all_bindings_disabled ? "disabled" : "enabled");
 }
 
+/**
+ * meta_keybindings_set_custom_handler:
+ * @name: The name of the keybinding to set
+ * @handler: (allow-none): The new handler function
+ * @user_data: User data to pass to the callback
+ * @free_data: Will be called when this handler is overridden.
+ *
+ * Allows users to register a custom handler for a
+ * builtin key binding.
+ *
+ * Returns: %TRUE if the binding known as @name was found,
+ * %FALSE otherwise.
+ */
 gboolean
 meta_keybindings_set_custom_handler (const gchar        *name,
                                      MetaKeyHandlerFunc  handler,
@@ -3885,13 +3888,6 @@ init_builtin_key_bindings (MetaDisplay *display)
                           META_KEY_BINDING_NONE,
                           META_KEYBINDING_ACTION_PANEL_RUN_DIALOG,
                           handle_panel, META_KEYBINDING_ACTION_PANEL_RUN_DIALOG);
-
-  add_builtin_keybinding (display,
-                          "toggle-recording",
-                          mutter_keybindings,
-                          META_KEY_BINDING_NONE,
-                          META_KEYBINDING_ACTION_TOGGLE_RECORDING,
-                          handle_toggle_recording, 0);
 
   add_builtin_keybinding (display,
                           "set-spew-mark",

@@ -41,12 +41,8 @@
 #include <meta/compositor.h>
 #include "mutter-enum-types.h"
 
-#ifdef HAVE_SOLARIS_XINERAMA
-#include <X11/extensions/xinerama.h>
-#endif
-#ifdef HAVE_XFREE_XINERAMA
 #include <X11/extensions/Xinerama.h>
-#endif
+
 #ifdef HAVE_RANDR
 #include <X11/extensions/Xrandr.h>
 #endif
@@ -83,7 +79,6 @@ enum
 enum
 {
   RESTACKED,
-  TOGGLE_RECORDING,
   WORKSPACE_ADDED,
   WORKSPACE_REMOVED,
   WORKSPACE_SWITCHED,
@@ -229,14 +224,6 @@ meta_screen_class_init (MetaScreenClass *klass)
                   0,
                   NULL, NULL, NULL,
                   G_TYPE_NONE, 1, G_TYPE_POINTER);
-
-  screen_signals[TOGGLE_RECORDING] =
-    g_signal_new ("toggle-recording",
-                  G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_LAST,
-                  0,
-                  NULL, NULL, NULL,
-                  G_TYPE_NONE, 0);
 
   screen_signals[WORKAREAS_CHANGED] =
     g_signal_new ("workareas-changed",
@@ -487,7 +474,6 @@ reload_monitor_infos (MetaScreen *screen)
       screen->monitor_infos[1].rect.width = screen->rect.width / 2;
     }
 
-#ifdef HAVE_XFREE_XINERAMA
   if (screen->n_monitor_infos == 0 &&
       XineramaIsActive (display->xdisplay))
     {
@@ -557,74 +543,10 @@ reload_monitor_infos (MetaScreen *screen)
   else if (screen->n_monitor_infos > 0)
     {
       meta_topic (META_DEBUG_XINERAMA,
-                  "No XFree86 Xinerama extension or XFree86 Xinerama inactive on display %s\n",
+                  "No Xinerama extension or Xinerama inactive on display %s\n",
                   display->name);
     }
-#else
-  meta_topic (META_DEBUG_XINERAMA,
-              "Mutter compiled without XFree86 Xinerama support\n");
-#endif /* HAVE_XFREE_XINERAMA */
 
-#ifdef HAVE_SOLARIS_XINERAMA
-  /* This code from GDK, Copyright (C) 2002 Sun Microsystems */
-  if (screen->n_monitor_infos == 0 &&
-      XineramaGetState (screen->display->xdisplay,
-                        screen->number))
-    {
-      XRectangle monitors[MAXFRAMEBUFFERS];
-      unsigned char hints[16];
-      int result;
-      int n_monitors;
-      int i;
-
-      n_monitors = 0;
-      result = XineramaGetInfo (screen->display->xdisplay,
-                                screen->number,
-				monitors, hints,
-                                &n_monitors);
-      /* Yes I know it should be Success but the current implementation 
-       * returns the num of monitor
-       */
-      if (result > 0)
-	{
-          g_assert (n_monitors > 0);
-          
-          screen->monitor_infos = g_new0 (MetaMonitorInfo, n_monitors);
-          screen->n_monitor_infos = n_monitors;
-          
-          i = 0;
-          while (i < n_monitors)
-            {
-              screen->monitor_infos[i].number = i;
-              screen->monitor_infos[i].rect.x = monitors[i].x;
-              screen->monitor_infos[i].rect.y = monitors[i].y;
-              screen->monitor_infos[i].rect.width = monitors[i].width;
-              screen->monitor_infos[i].rect.height = monitors[i].height;
-
-              meta_topic (META_DEBUG_XINERAMA,
-                          "Monitor %d is %d,%d %d x %d\n",
-                          screen->monitor_infos[i].number,
-                          screen->monitor_infos[i].rect.x,
-                          screen->monitor_infos[i].rect.y,
-                          screen->monitor_infos[i].rect.width,
-                          screen->monitor_infos[i].rect.height);              
-              
-              ++i;
-            }
-	}
-    }
-  else if (screen->n_monitor_infos == 0)
-    {
-      meta_topic (META_DEBUG_XINERAMA,
-                  "No Solaris Xinerama extension or Solaris Xinerama inactive on display %s\n",
-                  display->name);
-    }
-#else
-  meta_topic (META_DEBUG_XINERAMA,
-              "Mutter compiled without Solaris Xinerama support\n");
-#endif /* HAVE_SOLARIS_XINERAMA */
-
-  
   /* If no Xinerama, fill in the single screen info so
    * we can use the field unconditionally
    */
@@ -1292,31 +1214,6 @@ meta_screen_foreach_window (MetaScreen *screen,
       tmp = tmp->next;
     }
   g_slist_free (winlist);
-}
-
-static void
-queue_draw (MetaScreen *screen, MetaWindow *window, gpointer data)
-{
-  if (window->frame)
-    meta_frame_queue_draw (window->frame);
-}
-
-void
-meta_screen_queue_frame_redraws (MetaScreen *screen)
-{
-  meta_screen_foreach_window (screen, queue_draw, NULL);
-}
-
-static void
-queue_resize (MetaScreen *screen, MetaWindow *window, gpointer data)
-{
-  meta_window_queue (window, META_QUEUE_MOVE_RESIZE);
-}
-
-void
-meta_screen_queue_window_resizes (MetaScreen *screen)
-{
-  meta_screen_foreach_window (screen, queue_resize, NULL);
 }
 
 int
@@ -2157,7 +2054,7 @@ meta_screen_get_natural_monitor_list (MetaScreen *screen,
       visited[i] = FALSE;
     }
 
-  current = meta_screen_get_current_monitor (screen);
+  current = meta_screen_get_current_monitor_info (screen);
   monitor_queue = g_queue_new ();
   g_queue_push_tail (monitor_queue, (gpointer) current);
   visited[current->number] = TRUE;
@@ -2224,10 +2121,26 @@ meta_screen_get_natural_monitor_list (MetaScreen *screen,
 }
 
 const MetaMonitorInfo*
+meta_screen_get_current_monitor_info (MetaScreen *screen)
+{
+    int monitor_index;
+    monitor_index = meta_screen_get_current_monitor (screen);
+    return &screen->monitor_infos[monitor_index];
+}
+
+/**
+ * meta_screen_get_current_monitor:
+ * @screen: a #MetaScreen
+ *
+ * Gets the index of the monitor that currently has the mouse pointer.
+ *
+ * Return value: a monitor index
+ */
+int
 meta_screen_get_current_monitor (MetaScreen *screen)
 {
   if (screen->n_monitor_infos == 1)
-    return &screen->monitor_infos[0];
+    return 0;
   
   /* Sadly, we have to do it this way. Yuck.
    */
@@ -2269,7 +2182,7 @@ meta_screen_get_current_monitor (MetaScreen *screen)
                   screen->last_monitor_index);
     }
 
-  return &screen->monitor_infos[screen->last_monitor_index];
+  return screen->last_monitor_index;
 }
 
 /**
@@ -2965,6 +2878,22 @@ meta_screen_resize (MetaScreen *screen,
   reload_monitor_infos (screen);
   set_desktop_geometry_hint (screen);
 
+  /* Resize the guard window to fill the screen again. */
+  if (screen->guard_window != None)
+    {
+      XWindowChanges changes;
+
+      changes.x = 0;
+      changes.y = 0;
+      changes.width = width;
+      changes.height = height;
+
+      XConfigureWindow(screen->display->xdisplay,
+                       screen->guard_window,
+                       CWX | CWY | CWWidth | CWHeight,
+                       &changes);
+    }
+
   if (screen->display->compositor)
     meta_compositor_sync_screen_size (screen->display->compositor,
 				      screen, width, height);
@@ -3463,9 +3392,10 @@ meta_screen_get_screen_number (MetaScreen *screen)
 
 /**
  * meta_screen_get_display:
- * Retrieve the display associated with screen.
  * @screen: A #MetaScreen
  * 
+ * Retrieve the display associated with screen.
+ *
  * Returns: (transfer none): Display 
  */
 MetaDisplay *
@@ -3497,8 +3427,11 @@ meta_screen_get_size (MetaScreen *screen,
                       int        *width,
                       int        *height)
 {
-  *width = screen->rect.width;
-  *height = screen->rect.height;
+  if (width != NULL)
+    *width = screen->rect.width;
+
+  if (height != NULL)
+    *height = screen->rect.height;
 }
 
 /**

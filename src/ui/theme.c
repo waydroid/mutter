@@ -22,7 +22,8 @@
  */
 
 /**
- * \file theme.c    Making Metacity look pretty
+ * SECTION:theme
+ * @short_description: Making Metacity look pretty
  *
  * The window decorations drawn by Metacity are described by files on disk
  * known internally as "themes" (externally as "window border themes" on
@@ -30,26 +31,8 @@
  * contains most of the code necessary to support themes; it does not
  * contain the XML parser, which is in theme-parser.c.
  *
- * \bug This is a big file with lots of different subsystems, which might
- * be better split out into separate files.
- */
-
-/**
- * \defgroup tokenizer   The theme expression tokenizer
- *
- * Themes can use a simple expression language to represent the values of
- * things. This is the tokeniser used for that language.
- *
- * \bug We could remove almost all this code by using GScanner instead,
- * but we would also have to find every expression in every existing theme
- * we could and make sure the parse trees were the same.
- */
-
-/**
- * \defgroup parser  The theme expression parser
- *
- * Themes can use a simple expression language to represent the values of
- * things. This is the parser used for that language.
+ * FIXME: This is a big file with lots of different subsystems, which might
+ *        be better split out into separate files.
  */
 
 #include <config.h>
@@ -89,7 +72,7 @@ static void hls_to_rgb			(gdouble	 *h,
 					 gdouble	 *l,
 					 gdouble	 *s);
 
-/**
+/*
  * The current theme. (Themes are singleton.)
  */
 static MetaTheme *meta_current_theme = NULL;
@@ -185,9 +168,10 @@ color_composite (const GdkRGBA *bg,
 }
 
 /**
- * Sets all the fields of a border to dummy values.
+ * init_border:
+ * @border: The border whose fields should be reset.
  *
- * \param border The border whose fields should be reset.
+ * Sets all the fields of a border to dummy values.
  */
 static void
 init_border (GtkBorder *border)
@@ -240,9 +224,6 @@ meta_frame_layout_new  (void)
   return layout;
 }
 
-/**
- *
- */
 static gboolean
 validate_border (const GtkBorder *border,
                  const char     **bad)
@@ -262,17 +243,18 @@ validate_border (const GtkBorder *border,
 }
 
 /**
+ * validate_geometry_value:
+ * @val: The value to check
+ * @name: The name to use in the error message
+ * @error: (out): Set to an error if val was not initialised
+ *
  * Ensures that the theme supplied a particular dimension. When a
- * MetaFrameLayout is created, all its integer fields are set to -1
+ * #MetaFrameLayout is created, all its integer fields are set to -1
  * by meta_frame_layout_new(). After an instance of this type
  * should have been initialised, this function checks that
  * a given field is not still at -1. It is never called directly, but
- * rather via the CHECK_GEOMETRY_VALUE and CHECK_GEOMETRY_BORDER
+ * rather via the %CHECK_GEOMETRY_VALUE and %CHECK_GEOMETRY_BORDER
  * macros.
- *
- * \param      val    The value to check
- * \param      name   The name to use in the error message
- * \param[out] error  Set to an error if val was not initialised
  */
 static gboolean
 validate_geometry_value (int         val,
@@ -611,7 +593,7 @@ strip_button (MetaButtonSpace *func_rects[MAX_BUTTONS_PER_CORNER],
   return FALSE; /* did not strip anything */
 }
 
-void
+static void
 meta_frame_layout_calc_geometry (const MetaFrameLayout  *layout,
                                  int                     text_height,
                                  MetaFrameFlags          flags,
@@ -1640,10 +1622,12 @@ meta_color_spec_render (MetaColorSpec   *spec,
 }
 
 /**
+ * op_name:
+ * @type: an operation, such as addition
+ *
  * Represents an operation as a string.
  *
- * \param type  an operation, such as addition
- * \return  a string, such as "+"
+ * Returns: a string, such as "+"
  */
 static const char*
 op_name (PosOperatorType type)
@@ -1672,12 +1656,14 @@ op_name (PosOperatorType type)
 }
 
 /**
+ * op_from_string:
+ * @p: a pointer into a string representing an operation; part of an
+ *     expression somewhere, so not null-terminated
+ * @len: set to the length of the string found. Set to 0 if none is.
+ *
  * Parses a string and returns an operation.
  *
- * \param p  a pointer into a string representing an operation; part of an
- *           expression somewhere, so not null-terminated
- * \param len  set to the length of the string found. Set to 0 if none is.
- * \return  the operation found. If none was, returns POS_OP_NONE.
+ * Returns: the operation found. If none was, returns %POS_OP_NONE.
  */
 static PosOperatorType
 op_from_string (const char *p,
@@ -1728,11 +1714,12 @@ op_from_string (const char *p,
 }
 
 /**
+ * free_tokens:
+ * @tokens: an array of tokens to be freed
+ * @n_tokens: how many tokens are in the array.
+ *
  * Frees an array of tokens. All the tokens and their associated memory
  * will be freed.
- *
- * \param tokens  an array of tokens to be freed
- * \param n_tokens  how many tokens are in the array.
  */
 static void
 free_tokens (PosToken *tokens,
@@ -1752,20 +1739,21 @@ free_tokens (PosToken *tokens,
 }
 
 /**
+ * parse_number:
+ * @p: a pointer into a string representing an operation; part of an
+ *           expression somewhere, so not null-terminated
+ * @end_return: set to a pointer to the end of the number found; but
+ *                    not updated if no number was found at all
+ * @next: set to either an integer or a float token
+ * @err: (out): set to the problem if there was a problem
+ *
  * Tokenises a number in an expression.
  *
- * \param p  a pointer into a string representing an operation; part of an
- *           expression somewhere, so not null-terminated
- * \param end_return  set to a pointer to the end of the number found; but
- *                    not updated if no number was found at all
- * \param next  set to either an integer or a float token
- * \param[out] err  set to the problem if there was a problem
- * \return TRUE if a valid number was found, FALSE otherwise (and "err" will
- *         have been set)
+ * FIXME: The "while (*start)..." part: what's wrong with strchr-ish things?
+ * FIXME: The name is wrong: it doesn't parse anything.
  *
- * \bug The "while (*start)..." part: what's wrong with strchr-ish things?
- * \bug The name is wrong: it doesn't parse anything.
- * \ingroup tokenizer
+ * Returns: %TRUE if a valid number was found, FALSE otherwise (and "err" will
+ *         have been set)
  */
 static gboolean
 parse_number (const char  *p,
@@ -1842,7 +1830,7 @@ parse_number (const char  *p,
   return TRUE;
 }
 
-/**
+/*
  * Whether a variable can validly appear as part of the name of a variable.
  */
 #define IS_VARIABLE_CHAR(c) (g_ascii_isalpha ((c)) || (c) == '_')
@@ -1888,16 +1876,15 @@ debug_print_tokens (PosToken *tokens,
 #endif
 
 /**
+ * pos_tokenize:
+ * @expr: The expression
+ * @tokens_p: (out) The resulting tokens
+ * @n_tokens_p: (out): The number of resulting tokens
+ * @err: (out):  set to the problem if there was a problem
+ 
  * Tokenises an expression.
  *
- * \param      expr        The expression
- * \param[out] tokens_p    The resulting tokens
- * \param[out] n_tokens_p  The number of resulting tokens
- * \param[out] err  set to the problem if there was a problem
- *
- * \return  True if the expression was successfully tokenised; false otherwise.
- *
- * \ingroup tokenizer
+ * Returns: %TRUE if the expression was successfully tokenised; %FALSE otherwise.
  */
 static gboolean
 pos_tokenize (const char  *expr,
@@ -2025,8 +2012,9 @@ pos_tokenize (const char  *expr,
 }
 
 /**
+ * PosExprType:
+ *
  * The type of a PosExpr: either integer, double, or an operation.
- * \ingroup parser
  */
 typedef enum
 {
@@ -2036,14 +2024,15 @@ typedef enum
 } PosExprType;
 
 /**
+ * PosExpr:
+ *
  * Type and value of an expression in a parsed sequence. We don't
- * keep expressions in a tree; if this is of type POS_EXPR_OPERATOR,
+ * keep expressions in a tree; if this is of type %POS_EXPR_OPERATOR,
  * the arguments of the operator will be in the array positions
  * immediately preceding and following this operator; they cannot
  * themselves be operators.
  *
- * \bug operator is char; it should really be of PosOperatorType.
- * \ingroup parser
+ * FIXME: operator is #gchar; it should really be of #PosOperatorType.
  */
 typedef struct
 {
@@ -2334,29 +2323,29 @@ do_operations (PosExpr *exprs,
 }
 
 /**
+ * pos_eval_get_variable:
+ * @t: The token representing a variable
+ * @result: (out): The value of that variable; not set if the token did
+ *                 not represent a known variable
+ * @env: The environment within which t should be evaluated
+ * @err: (out): set to the problem if there was a problem
+ *
  * There is a predefined set of variables which can appear in an expression.
  * Here we take a token representing a variable, and return the current value
  * of that variable in a particular environment.
  * (The value is always an integer.)
  *
  * There are supposedly some circumstances in which this function can be
- * called from outside Metacity, in which case env->theme will be NULL, and
+ * called from outside Metacity, in which case env->theme will be %NULL, and
  * therefore we can't use it to find out quark values, so we do the comparison
- * using strcmp, which is slower.
+ * using strcmp(), which is slower.
  *
- * \param t  The token representing a variable
- * \param[out] result  The value of that variable; not set if the token did
- *                     not represent a known variable
- * \param env  The environment within which t should be evaluated
- * \param[out] err  set to the problem if there was a problem
+ * FIXME: shouldn't @t be const?
+ * FIXME: we should perhaps consider some sort of lookup arrangement into an
+ *        array; also, the duplication of code is unlovely; perhaps using glib
+ *        string hashes instead of quarks would fix both problems?
  *
- * \return true if we found the variable asked for, false if we didn't
- *
- * \bug shouldn't t be const?
- * \bug we should perhaps consider some sort of lookup arrangement into an
- *      array; also, the duplication of code is unlovely; perhaps using glib
- *      string hashes instead of quarks would fix both problems?
- * \ingroup parser
+ * Returns: %TRUE if we found the variable asked for, %FALSE if we didn't
  */
 static gboolean
 pos_eval_get_variable (PosToken                  *t,
@@ -2459,18 +2448,18 @@ pos_eval_get_variable (PosToken                  *t,
 }
 
 /**
+ * pos_eval_helper:
+ * @tokens: A list of tokens to evaluate.
+ * @n_tokens: How many tokens are in the list.
+ * @env: The environment context in which to evaluate the expression.
+ * @result: (out): The current value of the expression
+ *
  * Evaluates a sequence of tokens within a particular environment context,
  * and returns the current value. May recur if parantheses are found.
  *
- * \param tokens  A list of tokens to evaluate.
- * \param n_tokens  How many tokens are in the list.
- * \param env  The environment context in which to evaluate the expression.
- * \param[out] result  The current value of the expression
- * 
- * \bug Yes, we really do reparse the expression every time it's evaluated.
- *      We should keep the parse tree around all the time and just
- *      run the new values through it.
- * \ingroup parser
+ * FIXME: Yes, we really do reparse the expression every time it's evaluated.
+ *        We should keep the parse tree around all the time and just
+ *        run the new values through it.
  */
 static gboolean
 pos_eval_helper (PosToken                   *tokens,
@@ -2633,21 +2622,22 @@ pos_eval_helper (PosToken                   *tokens,
  *
  *   so very not worth fooling with bison, yet so very painful by hand.
  */
+
 /**
+ * pos_eval:
+ * @spec: The expression to evaluate.
+ * @env: The environment context to evaluate the expression in.
+ * @val_p: (out): The integer value of the expression; if the expression
+ *                 is of type float, this will be rounded. If we return
+ *                 %FALSE because the expression is invalid, this will be
+ *                 zero.
+ * @err: (out): The error, if anything went wrong.
+ *
  * Evaluates an expression.
  *
- * \param spec  The expression to evaluate.
- * \param env   The environment context to evaluate the expression in.
- * \param[out] val_p  The integer value of the expression; if the expression
- *                    is of type float, this will be rounded. If we return
- *                    FALSE because the expression is invalid, this will be
- *                    zero.
- * \param[out] err    The error, if anything went wrong.
+ * FIXME: Shouldn't @spec be const?
  *
- * \return  True if we evaluated the expression successfully; false otherwise.
- *
- * \bug Shouldn't spec be const?
- * \ingroup parser
+ * Returns: %TRUE if we evaluated the expression successfully; %FALSE otherwise.
  */
 static gboolean
 pos_eval (MetaDrawSpec              *spec,
@@ -3633,7 +3623,6 @@ fill_env (MetaPositionExprEnv *env,
 static void
 meta_draw_op_draw_with_env (const MetaDrawOp    *op,
                             GtkStyleContext     *style_gtk,
-                            GtkWidget           *widget,
                             cairo_t             *cr,
                             const MetaDrawInfo  *info,
                             MetaRectangle        rect,
@@ -4043,7 +4032,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
         d_rect.height = parse_size_unchecked (op->data.op_list.height, env);
 
         meta_draw_op_list_draw_with_style (op->data.op_list.op_list,
-                                           style_gtk, widget, cr, info,
+                                           style_gtk, cr, info,
                                 d_rect);
       }
       break;
@@ -4081,7 +4070,7 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
             while (tile.y < (ry + rheight))
               {
                 meta_draw_op_list_draw_with_style (op->data.tile.op_list,
-                                                   style_gtk, widget, cr, info,
+                                                   style_gtk, cr, info,
                                         tile);
 
                 tile.y += tile.height;
@@ -4102,7 +4091,6 @@ meta_draw_op_draw_with_env (const MetaDrawOp    *op,
 void
 meta_draw_op_draw_with_style (const MetaDrawOp    *op,
                               GtkStyleContext     *style_gtk,
-                              GtkWidget           *widget,
                               cairo_t             *cr,
                               const MetaDrawInfo  *info,
                               MetaRectangle        logical_region)
@@ -4111,21 +4099,10 @@ meta_draw_op_draw_with_style (const MetaDrawOp    *op,
 
   fill_env (&env, info, logical_region);
 
-  meta_draw_op_draw_with_env (op, style_gtk, widget, cr,
+  meta_draw_op_draw_with_env (op, style_gtk, cr,
                               info, logical_region,
                               &env);
 
-}
-
-void
-meta_draw_op_draw (const MetaDrawOp    *op,
-                   GtkWidget           *widget,
-                   cairo_t             *cr,
-                   const MetaDrawInfo  *info,
-                   MetaRectangle        logical_region)
-{
-  meta_draw_op_draw_with_style (op, gtk_widget_get_style_context (widget),
-                                widget, cr, info, logical_region);
 }
 
 /**
@@ -4182,7 +4159,6 @@ meta_draw_op_list_unref (MetaDrawOpList *op_list)
 void
 meta_draw_op_list_draw_with_style  (const MetaDrawOpList *op_list,
                                     GtkStyleContext      *style_gtk,
-                                    GtkWidget            *widget,
                                     cairo_t              *cr,
                                     const MetaDrawInfo   *info,
                                     MetaRectangle         rect)
@@ -4229,25 +4205,13 @@ meta_draw_op_list_draw_with_style  (const MetaDrawOpList *op_list,
       else if (gdk_cairo_get_clip_rectangle (cr, NULL))
         {
           meta_draw_op_draw_with_env (op,
-                                      style_gtk, widget, cr, info,
+                                      style_gtk, cr, info,
                                       rect,
                                       &env);
         }
     }
 
   cairo_restore (cr);
-}
-
-void
-meta_draw_op_list_draw  (const MetaDrawOpList *op_list,
-                         GtkWidget            *widget,
-                         cairo_t              *cr,
-                         const MetaDrawInfo   *info,
-                         MetaRectangle         rect)
-
-{
-  meta_draw_op_list_draw_with_style (op_list, gtk_widget_get_style_context (widget), widget,
-                                     cr, info, rect);
 }
 
 void
@@ -4313,13 +4277,14 @@ meta_draw_op_list_contains (MetaDrawOpList    *op_list,
 }
 
 /**
+ * meta_frame_style_new:
+ * @parent: The parent style. Data not filled in here will be
+ *          looked for in the parent style, and in its parent
+ *          style, and so on.
+ *
  * Constructor for a MetaFrameStyle.
  *
- * \param parent  The parent style. Data not filled in here will be
- *                looked for in the parent style, and in its parent
- *                style, and so on.
- *
- * \return The newly-constructed style.
+ * Returns: (transfer full): The newly-constructed style.
  */
 MetaFrameStyle*
 meta_frame_style_new (MetaFrameStyle *parent)
@@ -4341,10 +4306,10 @@ meta_frame_style_new (MetaFrameStyle *parent)
 }
 
 /**
- * Increases the reference count of a frame style.
- * If the style is NULL, this is a no-op.
+ * meta_frame_style_ref:
+ * @style: The style.
  *
- * \param style  The style.
+ * Increases the reference count of a frame style.
  */
 void
 meta_frame_style_ref (MetaFrameStyle *style)
@@ -4628,10 +4593,9 @@ button_rect (MetaButtonType           type,
     }
 }
 
-void
+static void
 meta_frame_style_draw_with_style (MetaFrameStyle          *style,
                                   GtkStyleContext         *style_gtk,
-                                  GtkWidget               *widget,
                                   cairo_t                 *cr,
                                   const MetaFrameGeometry *fgeom,
                                   int                      client_width,
@@ -4801,7 +4765,6 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
               m_rect = meta_rect (rect.x, rect.y, rect.width, rect.height);
               meta_draw_op_list_draw_with_style (op_list,
                                                  style_gtk,
-                                                 widget,
                                                  cr,
                                                  &draw_info,
                                                  m_rect);
@@ -4843,7 +4806,6 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
 
                       meta_draw_op_list_draw_with_style (op_list,
                                                          style_gtk,
-                                                         widget,
                                                          cr,
                                                          &draw_info,
                                                          m_rect);
@@ -4869,25 +4831,6 @@ meta_frame_style_draw_with_style (MetaFrameStyle          *style,
 
       ++i;
     }
-}
-
-void
-meta_frame_style_draw (MetaFrameStyle          *style,
-                       GtkWidget               *widget,
-                       cairo_t                 *cr,
-                       const MetaFrameGeometry *fgeom,
-                       int                      client_width,
-                       int                      client_height,
-                       PangoLayout             *title_layout,
-                       int                      text_height,
-                       MetaButtonState          button_states[META_BUTTON_TYPE_LAST],
-                       GdkPixbuf               *mini_icon,
-                       GdkPixbuf               *icon)
-{
-  meta_frame_style_draw_with_style (style, gtk_widget_get_style_context (widget), widget,
-                                    cr, fgeom, client_width, client_height,
-                                    title_layout, text_height,
-                                    button_states, mini_icon, icon);
 }
 
 MetaFrameStyleSet*
@@ -5498,7 +5441,6 @@ meta_theme_get_title_scale (MetaTheme     *theme,
 void
 meta_theme_draw_frame_with_style (MetaTheme              *theme,
                                   GtkStyleContext        *style_gtk,
-                                  GtkWidget              *widget,
                                   cairo_t                *cr,
                                   MetaFrameType           type,
                                   MetaFrameFlags          flags,
@@ -5533,7 +5475,6 @@ meta_theme_draw_frame_with_style (MetaTheme              *theme,
 
   meta_frame_style_draw_with_style (style,
                                     style_gtk,
-                                    widget,
                                     cr,
                                     &fgeom,
                                     client_width, client_height,
@@ -5558,7 +5499,7 @@ meta_theme_draw_frame (MetaTheme              *theme,
                        GdkPixbuf              *mini_icon,
                        GdkPixbuf              *icon)
 {
-  meta_theme_draw_frame_with_style (theme, gtk_widget_get_style_context (widget), widget,
+  meta_theme_draw_frame_with_style (theme, gtk_widget_get_style_context (widget),
                                     cr, type,flags,
                                     client_width, client_height,
                                     title_layout, text_height,
@@ -5853,13 +5794,15 @@ meta_theme_define_color_constant (MetaTheme   *theme,
 }
 
 /**
+ * meta_theme_lookup_color_constant:
+ * @theme: the theme containing the constant
+ * @name: the name of the constant
+ * @value: (out): the string representation of the colour, or %NULL if it
+ *                doesn't exist
+ *
  * Looks up a colour constant.
  *
- * \param theme  the theme containing the constant
- * \param name  the name of the constant
- * \param value  [out] the string representation of the colour, or NULL if it
- *               doesn't exist
- * \return  TRUE if it exists, FALSE otherwise
+ * Returns: %TRUE if it exists, %FALSE otherwise
  */
 gboolean
 meta_theme_lookup_color_constant (MetaTheme   *theme,
@@ -5910,11 +5853,13 @@ meta_gtk_widget_get_font_desc (GtkWidget *widget,
 }
 
 /**
+ * meta_pango_font_desc_get_text_height:
+ * @font_desc: the font
+ * @context: the context of the font
+ *
  * Returns the height of the letters in a particular font.
  *
- * \param font_desc  the font
- * \param context  the context of the font
- * \return  the height of the letters
+ * Returns: the height of the letters
  */
 int
 meta_pango_font_desc_get_text_height (const PangoFontDescription *font_desc,
@@ -6510,11 +6455,13 @@ meta_gtk_arrow_to_string (GtkArrowType arrow)
 }
 
 /**
+ * meta_image_fill_type_from_string:
+ * @str: a string representing a fill_type
+ *
  * Returns a fill_type from a string.  The inverse of
  * meta_image_fill_type_to_string().
  *
- * \param str  a string representing a fill_type
- * \result  the fill_type, or -1 if it represents no fill_type.
+ * Returns: the fill type, or -1 if it represents no fill type.
  */
 MetaImageFillType
 meta_image_fill_type_from_string (const char *str)
@@ -6528,11 +6475,13 @@ meta_image_fill_type_from_string (const char *str)
 }
 
 /**
+ * meta_image_fill_type_to_string:
+ * @fill_type: the fill type
+ *
  * Returns a string representation of a fill_type.  The inverse of
  * meta_image_fill_type_from_string().
  *
- * \param fill_type  the fill type
- * \result  a string representing that type
+ * Returns: a string representing that type
  */
 const char*
 meta_image_fill_type_to_string (MetaImageFillType fill_type)
@@ -6549,13 +6498,14 @@ meta_image_fill_type_to_string (MetaImageFillType fill_type)
 }
 
 /**
+ * gtk_style_shade:
+ * @a: the starting colour
+ * @b: (out): the resulting colour
+ * @k: amount to scale lightness and saturation by
+ *
  * Takes a colour "a", scales the lightness and saturation by a certain amount,
  * and sets "b" to the resulting colour.
  * gtkstyle.c cut-and-pastage.
- *
- * \param a  the starting colour
- * \param b  [out] the resulting colour
- * \param k  amount to scale lightness and saturation by
  */ 
 static void
 gtk_style_shade (GdkRGBA *a,
@@ -6592,11 +6542,12 @@ gtk_style_shade (GdkRGBA *a,
 }
 
 /**
- * Converts a red/green/blue triplet to a hue/lightness/saturation triplet.
+ * rgb_to_hls:
+ * @r: on input, red; on output, hue
+ * @g: on input, green; on output, lightness
+ * @b: on input, blue; on output, saturation
  *
- * \param r  on input, red; on output, hue
- * \param g  on input, green; on output, lightness
- * \param b  on input, blue; on output, saturation
+ * Converts a red/green/blue triplet to a hue/lightness/saturation triplet.
  */
 static void
 rgb_to_hls (gdouble *r,
@@ -6670,11 +6621,12 @@ rgb_to_hls (gdouble *r,
 }
 
 /**
- * Converts a hue/lightness/saturation triplet to a red/green/blue triplet.
+ * hls_to_rgb:
+ * @h: on input, hue; on output, red
+ * @l: on input, lightness; on output, green
+ * @s: on input, saturation; on output, blue
  *
- * \param h  on input, hue; on output, red
- * \param l  on input, lightness; on output, green
- * \param s  on input, saturation; on output, blue
+ * Converts a hue/lightness/saturation triplet to a red/green/blue triplet.
  */
 static void
 hls_to_rgb (gdouble *h,
@@ -6966,12 +6918,14 @@ draw_bg_gradient_composite (const MetaTextureSpec *bg,
 #endif
 
 /**
+ * meta_theme_earliest_version_with_button:
+ * @type: the button type
+ *
  * Returns the earliest version of the theme format which required support
  * for a particular button.  (For example, "shade" first appeared in v2, and
  * "close" in v1.)
  *
- * \param type  the button type
- * \return  the number of the theme format
+ * Returns: the number of the theme format
  */
 guint
 meta_theme_earliest_version_with_button (MetaButtonType type)
