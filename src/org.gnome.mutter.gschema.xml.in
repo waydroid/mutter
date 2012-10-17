@@ -25,16 +25,6 @@
       </_description>
     </key>
 
-    <key name="live-hidden-windows" type="b">
-      <default>false</default>
-      <_summary>Live Hidden Windows</_summary>
-      <_description>
-        Determines whether hidden windows (i.e., minimized windows and
-        windows on other workspaces than the current one) should be kept
-        alive.
-      </_description>
-    </key>
-
     <key name="edge-tiling" type="b">
       <default>false</default>
       <_summary>Enable edge tiling when dropping windows on screen edges</_summary>
@@ -73,6 +63,16 @@
       </_description>
     </key>
 
+    <key name="focus-change-on-pointer-rest" type="b">
+      <default>false</default>
+      <_summary>Delay focus changes until the pointer stops moving</_summary>
+      <_description>
+        If set to true, and the focus mode is either "sloppy" or "mouse"
+        then the focus will not be changed immediately when entering a
+        window, but only after the pointer stops moving.
+      </_description>
+    </key>
+
     <key name="draggable-border-width" type="i">
       <default>10</default>
       <range min="0" max="64"/>
@@ -88,10 +88,6 @@
 
   </schema>
   <schema id="org.gnome.mutter.keybindings" path="/org/gnome/mutter/keybindings/">
-
-    <key name="toggle-recording" type="as">
-      <default><![CDATA[['<Control><Shift><Alt>r']]]></default>
-    </key>
 
     <key name="toggle-tiled-left" type="as">
       <default><![CDATA[['<Super>Left']]]></default>

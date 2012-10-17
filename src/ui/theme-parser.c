@@ -4281,29 +4281,15 @@ meta_theme_load (const char *theme_name,
   int i;
 
   retval = NULL;
-
-  if (meta_is_debugging ())
-    {
-      /* Try in themes in our source tree */
-      /* We try all supported major versions from current to oldest */
-      for (major_version = THEME_MAJOR_VERSION; (major_version > 0); major_version--)
-        {
-          theme_dir = g_build_filename ("./themes", theme_name, NULL);
-          retval = load_theme (theme_dir, theme_name, major_version, &error);
-          g_free (theme_dir);
-          if (!keep_trying (&error))
-            goto out;
-        }
-    }
   
   /* We try all supported major versions from current to oldest */
   for (major_version = THEME_MAJOR_VERSION; (major_version > 0); major_version--)
     {
-      /* We try first in home dir, XDG_DATA_DIRS, then system dir for themes */
+      /* We try first in XDG_USER_DATA_DIR, XDG_DATA_DIRS, then system dir for themes */
 
-      /* Try home dir for themes */
-      theme_dir = g_build_filename (g_get_home_dir (),
-                                    ".themes",
+      /* Try XDG_USER_DATA_DIR first */
+      theme_dir = g_build_filename (g_get_user_data_dir(),
+                                    "themes",
                                     theme_name,
                                     THEME_SUBDIR,
                                     NULL);

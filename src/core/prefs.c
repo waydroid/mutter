@@ -53,7 +53,6 @@
 #define KEY_GNOME_CURSOR_SIZE "cursor-size"
 
 #define KEY_OVERLAY_KEY "overlay-key"
-#define KEY_LIVE_HIDDEN_WINDOWS "live-hidden-windows"
 #define KEY_WORKSPACES_ONLY_ON_PRIMARY "workspaces-only-on-primary"
 #define KEY_NO_TAB_POPUP "no-tab-popup"
 
@@ -73,6 +72,7 @@ static GHashTable *settings_schemas;
 static gboolean use_system_font = FALSE;
 static PangoFontDescription *titlebar_font = NULL;
 static MetaVirtualModifier mouse_button_mods = Mod1Mask;
+static MetaKeyCombo overlay_key_combo = { 0, 0, 0 };
 static GDesktopFocusMode focus_mode = G_DESKTOP_FOCUS_MODE_CLICK;
 static GDesktopFocusNewWindows focus_new_windows = G_DESKTOP_FOCUS_NEW_WINDOWS_SMART;
 static gboolean raise_on_click = TRUE;
@@ -87,6 +87,7 @@ static gboolean application_based = FALSE;
 static gboolean disable_workarounds = FALSE;
 static gboolean auto_raise = FALSE;
 static gboolean auto_raise_delay = 500;
+static gboolean focus_change_on_pointer_rest = FALSE;
 static gboolean bell_is_visible = FALSE;
 static gboolean bell_is_audible = TRUE;
 static gboolean gnome_accessibility = FALSE;
@@ -97,6 +98,7 @@ static int   draggable_border_width = 10;
 static gboolean resize_with_right_button = FALSE;
 static gboolean edge_tiling = FALSE;
 static gboolean force_fullscreen = TRUE;
+static gboolean ignore_request_hide_titlebar = FALSE;
 
 static GDesktopVisualBellType visual_bell_type = G_DESKTOP_VISUAL_BELL_FULLSCREEN_FLASH;
 static MetaButtonLayout button_layout;
@@ -104,7 +106,6 @@ static MetaButtonLayout button_layout;
 /* NULL-terminated array */
 static char **workspace_names = NULL;
 
-static gboolean live_hidden_windows = FALSE;
 static gboolean workspaces_only_on_primary = FALSE;
 
 static gboolean no_tab_popup = FALSE;
@@ -133,6 +134,7 @@ static gboolean titlebar_handler (GVariant*, gpointer*, gpointer);
 static gboolean theme_name_handler (GVariant*, gpointer*, gpointer);
 static gboolean mouse_button_mods_handler (GVariant*, gpointer*, gpointer);
 static gboolean button_layout_handler (GVariant*, gpointer*, gpointer);
+static gboolean overlay_key_handler (GVariant*, gpointer*, gpointer);
 
 static void     do_override               (char *key, char *schema);
 
@@ -165,36 +167,30 @@ typedef struct
   gboolean *target;
 } MetaBoolPreference;
 
+
+/**
+ * MetaStringPreference:
+ * @handler: (allow-none): A handler. Many of the string preferences
+ * aren't stored as strings and need parsing; others of them have
+ * default values which can't be solved in the general case.  If you
+ * include a function pointer here, it will be called instead of writing
+ * the string value out to the target variable.
+ * The function will be passed to g_settings_get_mapped() and should
+ * return %TRUE if the mapping was successful and %FALSE otherwise.
+ * In the former case the function is expected to handle the result
+ * of the conversion itself and call queue_changed() appropriately;
+ * in particular the @result (out) parameter as returned by
+ * g_settings_get_mapped() will be ignored in all cases.
+ * This may be %NULL.  If it is, see "target", below.
+ * @target: (allow-none): Where to write the incoming string.
+ * This must be %NULL if the handler is non-%NULL.
+ * If the incoming string is %NULL, no change will be made.
+ */
 typedef struct
 {
   MetaBasePreference base;
-
-  /**
-   * A handler.  Many of the string preferences aren't stored as
-   * strings and need parsing; others of them have default values
-   * which can't be solved in the general case.  If you include a
-   * function pointer here, it will be called instead of writing
-   * the string value out to the target variable.
-   *
-   * The function will be passed to g_settings_get_mapped() and should
-   * return %TRUE if the mapping was successful and %FALSE otherwise.
-   * In the former case the function is expected to handle the result
-   * of the conversion itself and call queue_changed() appropriately;
-   * in particular the @result (out) parameter as returned by
-   * g_settings_get_mapped() will be ignored in all cases.
-   *
-   * This may be NULL.  If it is, see "target", below.
-   */
   GSettingsGetMapping handler;
-
-  /**
-   * Where to write the incoming string.
-   *
-   * This must be NULL if the handler is non-NULL.
-   * If the incoming string is NULL, no change will be made.
-   */
   gchar **target;
-
 } MetaStringPreference;
 
 typedef struct
@@ -310,6 +306,13 @@ static MetaBoolPreference preferences_bool[] =
       &auto_raise,
     },
     {
+      { "focus-change-on-pointer-rest",
+        SCHEMA_MUTTER,
+        META_PREF_FOCUS_CHANGE_ON_POINTER_REST,
+      },
+      &focus_change_on_pointer_rest
+    },
+    {
       { "visual-bell",
         SCHEMA_GENERAL,
         META_PREF_VISUAL_BELL,
@@ -350,13 +353,6 @@ static MetaBoolPreference preferences_bool[] =
         META_PREF_EDGE_TILING,
       },
       &edge_tiling,
-    },
-    {
-      { KEY_LIVE_HIDDEN_WINDOWS,
-        SCHEMA_MUTTER,
-        META_PREF_LIVE_HIDDEN_WINDOWS,
-      },
-      &live_hidden_windows,
     },
     {
       { "workspaces-only-on-primary",
@@ -416,6 +412,14 @@ static MetaStringPreference preferences_string[] =
       },
       NULL,
       &cursor_theme,
+    },
+    {
+      { "overlay-key",
+        SCHEMA_MUTTER,
+        META_PREF_KEYBINDINGS,
+      },
+      overlay_key_handler,
+      NULL,
     },
     { { NULL, 0, 0 }, NULL },
   };
@@ -931,9 +935,9 @@ do_override (char *key,
 
 
 /**
- * meta_prefs_override_preference_schema
+ * meta_prefs_override_preference_schema:
  * @key: the preference name
- * @schema: new schema for preference %key
+ * @schema: new schema for preference @key
  *
  * Specify a schema whose keys are used to override the standard Metacity
  * keys. This might be used if a plugin expected a different value for
@@ -1034,10 +1038,6 @@ settings_changed (GSettings *settings,
       else
         handle_preference_update_string (settings, key);
     }
-  else if (g_str_equal (key, KEY_OVERLAY_KEY))
-    {
-      queue_changed (META_PREF_KEYBINDINGS);
-    }
   else
     {
       /* Someone added a preference of an unhandled type */
@@ -1062,6 +1062,8 @@ bindings_changed (GSettings *settings,
 }
 
 /**
+ * maybe_give_disable_workaround_warning:
+ *
  * Special case: give a warning the first time disable_workarounds
  * is turned on.
  */
@@ -1491,6 +1493,39 @@ button_layout_handler (GVariant *value,
   return TRUE;
 }
 
+static gboolean
+overlay_key_handler (GVariant *value,
+                     gpointer *result,
+                     gpointer  data)
+{
+  MetaKeyCombo combo;
+  const gchar *string_value;
+
+  *result = NULL; /* ignored */
+  string_value = g_variant_get_string (value, NULL);
+
+  if (string_value && meta_ui_parse_accelerator (string_value, &combo.keysym,
+                                                 &combo.keycode,
+                                                 &combo.modifiers))
+    ;
+  else
+    {
+      meta_topic (META_DEBUG_KEYBINDINGS,
+                  "Failed to parse value for overlay-key\n");
+      return FALSE;
+    }
+
+  if (overlay_key_combo.keysym != combo.keysym ||
+      overlay_key_combo.keycode != combo.keycode ||
+      overlay_key_combo.modifiers != combo.modifiers)
+    {
+      overlay_key_combo = combo;
+      queue_changed (META_PREF_KEYBINDINGS);
+    }
+
+  return TRUE;
+}
+
 const PangoFontDescription*
 meta_prefs_get_titlebar_font (void)
 {
@@ -1581,6 +1616,9 @@ meta_preference_to_string (MetaPreference pref)
     case META_PREF_AUTO_RAISE_DELAY:
       return "AUTO_RAISE_DELAY";
 
+    case META_PREF_FOCUS_CHANGE_ON_POINTER_REST:
+      return "FOCUS_CHANGE_ON_POINTER_REST";
+
     case META_PREF_BUTTON_LAYOUT:
       return "BUTTON_LAYOUT";
 
@@ -1617,9 +1655,6 @@ meta_preference_to_string (MetaPreference pref)
     case META_PREF_FORCE_FULLSCREEN:
       return "FORCE_FULLSCREEN";
 
-    case META_PREF_LIVE_HIDDEN_WINDOWS:
-      return "LIVE_HIDDEN_WINDOWS";
-
     case META_PREF_WORKSPACES_ONLY_ON_PRIMARY:
       return "WORKSPACES_ONLY_ON_PRIMARY";
 
@@ -1652,8 +1687,6 @@ meta_prefs_set_num_workspaces (int n_workspaces)
 
 static GHashTable *key_bindings;
 
-static MetaKeyCombo overlay_key_combo = { 0, 0, 0 };
-
 static void
 meta_key_pref_free (MetaKeyPref *pref)
 {
@@ -1665,37 +1698,12 @@ meta_key_pref_free (MetaKeyPref *pref)
   g_free (pref);
 }
 
-/* These bindings are for modifiers alone, so they need special handling */
-static void
-init_special_bindings (void)
-{
-  char *val;
-  
-  /* Default values for bindings which are global, but take special handling */
-  meta_ui_parse_accelerator ("Super_L", &overlay_key_combo.keysym, 
-                             &overlay_key_combo.keycode, 
-                             &overlay_key_combo.modifiers);
-
-  val = g_settings_get_string (SETTINGS (SCHEMA_MUTTER), KEY_OVERLAY_KEY);
-    
-  if (val && meta_ui_parse_accelerator (val, &overlay_key_combo.keysym, 
-                                        &overlay_key_combo.keycode, 
-                                        &overlay_key_combo.modifiers))
-    ;
-  else
-    {
-      meta_topic (META_DEBUG_KEYBINDINGS,
-                  "Failed to parse value for overlay_key\n");
-    }
-  g_free (val);
-}
 
 static void
 init_bindings (void)
 {
   key_bindings = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                         (GDestroyNotify)meta_key_pref_free);
-  init_special_bindings ();  
 }
 
 static void
@@ -2004,7 +2012,8 @@ meta_prefs_remove_keybinding (const char *name)
 
 /**
  * meta_prefs_get_keybindings:
- * Return: (element-type MetaKeyPref) (transfer container):
+ *
+ * Returns: (element-type MetaKeyPref) (transfer container):
  */
 GList *
 meta_prefs_get_keybindings ()
@@ -2046,6 +2055,12 @@ int
 meta_prefs_get_auto_raise_delay (void)
 {
   return auto_raise_delay;
+}
+
+gboolean
+meta_prefs_get_focus_change_on_pointer_rest ()
+{
+  return focus_change_on_pointer_rest;
 }
 
 gboolean
@@ -2131,27 +2146,6 @@ meta_prefs_get_force_fullscreen (void)
 }
 
 gboolean
-meta_prefs_get_live_hidden_windows (void)
-{
-#if 0
-  return live_hidden_windows;
-#else
-  return TRUE;
-#endif
-}
-
-void
-meta_prefs_set_live_hidden_windows (gboolean whether)
-{
-  MetaBasePreference *pref;
-
-  find_pref (preferences_bool, sizeof(MetaBoolPreference),
-             KEY_LIVE_HIDDEN_WINDOWS, &pref);
-  g_settings_set_boolean (SETTINGS (pref->schema), KEY_LIVE_HIDDEN_WINDOWS,
-                          whether);
-}
-
-gboolean
 meta_prefs_get_workspaces_only_on_primary (void)
 {
   return workspaces_only_on_primary;
@@ -2184,4 +2178,16 @@ void
 meta_prefs_set_force_fullscreen (gboolean whether)
 {
   force_fullscreen = whether;
+}
+
+gboolean
+meta_prefs_get_ignore_request_hide_titlebar (void)
+{
+  return ignore_request_hide_titlebar;
+}
+
+void
+meta_prefs_set_ignore_request_hide_titlebar (gboolean whether)
+{
+  ignore_request_hide_titlebar = whether;
 }

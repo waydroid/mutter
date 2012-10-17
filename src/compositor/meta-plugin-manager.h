@@ -46,14 +46,9 @@
  */
 typedef struct MetaPluginManager MetaPluginManager;
 
-MetaPluginManager * meta_plugin_manager_get         (MetaScreen *screen);
-MetaPluginManager * meta_plugin_manager_get_default (void);
+MetaPluginManager * meta_plugin_manager_new (MetaScreen *screen);
 
-void     meta_plugin_manager_load         (MetaPluginManager *mgr,
-                                           const gchar       *plugin_name);
-void     meta_plugin_manager_register     (MetaPluginManager *mgr,
-                                           GType              plugin_type);
-void     meta_plugin_manager_initialize   (MetaPluginManager *mgr);
+void     meta_plugin_manager_load         (const gchar       *plugin_name);
 
 gboolean meta_plugin_manager_event_simple (MetaPluginManager *mgr,
                                            MetaWindowActor   *actor,
@@ -66,10 +61,6 @@ gboolean meta_plugin_manager_event_maximize    (MetaPluginManager *mgr,
                                                 gint               target_y,
                                                 gint               target_width,
                                                 gint               target_height);
-void     meta_plugin_manager_update_workspaces (MetaPluginManager *mgr);
-
-void meta_plugin_manager_update_workspace (MetaPluginManager *mgr,
-                                           MetaWorkspace     *w);
 
 gboolean meta_plugin_manager_switch_workspace (MetaPluginManager   *mgr,
                                                gint                 from,

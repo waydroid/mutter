@@ -119,6 +119,7 @@ typedef struct
   MetaRectangle        orig;
   MetaRectangle        current;
   MetaFrameBorders    *borders;
+  gboolean             must_free_borders;
   ActionType           action_type;
   gboolean             is_user_action;
 
@@ -337,7 +338,7 @@ meta_window_constrain (MetaWindow          *window,
    * not gobject-style--gobject would be more pain than it's worth) or
    * smart pointers would be so much nicer here.  *shrug*
    */
-  if (!orig_borders)
+  if (info.must_free_borders)
     g_free (info.borders);
 }
 
@@ -358,9 +359,15 @@ setup_constraint_info (ConstraintInfo      *info,
 
   /* Create a fake frame geometry if none really exists */
   if (orig_borders && !window->fullscreen)
-    info->borders = orig_borders;
+    {
+      info->borders = orig_borders;
+      info->must_free_borders = FALSE;
+    }
   else
-    info->borders = g_new0 (MetaFrameBorders, 1);
+    {
+      info->borders = g_new0 (MetaFrameBorders, 1);
+      info->must_free_borders = TRUE;
+    }
 
   if (flags & META_IS_MOVE_ACTION && flags & META_IS_RESIZE_ACTION)
     info->action_type = ACTION_MOVE_AND_RESIZE;
@@ -757,21 +764,12 @@ constrain_modal_dialog (MetaWindow         *window,
     return TRUE;
 
   x = parent->rect.x + (parent->rect.width / 2  - info->current.width / 2);
-  y = 0;
+  y = parent->rect.y + (parent->rect.height / 2 - info->current.height / 2);
   if (parent->frame)
     {
-      MetaFrameBorders borders;
-
       x += parent->frame->rect.x;
       y += parent->frame->rect.y;
-
-      meta_frame_calc_borders (parent->frame, &borders);
-      y += borders.total.top;
-
-      y += info->borders->visible.top;
     }
-  else
-    y = parent->rect.y + info->borders->visible.top;
 
   constraint_already_satisfied = (x == info->current.x) && (y == info->current.y);
 
