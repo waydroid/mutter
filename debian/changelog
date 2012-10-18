@@ -1,3 +1,9 @@
+mutter (3.6.1-1ubuntu2) raring; urgency=low
+
+  * Added 05_ignore_num_workspaces.patch (LP: #1067933)
+
+ -- Brandon Snider <brandonjsnider@gmail.com>  Wed, 17 Oct 2012 20:23:11 -0400
+
 mutter (3.6.1-1ubuntu1) raring; urgency=low
 
   * Sync with Debian. Remaining change:
