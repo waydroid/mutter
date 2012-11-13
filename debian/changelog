@@ -1,3 +1,9 @@
+mutter (3.6.2-0ubuntu1) raring; urgency=low
+
+  * New upstream release (LP: #1078155)
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 12 Nov 2012 22:09:47 -0500
+
 mutter (3.6.1-1ubuntu2) raring; urgency=low
 
   * Added 05_ignore_num_workspaces.patch (LP: #1067933)
