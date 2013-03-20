@@ -1,0 +1,372 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>MetaBarrier</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<link rel="home" href="index.html" title="Mutter Reference Manual">
+<link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
+<link rel="prev" href="MetaPlugin.html" title="MetaPlugin">
+<link rel="next" href="MetaRectangle.html" title="MetaRectangle">
+<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="MetaPlugin.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Mutter Reference Manual</th>
+<td><a accesskey="n" href="MetaRectangle.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#MetaBarrier.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#MetaBarrier.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#MetaBarrier.object-hierarchy" class="shortcut">Object Hierarchy</a>
+                   | 
+                  <a href="#MetaBarrier.properties" class="shortcut">Properties</a>
+                   | 
+                  <a href="#MetaBarrier.signals" class="shortcut">Signals</a>
+</td></tr>
+</table>
+<div class="refentry">
+<a name="MetaBarrier"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="MetaBarrier.top_of_page"></a>MetaBarrier</span></h2>
+<p>MetaBarrier — Pointer barriers</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv">
+<a name="MetaBarrier.synopsis"></a><h2>Synopsis</h2>
+<a name="MetaBarrierEvent"></a><pre class="synopsis">struct              <a class="link" href="MetaBarrier.html#MetaBarrier-struct" title="struct MetaBarrier">MetaBarrier</a>;
+struct              <a class="link" href="MetaBarrier.html#MetaBarrierClass" title="struct MetaBarrierClass">MetaBarrierClass</a>;
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaBarrier.html#meta-barrier-is-active" title="meta_barrier_is_active ()">meta_barrier_is_active</a>              (<em class="parameter"><code><a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a> *barrier</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaBarrier.html#meta-barrier-destroy" title="meta_barrier_destroy ()">meta_barrier_destroy</a>                (<em class="parameter"><code><a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a> *barrier</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaBarrier.html#meta-barrier-release" title="meta_barrier_release ()">meta_barrier_release</a>                (<em class="parameter"><code><a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a> *barrier</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaBarrier.html#MetaBarrierEvent"><span class="type">MetaBarrierEvent</span></a> *event</code></em>);
+enum                <a class="link" href="MetaBarrier.html#MetaBarrierDirection" title="enum MetaBarrierDirection">MetaBarrierDirection</a>;
+struct              <a class="link" href="MetaBarrier.html#MetaBarrierEvent-struct" title="struct MetaBarrierEvent">MetaBarrierEvent</a>;
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaBarrier.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  GObject
+   +----MetaBarrier
+</pre>
+<pre class="synopsis">
+  GBoxed
+   +----MetaBarrierEvent
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaBarrier.properties"></a><h2>Properties</h2>
+<pre class="synopsis">
+  "<a class="link" href="MetaBarrier.html#MetaBarrier--directions" title='The "directions" property'>directions</a>"               <a class="link" href="MetaBarrier.html#MetaBarrierDirection" title="enum MetaBarrierDirection"><span class="type">MetaBarrierDirection</span></a>  : Read / Write / Construct Only
+  "<a class="link" href="MetaBarrier.html#MetaBarrier--display" title='The "display" property'>display</a>"                  <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>*          : Read / Write / Construct Only
+  "<a class="link" href="MetaBarrier.html#MetaBarrier--x1" title='The "x1" property'>x1</a>"                       <span class="type">gint</span>                  : Read / Write / Construct Only
+  "<a class="link" href="MetaBarrier.html#MetaBarrier--x2" title='The "x2" property'>x2</a>"                       <span class="type">gint</span>                  : Read / Write / Construct Only
+  "<a class="link" href="MetaBarrier.html#MetaBarrier--y1" title='The "y1" property'>y1</a>"                       <span class="type">gint</span>                  : Read / Write / Construct Only
+  "<a class="link" href="MetaBarrier.html#MetaBarrier--y2" title='The "y2" property'>y2</a>"                       <span class="type">gint</span>                  : Read / Write / Construct Only
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaBarrier.signals"></a><h2>Signals</h2>
+<pre class="synopsis">
+  "<a class="link" href="MetaBarrier.html#MetaBarrier-hit" title='The "hit" signal'>hit</a>"                                            : <code class="literal">Run First</code>
+  "<a class="link" href="MetaBarrier.html#MetaBarrier-left" title='The "left" signal'>left</a>"                                           : <code class="literal">Run First</code>
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaBarrier.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="MetaBarrier.details"></a><h2>Details</h2>
+<div class="refsect2">
+<a name="MetaBarrier-struct"></a><h3>struct MetaBarrier</h3>
+<pre class="programlisting">struct MetaBarrier;</pre>
+<p>
+The <span class="structname">MetaBarrier</span> structure contains
+only private data and should be accessed using the provided API
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBarrierClass"></a><h3>struct MetaBarrierClass</h3>
+<pre class="programlisting">struct MetaBarrierClass {
+};
+</pre>
+<p>
+The <span class="structname">MetaBarrierClass</span> structure contains only
+private data.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-barrier-is-active"></a><h3>meta_barrier_is_active ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_barrier_is_active              (<em class="parameter"><code><a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a> *barrier</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-barrier-destroy"></a><h3>meta_barrier_destroy ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_barrier_destroy                (<em class="parameter"><code><a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a> *barrier</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-barrier-release"></a><h3>meta_barrier_release ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_barrier_release                (<em class="parameter"><code><a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a> *barrier</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaBarrier.html#MetaBarrierEvent"><span class="type">MetaBarrierEvent</span></a> *event</code></em>);</pre>
+<p>
+In XI2.3, pointer barriers provide a feature where they can
+be temporarily released so that the pointer goes through
+them. Pass a <a class="link" href="MetaBarrier.html#MetaBarrierEvent"><span class="type">MetaBarrierEvent</span></a> to release the barrier for
+this event sequence.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>barrier</code></em> :</span></p></td>
+<td>The barrier to release</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>event</code></em> :</span></p></td>
+<td>The event to release the pointer for</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBarrierDirection"></a><h3>enum MetaBarrierDirection</h3>
+<pre class="programlisting">typedef enum {
+  META_BARRIER_DIRECTION_POSITIVE_X = 1 &lt;&lt; 0,
+  META_BARRIER_DIRECTION_POSITIVE_Y = 1 &lt;&lt; 1,
+  META_BARRIER_DIRECTION_NEGATIVE_X = 1 &lt;&lt; 2,
+  META_BARRIER_DIRECTION_NEGATIVE_Y = 1 &lt;&lt; 3,
+} MetaBarrierDirection;
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><a name="META-BARRIER-DIRECTION-POSITIVE-X:CAPS"></a><span class="term"><code class="literal">META_BARRIER_DIRECTION_POSITIVE_X</code></span></p></td>
+<td>Positive direction in the X axis
+</td>
+</tr>
+<tr>
+<td><p><a name="META-BARRIER-DIRECTION-POSITIVE-Y:CAPS"></a><span class="term"><code class="literal">META_BARRIER_DIRECTION_POSITIVE_Y</code></span></p></td>
+<td>Positive direction in the Y axis
+</td>
+</tr>
+<tr>
+<td><p><a name="META-BARRIER-DIRECTION-NEGATIVE-X:CAPS"></a><span class="term"><code class="literal">META_BARRIER_DIRECTION_NEGATIVE_X</code></span></p></td>
+<td>Negative direction in the X axis
+</td>
+</tr>
+<tr>
+<td><p><a name="META-BARRIER-DIRECTION-NEGATIVE-Y:CAPS"></a><span class="term"><code class="literal">META_BARRIER_DIRECTION_NEGATIVE_Y</code></span></p></td>
+<td>Negative direction in the Y axis
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBarrierEvent-struct"></a><h3>struct MetaBarrierEvent</h3>
+<pre class="programlisting">struct MetaBarrierEvent {
+  int event_id;
+  int dt;
+  guint32 time;
+  double x;
+  double y;
+  double dx;
+  double dy;
+  gboolean released;
+  gboolean grabbed;
+};
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.event-id"></a>event_id</code></em>;</span></p></td>
+<td>A unique integer ID identifying a
+consecutive series of motions at or along the barrier</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.dt"></a>dt</code></em>;</span></p></td>
+<td>Server time, in milliseconds, since the last event
+sent for this barrier</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">guint32</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.time"></a>time</code></em>;</span></p></td>
+<td>Server time, in milliseconds</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">double</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.x"></a>x</code></em>;</span></p></td>
+<td>The cursor X position in screen coordinates</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">double</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.y"></a>y</code></em>;</span></p></td>
+<td>The cursor Y position in screen coordinates.</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">double</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.dx"></a>dx</code></em>;</span></p></td>
+<td>If the cursor hadn't been constrained, the delta
+of X movement past the barrier, in screen coordinates</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">double</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.dy"></a>dy</code></em>;</span></p></td>
+<td>If the cursor hadn't been constrained, the delta
+of X movement past the barrier, in screen coordinates</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">gboolean</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.released"></a>released</code></em>;</span></p></td>
+<td>A boolean flag, <code class="literal">TRUE</code> if this event generated
+by the pointer leaving the barrier as a result of a client
+calling <a class="link" href="MetaBarrier.html#meta-barrier-release" title="meta_barrier_release ()"><code class="function">meta_barrier_release()</code></a> (will be set only for
+MetaBarrier::leave signals)</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">gboolean</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.grabbed"></a>grabbed</code></em>;</span></p></td>
+<td>A boolean flag, <code class="literal">TRUE</code> if the pointer was grabbed
+at the time this event was sent</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<div class="refsect1">
+<a name="MetaBarrier.property-details"></a><h2>Property Details</h2>
+<div class="refsect2">
+<a name="MetaBarrier--directions"></a><h3>The <code class="literal">"directions"</code> property</h3>
+<pre class="programlisting">  "directions"               <a class="link" href="MetaBarrier.html#MetaBarrierDirection" title="enum MetaBarrierDirection"><span class="type">MetaBarrierDirection</span></a>  : Read / Write / Construct Only</pre>
+<p>A set of directions to let the pointer through.</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBarrier--display"></a><h3>The <code class="literal">"display"</code> property</h3>
+<pre class="programlisting">  "display"                  <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>*          : Read / Write / Construct Only</pre>
+<p>The display to construct the pointer barrier on.</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBarrier--x1"></a><h3>The <code class="literal">"x1"</code> property</h3>
+<pre class="programlisting">  "x1"                       <span class="type">gint</span>                  : Read / Write / Construct Only</pre>
+<p>The first X coordinate of the barrier.</p>
+<p>Allowed values: [0,32767]</p>
+<p>Default value: 0</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBarrier--x2"></a><h3>The <code class="literal">"x2"</code> property</h3>
+<pre class="programlisting">  "x2"                       <span class="type">gint</span>                  : Read / Write / Construct Only</pre>
+<p>The second X coordinate of the barrier.</p>
+<p>Allowed values: [0,32767]</p>
+<p>Default value: 32767</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBarrier--y1"></a><h3>The <code class="literal">"y1"</code> property</h3>
+<pre class="programlisting">  "y1"                       <span class="type">gint</span>                  : Read / Write / Construct Only</pre>
+<p>The first Y coordinate of the barrier.</p>
+<p>Allowed values: [0,32767]</p>
+<p>Default value: 0</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBarrier--y2"></a><h3>The <code class="literal">"y2"</code> property</h3>
+<pre class="programlisting">  "y2"                       <span class="type">gint</span>                  : Read / Write / Construct Only</pre>
+<p>The second Y coordinate of the barrier.</p>
+<p>Allowed values: [0,32767]</p>
+<p>Default value: 32767</p>
+</div>
+</div>
+<div class="refsect1">
+<a name="MetaBarrier.signal-details"></a><h2>Signal Details</h2>
+<div class="refsect2">
+<a name="MetaBarrier-hit"></a><h3>The <code class="literal">"hit"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a>      *barrier,
+                                                        <a class="link" href="MetaBarrier.html#MetaBarrierEvent"><span class="type">MetaBarrierEvent</span></a> *event,
+                                                        <span class="type">gpointer</span>          user_data)      : <code class="literal">Run First</code></pre>
+<p>
+When a pointer barrier is hit, this will trigger. This
+requires an XI2-enabled server.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>barrier</code></em> :</span></p></td>
+<td>The <a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a> that was hit</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>event</code></em> :</span></p></td>
+<td>A <a class="link" href="MetaBarrier.html#MetaBarrierEvent"><span class="type">MetaBarrierEvent</span></a> that has the details of how
+the barrier was hit.</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBarrier-left"></a><h3>The <code class="literal">"left"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a>      *barrier,
+                                                        <a class="link" href="MetaBarrier.html#MetaBarrierEvent"><span class="type">MetaBarrierEvent</span></a> *event,
+                                                        <span class="type">gpointer</span>          user_data)      : <code class="literal">Run First</code></pre>
+<p>
+When a pointer barrier hitbox was left, this will trigger.
+This requires an XI2-enabled server.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>barrier</code></em> :</span></p></td>
+<td>The <a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a> that was left</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>event</code></em> :</span></p></td>
+<td>A <a class="link" href="MetaBarrier.html#MetaBarrierEvent"><span class="type">MetaBarrierEvent</span></a> that has the details of how
+the barrier was left.</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.18</div>
+</body>
+</html>

@@ -8,6 +8,10 @@
 
 G_BEGIN_DECLS
 
+/* enumerations from "meta/barrier.h" */
+GType meta_barrier_direction_get_type (void) G_GNUC_CONST;
+#define META_TYPE_BARRIER_DIRECTION (meta_barrier_direction_get_type())
+
 /* enumerations from "meta/boxes.h" */
 GType meta_edge_type_get_type (void) G_GNUC_CONST;
 #define META_TYPE_EDGE_TYPE (meta_edge_type_get_type())
@@ -57,9 +61,6 @@ GType meta_tab_list_get_type (void) G_GNUC_CONST;
 GType meta_tab_show_type_get_type (void) G_GNUC_CONST;
 #define META_TYPE_TAB_SHOW_TYPE (meta_tab_show_type_get_type())
 
-GType meta_atom_get_type (void) G_GNUC_CONST;
-#define META_TYPE_ATOM (meta_atom_get_type())
-
 /* enumerations from "meta/gradient.h" */
 GType meta_gradient_type_get_type (void) G_GNUC_CONST;
 #define META_TYPE_GRADIENT_TYPE (meta_gradient_type_get_type())
@@ -67,6 +68,10 @@ GType meta_gradient_type_get_type (void) G_GNUC_CONST;
 /* enumerations from "meta/main.h" */
 GType meta_exit_code_get_type (void) G_GNUC_CONST;
 #define META_TYPE_EXIT_CODE (meta_exit_code_get_type())
+
+/* enumerations from "meta/meta-background.h" */
+GType meta_background_effects_get_type (void) G_GNUC_CONST;
+#define META_TYPE_BACKGROUND_EFFECTS (meta_background_effects_get_type())
 
 /* enumerations from "meta/meta-plugin.h" */
 GType meta_modal_options_get_type (void) G_GNUC_CONST;

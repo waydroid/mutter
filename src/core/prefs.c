@@ -1,7 +1,5 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* Mutter preferences */
-
 /* 
  * Copyright (C) 2001 Havoc Pennington, Copyright (C) 2002 Red Hat Inc.
  * Copyright (C) 2006 Elijah Newren
@@ -22,6 +20,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
+ */
+
+/**
+ * SECTION:prefs
+ * @title: Preferences
+ * @short_description: Mutter preferences
  */
 
 #include <config.h>
@@ -99,6 +103,7 @@ static gboolean resize_with_right_button = FALSE;
 static gboolean edge_tiling = FALSE;
 static gboolean force_fullscreen = TRUE;
 static gboolean ignore_request_hide_titlebar = FALSE;
+static gboolean auto_maximize = TRUE;
 
 static GDesktopVisualBellType visual_bell_type = G_DESKTOP_VISUAL_BELL_FULLSCREEN_FLASH;
 static MetaButtonLayout button_layout;
@@ -367,6 +372,13 @@ static MetaBoolPreference preferences_bool[] =
         META_PREF_NO_TAB_POPUP,
       },
       &no_tab_popup,
+    },
+    {
+      { "auto-maximize",
+        SCHEMA_MUTTER,
+        META_PREF_AUTO_MAXIMIZE,
+      },
+      &auto_maximize,
     },
     { { NULL, 0, 0 }, NULL },
   };
@@ -692,28 +704,32 @@ handle_preference_update_int (GSettings *settings,
 
 /**
  * meta_prefs_add_listener: (skip)
+ * @func: a #MetaPrefsChangedFunc
+ * @user_data: data passed to the function
  *
  */
 void
 meta_prefs_add_listener (MetaPrefsChangedFunc func,
-                         gpointer             data)
+                         gpointer             user_data)
 {
   MetaPrefsListener *l;
 
   l = g_new (MetaPrefsListener, 1);
   l->func = func;
-  l->data = data;
+  l->data = user_data;
 
   listeners = g_list_prepend (listeners, l);
 }
 
 /**
  * meta_prefs_remove_listener: (skip)
+ * @func: a #MetaPrefsChangedFunc
+ * @user_data: data passed to the function
  *
  */
 void
 meta_prefs_remove_listener (MetaPrefsChangedFunc func,
-                            gpointer             data)
+                            gpointer             user_data)
 {
   GList *tmp;
 
@@ -723,7 +739,7 @@ meta_prefs_remove_listener (MetaPrefsChangedFunc func,
       MetaPrefsListener *l = tmp->data;
 
       if (l->func == func &&
-          l->data == data)
+          l->data == user_data)
         {
           g_free (l);
           listeners = g_list_delete_link (listeners, tmp);
@@ -1007,7 +1023,7 @@ settings_changed (GSettings *settings,
   /* String array, handled separately */
   if (strcmp (key, KEY_WORKSPACE_NAMES) == 0)
     {
-      if (update_workspace_names ());
+      if (update_workspace_names ())
         queue_changed (META_PREF_WORKSPACE_NAMES);
       return;
     }
@@ -1387,8 +1403,11 @@ button_layout_handler (GVariant *value,
       g_strfreev (buttons);
     }
 
-  new_layout.left_buttons[i] = META_BUTTON_FUNCTION_LAST;
-  new_layout.left_buttons_has_spacer[i] = FALSE;
+  for (; i < MAX_BUTTONS_PER_CORNER; i++)
+    {
+      new_layout.left_buttons[i] = META_BUTTON_FUNCTION_LAST;
+      new_layout.left_buttons_has_spacer[i] = FALSE;
+    }
 
   i = 0;
   if (sides != NULL && sides[0] != NULL && sides[1] != NULL)
@@ -1446,8 +1465,11 @@ button_layout_handler (GVariant *value,
       g_strfreev (buttons);
     }
 
-  new_layout.right_buttons[i] = META_BUTTON_FUNCTION_LAST;
-  new_layout.right_buttons_has_spacer[i] = FALSE;
+  for (; i < MAX_BUTTONS_PER_CORNER; i++)
+    {
+      new_layout.right_buttons[i] = META_BUTTON_FUNCTION_LAST;
+      new_layout.right_buttons_has_spacer[i] = FALSE;
+    }
 
   g_strfreev (sides);
   
@@ -1466,8 +1488,11 @@ button_layout_handler (GVariant *value,
         else
           rtl_layout.right_buttons_has_spacer[j - 1] = new_layout.left_buttons_has_spacer[i - j - 1];
       }
-    rtl_layout.right_buttons[j] = META_BUTTON_FUNCTION_LAST;
-    rtl_layout.right_buttons_has_spacer[j] = FALSE;
+    for (; j < MAX_BUTTONS_PER_CORNER; j++)
+      {
+        rtl_layout.right_buttons[j] = META_BUTTON_FUNCTION_LAST;
+        rtl_layout.right_buttons_has_spacer[j] = FALSE;
+      }
       
     for (i = 0; new_layout.right_buttons[i] != META_BUTTON_FUNCTION_LAST; i++);
     for (j = 0; j < i; j++)
@@ -1478,8 +1503,11 @@ button_layout_handler (GVariant *value,
         else
           rtl_layout.left_buttons_has_spacer[j - 1] = new_layout.right_buttons_has_spacer[i - j - 1];
       }
-    rtl_layout.left_buttons[j] = META_BUTTON_FUNCTION_LAST;
-    rtl_layout.left_buttons_has_spacer[j] = FALSE;
+    for (; j < MAX_BUTTONS_PER_CORNER; j++)
+      {
+        rtl_layout.left_buttons[j] = META_BUTTON_FUNCTION_LAST;
+        rtl_layout.left_buttons_has_spacer[j] = FALSE;
+      }
 
     new_layout = rtl_layout;
   }
@@ -1666,6 +1694,9 @@ meta_preference_to_string (MetaPreference pref)
 
     case META_PREF_DYNAMIC_WORKSPACES:
       return "DYNAMIC_WORKSPACES";
+
+    case META_PREF_AUTO_MAXIMIZE:
+      return "AUTO_MAXIMIZE";
     }
 
   return "(unknown)";
@@ -1702,8 +1733,18 @@ meta_key_pref_free (MetaKeyPref *pref)
 static void
 init_bindings (void)
 {
+  MetaKeyPref *pref;
+
   key_bindings = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                         (GDestroyNotify)meta_key_pref_free);
+
+  pref = g_new0 (MetaKeyPref, 1);
+  pref->name = g_strdup ("overlay-key");
+  pref->action = META_KEYBINDING_ACTION_OVERLAY_KEY;
+  pref->bindings = g_slist_prepend (pref->bindings, &overlay_key_combo);
+  pref->builtin = 1;
+
+  g_hash_table_insert (key_bindings, g_strdup ("overlay-key"), pref);
 }
 
 static void
@@ -1781,6 +1822,8 @@ update_binding (MetaKeyPref *binding,
                       "New keybinding for \"%s\" is keysym = 0x%x keycode = 0x%x mods = 0x%x\n",
                       binding->name, keysym, keycode, mods);
     }
+
+  binding->bindings = g_slist_reverse (binding->bindings);
 
   return changed;
 }
@@ -1902,6 +1945,10 @@ meta_prefs_change_workspace_name (int         num,
                         g_variant_builder_end (&builder));
 }
 
+/**
+ * meta_prefs_get_button_layout:
+ * @button_layout: (out):
+ */
 void
 meta_prefs_get_button_layout (MetaButtonLayout *button_layout_p)
 {
@@ -2081,6 +2128,12 @@ meta_prefs_get_edge_tiling ()
   return edge_tiling;
 }
 
+gboolean
+meta_prefs_get_auto_maximize (void)
+{
+  return auto_maximize;
+}
+
 MetaKeyBindingAction
 meta_prefs_get_keybinding_action (const char *name)
 {
@@ -2127,13 +2180,13 @@ meta_prefs_get_window_binding (const char          *name,
   g_assert_not_reached ();
 }
 
-guint
+gint
 meta_prefs_get_mouse_button_resize (void)
 {
   return resize_with_right_button ? 3: 2;
 }
 
-guint
+gint
 meta_prefs_get_mouse_button_menu (void)
 {
   return resize_with_right_button ? 2: 3;

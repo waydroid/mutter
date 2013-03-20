@@ -1,0 +1,15 @@
+meta_background_actor_get_type
+meta_background_get_type
+meta_background_group_get_type
+meta_barrier_event_get_type
+meta_barrier_get_type
+meta_display_get_type
+meta_key_binding_get_type
+meta_plugin_get_type
+meta_rectangle_get_type
+meta_screen_get_type
+meta_shadow_factory_get_type
+meta_shaped_texture_get_type
+meta_window_actor_get_type
+meta_window_get_type
+meta_workspace_get_type

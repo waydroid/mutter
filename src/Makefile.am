@@ -6,6 +6,9 @@ lib_LTLIBRARIES = libmutter.la
 SUBDIRS=wm-tester tools compositor/plugins
 
 INCLUDES=								\
+	-DCLUTTER_ENABLE_EXPERIMENTAL_API				\
+	-DCOGL_ENABLE_EXPERIMENTAL_API					\
+	-DCOGL_ENABLE_EXPERIMENTAL_2_0_API                              \
 	$(MUTTER_CFLAGS)						\
 	-I$(srcdir)							\
 	-I$(srcdir)/core						\
@@ -33,17 +36,24 @@ mutter_built_sources = \
 libmutter_la_SOURCES =				\
 	core/async-getprop.c			\
 	core/async-getprop.h			\
+	core/barrier.c				\
+	meta/barrier.h				\
 	core/bell.c				\
 	core/bell.h				\
 	core/boxes.c				\
 	core/boxes-private.h			\
 	meta/boxes.h				\
+	compositor/clutter-utils.c		\
+	compositor/clutter-utils.h		\
 	compositor/cogl-utils.c			\
 	compositor/cogl-utils.h			\
 	compositor/compositor.c			\
 	compositor/compositor-private.h		\
+	compositor/meta-background.c		\
 	compositor/meta-background-actor.c	\
 	compositor/meta-background-actor-private.h	\
+	compositor/meta-background-group.c	\
+	compositor/meta-background-group-private.h	\
 	compositor/meta-module.c		\
 	compositor/meta-module.h		\
 	compositor/meta-plugin.c		\
@@ -65,7 +75,9 @@ libmutter_la_SOURCES =				\
 	compositor/region-utils.c		\
 	compositor/region-utils.h		\
 	meta/compositor.h			\
+	meta/meta-background.h			\
 	meta/meta-background-actor.h		\
+	meta/meta-background-group.h		\
 	meta/meta-plugin.h			\
 	meta/meta-shadow-factory.h		\
 	meta/meta-window-actor.h		\
@@ -84,8 +96,6 @@ libmutter_la_SOURCES =				\
 	core/edge-resistance.h			\
 	core/errors.c				\
 	meta/errors.h				\
-	core/eventqueue.c			\
-	core/eventqueue.h			\
 	core/frame.c				\
 	core/frame.h				\
 	ui/gradient.c				\
@@ -157,6 +167,7 @@ libmutter_la_LIBADD  = $(MUTTER_LIBS)
 # Headers installed for plugins; introspected information will
 # be extracted into Mutter-<version>.gir
 libmutterinclude_base_headers =		\
+	meta/barrier.h				\
 	meta/boxes.h				\
 	meta/common.h				\
 	meta/compositor-mutter.h		\
@@ -168,6 +179,8 @@ libmutterinclude_base_headers =		\
 	meta/keybindings.h			\
 	meta/main.h				\
 	meta/meta-background-actor.h		\
+	meta/meta-background-group.h		\
+	meta/meta-background.h			\
 	meta/meta-plugin.h			\
 	meta/meta-shaped-texture.h		\
 	meta/meta-shadow-factory.h		\
@@ -221,7 +234,7 @@ typelib_DATA = Meta-$(api_version).typelib
 INTROSPECTION_GIRS = Meta-$(api_version).gir
 
 Meta-$(api_version).gir: libmutter.la
-@META_GIR@_INCLUDES = GObject-2.0 GDesktopEnums-3.0 Gdk-3.0 Gtk-3.0 Clutter-1.0 xlib-2.0 xfixes-4.0
+@META_GIR@_INCLUDES = GObject-2.0 GDesktopEnums-3.0 Gdk-3.0 Gtk-3.0 Clutter-1.0 xlib-2.0 xfixes-4.0 Cogl-1.0
 @META_GIR@_EXPORT_PACKAGES = libmutter
 @META_GIR@_CFLAGS = $(INCLUDES)
 @META_GIR@_LIBS = libmutter.la
@@ -259,6 +272,8 @@ wmproperties_DATA = $(wmproperties_files)
 
 xmldir       = @GNOME_KEYBINDINGS_KEYSDIR@
 xml_in_files = \
+        50-mutter-navigation.xml.in	\
+        50-mutter-system.xml.in		\
         50-mutter-windows.xml.in
 xml_DATA     = $(xml_in_files:.xml.in=.xml)
 

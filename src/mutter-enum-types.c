@@ -3,6 +3,34 @@
 
 #include "mutter-enum-types.h"
 
+/* enumerations from "meta/barrier.h" */
+#include "meta/barrier.h"
+
+GType
+meta_barrier_direction_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { META_BARRIER_DIRECTION_POSITIVE_X, "META_BARRIER_DIRECTION_POSITIVE_X", "positive-x" },
+        { META_BARRIER_DIRECTION_POSITIVE_Y, "META_BARRIER_DIRECTION_POSITIVE_Y", "positive-y" },
+        { META_BARRIER_DIRECTION_NEGATIVE_X, "META_BARRIER_DIRECTION_NEGATIVE_X", "negative-x" },
+        { META_BARRIER_DIRECTION_NEGATIVE_Y, "META_BARRIER_DIRECTION_NEGATIVE_Y", "negative-y" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_flags_register_static (g_intern_static_string ("MetaBarrierDirection"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+
 /* enumerations from "meta/boxes.h" */
 #include "meta/boxes.h"
 
@@ -476,27 +504,6 @@ meta_tab_show_type_get_type (void)
 
   return g_enum_type_id__volatile;
 }
-GType
-meta_atom_get_type (void)
-{
-  static volatile gsize g_enum_type_id__volatile = 0;
-
-  if (g_once_init_enter (&g_enum_type_id__volatile))
-    {
-      static const GEnumValue values[] = {
-        { META_ATOM_FIRST, "META_ATOM_FIRST", "first" },
-        { 0, NULL, NULL }
-      };
-      GType g_enum_type_id;
-
-      g_enum_type_id =
-        g_enum_register_static (g_intern_static_string ("MetaAtom"), values);
-
-      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
-    }
-
-  return g_enum_type_id__volatile;
-}
 
 /* enumerations from "meta/gradient.h" */
 #include "meta/gradient.h"
@@ -545,6 +552,34 @@ meta_exit_code_get_type (void)
 
       g_enum_type_id =
         g_enum_register_static (g_intern_static_string ("MetaExitCode"), values);
+
+      g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
+    }
+
+  return g_enum_type_id__volatile;
+}
+
+/* enumerations from "meta/meta-background.h" */
+#include "meta/meta-background.h"
+
+GType
+meta_background_effects_get_type (void)
+{
+  static volatile gsize g_enum_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_enum_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { META_BACKGROUND_EFFECTS_NONE, "META_BACKGROUND_EFFECTS_NONE", "none" },
+        { META_BACKGROUND_EFFECTS_DESATURATE, "META_BACKGROUND_EFFECTS_DESATURATE", "desaturate" },
+        { META_BACKGROUND_EFFECTS_BLUR, "META_BACKGROUND_EFFECTS_BLUR", "blur" },
+        { META_BACKGROUND_EFFECTS_VIGNETTE, "META_BACKGROUND_EFFECTS_VIGNETTE", "vignette" },
+        { 0, NULL, NULL }
+      };
+      GType g_enum_type_id;
+
+      g_enum_type_id =
+        g_flags_register_static (g_intern_static_string ("MetaBackgroundEffects"), values);
 
       g_once_init_leave (&g_enum_type_id__volatile, g_enum_type_id);
     }
@@ -622,6 +657,7 @@ meta_preference_get_type (void)
         { META_PREF_WORKSPACES_ONLY_ON_PRIMARY, "META_PREF_WORKSPACES_ONLY_ON_PRIMARY", "workspaces-only-on-primary" },
         { META_PREF_NO_TAB_POPUP, "META_PREF_NO_TAB_POPUP", "no-tab-popup" },
         { META_PREF_DRAGGABLE_BORDER_WIDTH, "META_PREF_DRAGGABLE_BORDER_WIDTH", "draggable-border-width" },
+        { META_PREF_AUTO_MAXIMIZE, "META_PREF_AUTO_MAXIMIZE", "auto-maximize" },
         { 0, NULL, NULL }
       };
       GType g_enum_type_id;
@@ -659,6 +695,8 @@ meta_key_binding_action_get_type (void)
         { META_KEYBINDING_ACTION_WORKSPACE_RIGHT, "META_KEYBINDING_ACTION_WORKSPACE_RIGHT", "workspace-right" },
         { META_KEYBINDING_ACTION_WORKSPACE_UP, "META_KEYBINDING_ACTION_WORKSPACE_UP", "workspace-up" },
         { META_KEYBINDING_ACTION_WORKSPACE_DOWN, "META_KEYBINDING_ACTION_WORKSPACE_DOWN", "workspace-down" },
+        { META_KEYBINDING_ACTION_SWITCH_APPLICATIONS, "META_KEYBINDING_ACTION_SWITCH_APPLICATIONS", "switch-applications" },
+        { META_KEYBINDING_ACTION_SWITCH_APPLICATIONS_BACKWARD, "META_KEYBINDING_ACTION_SWITCH_APPLICATIONS_BACKWARD", "switch-applications-backward" },
         { META_KEYBINDING_ACTION_SWITCH_GROUP, "META_KEYBINDING_ACTION_SWITCH_GROUP", "switch-group" },
         { META_KEYBINDING_ACTION_SWITCH_GROUP_BACKWARD, "META_KEYBINDING_ACTION_SWITCH_GROUP_BACKWARD", "switch-group-backward" },
         { META_KEYBINDING_ACTION_SWITCH_WINDOWS, "META_KEYBINDING_ACTION_SWITCH_WINDOWS", "switch-windows" },
@@ -845,6 +883,9 @@ meta_later_type_get_type (void)
     {
       static const GEnumValue values[] = {
         { META_LATER_RESIZE, "META_LATER_RESIZE", "resize" },
+        { META_LATER_CALC_SHOWING, "META_LATER_CALC_SHOWING", "calc-showing" },
+        { META_LATER_CHECK_FULLSCREEN, "META_LATER_CHECK_FULLSCREEN", "check-fullscreen" },
+        { META_LATER_SYNC_STACK, "META_LATER_SYNC_STACK", "sync-stack" },
         { META_LATER_BEFORE_REDRAW, "META_LATER_BEFORE_REDRAW", "before-redraw" },
         { META_LATER_IDLE, "META_LATER_IDLE", "idle" },
         { 0, NULL, NULL }

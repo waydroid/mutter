@@ -23,17 +23,6 @@
 #ifndef META_WORKSPACE_H
 #define META_WORKSPACE_H
 
-/**
- * SECTION:Workspaces
- * @short_description:Workspaces
- *
- * A workspace is a set of windows which all live on the same
- * screen.  (You may also see the name "desktop" around the place,
- * which is the EWMH's name for the same thing.)  Only one workspace
- * of a screen may be active at once; all windows on all other workspaces
- * are unmapped.
- */
-
 #include <meta/types.h>
 #include <meta/boxes.h>
 #include <meta/screen.h>
@@ -52,6 +41,9 @@ GType meta_workspace_get_type (void);
 int  meta_workspace_index (MetaWorkspace *workspace);
 MetaScreen *meta_workspace_get_screen (MetaWorkspace *workspace);
 GList* meta_workspace_list_windows (MetaWorkspace *workspace);
+void meta_workspace_get_work_area_for_monitor (MetaWorkspace *workspace,
+                                               int            which_monitor,
+                                               MetaRectangle *area);
 void meta_workspace_get_work_area_all_monitors (MetaWorkspace *workspace,
                                                 MetaRectangle *area);
 void meta_workspace_activate (MetaWorkspace *workspace, guint32 timestamp);

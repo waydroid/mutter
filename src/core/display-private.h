@@ -33,12 +33,12 @@
 
 #include <glib.h>
 #include <X11/Xlib.h>
-#include "eventqueue.h"
 #include <meta/common.h>
 #include <meta/boxes.h>
 #include <meta/display.h>
 #include "keybindings-private.h"
 #include <meta/prefs.h>
+#include <meta/barrier.h>
 
 #ifdef HAVE_STARTUP_NOTIFICATION
 #include <libsn/sn.h>
@@ -92,7 +92,6 @@ struct _MetaDisplay
   
   char *name;
   Display *xdisplay;
-  char *hostname;
 
   Window leader_window;
   Window timestamp_pinging_window;
@@ -142,10 +141,9 @@ struct _MetaDisplay
   
   /*< private-ish >*/
   guint error_trap_synced_at_last_pop : 1;
-  MetaEventQueue *events;
   GSList *screens;
   MetaScreen *active_screen;
-  GHashTable *window_ids;
+  GHashTable *xids;
   int error_traps;
   int (* error_trap_handler) (Display     *display,
                               XErrorEvent *error);  
@@ -211,6 +209,7 @@ struct _MetaDisplay
   GList*      grab_old_window_stacking;
   MetaEdgeResistanceData *grab_edge_resistance_data;
   unsigned int grab_last_user_action_was_snap;
+  guint32     grab_timestamp;
 
   /* we use property updates as sentinels for certain window focus events
    * to avoid some race conditions on EnterNotify events
@@ -220,10 +219,6 @@ struct _MetaDisplay
 #ifdef HAVE_XKB
   int         xkb_base_event_type;
   guint32     last_bell_time;
-#endif
-#ifdef HAVE_XSYNC
-  /* alarm monitoring client's _NET_WM_SYNC_REQUEST_COUNTER */
-  XSyncAlarm  grab_sync_request_alarm;
 #endif
   int	      grab_resize_timeout_id;
 
@@ -283,7 +278,10 @@ struct _MetaDisplay
   int damage_error_base;
   int xfixes_event_base;
   int xfixes_error_base;
-  
+  int xinput_error_base;
+  int xinput_event_base;
+  int xinput_opcode;
+
 #ifdef HAVE_STARTUP_NOTIFICATION
   SnDisplay *sn_display;
 #endif
@@ -311,10 +309,14 @@ struct _MetaDisplay
 #define META_DISPLAY_HAS_RENDER(display) ((display)->have_render)
   unsigned int have_composite : 1;
   unsigned int have_damage : 1;
-  unsigned int have_xfixes : 1;
 #define META_DISPLAY_HAS_COMPOSITE(display) ((display)->have_composite)
 #define META_DISPLAY_HAS_DAMAGE(display) ((display)->have_damage)
-#define META_DISPLAY_HAS_XFIXES(display) ((display)->have_xfixes)
+#ifdef HAVE_XI23
+  gboolean have_xinput_23 : 1;
+#define META_DISPLAY_HAS_XINPUT_23(display) ((display)->have_xinput_23)
+#else
+#define META_DISPLAY_HAS_XINPUT_23(display) FALSE
+#endif /* HAVE_XI23 */
 };
 
 struct _MetaDisplayClass
@@ -366,6 +368,16 @@ void        meta_display_register_x_window   (MetaDisplay *display,
 void        meta_display_unregister_x_window (MetaDisplay *display,
                                               Window       xwindow);
 
+#ifdef HAVE_XSYNC
+MetaWindow* meta_display_lookup_sync_alarm     (MetaDisplay *display,
+                                                XSyncAlarm   alarm);
+void        meta_display_register_sync_alarm   (MetaDisplay *display,
+                                                XSyncAlarm  *alarmp,
+                                                MetaWindow  *window);
+void        meta_display_unregister_sync_alarm (MetaDisplay *display,
+                                                XSyncAlarm   alarm);
+#endif /* HAVE_XSYNC */
+
 void        meta_display_notify_window_created (MetaDisplay  *display,
                                                 MetaWindow   *window);
 
@@ -381,7 +393,6 @@ Cursor         meta_display_create_x_cursor (MetaDisplay *display,
 void     meta_display_set_grab_op_cursor (MetaDisplay *display,
                                           MetaScreen  *screen,
                                           MetaGrabOp   op,
-                                          gboolean     change_pointer,
                                           Window       grab_xwindow,
                                           guint32      timestamp);
 
@@ -429,6 +440,7 @@ int meta_resize_gravity_from_grab_op (MetaGrabOp op);
 
 gboolean meta_grab_op_is_moving   (MetaGrabOp op);
 gboolean meta_grab_op_is_resizing (MetaGrabOp op);
+gboolean meta_grab_op_is_mouse    (MetaGrabOp op);
 
 void meta_display_devirtualize_modifiers (MetaDisplay        *display,
                                           MetaVirtualModifier modifiers,
@@ -443,8 +455,16 @@ void meta_display_queue_autoraise_callback  (MetaDisplay *display,
 void meta_display_remove_autoraise_callback (MetaDisplay *display);
 
 void meta_display_overlay_key_activate (MetaDisplay *display);
+void meta_display_accelerator_activate (MetaDisplay *display,
+                                        guint        action,
+                                        guint        deviceid);
 
 /* In above-tab-keycode.c */
 guint meta_display_get_above_tab_keycode (MetaDisplay *display);
+
+#ifdef HAVE_XI23
+gboolean meta_display_process_barrier_event (MetaDisplay    *display,
+                                             XIBarrierEvent *event);
+#endif /* HAVE_XI23 */
 
 #endif

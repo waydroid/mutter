@@ -1,8 +1,8 @@
 AC_PREREQ(2.50)
 
 m4_define([mutter_major_version], [3])
-m4_define([mutter_minor_version], [6])
-m4_define([mutter_micro_version], [2])
+m4_define([mutter_minor_version], [7])
+m4_define([mutter_micro_version], [92])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -71,10 +71,10 @@ MUTTER_PC_MODULES="
    gio-2.0 >= 2.25.10
    pango >= 1.2.0
    cairo >= 1.10.0
-   gsettings-desktop-schemas >= 3.3.0
-   xcomposite >= 0.2 xfixes xrender xdamage
-   $CLUTTER_PACKAGE >= 1.9.10
-   cogl-1.0 >= 1.9.6
+   gsettings-desktop-schemas >= 3.7.3
+   xcomposite >= 0.2 xfixes xrender xdamage xi >= 1.6.0
+   $CLUTTER_PACKAGE >= 1.13.5
+   cogl-1.0 >= 1.13.3
 "
 
 GLIB_GSETTINGS
@@ -200,6 +200,9 @@ if test x$have_xcursor = xyes; then
 fi
 
 PKG_CHECK_MODULES(MUTTER, $MUTTER_PC_MODULES)
+
+PKG_CHECK_EXISTS([xi >= 1.6.99.1],
+                 AC_DEFINE([HAVE_XI23],[1],[Define if you have support for XInput 2.3 or greater]))
 
 # This is used for plugins
 AC_SUBST(CLUTTER_PACKAGE)
@@ -361,8 +364,7 @@ if test "x$enable_debug" = "xyes"; then
 	CFLAGS="$CFLAGS -g -O"
 fi
 
-# For fix-meta-rectangle.py
-AM_PATH_PYTHON([2.5])
+GTK_DOC_CHECK([1.15], [--flavour no-tmpl])
 
 #### Warnings (last since -Werror can disturb other tests)
 
@@ -434,6 +436,8 @@ AC_CONFIG_FILES([
 Makefile
 doc/Makefile
 doc/man/Makefile
+doc/reference/Makefile
+doc/reference/meta-docs.sgml
 src/Makefile
 src/wm-tester/Makefile
 src/libmutter.pc

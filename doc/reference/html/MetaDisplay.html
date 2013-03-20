@@ -1,0 +1,1114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>MetaDisplay</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<link rel="home" href="index.html" title="Mutter Reference Manual">
+<link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
+<link rel="prev" href="meta-MetaCompositor.html" title="MetaCompositor">
+<link rel="next" href="meta-MetaGroup.html" title="MetaGroup">
+<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="meta-MetaCompositor.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Mutter Reference Manual</th>
+<td><a accesskey="n" href="meta-MetaGroup.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#MetaDisplay.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#MetaDisplay.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#MetaDisplay.object-hierarchy" class="shortcut">Object Hierarchy</a>
+                   | 
+                  <a href="#MetaDisplay.properties" class="shortcut">Properties</a>
+                   | 
+                  <a href="#MetaDisplay.signals" class="shortcut">Signals</a>
+</td></tr>
+</table>
+<div class="refentry">
+<a name="MetaDisplay"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="MetaDisplay.top_of_page"></a>MetaDisplay</span></h2>
+<p>MetaDisplay — Mutter X display handler</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv">
+<a name="MetaDisplay.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">enum                <a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList">MetaTabList</a>;
+enum                <a class="link" href="MetaDisplay.html#MetaTabShowType" title="enum MetaTabShowType">MetaTabShowType</a>;
+#define             <a class="link" href="MetaDisplay.html#meta-XFree" title="meta_XFree()">meta_XFree</a>                          (p)
+<span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-get-compositor-version" title="meta_display_get_compositor_version ()">meta_display_get_compositor_version</a> (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> *major</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> *minor</code></em>);
+<span class="returnvalue">int</span>                 <a class="link" href="MetaDisplay.html#meta-display-get-xinput-opcode" title="meta_display_get_xinput_opcode ()">meta_display_get_xinput_opcode</a>      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-supports-extended-barriers" title="meta_display_supports_extended_barriers ()">meta_display_supports_extended_barriers</a>
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">Display</span> *           <a class="link" href="MetaDisplay.html#meta-display-get-xdisplay" title="meta_display_get_xdisplay ()">meta_display_get_xdisplay</a>           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="returnvalue">MetaCompositor</span></a> *    <a class="link" href="MetaDisplay.html#meta-display-get-compositor" title="meta_display_get_compositor ()">meta_display_get_compositor</a>         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">GSList</span> *            <a class="link" href="MetaDisplay.html#meta-display-get-screens" title="meta_display_get_screens ()">meta_display_get_screens</a>            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-has-shape" title="meta_display_has_shape ()">meta_display_has_shape</a>              (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="returnvalue">MetaScreen</span></a> *        <a class="link" href="MetaDisplay.html#meta-display-screen-for-root" title="meta_display_screen_for_root ()">meta_display_screen_for_root</a>        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">Window</span> xroot</code></em>);
+<a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        <a class="link" href="MetaDisplay.html#meta-display-get-focus-window" title="meta_display_get_focus_window ()">meta_display_get_focus_window</a>       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-xwindow-is-a-no-focus-window" title="meta_display_xwindow_is_a_no_focus_window ()">meta_display_xwindow_is_a_no_focus_window</a>
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">Window</span> xwindow</code></em>);
+<span class="returnvalue">int</span>                 <a class="link" href="MetaDisplay.html#meta-display-get-damage-event-base" title="meta_display_get_damage_event_base ()">meta_display_get_damage_event_base</a>  (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">int</span>                 <a class="link" href="MetaDisplay.html#meta-display-get-shape-event-base" title="meta_display_get_shape_event_base ()">meta_display_get_shape_event_base</a>   (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-xserver-time-is-before" title="meta_display_xserver_time_is_before ()">meta_display_xserver_time_is_before</a> (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> time1</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> time2</code></em>);
+<span class="returnvalue">guint32</span>             <a class="link" href="MetaDisplay.html#meta-display-get-last-user-time" title="meta_display_get_last_user_time ()">meta_display_get_last_user_time</a>     (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">guint32</span>             <a class="link" href="MetaDisplay.html#meta-display-get-current-time" title="meta_display_get_current_time ()">meta_display_get_current_time</a>       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">guint32</span>             <a class="link" href="MetaDisplay.html#meta-display-get-current-time-roundtrip" title="meta_display_get_current_time_roundtrip ()">meta_display_get_current_time_roundtrip</a>
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+unsigned <span class="returnvalue">int</span>        <a class="link" href="MetaDisplay.html#meta-display-get-ignored-modifier-mask" title="meta_display_get_ignored_modifier_mask ()">meta_display_get_ignored_modifier_mask</a>
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">GList</span> *             <a class="link" href="MetaDisplay.html#meta-display-get-tab-list" title="meta_display_get_tab_list ()">meta_display_get_tab_list</a>           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
+<a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        <a class="link" href="MetaDisplay.html#meta-display-get-tab-next" title="meta_display_get_tab_next ()">meta_display_get_tab_next</a>           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> backward</code></em>);
+<a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        <a class="link" href="MetaDisplay.html#meta-display-get-tab-current" title="meta_display_get_tab_current ()">meta_display_get_tab_current</a>        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-begin-grab-op" title="meta_display_begin_grab_op ()">meta_display_begin_grab_op</a>          (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a> op</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> pointer_already_grabbed</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> frame_action</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> button</code></em>,
+                                                         <em class="parameter"><code><span class="type">gulong</span> modmask</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> root_x</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> root_y</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-end-grab-op" title="meta_display_end_grab_op ()">meta_display_end_grab_op</a>            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+<a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="returnvalue">MetaGrabOp</span></a>          <a class="link" href="MetaDisplay.html#meta-display-get-grab-op" title="meta_display_get_grab_op ()">meta_display_get_grab_op</a>            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">guint</span>               <a class="link" href="MetaDisplay.html#meta-display-add-keybinding" title="meta_display_add_keybinding ()">meta_display_add_keybinding</a>         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">char</span> *name</code></em>,
+                                                         <em class="parameter"><code><span class="type">GSettings</span> *settings</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyBindingFlags" title="enum MetaKeyBindingFlags"><span class="type">MetaKeyBindingFlags</span></a> flags</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyHandlerFunc" title="MetaKeyHandlerFunc ()"><span class="type">MetaKeyHandlerFunc</span></a> handler</code></em>,
+                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>,
+                                                         <em class="parameter"><code><span class="type">GDestroyNotify</span> free_data</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-remove-keybinding" title="meta_display_remove_keybinding ()">meta_display_remove_keybinding</a>      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">char</span> *name</code></em>);
+<span class="returnvalue">guint</span>               <a class="link" href="MetaDisplay.html#meta-display-get-keybinding-action" title="meta_display_get_keybinding_action ()">meta_display_get_keybinding_action</a>  (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code>unsigned <span class="type">int</span> keycode</code></em>,
+                                                         <em class="parameter"><code><span class="type">unsigned long </span> mask</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-set-input-focus-window" title="meta_display_set_input_focus_window ()">meta_display_set_input_focus_window</a> (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focus_frame</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-focus-the-no-focus-window" title="meta_display_focus_the_no_focus_window ()">meta_display_focus_the_no_focus_window</a>
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+<span class="returnvalue">GSList</span> *            <a class="link" href="MetaDisplay.html#meta-display-sort-windows-by-stacking" title="meta_display_sort_windows_by_stacking ()">meta_display_sort_windows_by_stacking</a>
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">GSList</span> *windows</code></em>);
+<span class="returnvalue">Window</span>              <a class="link" href="MetaDisplay.html#meta-display-get-leader-window" title="meta_display_get_leader_window ()">meta_display_get_leader_window</a>      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-add-ignored-crossing-serial" title="meta_display_add_ignored_crossing_serial ()">meta_display_add_ignored_crossing_serial</a>
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">unsigned long </span> serial</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-unmanage-screen" title="meta_display_unmanage_screen ()">meta_display_unmanage_screen</a>        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-clear-mouse-mode" title="meta_display_clear_mouse_mode ()">meta_display_clear_mouse_mode</a>       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+                    <a class="link" href="MetaDisplay.html#MetaDisplay-struct" title="MetaDisplay">MetaDisplay</a>;
+                    <a class="link" href="MetaDisplay.html#MetaDisplayClass" title="MetaDisplayClass">MetaDisplayClass</a>;
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaDisplay.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  GObject
+   +----MetaDisplay
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaDisplay.properties"></a><h2>Properties</h2>
+<pre class="synopsis">
+  "<a class="link" href="MetaDisplay.html#MetaDisplay--focus-window" title='The "focus-window" property'>focus-window</a>"             <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>*           : Read
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaDisplay.signals"></a><h2>Signals</h2>
+<pre class="synopsis">
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-accelerator-activated" title='The "accelerator-activated" signal'>accelerator-activated</a>"                          : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-grab-op-begin" title='The "grab-op-begin" signal'>grab-op-begin</a>"                                  : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-grab-op-end" title='The "grab-op-end" signal'>grab-op-end</a>"                                    : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-overlay-key" title='The "overlay-key" signal'>overlay-key</a>"                                    : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-window-created" title='The "window-created" signal'>window-created</a>"                                 : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-window-demands-attention" title='The "window-demands-attention" signal'>window-demands-attention</a>"                       : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-window-marked-urgent" title='The "window-marked-urgent" signal'>window-marked-urgent</a>"                           : <code class="literal">Run Last</code>
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaDisplay.description"></a><h2>Description</h2>
+<p>
+The display is represented as a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> struct.
+</p>
+</div>
+<div class="refsect1">
+<a name="MetaDisplay.details"></a><h2>Details</h2>
+<div class="refsect2">
+<a name="MetaTabList"></a><h3>enum MetaTabList</h3>
+<pre class="programlisting">typedef enum {
+  META_TAB_LIST_NORMAL,
+  META_TAB_LIST_DOCKS,
+  META_TAB_LIST_GROUP,
+  META_TAB_LIST_NORMAL_ALL
+} MetaTabList;
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><a name="META-TAB-LIST-NORMAL:CAPS"></a><span class="term"><code class="literal">META_TAB_LIST_NORMAL</code></span></p></td>
+<td>Normal windows
+</td>
+</tr>
+<tr>
+<td><p><a name="META-TAB-LIST-DOCKS:CAPS"></a><span class="term"><code class="literal">META_TAB_LIST_DOCKS</code></span></p></td>
+<td>Dock windows
+</td>
+</tr>
+<tr>
+<td><p><a name="META-TAB-LIST-GROUP:CAPS"></a><span class="term"><code class="literal">META_TAB_LIST_GROUP</code></span></p></td>
+<td>Groups
+</td>
+</tr>
+<tr>
+<td><p><a name="META-TAB-LIST-NORMAL-ALL:CAPS"></a><span class="term"><code class="literal">META_TAB_LIST_NORMAL_ALL</code></span></p></td>
+<td>All windows
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaTabShowType"></a><h3>enum MetaTabShowType</h3>
+<pre class="programlisting">typedef enum {
+  META_TAB_SHOW_ICON,      /* Alt-Tab mode */
+  META_TAB_SHOW_INSTANTLY  /* Alt-Esc mode */
+} MetaTabShowType;
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><a name="META-TAB-SHOW-ICON:CAPS"></a><span class="term"><code class="literal">META_TAB_SHOW_ICON</code></span></p></td>
+<td>Show icon (Alt-Tab mode)
+</td>
+</tr>
+<tr>
+<td><p><a name="META-TAB-SHOW-INSTANTLY:CAPS"></a><span class="term"><code class="literal">META_TAB_SHOW_INSTANTLY</code></span></p></td>
+<td>Show instantly (Alt-Esc mode)
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-XFree"></a><h3>meta_XFree()</h3>
+<pre class="programlisting">#define meta_XFree(p) do { if ((p)) XFree ((p)); } while (0)
+</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-compositor-version"></a><h3>meta_display_get_compositor_version ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_display_get_compositor_version (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> *major</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> *minor</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-xinput-opcode"></a><h3>meta_display_get_xinput_opcode ()</h3>
+<pre class="programlisting"><span class="returnvalue">int</span>                 meta_display_get_xinput_opcode      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-supports-extended-barriers"></a><h3>meta_display_supports_extended_barriers ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_supports_extended_barriers
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>whether the X server supports extended barrier
+features as defined in version 2.3 of the XInput 2
+specification.
+Clients should use this method to determine whether their
+interfaces should depend on new barrier features.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-xdisplay"></a><h3>meta_display_get_xdisplay ()</h3>
+<pre class="programlisting"><span class="returnvalue">Display</span> *           meta_display_get_xdisplay           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-compositor"></a><h3>meta_display_get_compositor ()</h3>
+<pre class="programlisting"><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="returnvalue">MetaCompositor</span></a> *    meta_display_get_compositor         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-screens"></a><h3>meta_display_get_screens ()</h3>
+<pre class="programlisting"><span class="returnvalue">GSList</span> *            meta_display_get_screens            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>Screens for this display. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> Meta.Screen]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-has-shape"></a><h3>meta_display_has_shape ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_has_shape              (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-screen-for-root"></a><h3>meta_display_screen_for_root ()</h3>
+<pre class="programlisting"><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="returnvalue">MetaScreen</span></a> *        meta_display_screen_for_root        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">Window</span> xroot</code></em>);</pre>
+<p>
+Return the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> corresponding to a specified X root window ID.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>xroot</code></em> :</span></p></td>
+<td>a X window</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>the screen for the specified root window ID, or <a href="/home/florian/opt/gnome/share/gtk-doc/html/liboil/liboil-liboiljunk.html#NULL--CAPS"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-focus-window"></a><h3>meta_display_get_focus_window ()</h3>
+<pre class="programlisting"><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        meta_display_get_focus_window       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<p>
+Get the window that, according to events received from X server,
+currently has the input focus. We may have already sent a request
+to the X server to move the focus window elsewhere. (The
+expected_focus_window records where we've last set the input
+focus.)
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The current focus window. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-xwindow-is-a-no-focus-window"></a><h3>meta_display_xwindow_is_a_no_focus_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_xwindow_is_a_no_focus_window
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">Window</span> xwindow</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>A <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>xwindow</code></em> :</span></p></td>
+<td>An X11 window</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>
+<code class="literal">TRUE</code> iff window is one of mutter's internal "no focus" windows
+(there is one per screen) which will have the focus when there is no
+actual client window focused.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-damage-event-base"></a><h3>meta_display_get_damage_event_base ()</h3>
+<pre class="programlisting"><span class="returnvalue">int</span>                 meta_display_get_damage_event_base  (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-shape-event-base"></a><h3>meta_display_get_shape_event_base ()</h3>
+<pre class="programlisting"><span class="returnvalue">int</span>                 meta_display_get_shape_event_base   (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-xserver-time-is-before"></a><h3>meta_display_xserver_time_is_before ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_xserver_time_is_before (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> time1</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> time2</code></em>);</pre>
+<p>
+Xserver time can wraparound, thus comparing two timestamps needs to take
+this into account. If no wraparound has occurred, this is equivalent to
+  time1 &lt; time2
+Otherwise, we need to account for the fact that wraparound can occur
+and the fact that a timestamp of 0 must be special-cased since it
+means "older than anything else".
+</p>
+<p>
+Note that this is NOT an equivalent for time1 &lt;= time2; if that's what
+you need then you'll need to swap the order of the arguments and negate
+the result.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>time1</code></em> :</span></p></td>
+<td>An event timestamp</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>time2</code></em> :</span></p></td>
+<td>An event timestamp</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-last-user-time"></a><h3>meta_display_get_last_user_time ()</h3>
+<pre class="programlisting"><span class="returnvalue">guint32</span>             meta_display_get_last_user_time     (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>Timestamp of the last user interaction event with a window</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-current-time"></a><h3>meta_display_get_current_time ()</h3>
+<pre class="programlisting"><span class="returnvalue">guint32</span>             meta_display_get_current_time       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-current-time-roundtrip"></a><h3>meta_display_get_current_time_roundtrip ()</h3>
+<pre class="programlisting"><span class="returnvalue">guint32</span>             meta_display_get_current_time_roundtrip
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-ignored-modifier-mask"></a><h3>meta_display_get_ignored_modifier_mask ()</h3>
+<pre class="programlisting">unsigned <span class="returnvalue">int</span>        meta_display_get_ignored_modifier_mask
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>a mask of modifiers that should be ignored
+when matching keybindings to events</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-tab-list"></a><h3>meta_display_get_tab_list ()</h3>
+<pre class="programlisting"><span class="returnvalue">GList</span> *             meta_display_get_tab_list           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
+<p>
+Determine the list of windows that should be displayed for Alt-TAB
+functionality.  The windows are returned in most recently used order.
+If <em class="parameter"><code>workspace</code></em> is not <a href="/home/florian/opt/gnome/share/gtk-doc/html/liboil/liboil-liboiljunk.html#NULL--CAPS"><code class="literal">NULL</code></a>, the list only conains windows that are on
+<em class="parameter"><code>workspace</code></em> or have the demands-attention hint set; otherwise it contains
+all windows on <em class="parameter"><code>screen</code></em>.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>type</code></em> :</span></p></td>
+<td>type of tab list</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>workspace</code></em> :</span></p></td>
+<td>origin workspace. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>List of windows. <span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> Meta.Window]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-tab-next"></a><h3>meta_display_get_tab_next ()</h3>
+<pre class="programlisting"><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        meta_display_get_tab_next           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> backward</code></em>);</pre>
+<p>
+Determine the next window that should be displayed for Alt-TAB
+functionality.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>type</code></em> :</span></p></td>
+<td>type of tab list</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>workspace</code></em> :</span></p></td>
+<td>origin workspace</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>window</code></em> :</span></p></td>
+<td>starting window. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>backward</code></em> :</span></p></td>
+<td>If <code class="literal">TRUE</code>, look for the previous window.</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>Next window. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-tab-current"></a><h3>meta_display_get_tab_current ()</h3>
+<pre class="programlisting"><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        meta_display_get_tab_current        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
+<p>
+Determine the active window that should be displayed for Alt-TAB.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>type</code></em> :</span></p></td>
+<td>type of tab list</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>workspace</code></em> :</span></p></td>
+<td>origin workspace</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>Current window. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-begin-grab-op"></a><h3>meta_display_begin_grab_op ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_begin_grab_op          (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a> op</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> pointer_already_grabbed</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> frame_action</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> button</code></em>,
+                                                         <em class="parameter"><code><span class="type">gulong</span> modmask</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> root_x</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> root_y</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-end-grab-op"></a><h3>meta_display_end_grab_op ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_display_end_grab_op            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-grab-op"></a><h3>meta_display_get_grab_op ()</h3>
+<pre class="programlisting"><a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="returnvalue">MetaGrabOp</span></a>          meta_display_get_grab_op            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<p>
+Gets the current grab operation, if any.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>The <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> that the window is on</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>the current grab operation, or <a class="link" href="meta-Common.html#META-GRAB-OP-NONE:CAPS"><code class="literal">META_GRAB_OP_NONE</code></a> if
+Mutter doesn't currently have a grab. <a class="link" href="meta-Common.html#META-GRAB-OP-COMPOSITOR:CAPS"><code class="literal">META_GRAB_OP_COMPOSITOR</code></a> will
+be returned if a compositor-plugin modal operation is in effect
+(See <code class="function">mutter_begin_modal_for_plugin()</code>)</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-add-keybinding"></a><h3>meta_display_add_keybinding ()</h3>
+<pre class="programlisting"><span class="returnvalue">guint</span>               meta_display_add_keybinding         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">char</span> *name</code></em>,
+                                                         <em class="parameter"><code><span class="type">GSettings</span> *settings</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyBindingFlags" title="enum MetaKeyBindingFlags"><span class="type">MetaKeyBindingFlags</span></a> flags</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyHandlerFunc" title="MetaKeyHandlerFunc ()"><span class="type">MetaKeyHandlerFunc</span></a> handler</code></em>,
+                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>,
+                                                         <em class="parameter"><code><span class="type">GDestroyNotify</span> free_data</code></em>);</pre>
+<p>
+Add a keybinding at runtime. The key <em class="parameter"><code>name</code></em> in <em class="parameter"><code>schema</code></em> needs to be of
+type <code class="literal">G_VARIANT_TYPE_STRING_ARRAY</code>, with each string describing a
+keybinding in the form of "&lt;Control&gt;a" or "&lt;Shift&gt;&lt;Alt&gt;F1". The parser
+is fairly liberal and allows lower or upper case, and also abbreviations
+such as "&lt;Ctl&gt;" and "&lt;Ctrl&gt;". If the key is set to the empty list or a
+list with a single element of either "" or "disabled", the keybinding is
+disabled.
+If <a class="link" href="meta-Preferences.html#META-KEY-BINDING-REVERSES:CAPS"><code class="literal">META_KEY_BINDING_REVERSES</code></a> is specified in <em class="parameter"><code>flags</code></em>, the binding
+may be reversed by holding down the "shift" key; therefore, "&lt;Shift&gt;"
+cannot be one of the keys used. <em class="parameter"><code>handler</code></em> is expected to check for the
+"shift" modifier in this case and reverse its action.
+</p>
+<p>
+Use <a class="link" href="MetaDisplay.html#meta-display-remove-keybinding" title="meta_display_remove_keybinding ()"><code class="function">meta_display_remove_keybinding()</code></a> to remove the binding.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>the binding's name</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>settings</code></em> :</span></p></td>
+<td>the <span class="type">GSettings</span> object where <em class="parameter"><code>name</code></em> is stored</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>flags</code></em> :</span></p></td>
+<td>flags to specify binding details</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>handler</code></em> :</span></p></td>
+<td>function to run when the keybinding is invoked</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>the data to pass to <em class="parameter"><code>handler</code></em>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>free_data</code></em> :</span></p></td>
+<td>function to free <em class="parameter"><code>user_data</code></em>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>the corresponding keybinding action if the keybinding was
+added successfully, otherwise <a class="link" href="meta-Preferences.html#META-KEYBINDING-ACTION-NONE:CAPS"><code class="literal">META_KEYBINDING_ACTION_NONE</code></a>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-remove-keybinding"></a><h3>meta_display_remove_keybinding ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_remove_keybinding      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">char</span> *name</code></em>);</pre>
+<p>
+Remove keybinding <em class="parameter"><code>name</code></em>; the function will fail if <em class="parameter"><code>name</code></em> is not a known
+keybinding or has not been added with <a class="link" href="MetaDisplay.html#meta-display-add-keybinding" title="meta_display_add_keybinding ()"><code class="function">meta_display_add_keybinding()</code></a>.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>the <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>name of the keybinding to remove</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>
+<code class="literal">TRUE</code> if the binding has been removed sucessfully,
+otherwise <code class="literal">FALSE</code>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-keybinding-action"></a><h3>meta_display_get_keybinding_action ()</h3>
+<pre class="programlisting"><span class="returnvalue">guint</span>               meta_display_get_keybinding_action  (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code>unsigned <span class="type">int</span> keycode</code></em>,
+                                                         <em class="parameter"><code><span class="type">unsigned long </span> mask</code></em>);</pre>
+<p>
+Get the keybinding action bound to <em class="parameter"><code>keycode</code></em>. Builtin keybindings
+have a fixed associated <a class="link" href="meta-Preferences.html#MetaKeyBindingAction" title="enum MetaKeyBindingAction"><span class="type">MetaKeyBindingAction</span></a>, for bindings added
+dynamically the function will return the keybinding action
+<a class="link" href="MetaDisplay.html#meta-display-add-keybinding" title="meta_display_add_keybinding ()"><code class="function">meta_display_add_keybinding()</code></a> returns on registration.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>A <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>keycode</code></em> :</span></p></td>
+<td>Raw keycode</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>mask</code></em> :</span></p></td>
+<td>Event mask</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The action that should be taken for the given key, or
+<a class="link" href="meta-Preferences.html#META-KEYBINDING-ACTION-NONE:CAPS"><code class="literal">META_KEYBINDING_ACTION_NONE</code></a>.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-set-input-focus-window"></a><h3>meta_display_set_input_focus_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_display_set_input_focus_window (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focus_frame</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-focus-the-no-focus-window"></a><h3>meta_display_focus_the_no_focus_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_display_focus_the_no_focus_window
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-sort-windows-by-stacking"></a><h3>meta_display_sort_windows_by_stacking ()</h3>
+<pre class="programlisting"><span class="returnvalue">GSList</span> *            meta_display_sort_windows_by_stacking
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">GSList</span> *windows</code></em>);</pre>
+<p>
+Sorts a set of windows according to their current stacking order. If windows
+from multiple screens are present in the set of input windows, then all the
+windows on screen 0 are sorted below all the windows on screen 1, and so forth.
+Since the stacking order of override-redirect windows isn't controlled by
+Metacity, if override-redirect windows are in the input, the result may not
+correspond to the actual stacking order in the X server.
+</p>
+<p>
+An example of using this would be to sort the list of transient dialogs for a
+window into their current stacking order.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>windows</code></em> :</span></p></td>
+<td>Set of windows. <span class="annotation">[<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> MetaWindow]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>Input windows sorted by stacking order, from lowest to highest. <span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> MetaWindow]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-get-leader-window"></a><h3>meta_display_get_leader_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">Window</span>              meta_display_get_leader_window      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<p>
+Returns the window manager's leader window (as defined by the
+_NET_SUPPORTING_WM_CHECK mechanism of EWMH). For use by plugins that wish
+to attach additional custom properties to this window.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>xid of the leader window. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-add-ignored-crossing-serial"></a><h3>meta_display_add_ignored_crossing_serial ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_display_add_ignored_crossing_serial
+                                                        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">unsigned long </span> serial</code></em>);</pre>
+<p>
+Save the specified serial and ignore crossing events with that
+serial for the purpose of focus-follows-mouse. This can be used
+for certain changes to the window hierarchy that we don't want
+to change the focus window, even if they cause the pointer to
+end up in a new window.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>serial</code></em> :</span></p></td>
+<td>the serial to ignore</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-unmanage-screen"></a><h3>meta_display_unmanage_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_display_unmanage_screen        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-display-clear-mouse-mode"></a><h3>meta_display_clear_mouse_mode ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_display_clear_mouse_mode       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<p>
+Sets the mouse-mode flag to <code class="literal">FALSE</code>, which means that motion events are
+no longer ignored in mouse or sloppy focus.
+This is an internal function. It should be used only for reimplementing
+keybindings, and only in a manner compatible with core code.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplay-struct"></a><h3>MetaDisplay</h3>
+<pre class="programlisting">typedef struct _MetaDisplay MetaDisplay;</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplayClass"></a><h3>MetaDisplayClass</h3>
+<pre class="programlisting">typedef struct _MetaDisplayClass MetaDisplayClass;</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="MetaDisplay.property-details"></a><h2>Property Details</h2>
+<div class="refsect2">
+<a name="MetaDisplay--focus-window"></a><h3>The <code class="literal">"focus-window"</code> property</h3>
+<pre class="programlisting">  "focus-window"             <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>*           : Read</pre>
+<p>Currently focused window.</p>
+</div>
+</div>
+<div class="refsect1">
+<a name="MetaDisplay.signal-details"></a><h2>Signal Details</h2>
+<div class="refsect2">
+<a name="MetaDisplay-accelerator-activated"></a><h3>The <code class="literal">"accelerator-activated"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
+                                                        <span class="type">guint</span>        arg1,
+                                                        <span class="type">guint</span>        arg2,
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplay-grab-op-begin"></a><h3>The <code class="literal">"grab-op-begin"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
+                                                        <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>  *arg1,
+                                                        <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg2,
+                                                        <a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a>   arg3,
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplay-grab-op-end"></a><h3>The <code class="literal">"grab-op-end"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
+                                                        <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>  *arg1,
+                                                        <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg2,
+                                                        <a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a>   arg3,
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplay-overlay-key"></a><h3>The <code class="literal">"overlay-key"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplay-window-created"></a><h3>The <code class="literal">"window-created"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
+                                                        <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg1,
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplay-window-demands-attention"></a><h3>The <code class="literal">"window-demands-attention"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
+                                                        <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg1,
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplay-window-marked-urgent"></a><h3>The <code class="literal">"window-marked-urgent"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
+                                                        <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg1,
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.18</div>
+</body>
+</html>

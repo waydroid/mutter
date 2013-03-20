@@ -1,10 +1,9 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
-
-/* Mutter X event source for main loop */
-
-/* 
- * Copyright (C) 2001 Havoc Pennington
- * 
+/*
+ * Utilities for use with Clutter
+ *
+ * Copyright 2010 Red Hat, Inc.
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -14,27 +13,24 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
 
-#ifndef META_EVENT_QUEUE_H
-#define META_EVENT_QUEUE_H
+#ifndef __META_CLUTTER_UTILS_H__
+#define __META_CLUTTER_UTILS_H__
 
-#include <glib.h>
-#include <X11/Xlib.h>
+#include <clutter/clutter.h>
+gboolean meta_actor_vertices_are_untransformed (ClutterVertex *verts,
+                                                float          widthf,
+                                                float          heightf,
+                                                int           *x_origin,
+                                                int           *y_origin);
+gboolean meta_actor_is_untransformed (ClutterActor *actor,
+                                      int          *x_origin,
+                                      int          *y_origin);
 
-typedef struct _MetaEventQueue MetaEventQueue;
-
-typedef void   (* MetaEventQueueFunc) (XEvent         *event,
-                                       gpointer        data);
-
-MetaEventQueue* meta_event_queue_new  (Display            *display,
-                                       MetaEventQueueFunc  func,
-                                       gpointer            data);
-void            meta_event_queue_free (MetaEventQueue     *eq);
-
-#endif
+#endif /* __META_CLUTTER_UTILS_H__ */

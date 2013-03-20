@@ -50,7 +50,7 @@ struct _MetaUI
   MetaFrames *frames;
 
   /* For double-click tracking */
-  guint button_click_number;
+  gint button_click_number;
   Window button_click_window;
   int button_click_x;
   int button_click_y;
@@ -60,16 +60,6 @@ struct _MetaUI
 void
 meta_ui_init (void)
 {
-  /* As of 2.91.7, Gdk uses XI2 by default, which conflicts with the
-   * direct X calls we use - in particular, events caused by calls to
-   * XGrabPointer/XGrabKeyboard are no longer understood by GDK, while
-   * GDK will no longer generate the core XEvents we process.
-   * So at least for now, enforce the previous behavior.
-   */
-#if GTK_CHECK_VERSION(2, 91, 7)
-  gdk_disable_multidevice ();
-#endif
-
   if (!gtk_init_check (NULL, NULL))
     meta_fatal ("Unable to open X display %s\n", XDisplayName (NULL));
 
@@ -86,6 +76,18 @@ gint
 meta_ui_get_screen_number (void)
 {
   return gdk_screen_get_number (gdk_screen_get_default ());
+}
+
+/* For XInput2 */
+#include "display-private.h"
+
+static gboolean
+is_input_event (XEvent *event)
+{
+  MetaDisplay *display = meta_get_display ();
+
+  return (event->type == GenericEvent &&
+          event->xcookie.extension == display->xinput_opcode);
 }
 
 /* We do some of our event handling in frames.c, which expects
@@ -113,25 +115,33 @@ maybe_redirect_mouse_event (XEvent *xevent)
   GdkEvent *gevent;
   GdkWindow *gdk_window;
   Window window;
+  XIEvent *xev;
+  XIDeviceEvent *xev_d = NULL;
+  XIEnterEvent *xev_e = NULL;
 
-  switch (xevent->type)
+  if (!is_input_event (xevent))
+    return FALSE;
+
+  xev = (XIEvent *) xevent->xcookie.data;
+
+  switch (xev->evtype)
     {
-    case ButtonPress:
-    case ButtonRelease:
-      window = xevent->xbutton.window;
+    case XI_ButtonPress:
+    case XI_ButtonRelease:
+    case XI_Motion:
+      xev_d = (XIDeviceEvent *) xev;
+      window = xev_d->event;
       break;
-    case MotionNotify:
-      window = xevent->xmotion.window;
-      break;
-    case EnterNotify:
-    case LeaveNotify:
-      window = xevent->xcrossing.window;
+    case XI_Enter:
+    case XI_Leave:
+      xev_e = (XIEnterEvent *) xev;
+      window = xev_e->event;
       break;
     default:
       return FALSE;
     }
 
-  gdisplay = gdk_x11_lookup_xdisplay (xevent->xany.display);
+  gdisplay = gdk_x11_lookup_xdisplay (xev->display);
   ui = g_object_get_data (G_OBJECT (gdisplay), "meta-ui");
   if (!ui)
     return FALSE;
@@ -141,7 +151,7 @@ maybe_redirect_mouse_event (XEvent *xevent)
     return FALSE;
 
   gmanager = gdk_display_get_device_manager (gdisplay);
-  gdevice = gdk_device_manager_get_client_pointer (gmanager);
+  gdevice = gdk_x11_device_manager_lookup (gmanager, META_VIRTUAL_CORE_POINTER_ID);
 
   /* If GDK already thinks it has a grab, we better let it see events; this
    * is the menu-navigation case and events need to get sent to the appropriate
@@ -150,11 +160,11 @@ maybe_redirect_mouse_event (XEvent *xevent)
   if (gdk_display_device_is_grabbed (gdisplay, gdevice))
     return FALSE;
 
-  switch (xevent->type)
+  switch (xev->evtype)
     {
-    case ButtonPress:
-    case ButtonRelease:
-      if (xevent->type == ButtonPress)
+    case XI_ButtonPress:
+    case XI_ButtonRelease:
+      if (xev_d->evtype == XI_ButtonPress)
         {
           GtkSettings *settings = gtk_settings_get_default ();
           int double_click_time;
@@ -165,11 +175,11 @@ maybe_redirect_mouse_event (XEvent *xevent)
                         "gtk-double-click-distance", &double_click_distance,
                         NULL);
 
-          if (xevent->xbutton.button == ui->button_click_number &&
-              xevent->xbutton.window == ui->button_click_window &&
-              xevent->xbutton.time < ui->button_click_time + double_click_time &&
-              ABS (xevent->xbutton.x - ui->button_click_x) <= double_click_distance &&
-              ABS (xevent->xbutton.y - ui->button_click_y) <= double_click_distance)
+          if (xev_d->detail == ui->button_click_number &&
+              xev_d->event == ui->button_click_window &&
+              xev_d->time < ui->button_click_time + double_click_time &&
+              ABS (xev_d->event_x - ui->button_click_x) <= double_click_distance &&
+              ABS (xev_d->event_y - ui->button_click_y) <= double_click_distance)
             {
               gevent = gdk_event_new (GDK_2BUTTON_PRESS);
 
@@ -178,11 +188,11 @@ maybe_redirect_mouse_event (XEvent *xevent)
           else
             {
               gevent = gdk_event_new (GDK_BUTTON_PRESS);
-              ui->button_click_number = xevent->xbutton.button;
-              ui->button_click_window = xevent->xbutton.window;
-              ui->button_click_time = xevent->xbutton.time;
-              ui->button_click_x = xevent->xbutton.x;
-              ui->button_click_y = xevent->xbutton.y;
+              ui->button_click_number = xev_d->detail;
+              ui->button_click_window = xev_d->event;
+              ui->button_click_time = xev_d->time;
+              ui->button_click_x = xev_d->event_x;
+              ui->button_click_y = xev_d->event_y;
             }
         }
       else
@@ -191,25 +201,25 @@ maybe_redirect_mouse_event (XEvent *xevent)
         }
 
       gevent->button.window = g_object_ref (gdk_window);
-      gevent->button.button = xevent->xbutton.button;
-      gevent->button.time = xevent->xbutton.time;
-      gevent->button.x = xevent->xbutton.x;
-      gevent->button.y = xevent->xbutton.y;
-      gevent->button.x_root = xevent->xbutton.x_root;
-      gevent->button.y_root = xevent->xbutton.y_root;
+      gevent->button.button = xev_d->detail;
+      gevent->button.time = xev_d->time;
+      gevent->button.x = xev_d->event_x;
+      gevent->button.y = xev_d->event_y;
+      gevent->button.x_root = xev_d->root_x;
+      gevent->button.y_root = xev_d->root_y;
 
       break;
-    case MotionNotify:
+    case XI_Motion:
       gevent = gdk_event_new (GDK_MOTION_NOTIFY);
       gevent->motion.type = GDK_MOTION_NOTIFY;
       gevent->motion.window = g_object_ref (gdk_window);
       break;
-    case EnterNotify:
-    case LeaveNotify:
-      gevent = gdk_event_new (xevent->type == EnterNotify ? GDK_ENTER_NOTIFY : GDK_LEAVE_NOTIFY);
+    case XI_Enter:
+    case XI_Leave:
+      gevent = gdk_event_new (xev_e->evtype == XI_Enter ? GDK_ENTER_NOTIFY : GDK_LEAVE_NOTIFY);
       gevent->crossing.window = g_object_ref (gdk_window);
-      gevent->crossing.x = xevent->xcrossing.x;
-      gevent->crossing.y = xevent->xcrossing.y;
+      gevent->crossing.x = xev_e->event_x;
+      gevent->crossing.y = xev_e->event_y;
       break;
     default:
       g_assert_not_reached ();
@@ -725,6 +735,7 @@ meta_ui_theme_get_frame_borders (MetaUI *ui,
   GtkStyleContext *style = NULL;
   PangoContext *context;
   const PangoFontDescription *font_desc;
+  PangoFontDescription *free_font_desc = NULL;
 
   if (meta_ui_have_a_theme ())
     {
@@ -734,7 +745,8 @@ meta_ui_theme_get_frame_borders (MetaUI *ui,
       if (!font_desc)
         {
           style = gtk_style_context_new ();
-          font_desc = gtk_style_context_get_font (style, 0);
+          gtk_style_context_get (style, GTK_STATE_FLAG_NORMAL, "font", &free_font_desc, NULL);
+          font_desc = (const PangoFontDescription *) free_font_desc;
         }
 
       text_height = meta_pango_font_desc_get_text_height (font_desc, context);
@@ -742,6 +754,9 @@ meta_ui_theme_get_frame_borders (MetaUI *ui,
       meta_theme_get_frame_borders (meta_theme_get_current (),
                                     type, text_height, flags,
                                     borders);
+
+      if (free_font_desc)
+        pango_font_description_free (free_font_desc);
     }
   else
     {

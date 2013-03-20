@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>MetaKeybinding</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<link rel="home" href="index.html" title="Mutter Reference Manual">
+<link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
+<link rel="prev" href="meta-MetaGroup.html" title="MetaGroup">
+<link rel="next" href="MetaBackgroundActor.html" title="MetaBackgroundActor">
+<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="meta-MetaGroup.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Mutter Reference Manual</th>
+<td><a accesskey="n" href="MetaBackgroundActor.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#meta-MetaKeybinding.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#meta-MetaKeybinding.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#meta-MetaKeybinding.object-hierarchy" class="shortcut">Object Hierarchy</a>
+</td></tr>
+</table>
+<div class="refentry">
+<a name="meta-MetaKeybinding"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="meta-MetaKeybinding.top_of_page"></a>MetaKeybinding</span></h2>
+<p>MetaKeybinding — Key bindings</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv">
+<a name="meta-MetaKeybinding.synopsis"></a><h2>Synopsis</h2>
+<a name="MetaKeyBinding"></a><pre class="synopsis">                    <a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding-struct" title="MetaKeyBinding">MetaKeyBinding</a>;
+#define             <a class="link" href="meta-MetaKeybinding.html#META-TYPE-KEY-BINDING:CAPS" title="META_TYPE_KEY_BINDING">META_TYPE_KEY_BINDING</a>
+const <span class="returnvalue">char</span> *        <a class="link" href="meta-MetaKeybinding.html#meta-key-binding-get-name" title="meta_key_binding_get_name ()">meta_key_binding_get_name</a>           (<em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);
+<a class="link" href="meta-Common.html#MetaVirtualModifier" title="enum MetaVirtualModifier"><span class="returnvalue">MetaVirtualModifier</span></a> <a class="link" href="meta-MetaKeybinding.html#meta-key-binding-get-modifiers" title="meta_key_binding_get_modifiers ()">meta_key_binding_get_modifiers</a>      (<em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);
+<span class="returnvalue">guint</span>               <a class="link" href="meta-MetaKeybinding.html#meta-key-binding-get-mask" title="meta_key_binding_get_mask ()">meta_key_binding_get_mask</a>           (<em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="meta-MetaKeybinding.html#meta-key-binding-is-builtin" title="meta_key_binding_is_builtin ()">meta_key_binding_is_builtin</a>         (<em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="meta-MetaKeybinding.html#meta-keybindings-set-custom-handler" title="meta_keybindings_set_custom_handler ()">meta_keybindings_set_custom_handler</a> (<em class="parameter"><code>const <span class="type">gchar</span> *name</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyHandlerFunc" title="MetaKeyHandlerFunc ()"><span class="type">MetaKeyHandlerFunc</span></a> handler</code></em>,
+                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>,
+                                                         <em class="parameter"><code><span class="type">GDestroyNotify</span> free_data</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaKeybinding.html#meta-keybindings-switch-window" title="meta_keybindings_switch_window ()">meta_keybindings_switch_window</a>      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *event_window</code></em>,
+                                                         <em class="parameter"><code><span class="type">XIDeviceEvent</span> *event</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaKeybinding.html#meta-screen-ungrab-all-keys" title="meta_screen_ungrab_all_keys ()">meta_screen_ungrab_all_keys</a>         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="meta-MetaKeybinding.html#meta-screen-grab-all-keys" title="meta_screen_grab_all_keys ()">meta_screen_grab_all_keys</a>           (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+</pre>
+</div>
+<div class="refsect1">
+<a name="meta-MetaKeybinding.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  GBoxed
+   +----MetaKeyBinding
+</pre>
+</div>
+<div class="refsect1">
+<a name="meta-MetaKeybinding.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="meta-MetaKeybinding.details"></a><h2>Details</h2>
+<div class="refsect2">
+<a name="MetaKeyBinding-struct"></a><h3>MetaKeyBinding</h3>
+<pre class="programlisting">typedef struct _MetaKeyBinding MetaKeyBinding;</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="META-TYPE-KEY-BINDING:CAPS"></a><h3>META_TYPE_KEY_BINDING</h3>
+<pre class="programlisting">#define META_TYPE_KEY_BINDING               (meta_key_binding_get_type ())
+</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-key-binding-get-name"></a><h3>meta_key_binding_get_name ()</h3>
+<pre class="programlisting">const <span class="returnvalue">char</span> *        meta_key_binding_get_name           (<em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-key-binding-get-modifiers"></a><h3>meta_key_binding_get_modifiers ()</h3>
+<pre class="programlisting"><a class="link" href="meta-Common.html#MetaVirtualModifier" title="enum MetaVirtualModifier"><span class="returnvalue">MetaVirtualModifier</span></a> meta_key_binding_get_modifiers      (<em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-key-binding-get-mask"></a><h3>meta_key_binding_get_mask ()</h3>
+<pre class="programlisting"><span class="returnvalue">guint</span>               meta_key_binding_get_mask           (<em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-key-binding-is-builtin"></a><h3>meta_key_binding_is_builtin ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_key_binding_is_builtin         (<em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-keybindings-set-custom-handler"></a><h3>meta_keybindings_set_custom_handler ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_keybindings_set_custom_handler (<em class="parameter"><code>const <span class="type">gchar</span> *name</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyHandlerFunc" title="MetaKeyHandlerFunc ()"><span class="type">MetaKeyHandlerFunc</span></a> handler</code></em>,
+                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>,
+                                                         <em class="parameter"><code><span class="type">GDestroyNotify</span> free_data</code></em>);</pre>
+<p>
+Allows users to register a custom handler for a
+builtin key binding.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>The name of the keybinding to set</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>handler</code></em> :</span></p></td>
+<td>The new handler function. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>User data to pass to the callback</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>free_data</code></em> :</span></p></td>
+<td>Will be called when this handler is overridden.</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>
+<code class="literal">TRUE</code> if the binding known as <em class="parameter"><code>name</code></em> was found,
+<code class="literal">FALSE</code> otherwise.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-keybindings-switch-window"></a><h3>meta_keybindings_switch_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_keybindings_switch_window      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *event_window</code></em>,
+                                                         <em class="parameter"><code><span class="type">XIDeviceEvent</span> *event</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>event_window</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>event</code></em> :</span></p></td>
+<td>a <span class="type">XIDeviceEvent</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>binding</code></em> :</span></p></td>
+<td>a <a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-screen-ungrab-all-keys"></a><h3>meta_screen_ungrab_all_keys ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_screen_ungrab_all_keys         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-screen-grab-all-keys"></a><h3>meta_screen_grab_all_keys ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_screen_grab_all_keys           (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.18</div>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>MetaCompositor</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<link rel="home" href="index.html" title="Mutter Reference Manual">
+<link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
+<link rel="prev" href="MetaRectangle.html" title="MetaRectangle">
+<link rel="next" href="MetaDisplay.html" title="MetaDisplay">
+<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="MetaRectangle.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Mutter Reference Manual</th>
+<td><a accesskey="n" href="MetaDisplay.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#meta-MetaCompositor.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#meta-MetaCompositor.description" class="shortcut">Description</a>
+</td></tr>
+</table>
+<div class="refentry">
+<a name="meta-MetaCompositor"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="meta-MetaCompositor.top_of_page"></a>MetaCompositor</span></h2>
+<p>MetaCompositor — Compositor API</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv">
+<a name="meta-MetaCompositor.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">enum                <a class="link" href="meta-MetaCompositor.html#MetaCompEffect" title="enum MetaCompEffect">MetaCompEffect</a>;
+                    <a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor">MetaCompositor</a>;
+<a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="returnvalue">MetaCompositor</span></a> *    <a class="link" href="meta-MetaCompositor.html#meta-compositor-new" title="meta_compositor_new ()">meta_compositor_new</a>                 (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-destroy" title="meta_compositor_destroy ()">meta_compositor_destroy</a>             (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-manage-screen" title="meta_compositor_manage_screen ()">meta_compositor_manage_screen</a>       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-unmanage-screen" title="meta_compositor_unmanage_screen ()">meta_compositor_unmanage_screen</a>     (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-window-shape-changed" title="meta_compositor_window_shape_changed ()">meta_compositor_window_shape_changed</a>
+                                                        (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="meta-MetaCompositor.html#meta-compositor-process-event" title="meta_compositor_process_event ()">meta_compositor_process_event</a>       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><span class="type">XEvent</span> *event</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="meta-MetaCompositor.html#meta-compositor-filter-keybinding" title="meta_compositor_filter_keybinding ()">meta_compositor_filter_keybinding</a>   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-add-window" title="meta_compositor_add_window ()">meta_compositor_add_window</a>          (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-remove-window" title="meta_compositor_remove_window ()">meta_compositor_remove_window</a>       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-show-window" title="meta_compositor_show_window ()">meta_compositor_show_window</a>         (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompEffect" title="enum MetaCompEffect"><span class="type">MetaCompEffect</span></a> effect</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-hide-window" title="meta_compositor_hide_window ()">meta_compositor_hide_window</a>         (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompEffect" title="enum MetaCompEffect"><span class="type">MetaCompEffect</span></a> effect</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-switch-workspace" title="meta_compositor_switch_workspace ()">meta_compositor_switch_workspace</a>    (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *from</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *to</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Common.html#MetaMotionDirection" title="enum MetaMotionDirection"><span class="type">MetaMotionDirection</span></a> direction</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-maximize-window" title="meta_compositor_maximize_window ()">meta_compositor_maximize_window</a>     (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *old_rect</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *new_rect</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-unmaximize-window" title="meta_compositor_unmaximize_window ()">meta_compositor_unmaximize_window</a>   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *old_rect</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *new_rect</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-window-mapped" title="meta_compositor_window_mapped ()">meta_compositor_window_mapped</a>       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-window-unmapped" title="meta_compositor_window_unmapped ()">meta_compositor_window_unmapped</a>     (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-sync-window-geometry" title="meta_compositor_sync_window_geometry ()">meta_compositor_sync_window_geometry</a>
+                                                        (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> did_placement</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-set-updates-frozen" title="meta_compositor_set_updates_frozen ()">meta_compositor_set_updates_frozen</a>  (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> updates_frozen</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-queue-frame-drawn" title="meta_compositor_queue_frame_drawn ()">meta_compositor_queue_frame_drawn</a>   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> no_delay_frame</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-sync-stack" title="meta_compositor_sync_stack ()">meta_compositor_sync_stack</a>          (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">GList</span> *stack</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-sync-screen-size" title="meta_compositor_sync_screen_size ()">meta_compositor_sync_screen_size</a>    (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> height</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-flash-screen" title="meta_compositor_flash_screen ()">meta_compositor_flash_screen</a>        (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">ClutterActor</span> *      <a class="link" href="meta-MetaCompositor.html#meta-get-stage-for-screen" title="meta_get_stage_for_screen ()">meta_get_stage_for_screen</a>           (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">ClutterActor</span> *      <a class="link" href="meta-MetaCompositor.html#meta-get-overlay-group-for-screen" title="meta_get_overlay_group_for_screen ()">meta_get_overlay_group_for_screen</a>   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">Window</span>              <a class="link" href="meta-MetaCompositor.html#meta-get-overlay-window" title="meta_get_overlay_window ()">meta_get_overlay_window</a>             (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">GList</span> *             <a class="link" href="meta-MetaCompositor.html#meta-get-window-actors" title="meta_get_window_actors ()">meta_get_window_actors</a>              (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">ClutterActor</span> *      <a class="link" href="meta-MetaCompositor.html#meta-get-window-group-for-screen" title="meta_get_window_group_for_screen ()">meta_get_window_group_for_screen</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">ClutterActor</span> *      <a class="link" href="meta-MetaCompositor.html#meta-get-top-window-group-for-screen" title="meta_get_top_window_group_for_screen ()">meta_get_top_window_group_for_screen</a>
+                                                        (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-disable-unredirect-for-screen" title="meta_disable_unredirect_for_screen ()">meta_disable_unredirect_for_screen</a>  (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-enable-unredirect-for-screen" title="meta_enable_unredirect_for_screen ()">meta_enable_unredirect_for_screen</a>   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-set-stage-input-region" title="meta_set_stage_input_region ()">meta_set_stage_input_region</a>         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">XserverRegion</span> region</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-empty-stage-input-region" title="meta_empty_stage_input_region ()">meta_empty_stage_input_region</a>       (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+</pre>
+</div>
+<div class="refsect1">
+<a name="meta-MetaCompositor.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="meta-MetaCompositor.details"></a><h2>Details</h2>
+<div class="refsect2">
+<a name="MetaCompEffect"></a><h3>enum MetaCompEffect</h3>
+<pre class="programlisting">typedef enum {
+  META_COMP_EFFECT_CREATE,
+  META_COMP_EFFECT_UNMINIMIZE,
+  META_COMP_EFFECT_DESTROY,
+  META_COMP_EFFECT_MINIMIZE,
+  META_COMP_EFFECT_NONE
+} MetaCompEffect;
+</pre>
+<p>
+Indicates the appropriate effect to show the user for
+<a class="link" href="meta-MetaCompositor.html#meta-compositor-show-window" title="meta_compositor_show_window ()"><code class="function">meta_compositor_show_window()</code></a> and <a class="link" href="meta-MetaCompositor.html#meta-compositor-hide-window" title="meta_compositor_hide_window ()"><code class="function">meta_compositor_hide_window()</code></a>
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><a name="META-COMP-EFFECT-CREATE:CAPS"></a><span class="term"><code class="literal">META_COMP_EFFECT_CREATE</code></span></p></td>
+<td>The window is newly created
+  (also used for a window that was previously on a different
+  workspace and is changed to become visible on the active
+  workspace.)
+</td>
+</tr>
+<tr>
+<td><p><a name="META-COMP-EFFECT-UNMINIMIZE:CAPS"></a><span class="term"><code class="literal">META_COMP_EFFECT_UNMINIMIZE</code></span></p></td>
+<td>The window should be shown
+  as unminimizing from its icon geometry.
+</td>
+</tr>
+<tr>
+<td><p><a name="META-COMP-EFFECT-DESTROY:CAPS"></a><span class="term"><code class="literal">META_COMP_EFFECT_DESTROY</code></span></p></td>
+<td>The window is being destroyed
+</td>
+</tr>
+<tr>
+<td><p><a name="META-COMP-EFFECT-MINIMIZE:CAPS"></a><span class="term"><code class="literal">META_COMP_EFFECT_MINIMIZE</code></span></p></td>
+<td>The window should be shown
+  as minimizing to its icon geometry.
+</td>
+</tr>
+<tr>
+<td><p><a name="META-COMP-EFFECT-NONE:CAPS"></a><span class="term"><code class="literal">META_COMP_EFFECT_NONE</code></span></p></td>
+<td>No effect, the window should be
+  shown or hidden immediately.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaCompositor"></a><h3>MetaCompositor</h3>
+<pre class="programlisting">typedef struct _MetaCompositor MetaCompositor;</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-new"></a><h3>meta_compositor_new ()</h3>
+<pre class="programlisting"><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="returnvalue">MetaCompositor</span></a> *    meta_compositor_new                 (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-destroy"></a><h3>meta_compositor_destroy ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_destroy             (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-manage-screen"></a><h3>meta_compositor_manage_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_manage_screen       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-unmanage-screen"></a><h3>meta_compositor_unmanage_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_unmanage_screen     (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-window-shape-changed"></a><h3>meta_compositor_window_shape_changed ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_window_shape_changed
+                                                        (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-process-event"></a><h3>meta_compositor_process_event ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_compositor_process_event       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><span class="type">XEvent</span> *event</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-filter-keybinding"></a><h3>meta_compositor_filter_keybinding ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_compositor_filter_keybinding   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-add-window"></a><h3>meta_compositor_add_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_add_window          (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-remove-window"></a><h3>meta_compositor_remove_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_remove_window       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-show-window"></a><h3>meta_compositor_show_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_show_window         (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompEffect" title="enum MetaCompEffect"><span class="type">MetaCompEffect</span></a> effect</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-hide-window"></a><h3>meta_compositor_hide_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_hide_window         (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompEffect" title="enum MetaCompEffect"><span class="type">MetaCompEffect</span></a> effect</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-switch-workspace"></a><h3>meta_compositor_switch_workspace ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_switch_workspace    (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *from</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *to</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Common.html#MetaMotionDirection" title="enum MetaMotionDirection"><span class="type">MetaMotionDirection</span></a> direction</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-maximize-window"></a><h3>meta_compositor_maximize_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_maximize_window     (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *old_rect</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *new_rect</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-unmaximize-window"></a><h3>meta_compositor_unmaximize_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_unmaximize_window   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *old_rect</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *new_rect</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-window-mapped"></a><h3>meta_compositor_window_mapped ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_window_mapped       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-window-unmapped"></a><h3>meta_compositor_window_unmapped ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_window_unmapped     (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-sync-window-geometry"></a><h3>meta_compositor_sync_window_geometry ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_sync_window_geometry
+                                                        (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> did_placement</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-set-updates-frozen"></a><h3>meta_compositor_set_updates_frozen ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_set_updates_frozen  (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> updates_frozen</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-queue-frame-drawn"></a><h3>meta_compositor_queue_frame_drawn ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_queue_frame_drawn   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> no_delay_frame</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-sync-stack"></a><h3>meta_compositor_sync_stack ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_sync_stack          (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">GList</span> *stack</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-sync-screen-size"></a><h3>meta_compositor_sync_screen_size ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_sync_screen_size    (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> height</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-compositor-flash-screen"></a><h3>meta_compositor_flash_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_flash_screen        (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-get-stage-for-screen"></a><h3>meta_get_stage_for_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">ClutterActor</span> *      meta_get_stage_for_screen           (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The <span class="type">ClutterStage</span> for the screen. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-get-overlay-group-for-screen"></a><h3>meta_get_overlay_group_for_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">ClutterActor</span> *      meta_get_overlay_group_for_screen   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The overlay group corresponding to <em class="parameter"><code>screen</code></em>. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-get-overlay-window"></a><h3>meta_get_overlay_window ()</h3>
+<pre class="programlisting"><span class="returnvalue">Window</span>              meta_get_overlay_window             (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-get-window-actors"></a><h3>meta_get_window_actors ()</h3>
+<pre class="programlisting"><span class="returnvalue">GList</span> *             meta_get_window_actors              (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The set of <a class="link" href="MetaWindowActor.html" title="MetaWindowActor"><span class="type">MetaWindowActor</span></a> on <em class="parameter"><code>screen</code></em>. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> Clutter.Actor]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-get-window-group-for-screen"></a><h3>meta_get_window_group_for_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">ClutterActor</span> *      meta_get_window_group_for_screen    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The window group corresponding to <em class="parameter"><code>screen</code></em>. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-get-top-window-group-for-screen"></a><h3>meta_get_top_window_group_for_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">ClutterActor</span> *      meta_get_top_window_group_for_screen
+                                                        (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The top window group corresponding to <em class="parameter"><code>screen</code></em>. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-disable-unredirect-for-screen"></a><h3>meta_disable_unredirect_for_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_disable_unredirect_for_screen  (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<p>
+Disables unredirection, can be usefull in situations where having
+unredirected windows is undesireable like when recording a video.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-enable-unredirect-for-screen"></a><h3>meta_enable_unredirect_for_screen ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_enable_unredirect_for_screen   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<p>
+Enables unredirection which reduces the overhead for apps like games.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>screen</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-set-stage-input-region"></a><h3>meta_set_stage_input_region ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_set_stage_input_region         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+                                                         <em class="parameter"><code><span class="type">XserverRegion</span> region</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-empty-stage-input-region"></a><h3>meta_empty_stage_input_region ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_empty_stage_input_region       (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.18</div>
+</body>
+</html>

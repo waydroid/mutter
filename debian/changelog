@@ -1,3 +1,49 @@
+mutter (3.7.92-1) experimental; urgency=low
+
+  [ Sjoerd Simons ]
+  * New upstream release (3.7.90)
+  * Sync from  Ubuntu
+    + d/p/04_ignore_shadow_and_padding.patch:
+      * Dropped, Ubuntu specific
+  * debian/control.in: Bump b-d on glib
+  * debian/control.in: Rename libmutter0a to libmutter0b for more ABI fun
+  * d/p/10_Always-send-_NET_WM_FRAME_DRAWN-for-newly-created-wi.patch:
+    + Added. Fix a race causing _NET_WM_FRAME_DRAWN to not be sent in context
+    menus. (From upstream git, BGO#694771)
+
+  [ Emilio Pozuelo Monfort ]
+  * New upstream release.
+    + debian/control.in:
+      - Add gtk-doc-tools to build-depends.
+    + debian/libmutter-dev.install:
+      - Ship the API reference.
+    + d/p/10_Always-send-_NET_WM_FRAME_DRAWN-for-newly-created-wi.patch:
+      - Removed, included upstream.
+    + debian/patches/02-dont-select-for-XI2-events.patch:
+      - New patch, revert an upstream change to receive XI2 events
+        until #696272 is fixed. Thanks to Sjoerd Simons and
+        Frédéric Péters for the info and the patch.
+    + debian/copyright:
+      - Updated.
+
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Wed, 20 Mar 2013 18:12:12 +0100
+
+mutter (3.7.5-0ubuntu1~raring1) raring; urgency=medium
+
+  [ Jeremy Bicha ]
+  * New upstream release.
+  * debian/control.in:
+    - Bump minimum clutter & gsettings-desktop-schemas
+
+  [ Rico Tzschichholz ]
+  * debian/control.in:
+    - Build-depend on libxi-dev
+  * debian/patches/01_Wcast-align.patch: Refreshed
+  * debian/patches/05_ignore_num_workspaces.patch:
+    - Dropped, applied in new version
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 05 Feb 2013 20:58:05 -0500
+
 mutter (3.6.2-0ubuntu1) raring; urgency=low
 
   * New upstream release (LP: #1078155)

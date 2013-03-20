@@ -1,6 +1,6 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/**
+/*
  * SECTION:window-props
  * @short_description: #MetaWindow property handling
  *
@@ -48,6 +48,7 @@
 #include <X11/Xatom.h>
 #include <unistd.h>
 #include <string.h>
+
 #ifndef HOST_NAME_MAX
 /* Solaris headers apparently don't define this so do so manually; #326745 */
 #define HOST_NAME_MAX 255
@@ -200,6 +201,19 @@ reload_wm_client_machine (MetaWindow    *window,
 
   meta_verbose ("Window has client machine \"%s\"\n",
                 window->wm_client_machine ? window->wm_client_machine : "unset");
+
+  if (window->wm_client_machine == NULL)
+    {
+      window->is_remote = FALSE;
+    }
+  else
+    {
+      char hostname[HOST_NAME_MAX + 1] = "";
+
+      gethostname (hostname, HOST_NAME_MAX + 1);
+
+      window->is_remote = g_strcmp0 (window->wm_client_machine, hostname) != 0;
+    }
 }
 
 static void
@@ -243,6 +257,36 @@ reload_kwm_win_icon (MetaWindow    *window,
                      gboolean       initial)
 {
   reload_icon (window, window->display->atom__KWM_WIN_ICON);
+}
+
+static void
+reload_icon_geometry (MetaWindow    *window,
+                      MetaPropValue *value,
+                      gboolean       initial)
+{
+  if (value->type != META_PROP_VALUE_INVALID)
+    {
+      if (value->v.cardinal_list.n_cardinals != 4)
+        {
+          meta_verbose ("_NET_WM_ICON_GEOMETRY on %s has %d values instead of 4\n",
+                        window->desc, value->v.cardinal_list.n_cardinals);
+        }
+      else
+        {
+          MetaRectangle geometry;
+
+          geometry.x = (int)value->v.cardinal_list.cardinals[0];
+          geometry.y = (int)value->v.cardinal_list.cardinals[1];
+          geometry.width = (int)value->v.cardinal_list.cardinals[2];
+          geometry.height = (int)value->v.cardinal_list.cardinals[3];
+
+          meta_window_set_icon_geometry (window, &geometry);
+        }
+    }
+  else
+    {
+      meta_window_set_icon_geometry (window, NULL);
+    }
 }
 
 static void
@@ -369,7 +413,6 @@ set_title_text (MetaWindow  *window,
                 Atom         atom,
                 char       **target)
 {
-  char hostname[HOST_NAME_MAX + 1];
   gboolean modified = FALSE;
   
   if (!target)
@@ -386,9 +429,7 @@ set_title_text (MetaWindow  *window,
     }
   /* if WM_CLIENT_MACHINE indicates this machine is on a remote host
    * lets place that hostname in the title */
-  else if (window->wm_client_machine &&
-           !gethostname (hostname, HOST_NAME_MAX + 1) &&
-           strcmp (hostname, window->wm_client_machine))
+  else if (meta_window_is_remote (window))
     {
       *target = g_strdup_printf (_("%s (on %s)"),
                       title, window->wm_client_machine);
@@ -488,6 +529,14 @@ reload_wm_name (MetaWindow    *window,
     {
       set_window_title (window, NULL);
     }
+}
+
+static void
+reload_opaque_region (MetaWindow    *window,
+                      MetaPropValue *value,
+                      gboolean       initial)
+{
+  meta_window_update_opaque_region (window);
 }
 
 static void
@@ -882,12 +931,32 @@ reload_update_counter (MetaWindow    *window,
 {
   if (value->type != META_PROP_VALUE_INVALID)
     {
-#ifdef HAVE_XSYNC
-      XSyncCounter counter = value->v.xcounter;
+      meta_window_destroy_sync_request_alarm (window);
+      window->sync_request_counter = None;
 
-      window->sync_request_counter = counter;
-      meta_verbose ("Window has _NET_WM_SYNC_REQUEST_COUNTER 0x%lx\n",
-                    window->sync_request_counter);
+#ifdef HAVE_XSYNC
+      if (value->v.xcounter_list.n_counters == 0)
+        {
+          meta_warning ("_NET_WM_SYNC_REQUEST_COUNTER is empty\n");
+          return;
+        }
+
+      if (value->v.xcounter_list.n_counters == 1)
+        {
+          window->sync_request_counter = value->v.xcounter_list.counters[0];
+          window->extended_sync_request_counter = FALSE;
+        }
+      else
+        {
+          window->sync_request_counter = value->v.xcounter_list.counters[1];
+          window->extended_sync_request_counter = TRUE;
+        }
+      meta_verbose ("Window has _NET_WM_SYNC_REQUEST_COUNTER 0x%lx (extended=%s)\n",
+                    window->sync_request_counter,
+                    window->extended_sync_request_counter ? "true" : "false");
+
+      if (window->extended_sync_request_counter)
+        meta_window_create_sync_request_alarm (window);
 #endif
     }
 }
@@ -1584,6 +1653,30 @@ reload_gtk_hide_titlebar_when_maximized (MetaWindow    *window,
     }
 }
 
+static void
+reload_bypass_compositor (MetaWindow    *window,
+                          MetaPropValue *value,
+                          gboolean       initial)
+{
+  int requested_value = 0;
+  int current_value = window->bypass_compositor;
+
+  if (value->type != META_PROP_VALUE_INVALID)
+      requested_value = (int) value->v.cardinal;
+
+  if (requested_value == current_value)
+    return;
+
+  if (requested_value == _NET_WM_BYPASS_COMPOSITOR_HINT_ON)
+    meta_verbose ("Request to bypass compositor for window %s.\n", window->desc);
+  else if (requested_value == _NET_WM_BYPASS_COMPOSITOR_HINT_OFF)
+    meta_verbose ("Request to don't bypass compositor for window %s.\n", window->desc);
+  else if (requested_value != _NET_WM_BYPASS_COMPOSITOR_HINT_AUTO)
+    return;
+
+  window->bypass_compositor = requested_value;
+}
+
 #define RELOAD_STRING(var_name, propname) \
   static void                                       \
   reload_ ## var_name (MetaWindow    *window,       \
@@ -1652,11 +1745,12 @@ meta_display_init_window_prop_hooks (MetaDisplay *display)
     { display->atom__NET_WM_PID,       META_PROP_VALUE_CARDINAL, reload_net_wm_pid,        TRUE,  TRUE },
     { XA_WM_NAME,                      META_PROP_VALUE_TEXT_PROPERTY, reload_wm_name,      TRUE,  TRUE },
     { display->atom__MUTTER_HINTS,     META_PROP_VALUE_TEXT_PROPERTY, reload_mutter_hints, TRUE,  TRUE },
+    { display->atom__NET_WM_OPAQUE_REGION, META_PROP_VALUE_CARDINAL_LIST, reload_opaque_region, TRUE, TRUE },
     { display->atom__NET_WM_ICON_NAME, META_PROP_VALUE_UTF8,     reload_net_wm_icon_name,  TRUE,  FALSE },
     { XA_WM_ICON_NAME,                 META_PROP_VALUE_TEXT_PROPERTY, reload_wm_icon_name, TRUE,  FALSE },
     { display->atom__NET_WM_DESKTOP,   META_PROP_VALUE_CARDINAL, reload_net_wm_desktop,    TRUE,  FALSE },
     { display->atom__NET_STARTUP_ID,   META_PROP_VALUE_UTF8,     reload_net_startup_id,    TRUE,  FALSE },
-    { display->atom__NET_WM_SYNC_REQUEST_COUNTER, META_PROP_VALUE_SYNC_COUNTER, reload_update_counter, TRUE, FALSE },
+    { display->atom__NET_WM_SYNC_REQUEST_COUNTER, META_PROP_VALUE_SYNC_COUNTER_LIST, reload_update_counter, TRUE, TRUE },
     { XA_WM_NORMAL_HINTS,              META_PROP_VALUE_SIZE_HINTS, reload_normal_hints,    TRUE,  FALSE },
     { display->atom_WM_PROTOCOLS,      META_PROP_VALUE_ATOM_LIST, reload_wm_protocols,     TRUE,  FALSE },
     { XA_WM_HINTS,                     META_PROP_VALUE_WM_HINTS,  reload_wm_hints,         TRUE,  FALSE },
@@ -1676,13 +1770,14 @@ meta_display_init_window_prop_hooks (MetaDisplay *display)
     { display->atom_WM_STATE,          META_PROP_VALUE_INVALID,  NULL,                     FALSE, FALSE },
     { display->atom__NET_WM_ICON,      META_PROP_VALUE_INVALID,  reload_net_wm_icon,       FALSE, FALSE },
     { display->atom__KWM_WIN_ICON,     META_PROP_VALUE_INVALID,  reload_kwm_win_icon,      FALSE, FALSE },
-    { display->atom__NET_WM_ICON_GEOMETRY, META_PROP_VALUE_INVALID, NULL,                  FALSE, FALSE },
+    { display->atom__NET_WM_ICON_GEOMETRY, META_PROP_VALUE_CARDINAL_LIST, reload_icon_geometry,     FALSE, FALSE },
     { display->atom_WM_CLIENT_LEADER,  META_PROP_VALUE_INVALID, complain_about_broken_client, FALSE, FALSE },
     { display->atom_SM_CLIENT_ID,      META_PROP_VALUE_INVALID, complain_about_broken_client, FALSE, FALSE },
     { display->atom_WM_WINDOW_ROLE,    META_PROP_VALUE_INVALID, reload_wm_window_role,        FALSE, FALSE },
     { display->atom__NET_WM_WINDOW_TYPE, META_PROP_VALUE_INVALID, reload_net_wm_window_type,  FALSE, TRUE },
     { display->atom__NET_WM_STRUT,         META_PROP_VALUE_INVALID, reload_struts,            FALSE, FALSE },
     { display->atom__NET_WM_STRUT_PARTIAL, META_PROP_VALUE_INVALID, reload_struts,            FALSE, FALSE },
+    { display->atom__NET_WM_BYPASS_COMPOSITOR, META_PROP_VALUE_CARDINAL,  reload_bypass_compositor, FALSE, FALSE },
     { 0 },
   };
 

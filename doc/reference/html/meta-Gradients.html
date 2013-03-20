@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Gradients</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<link rel="home" href="index.html" title="Mutter Reference Manual">
+<link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
+<link rel="prev" href="meta-Common.html" title="Common">
+<link rel="next" href="meta-Preferences.html" title="Preferences">
+<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="meta-Common.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Mutter Reference Manual</th>
+<td><a accesskey="n" href="meta-Preferences.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#meta-Gradients.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#meta-Gradients.description" class="shortcut">Description</a>
+</td></tr>
+</table>
+<div class="refentry">
+<a name="meta-Gradients"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="meta-Gradients.top_of_page"></a>Gradients</span></h2>
+<p>Gradients — Metacity gradient rendering</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv">
+<a name="meta-Gradients.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">enum                <a class="link" href="meta-Gradients.html#MetaGradientType" title="enum MetaGradientType">MetaGradientType</a>;
+<span class="returnvalue">GdkPixbuf</span> *         <a class="link" href="meta-Gradients.html#meta-gradient-create-simple" title="meta_gradient_create_simple ()">meta_gradient_create_simple</a>         (<em class="parameter"><code><span class="type">int</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> height</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> *from</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> *to</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Gradients.html#MetaGradientType" title="enum MetaGradientType"><span class="type">MetaGradientType</span></a> style</code></em>);
+<span class="returnvalue">GdkPixbuf</span> *         <a class="link" href="meta-Gradients.html#meta-gradient-create-multi" title="meta_gradient_create_multi ()">meta_gradient_create_multi</a>          (<em class="parameter"><code><span class="type">int</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> height</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> *colors</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> n_colors</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Gradients.html#MetaGradientType" title="enum MetaGradientType"><span class="type">MetaGradientType</span></a> style</code></em>);
+<span class="returnvalue">GdkPixbuf</span> *         <a class="link" href="meta-Gradients.html#meta-gradient-create-interwoven" title="meta_gradient_create_interwoven ()">meta_gradient_create_interwoven</a>     (<em class="parameter"><code><span class="type">int</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> height</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> colors1[2]</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> thickness1</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> colors2[2]</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> thickness2</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-Gradients.html#meta-gradient-add-alpha" title="meta_gradient_add_alpha ()">meta_gradient_add_alpha</a>             (<em class="parameter"><code><span class="type">GdkPixbuf</span> *pixbuf</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">guchar</span> *alphas</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> n_alphas</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Gradients.html#MetaGradientType" title="enum MetaGradientType"><span class="type">MetaGradientType</span></a> type</code></em>);
+</pre>
+</div>
+<div class="refsect1">
+<a name="meta-Gradients.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="meta-Gradients.details"></a><h2>Details</h2>
+<div class="refsect2">
+<a name="MetaGradientType"></a><h3>enum MetaGradientType</h3>
+<pre class="programlisting">typedef enum {
+  META_GRADIENT_VERTICAL,
+  META_GRADIENT_HORIZONTAL,
+  META_GRADIENT_DIAGONAL,
+  META_GRADIENT_LAST
+} MetaGradientType;
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><a name="META-GRADIENT-VERTICAL:CAPS"></a><span class="term"><code class="literal">META_GRADIENT_VERTICAL</code></span></p></td>
+<td>Vertical gradient
+</td>
+</tr>
+<tr>
+<td><p><a name="META-GRADIENT-HORIZONTAL:CAPS"></a><span class="term"><code class="literal">META_GRADIENT_HORIZONTAL</code></span></p></td>
+<td>Horizontal gradient
+</td>
+</tr>
+<tr>
+<td><p><a name="META-GRADIENT-DIAGONAL:CAPS"></a><span class="term"><code class="literal">META_GRADIENT_DIAGONAL</code></span></p></td>
+<td>Diagonal gradient
+</td>
+</tr>
+<tr>
+<td><p><a name="META-GRADIENT-LAST:CAPS"></a><span class="term"><code class="literal">META_GRADIENT_LAST</code></span></p></td>
+<td>Marks the end of the <a class="link" href="meta-Gradients.html#MetaGradientType" title="enum MetaGradientType"><span class="type">MetaGradientType</span></a> enumeration
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-gradient-create-simple"></a><h3>meta_gradient_create_simple ()</h3>
+<pre class="programlisting"><span class="returnvalue">GdkPixbuf</span> *         meta_gradient_create_simple         (<em class="parameter"><code><span class="type">int</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> height</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> *from</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> *to</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Gradients.html#MetaGradientType" title="enum MetaGradientType"><span class="type">MetaGradientType</span></a> style</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>width</code></em> :</span></p></td>
+<td>Width in pixels</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>height</code></em> :</span></p></td>
+<td>Height in pixels</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>from</code></em> :</span></p></td>
+<td>Starting color</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>to</code></em> :</span></p></td>
+<td>Ending color</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>style</code></em> :</span></p></td>
+<td>Gradient style</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>A new linear gradient. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-gradient-create-multi"></a><h3>meta_gradient_create_multi ()</h3>
+<pre class="programlisting"><span class="returnvalue">GdkPixbuf</span> *         meta_gradient_create_multi          (<em class="parameter"><code><span class="type">int</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> height</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> *colors</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> n_colors</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Gradients.html#MetaGradientType" title="enum MetaGradientType"><span class="type">MetaGradientType</span></a> style</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>width</code></em> :</span></p></td>
+<td>Width in pixels</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>height</code></em> :</span></p></td>
+<td>Height in pixels</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>colors</code></em> :</span></p></td>
+<td>Array of colors. <span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> length=n_colors]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>n_colors</code></em> :</span></p></td>
+<td>Number of colors</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>style</code></em> :</span></p></td>
+<td>Gradient style</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>A new multi-step linear gradient. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-gradient-create-interwoven"></a><h3>meta_gradient_create_interwoven ()</h3>
+<pre class="programlisting"><span class="returnvalue">GdkPixbuf</span> *         meta_gradient_create_interwoven     (<em class="parameter"><code><span class="type">int</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> height</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> colors1[2]</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> thickness1</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">GdkRGBA</span> colors2[2]</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> thickness2</code></em>);</pre>
+<p>
+Interwoven essentially means we have two vertical gradients,
+cut into horizontal strips of the given thickness, and then the strips
+are alternated. I'm not sure what it's good for, just copied since
+WindowMaker had it.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>width</code></em> :</span></p></td>
+<td>Width in pixels</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>height</code></em> :</span></p></td>
+<td>Height in pixels</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>colors1</code></em> :</span></p></td>
+<td>Array of colors</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>thickness1</code></em> :</span></p></td>
+<td>Thickness</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>colors2</code></em> :</span></p></td>
+<td>Array of colors</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>thickness2</code></em> :</span></p></td>
+<td>Thickness</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-gradient-add-alpha"></a><h3>meta_gradient_add_alpha ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_gradient_add_alpha             (<em class="parameter"><code><span class="type">GdkPixbuf</span> *pixbuf</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">guchar</span> *alphas</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> n_alphas</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="meta-Gradients.html#MetaGradientType" title="enum MetaGradientType"><span class="type">MetaGradientType</span></a> type</code></em>);</pre>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.18</div>
+</body>
+</html>

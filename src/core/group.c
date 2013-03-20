@@ -1,7 +1,5 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* Mutter window groups */
-
 /* 
  * Copyright (C) 2002 Red Hat Inc.
  * Copyright (C) 2003 Rob Adams
@@ -20,6 +18,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
+ */
+
+/**
+ * SECTION:group
+ * @title: MetaGroup
+ * @short_description: Mutter window groups
+ *
  */
 
 #include <config.h>
@@ -106,6 +111,7 @@ meta_group_unref (MetaGroup *group)
 
 /**
  * meta_window_get_group: (skip)
+ * @window: a #MetaWindow
  *
  */
 MetaGroup*
@@ -204,6 +210,8 @@ meta_window_shutdown_group (MetaWindow *window)
 
 /**
  * meta_display_lookup_group: (skip)
+ * @display: a #MetaDisplay
+ * @group_leader: a X window
  *
  */
 MetaGroup*
@@ -279,6 +287,8 @@ meta_group_get_startup_id (MetaGroup *group)
 
 /**
  * meta_group_property_notify: (skip)
+ * @group: a #MetaGroup
+ * @event: a X event
  *
  */
 gboolean

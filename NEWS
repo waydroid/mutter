@@ -1,14 +1,157 @@
-3.6.2
-=====
-* Only process keyboard mapping events for the core X keyboard [Rui; #674859]
+3.7.92
+======
+* Build and improve reference docs [Tomeu; #676856, #695641, #695935]
+* Add tracking of whether there are fullscreen windows [Owen; 649748]
+* Misc bug fixes and cleanups [Adel, Giovanni, Owen, Jasper, Florian; #695269,
+  #695711, #694046, #695813, #695881, #676856, #696053, #682779, #696089,
+  #696091, #696087]
 
-Contributor:
-  Rui Matos
+Contributors:
+  Giovanni Campagna, Adel Gadllah, Florian Müllner, Jasper St. Pierre,
+  Tomeu Vizoso, Owen W. Taylor
 
 Translations:
-  Marek Černocký [cs], Мирослав Николић [sr, sr@latin], Mattias Põldaru [et],
-  Nilamdyuti Goswami [as], Sweta Kothari [gu], Tobias Endrigkeit [de],
-  A S Alam [pa]
+  Chao-Hsiung Liao [zh_HK, zh_TW], Rafael Ferreira [pt_BR],
+  Ihar Hrachyshka [be], Nilamdyuti Goswami [as], Matej Urbančič [sl],
+  Dimitris Spingos [el], Jan Kyselica [sk], Khaled Hosny [ar],
+  Мирослав Николић [sr, sr@latin], Duarte Loreto [pt], Sweta Kothari [gu],
+  Milo Casagrande [it], Changwoo Ryu [ko], Gil Forcada [ca],
+  Carles Ferrando [ca@valencia], Mattias Põldaru [et], Alexandre Franke [fr],
+  Ask H. Larsen [da], Rūdolfs Mazurs [lv], Nguyễn Thái Ngọc Duy [vi]
+
+3.7.91
+======
+* Fix windows being treated as remote after hostname changes [Ray; #688716]
+* Add meta_window_get_all_monitors() method [Adel; #646861]
+* Add grab API for externally defined accelerators [Florian; #643111]
+* Make session registration an explicit step [Ray; #694876]
+* Avoid unnecessary stage redraws [Adel; #694988, #695006]
+* Misc fixes [Giovanni, Ray, Jasper, Rui, Pavel, Owen; #694801, #694725,
+  #694641, #694393, #678917, #695093, #694837, #695135, #694771, #694321]
+
+Contributors:
+  Giovanni Campagna, Adel Gadllah, Rui Matos, Florian Müllner,
+  Jasper St. Pierre, Ray Strode, Owen Taylor, Pavel Vasin
+
+Translations:
+  Daniel Mustieles [es], Yaron Shahrabani [he], A S Alam [pa], Piotr Drąg [pl],
+  Gheyret Kenji [ug], Alexandre Franke [fr], Milo Casagrande [it],
+  Fran Diéguez [gl], Dimitris Spingos [el], Мирослав Николић [sr, sr@latin],
+  Chao-Hsiung Liao [zh_HK, zh_TW], Nguyễn Thái Ngọc Duy [vi],
+  Aurimas Černius [lt], Mario Blättermann [de], Kjartan Maraas [nb]
+
+3.7.90
+======
+* Support _NET_WM_OPAQUE_REGION [Jasper, Adel; #679901]
+* Add wrapper for XI2.3 pointer barriers [Jasper; #677215]
+* Update style of resize popups [Cosimo; #692741]
+* Implement compositor <-> application frame synchronization [Owen; #685463]
+* Handle animated backgrounds [Ray; #682427]
+* Add a new window group for override-redirect windows [Gayan; #633620]
+* Pass on pointer events on guard window to Clutter [Jasper; #681540]
+* Show correct shortcut in window menus [Giovanni; #694045]
+* Don't put minimized windows at the back of alt-tab [Jasper; #693991]
+* Misc bug fixes and cleanups [Jasper, Rico, Adel, Florian, Rui, Giovanni,
+  Owen; #692679, #693354, #690581, #693439, #692718, #693475, #693482, #693540,
+  #690580, #680990, #693833, #693922, #693854, #694224]
+
+Contributors:
+  Giovanni Campagna, Cosimo Cecchi, Adel Gadllah, Rui Matos, Florian Müllner,
+  Gayan Perera, Jasper St. Pierre, Ray Strode, Owen Taylor, Rico Tzschichholz
+
+Translations:
+  Fran Diéguez [gl], A S Alam [pa], Alexandre Franke [fr], Aurimas Černius [lt],
+  Мирослав Николић [sr, sr@latin], Fran Diéguez [gl], Piotr Drąg [pl],
+  Luca Ferretti [it], Daniel Mustieles [es]
+
+3.7.5
+=====
+* Don't allow multiline window titles [Jon; #683056]
+* Make meta_window_located_on_workspace() public [Jasper; #691744]
+* Request XI2.3 [Colin; #692877]
+* Add meta_window_set_icon_geometry() method [Florian; #692997]
+* Require XFixes 5.0 [Jasper; #677215]
+* Change unredirection hints to match spec changes [Adel; #693064]
+* Improve unredict heuristicts [Adel; #683786]
+* Misc bug fixes and cleanups [Florian, Jasper, Adel; #691874, #679901,
+  #692952, #693042]
+
+Contributors:
+  Adel Gadllah, William Jon McCann, Florian Müllner, Jasper St. Pierre,
+  Colin Walters
+
+Translations:
+  Daniel Mustieles [es], Ihar Hrachyshka [be], Nilamdyuti Goswami [as],
+  Gheyret Kenji [ug], Kjartan Maraas [nb], Yaron Shahrabani [he],
+  Piotr Drąg [pl], Chao-Hsiung Liao [zh_HK,zh_TW], Milo Casagrande [it]
+
+3.7.4
+=====
+* Add support for bypass compositor hints [Adel; #683020]
+* Make automaximization optional [Adel; #680990]
+* Add method for checking if the application is responding [Giovanni; #684340]
+* Expose the xinput opcode [Jasper; #690590]
+* Rebrand "minimize" as "hide" [Florian; #682887]
+* Misc bug fixes and cleanups [Giovanni, Ray, Jasper, Matthias, Debarshi,
+  Florian, Rui; #690454, #690573, #690593, #690956, #691363, #690609, #690317,
+  #689263]
+
+Contributors:
+  Giovanni Campagna, Matthias Clasen, Adel Gadllah, Rui Matos, Florian Müllner,
+  Debarshi Ray, Jasper St. Pierre, Ray Strode
+
+Translations:
+  Mattias Põldaru [et], Yaron Shahrabani [he], Daniel Mustieles [es],
+  Khaled Hosny [ar], Fran Diéguez [gl], A S Alam [pa], Piotr Drąg [pl],
+  Rafael Ferreira [pt_BR], Nilamdyuti Goswami [as], Alexander Shopov [bg],
+  Matej Urbančič [sl]
+
+3.7.3
+=====
+* Fix maximized windows jumping to other monitors [Alban; #556696]
+* Add 'switch-applications' keybinding [Florian; #688913]
+* Add a convenience method to focus the default window [Jasper; #689652]
+* Increase typical icon size to 96 [Jasper; #689651]
+* Port to XInput2 [Jasper; #688779]
+* Give dynamic keybindings a keybinding action [Florian; #682315]
+* Misc. fixes and cleanups [Jasper, Rui; #688777]
+
+Contributors:
+  Alban Crequy, Rui Matos, Florian Müllner, Jasper St. Pierre
+
+Translations:
+  Nilamdyuti Goswami [as], Piotr Drąg [pl], Yaron Shahrabani [he],
+  Dr.T.Vasudevan [ta], ManojKumar Giri [or], Shankar Prasad [kn]
+
+3.7.2
+=====
+* Fix spurious focus changes when showing desktop [Florian; #686928]
+* MetaPluginManager: don't send events to Clutter twice [Owen; #686406]
+* Add the ability to add shader hooks to MetaBackgroundActor [Giovanni; #669798]
+* Only process keyboard mapping events for the core X keyboard [Rui; #674859]
+* Import keybinding files from Metacity [Florian; #687672]
+* Add compositor hook to process keybindings selectively [Florian; #688202]
+* MetaBackgroundActor: add a setter for GLSL uniforms [Giovanni; #682536]
+* Misc. fixes and cleanups [Jasper, Rui, Florian, Rico; #688182]
+
+Contributors:
+  Giovanni Campagna, Rui Matos, Florian Müllner, Jasper St. Pierre,
+  Owen Taylor, Rico Tzschichholz
+
+Translations:
+  Rafael Ferreira [pt_BR], Tobias Endrigkeit [de], Yaron Shahrabani [he]
+
+3.7.1
+=====
+* screen: Ignore num-workspaces when using dynamic workspaces [Florian; #685439]
+
+Contributors:
+  Florian Müllner
+
+Translations:
+  Mattias Põldaru [et], Kjartan Maraas [nb], Мирослав Николић [sr, sr@latin],
+  Marek Černocký [cs], Andika Triwidada [id], Daniel Mustieles [es],
+  Fran Diéguez [gl], Matej Urbančič [sl]
 
 3.6.1
 =====

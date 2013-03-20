@@ -1,7 +1,5 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* Mutter Workspaces */
-
 /* 
  * Copyright (C) 2001 Havoc Pennington
  * Copyright (C) 2003 Rob Adams
@@ -21,6 +19,18 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
+ */
+
+/**
+ * SECTION:workspace
+ * @title:MetaWorkspace
+ * @short_description:Workspaces
+ *
+ * A workspace is a set of windows which all live on the same
+ * screen.  (You may also see the name "desktop" around the place,
+ * which is the EWMH's name for the same thing.)  Only one workspace
+ * of a screen may be active at once; all windows on all other workspaces
+ * are unmapped.
  */
 
 #include <config.h>
@@ -1043,6 +1053,15 @@ meta_workspace_set_builtin_struts (MetaWorkspace *workspace,
   meta_workspace_invalidate_work_area (workspace);
 }
 
+/**
+ * meta_workspace_get_work_area_for_monitor:
+ * @workspace: a #MetaWorkspace
+ * @which_monitor: a monitor index
+ * @area: (out): location to store the work area
+ *
+ * Stores the work area for @which_monitor on @workspace
+ * in @area.
+ */
 void
 meta_workspace_get_work_area_for_monitor (MetaWorkspace *workspace,
                                           int            which_monitor,
@@ -1292,8 +1311,7 @@ focus_ancestor_or_top_window (MetaWorkspace *workspace,
       ancestor = NULL;
       meta_window_foreach_ancestor (not_this_one, record_ancestor, &ancestor);
       if (ancestor != NULL &&
-          (ancestor->on_all_workspaces ||
-           ancestor->workspace == workspace) &&
+          meta_window_located_on_workspace (ancestor, workspace) &&
           meta_window_showing_on_its_workspace (ancestor))
         {
           meta_topic (META_DEBUG_FOCUS,
