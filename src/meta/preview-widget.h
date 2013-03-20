@@ -44,6 +44,8 @@ struct _MetaPreview
 {
   GtkBin bin;
 
+  GtkStyleContext *style_context;
+
   MetaTheme *theme;
   char *title;
   MetaFrameType type;
@@ -60,6 +62,7 @@ struct _MetaPreview
 
 struct _MetaPreviewClass
 {
+  /*< private >*/
   GtkBinClass parent_class;
 };
 

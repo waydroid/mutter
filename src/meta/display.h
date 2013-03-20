@@ -29,6 +29,13 @@
 #include <meta/prefs.h>
 #include <meta/common.h>
 
+/**
+ * MetaTabList:
+ * @META_TAB_LIST_NORMAL: Normal windows
+ * @META_TAB_LIST_DOCKS: Dock windows
+ * @META_TAB_LIST_GROUP: Groups
+ * @META_TAB_LIST_NORMAL_ALL: All windows
+ */
 typedef enum
 {
   META_TAB_LIST_NORMAL,
@@ -37,6 +44,11 @@ typedef enum
   META_TAB_LIST_NORMAL_ALL
 } MetaTabList;
 
+/**
+ * MetaTabShowType:
+ * @META_TAB_SHOW_ICON: Show icon (Alt-Tab mode)
+ * @META_TAB_SHOW_INSTANTLY: Show instantly (Alt-Esc mode)
+ */
 typedef enum
 {
   META_TAB_SHOW_ICON,      /* Alt-Tab mode */
@@ -56,17 +68,11 @@ GType meta_display_get_type (void) G_GNUC_CONST;
 
 #define meta_XFree(p) do { if ((p)) XFree ((p)); } while (0)
 
-typedef enum
-{
-  META_ATOM_FIRST = 0,
-#define item(x) META_ATOM_##x,
-#include "atomnames.h"
-#undef item
-}MetaAtom;
-
 void meta_display_get_compositor_version (MetaDisplay *display,
                                           int         *major,
                                           int         *minor);
+int meta_display_get_xinput_opcode (MetaDisplay *display);
+gboolean meta_display_supports_extended_barriers (MetaDisplay *display);
 Display *meta_display_get_xdisplay (MetaDisplay *display);
 MetaCompositor *meta_display_get_compositor (MetaDisplay *display);
 GSList *meta_display_get_screens (MetaDisplay *display);
@@ -82,7 +88,6 @@ gboolean  meta_display_xwindow_is_a_no_focus_window (MetaDisplay *display,
 
 int meta_display_get_damage_event_base (MetaDisplay *display);
 int meta_display_get_shape_event_base (MetaDisplay *display);
-Atom meta_display_get_atom (MetaDisplay *display, MetaAtom meta_atom);
 
 gboolean meta_display_xserver_time_is_before (MetaDisplay *display,
                                               guint32      time1,
@@ -127,19 +132,24 @@ void     meta_display_end_grab_op   (MetaDisplay *display,
 
 MetaGrabOp meta_display_get_grab_op (MetaDisplay *display);
 
-gboolean meta_display_add_keybinding    (MetaDisplay         *display,
-                                         const char          *name,
-                                         GSettings           *settings,
-                                         MetaKeyBindingFlags  flags,
-                                         MetaKeyHandlerFunc   handler,
-                                         gpointer             user_data,
-                                         GDestroyNotify       free_data);
+guint meta_display_add_keybinding    (MetaDisplay         *display,
+                                      const char          *name,
+                                      GSettings           *settings,
+                                      MetaKeyBindingFlags  flags,
+                                      MetaKeyHandlerFunc   handler,
+                                      gpointer             user_data,
+                                      GDestroyNotify       free_data);
 gboolean meta_display_remove_keybinding (MetaDisplay         *display,
                                          const char          *name);
 
-MetaKeyBindingAction meta_display_get_keybinding_action (MetaDisplay  *display,
-                                                         unsigned int  keycode,
-                                                         unsigned long mask);
+guint    meta_display_grab_accelerator   (MetaDisplay *display,
+                                          const char  *accelerator);
+gboolean meta_display_ungrab_accelerator (MetaDisplay *display,
+                                          guint        action_id);
+
+guint meta_display_get_keybinding_action (MetaDisplay  *display,
+                                          unsigned int  keycode,
+                                          unsigned long mask);
 
 /* meta_display_set_input_focus_window is like XSetInputFocus, except
  * that (a) it can't detect timestamps later than the current time,

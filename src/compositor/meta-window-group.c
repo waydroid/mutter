@@ -7,118 +7,26 @@
 
 #include <gdk/gdk.h> /* for gdk_rectangle_intersect() */
 
+#include "clutter-utils.h"
 #include "compositor-private.h"
 #include "meta-window-actor-private.h"
 #include "meta-window-group.h"
 #include "meta-background-actor-private.h"
+#include "meta-background-group-private.h"
 
 struct _MetaWindowGroupClass
 {
-  ClutterGroupClass parent_class;
+  ClutterActorClass parent_class;
 };
 
 struct _MetaWindowGroup
 {
-  ClutterGroup parent;
+  ClutterActor parent;
 
   MetaScreen *screen;
 };
 
-G_DEFINE_TYPE (MetaWindowGroup, meta_window_group, CLUTTER_TYPE_GROUP);
-
-/* This file uses pixel-aligned region computation to determine what
- * can be clipped out. This only really works if everything is aligned
- * to the pixel grid - not scaled or rotated and at integer offsets.
- *
- * (This could be relaxed - if we turned off filtering for unscaled
- * windows then windows would be, by definition aligned to the pixel
- * grid. And for rectangular windows without a shape, the outline that
- * we draw for an unrotated window is always a rectangle because we
- * don't use antialasing for the window boundary - with or without
- * filtering, with or without a scale. But figuring out exactly
- * what pixels will be drawn by the graphics system in these cases
- * gets tricky, so we just go for the easiest part - no scale,
- * and at integer offsets.)
- *
- * The way we check for pixel-aligned is by looking at the
- * transformation into screen space of the allocation box of an actor
- * and and checking if the corners are "close enough" to integral
- * pixel values.
- */
-
-/* The definition of "close enough" to integral pixel values is
- * equality when we convert to 24.8 fixed-point.
- */
-static inline int
-round_to_fixed (float x)
-{
-  return roundf (x * 256);
-}
-
-/* This helper function checks if (according to our fixed point precision)
- * the vertices @verts form a box of width @widthf and height @heightf
- * located at integral coordinates. These coordinates are returned
- * in @x_origin and @y_origin.
- */
-static gboolean
-vertices_are_untransformed (ClutterVertex *verts,
-                            float          widthf,
-                            float          heightf,
-                            int           *x_origin,
-                            int           *y_origin)
-{
-  int width, height;
-  int v0x, v0y, v1x, v1y, v2x, v2y, v3x, v3y;
-  int x, y;
-
-  width = round_to_fixed (widthf); height = round_to_fixed (heightf);
-
-  v0x = round_to_fixed (verts[0].x); v0y = round_to_fixed (verts[0].y);
-  v1x = round_to_fixed (verts[1].x); v1y = round_to_fixed (verts[1].y);
-  v2x = round_to_fixed (verts[2].x); v2y = round_to_fixed (verts[2].y);
-  v3x = round_to_fixed (verts[3].x); v3y = round_to_fixed (verts[3].y);
-
-  /* Using shifting for converting fixed => int, gets things right for
-   * negative values. / 256. wouldn't do the same
-   */
-  x = v0x >> 8;
-  y = v0y >> 8;
-
-  /* At integral coordinates? */
-  if (x * 256 != v0x || y * 256 != v0y)
-    return FALSE;
-
-  /* Not scaled? */
-  if (v1x - v0x != width || v2y - v0y != height)
-    return FALSE;
-
-  /* Not rotated/skewed? */
-  if (v0x != v2x || v0y != v1y ||
-      v3x != v1x || v3y != v2y)
-    return FALSE;
-
-  *x_origin = x;
-  *y_origin = y;
-
-  return TRUE;
-}
-
-/* Check if an actor is "untransformed" - which actually means transformed by
- * at most a integer-translation. The integer translation, if any, is returned.
- */
-static gboolean
-actor_is_untransformed (ClutterActor *actor,
-                        int          *x_origin,
-                        int          *y_origin)
-{
-  gfloat widthf, heightf;
-  ClutterVertex verts[4];
-
-  clutter_actor_get_size (actor, &widthf, &heightf);
-  clutter_actor_get_abs_allocation_vertices (actor, verts);
-
-  return vertices_are_untransformed (verts, widthf, heightf, x_origin, y_origin);
-}
+G_DEFINE_TYPE (MetaWindowGroup, meta_window_group, CLUTTER_TYPE_ACTOR);
 
 /* Help macros to scale from OpenGL <-1,1> coordinates system to
  * window coordinates ranging [0,window-size]. Borrowed from clutter-utils.c
@@ -175,7 +83,7 @@ painting_untransformed (MetaWindowGroup *window_group,
                                       viewport[3], viewport[1]);
     }
 
-  return vertices_are_untransformed (vertices, width, height, x_origin, y_origin);
+  return meta_actor_vertices_are_untransformed (vertices, width, height, x_origin, y_origin);
 }
 
 static void
@@ -206,7 +114,7 @@ meta_window_group_paint (ClutterActor *actor)
    * on the stage.
    */
   if (!painting_untransformed (window_group, &paint_x_origin, &paint_y_origin) ||
-      !actor_is_untransformed (actor, &actor_x_origin, &actor_y_origin))
+      !meta_actor_is_untransformed (actor, &actor_x_origin, &actor_y_origin))
     {
       CLUTTER_ACTOR_CLASS (meta_window_group_parent_class)->paint (actor);
       return;
@@ -219,7 +127,7 @@ meta_window_group_paint (ClutterActor *actor)
    * and subtract the opaque area of each window out of the visible
    * region that we pass to the windows below.
    */
-  children = clutter_container_get_children (CLUTTER_CONTAINER (actor));
+  children = clutter_actor_get_children (actor);
   children = g_list_reverse (children);
 
   /* Get the clipped redraw bounds from Clutter so that we can avoid
@@ -275,7 +183,7 @@ meta_window_group_paint (ClutterActor *actor)
           MetaWindowActor *window_actor = l->data;
           int x, y;
 
-          if (!actor_is_untransformed (CLUTTER_ACTOR (window_actor), &x, &y))
+          if (!meta_actor_is_untransformed (CLUTTER_ACTOR (window_actor), &x, &y))
             continue;
 
           x += paint_x_offset;
@@ -296,19 +204,24 @@ meta_window_group_paint (ClutterActor *actor)
           meta_window_actor_set_visible_region_beneath (window_actor, visible_region);
           cairo_region_translate (visible_region, x, y);
         }
-      else if (META_IS_BACKGROUND_ACTOR (l->data))
+      else if (META_IS_BACKGROUND_ACTOR (l->data) ||
+               META_IS_BACKGROUND_GROUP (l->data))
         {
-          MetaBackgroundActor *background_actor = l->data;
+          ClutterActor *background_actor = l->data;
           int x, y;
 
-          if (!actor_is_untransformed (CLUTTER_ACTOR (background_actor), &x, &y))
+          if (!meta_actor_is_untransformed (CLUTTER_ACTOR (background_actor), &x, &y))
             continue;
 
           x += paint_x_offset;
           y += paint_y_offset;
 
           cairo_region_translate (visible_region, - x, - y);
-          meta_background_actor_set_visible_region (background_actor, visible_region);
+
+          if (META_IS_BACKGROUND_GROUP (background_actor))
+            meta_background_group_set_visible_region (META_BACKGROUND_GROUP (background_actor), visible_region);
+          else
+            meta_background_actor_set_visible_region (META_BACKGROUND_ACTOR (background_actor), visible_region);
           cairo_region_translate (visible_region, x, y);
         }
     }
@@ -337,12 +250,20 @@ meta_window_group_paint (ClutterActor *actor)
   g_list_free (children);
 }
 
+static gboolean
+meta_window_group_get_paint_volume (ClutterActor       *actor,
+                                    ClutterPaintVolume *volume)
+{
+  return clutter_paint_volume_set_from_allocation (volume, actor);
+}
+
 static void
 meta_window_group_class_init (MetaWindowGroupClass *klass)
 {
   ClutterActorClass *actor_class = CLUTTER_ACTOR_CLASS (klass);
 
   actor_class->paint = meta_window_group_paint;
+  actor_class->get_paint_volume = meta_window_group_get_paint_volume;
 }
 
 static void

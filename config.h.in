@@ -1,4 +1,4 @@
-/* config.h.in.  Generated from configure.in by autoheader.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if building universal (internal helper macro) */
 #undef AC_APPLE_UNIVERSAL_BUILD
@@ -77,6 +77,9 @@
 
 /* Building with Xcursor support */
 #undef HAVE_XCURSOR
+
+/* Define if you have support for XInput 2.3 or greater */
+#undef HAVE_XI23
 
 /* Have keyboard extension library */
 #undef HAVE_XKB

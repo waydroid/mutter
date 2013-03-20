@@ -29,6 +29,25 @@
 #include <meta/boxes.h>
 #include <meta/types.h>
 
+/**
+ * MetaWindowType:
+ * @META_WINDOW_NORMAL: Normal
+ * @META_WINDOW_DESKTOP: Desktop
+ * @META_WINDOW_DOCK: Dock
+ * @META_WINDOW_DIALOG: Dialog
+ * @META_WINDOW_MODAL_DIALOG: Modal dialog
+ * @META_WINDOW_TOOLBAR: Toolbar
+ * @META_WINDOW_MENU: Menu
+ * @META_WINDOW_UTILITY: Utility
+ * @META_WINDOW_SPLASHSCREEN: Splashcreen
+ * @META_WINDOW_DROPDOWN_MENU: Dropdown menu
+ * @META_WINDOW_POPUP_MENU: Popup menu
+ * @META_WINDOW_TOOLTIP: Tooltip
+ * @META_WINDOW_NOTIFICATION: Notification
+ * @META_WINDOW_COMBO: Combobox
+ * @META_WINDOW_DND: Drag and drop
+ * @META_WINDOW_OVERRIDE_OTHER: Other override-redirect window type
+ */
 typedef enum
 {
   META_WINDOW_NORMAL,
@@ -51,6 +70,11 @@ typedef enum
   META_WINDOW_OVERRIDE_OTHER
 } MetaWindowType;
 
+/**
+ * MetaMaximizeFlags:
+ * @META_MAXIMIZE_HORIZONTAL: Horizontal
+ * @META_MAXIMIZE_VERTICAL: Vertical
+ */
 typedef enum
 {
   META_MAXIMIZE_HORIZONTAL = 1 << 0,
@@ -85,6 +109,8 @@ Atom meta_window_get_window_type_atom (MetaWindow *window);
 MetaWorkspace *meta_window_get_workspace (MetaWindow *window);
 int      meta_window_get_monitor (MetaWindow *window);
 gboolean meta_window_is_on_all_workspaces (MetaWindow *window);
+gboolean meta_window_located_on_workspace (MetaWindow    *window,
+                                           MetaWorkspace *workspace);
 gboolean meta_window_is_hidden (MetaWindow *window);
 void     meta_window_activate  (MetaWindow *window,guint32 current_time);
 void     meta_window_activate_with_workspace (MetaWindow    *window,
@@ -128,7 +154,7 @@ gboolean meta_window_is_ancestor_of_transient (MetaWindow            *window,
                                                MetaWindow            *transient);
 
 typedef gboolean (*MetaWindowForeachFunc) (MetaWindow *window,
-                                           void       *data);
+                                           void       *user_data);
 
 void     meta_window_foreach_transient        (MetaWindow            *window,
                                                MetaWindowForeachFunc  func,
@@ -139,12 +165,19 @@ void     meta_window_foreach_ancestor         (MetaWindow            *window,
 
 MetaMaximizeFlags meta_window_get_maximized (MetaWindow *window);
 gboolean          meta_window_is_fullscreen (MetaWindow *window);
+gboolean          meta_window_is_screen_sized (MetaWindow *window);
+gboolean          meta_window_is_monitor_sized (MetaWindow *window);
 gboolean          meta_window_is_on_primary_monitor (MetaWindow *window);
+gboolean          meta_window_requested_bypass_compositor (MetaWindow *window);
+gboolean          meta_window_requested_dont_bypass_compositor (MetaWindow *window);
+gint             *meta_window_get_all_monitors (MetaWindow *window, gsize *length);
 
 gboolean meta_window_is_mapped (MetaWindow  *window);
 gboolean meta_window_toplevel_is_mapped (MetaWindow  *window);
 gboolean meta_window_get_icon_geometry (MetaWindow    *window,
                                         MetaRectangle *rect);
+void meta_window_set_icon_geometry (MetaWindow    *window,
+                                    MetaRectangle *rect);
 void meta_window_maximize   (MetaWindow        *window,
                              MetaMaximizeFlags  directions);
 void meta_window_unmaximize (MetaWindow        *window,
@@ -187,6 +220,17 @@ void        meta_window_unstick            (MetaWindow  *window);
 void        meta_window_kill               (MetaWindow  *window);
 void        meta_window_focus              (MetaWindow  *window,
                                             guint32      timestamp);
+
+void        meta_window_check_alive        (MetaWindow  *window,
+                                            guint32      timestamp);
+
+void meta_window_get_work_area_current_monitor (MetaWindow    *window,
+                                                MetaRectangle *area);
+void meta_window_get_work_area_for_monitor     (MetaWindow    *window,
+                                                int            which_monitor,
+                                                MetaRectangle *area);
+void meta_window_get_work_area_all_monitors    (MetaWindow    *window,
+                                                MetaRectangle *area);
 
 void meta_window_begin_grab_op (MetaWindow *window,
                                 MetaGrabOp  op,

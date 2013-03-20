@@ -50,6 +50,32 @@ void meta_warning    (const char *format,
 void meta_fatal      (const char *format,
                       ...) G_GNUC_PRINTF (1, 2);
 
+/**
+ * MetaDebugTopic:
+ * @META_DEBUG_VERBOSE: verbose logging
+ * @META_DEBUG_FOCUS: focus
+ * @META_DEBUG_WORKAREA: workarea
+ * @META_DEBUG_STACK: stack
+ * @META_DEBUG_THEMES: themes
+ * @META_DEBUG_SM: session management
+ * @META_DEBUG_EVENTS: events
+ * @META_DEBUG_WINDOW_STATE: window state
+ * @META_DEBUG_WINDOW_OPS: window operations
+ * @META_DEBUG_GEOMETRY: geometry
+ * @META_DEBUG_PLACEMENT: window placement
+ * @META_DEBUG_PING: ping
+ * @META_DEBUG_XINERAMA: Xinerama
+ * @META_DEBUG_KEYBINDINGS: keybindings
+ * @META_DEBUG_SYNC: sync
+ * @META_DEBUG_ERRORS: errors
+ * @META_DEBUG_STARTUP: startup
+ * @META_DEBUG_PREFS: preferences
+ * @META_DEBUG_GROUPS: groups
+ * @META_DEBUG_RESIZING: resizing
+ * @META_DEBUG_SHAPES: shapes
+ * @META_DEBUG_COMPOSITOR: compositor
+ * @META_DEBUG_EDGE_RESISTANCE: edge resistance
+ */
 typedef enum
 {
   META_DEBUG_VERBOSE         = -1,
@@ -92,6 +118,8 @@ guint meta_unsigned_long_hash  (gconstpointer v);
 
 const char* meta_frame_type_to_string (MetaFrameType type);
 const char* meta_gravity_to_string (int gravity);
+
+char* meta_external_binding_name_for_action (guint keybinding_action);
 
 #include <libintl.h>
 #define _(x) dgettext (GETTEXT_PACKAGE, x)
@@ -139,12 +167,18 @@ GPid meta_show_dialog (const char *type,
  * MetaLaterType:
  * @META_LATER_RESIZE: call in a resize processing phase that is done
  *   before GTK+ repainting (including window borders) is done.
+ * @META_LATER_CALC_SHOWING: used by Mutter to compute which windows should be mapped
+ * @META_LATER_CHECK_FULLSCREEN: used by Mutter to see if there's a fullscreen window
+ * @META_LATER_SYNC_STACK: used by Mutter to send it's idea of the stacking order to the server
  * @META_LATER_BEFORE_REDRAW: call before the stage is redrawn
  * @META_LATER_IDLE: call at a very low priority (can be blocked
  *    by running animations or redrawing applications)
  **/
 typedef enum {
   META_LATER_RESIZE,
+  META_LATER_CALC_SHOWING,
+  META_LATER_CHECK_FULLSCREEN,
+  META_LATER_SYNC_STACK,
   META_LATER_BEFORE_REDRAW,
   META_LATER_IDLE
 } MetaLaterType;

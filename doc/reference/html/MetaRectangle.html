@@ -1,0 +1,342 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>MetaRectangle</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<link rel="home" href="index.html" title="Mutter Reference Manual">
+<link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
+<link rel="prev" href="MetaBarrier.html" title="MetaBarrier">
+<link rel="next" href="meta-MetaCompositor.html" title="MetaCompositor">
+<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="MetaBarrier.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Mutter Reference Manual</th>
+<td><a accesskey="n" href="meta-MetaCompositor.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#MetaRectangle.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#MetaRectangle.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#MetaRectangle.object-hierarchy" class="shortcut">Object Hierarchy</a>
+</td></tr>
+</table>
+<div class="refentry">
+<a name="MetaRectangle"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="MetaRectangle.top_of_page"></a>MetaRectangle</span></h2>
+<p>MetaRectangle — Simple box operations</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv">
+<a name="MetaRectangle.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">struct              <a class="link" href="MetaRectangle.html#MetaRectangle-struct" title="struct MetaRectangle">MetaRectangle</a>;
+struct              <a class="link" href="MetaRectangle.html#MetaStrut" title="struct MetaStrut">MetaStrut</a>;
+enum                <a class="link" href="MetaRectangle.html#MetaEdgeType" title="enum MetaEdgeType">MetaEdgeType</a>;
+struct              <a class="link" href="MetaRectangle.html#MetaEdge" title="struct MetaEdge">MetaEdge</a>;
+<a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="returnvalue">MetaRectangle</span></a> *     <a class="link" href="MetaRectangle.html#meta-rectangle-copy" title="meta_rectangle_copy ()">meta_rectangle_copy</a>                 (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaRectangle.html#meta-rectangle-free" title="meta_rectangle_free ()">meta_rectangle_free</a>                 (<em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);
+<a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="returnvalue">MetaRectangle</span></a>       <a class="link" href="MetaRectangle.html#meta-rect" title="meta_rect ()">meta_rect</a>                           (<em class="parameter"><code><span class="type">int</span> x</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> y</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> height</code></em>);
+<span class="returnvalue">int</span>                 <a class="link" href="MetaRectangle.html#meta-rectangle-area" title="meta_rectangle_area ()">meta_rectangle_area</a>                 (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-intersect" title="meta_rectangle_intersect ()">meta_rectangle_intersect</a>            (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src2</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *dest</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-equal" title="meta_rectangle_equal ()">meta_rectangle_equal</a>                (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src2</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaRectangle.html#meta-rectangle-union" title="meta_rectangle_union ()">meta_rectangle_union</a>                (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *dest</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-overlap" title="meta_rectangle_overlap ()">meta_rectangle_overlap</a>              (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-vert-overlap" title="meta_rectangle_vert_overlap ()">meta_rectangle_vert_overlap</a>         (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-horiz-overlap" title="meta_rectangle_horiz_overlap ()">meta_rectangle_horiz_overlap</a>        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-could-fit-rect" title="meta_rectangle_could_fit_rect ()">meta_rectangle_could_fit_rect</a>       (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *inner_rect</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-contains-rect" title="meta_rectangle_contains_rect ()">meta_rectangle_contains_rect</a>        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *inner_rect</code></em>);
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaRectangle.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  GBoxed
+   +----MetaRectangle
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaRectangle.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="MetaRectangle.details"></a><h2>Details</h2>
+<div class="refsect2">
+<a name="MetaRectangle-struct"></a><h3>struct MetaRectangle</h3>
+<pre class="programlisting">struct MetaRectangle {
+  int x;
+  int y;
+  int width;
+  int height;
+};
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaRectangle-struct.x"></a>x</code></em>;</span></p></td>
+<td>X coordinate of the top-left corner</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaRectangle-struct.y"></a>y</code></em>;</span></p></td>
+<td>Y coordinate of the top-left corner</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaRectangle-struct.width"></a>width</code></em>;</span></p></td>
+<td>Width of the rectangle</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaRectangle-struct.height"></a>height</code></em>;</span></p></td>
+<td>Height of the rectangle</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaStrut"></a><h3>struct MetaStrut</h3>
+<pre class="programlisting">struct MetaStrut {
+  MetaRectangle rect;
+  MetaSide side;
+};
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> <em class="structfield"><code><a name="MetaStrut.rect"></a>rect</code></em>;</span></p></td>
+<td>
+<a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> the <a class="link" href="MetaRectangle.html#MetaStrut" title="struct MetaStrut"><span class="type">MetaStrut</span></a> is on</td>
+</tr>
+<tr>
+<td><p><span class="term"><a class="link" href="meta-Common.html#MetaSide" title="enum MetaSide"><span class="type">MetaSide</span></a> <em class="structfield"><code><a name="MetaStrut.side"></a>side</code></em>;</span></p></td>
+<td>
+<a class="link" href="meta-Common.html#MetaSide" title="enum MetaSide"><span class="type">MetaSide</span></a> the <a class="link" href="MetaRectangle.html#MetaStrut" title="struct MetaStrut"><span class="type">MetaStrut</span></a> is on</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaEdgeType"></a><h3>enum MetaEdgeType</h3>
+<pre class="programlisting">typedef enum {
+  META_EDGE_WINDOW,
+  META_EDGE_MONITOR,
+  META_EDGE_SCREEN
+} MetaEdgeType;
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><a name="META-EDGE-WINDOW:CAPS"></a><span class="term"><code class="literal">META_EDGE_WINDOW</code></span></p></td>
+<td>Whether the edge belongs to a window
+</td>
+</tr>
+<tr>
+<td><p><a name="META-EDGE-MONITOR:CAPS"></a><span class="term"><code class="literal">META_EDGE_MONITOR</code></span></p></td>
+<td>Whether the edge belongs to a monitor
+</td>
+</tr>
+<tr>
+<td><p><a name="META-EDGE-SCREEN:CAPS"></a><span class="term"><code class="literal">META_EDGE_SCREEN</code></span></p></td>
+<td>Whether the edge belongs to a screen
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaEdge"></a><h3>struct MetaEdge</h3>
+<pre class="programlisting">struct MetaEdge {
+  MetaRectangle rect;      /* width or height should be 1 */
+  MetaSide side_type;
+  MetaEdgeType  edge_type;
+};
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> <em class="structfield"><code><a name="MetaEdge.rect"></a>rect</code></em>;</span></p></td>
+<td>
+<a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> with the bounds of the edge</td>
+</tr>
+<tr>
+<td><p><span class="term"><a class="link" href="meta-Common.html#MetaSide" title="enum MetaSide"><span class="type">MetaSide</span></a> <em class="structfield"><code><a name="MetaEdge.side-type"></a>side_type</code></em>;</span></p></td>
+<td>Side</td>
+</tr>
+<tr>
+<td><p><span class="term"><a class="link" href="MetaRectangle.html#MetaEdgeType" title="enum MetaEdgeType"><span class="type">MetaEdgeType</span></a> <em class="structfield"><code><a name="MetaEdge.edge-type"></a>edge_type</code></em>;</span></p></td>
+<td>To what belongs the edge</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-copy"></a><h3>meta_rectangle_copy ()</h3>
+<pre class="programlisting"><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="returnvalue">MetaRectangle</span></a> *     meta_rectangle_copy                 (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-free"></a><h3>meta_rectangle_free ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_rectangle_free                 (<em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rect"></a><h3>meta_rect ()</h3>
+<pre class="programlisting"><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="returnvalue">MetaRectangle</span></a>       meta_rect                           (<em class="parameter"><code><span class="type">int</span> x</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> y</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> height</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-area"></a><h3>meta_rectangle_area ()</h3>
+<pre class="programlisting"><span class="returnvalue">int</span>                 meta_rectangle_area                 (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-intersect"></a><h3>meta_rectangle_intersect ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_intersect            (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src2</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *dest</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>src1</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>src2</code></em> :</span></p></td>
+<td>another <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>dest</code></em> :</span></p></td>
+<td>an empty <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a>, to be filled
+with the coordinates of the intersection. <span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym> caller-allocates]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>TRUE is some intersection exists and is not degenerate, FALSE
+otherwise.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-equal"></a><h3>meta_rectangle_equal ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_equal                (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src2</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-union"></a><h3>meta_rectangle_union ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_rectangle_union                (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *dest</code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>rect1</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>rect2</code></em> :</span></p></td>
+<td>another <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>dest</code></em> :</span></p></td>
+<td>an empty <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a>, to be filled
+with the coordinates of the bounding box. <span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym> caller-allocates]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-overlap"></a><h3>meta_rectangle_overlap ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_overlap              (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-vert-overlap"></a><h3>meta_rectangle_vert_overlap ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_vert_overlap         (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-horiz-overlap"></a><h3>meta_rectangle_horiz_overlap ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_horiz_overlap        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-could-fit-rect"></a><h3>meta_rectangle_could_fit_rect ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_could_fit_rect       (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *inner_rect</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-rectangle-contains-rect"></a><h3>meta_rectangle_contains_rect ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_contains_rect        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
+                                                         <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *inner_rect</code></em>);</pre>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.18</div>
+</body>
+</html>

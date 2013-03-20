@@ -1,7 +1,5 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* Metacity gradient rendering */
-
 /* 
  * Copyright (C) 2001 Havoc Pennington, 99% copied from wrlib in
  * WindowMaker, Copyright (C) 1997-2000 Dan Pascu and Alfredo Kojima
@@ -21,6 +19,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.  */
+
+/**
+ * SECTION:gradient
+ * @title: Gradients
+ * @short_description: Metacity gradient rendering
+ */
 
 #include <meta/gradient.h>
 #include <meta/util.h>
@@ -172,6 +176,12 @@ meta_gradient_create_multi (int              width,
 
 /**
  * meta_gradient_create_interwoven: (skip)
+ * @width: Width in pixels
+ * @height: Height in pixels
+ * @colors1: Array of colors
+ * @thickness1: Thickness
+ * @colors2: Array of colors
+ * @thickness2: Thickness
  *
  * Interwoven essentially means we have two vertical gradients,
  * cut into horizontal strips of the given thickness, and then the strips

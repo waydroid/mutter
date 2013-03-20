@@ -46,12 +46,13 @@ typedef struct _MetaWindowActorPrivate MetaWindowActorPrivate;
 
 struct _MetaWindowActorClass
 {
-  ClutterGroupClass parent_class;
+  /*< private >*/
+  ClutterActorClass parent_class;
 };
 
 struct _MetaWindowActor
 {
-  ClutterGroup           parent;
+  ClutterActor           parent;
 
   MetaWindowActorPrivate *priv;
 };

@@ -1,7 +1,5 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* Mutter X screen handler */
-
 /* 
  * Copyright (C) 2001, 2002 Havoc Pennington
  * Copyright (C) 2002, 2003 Red Hat Inc.
@@ -26,6 +24,12 @@
  * 02111-1307, USA.
  */
 
+/**
+ * SECTION:screen
+ * @title: MetaScreen
+ * @short_description: Mutter X screen handler
+ */
+
 #include <config.h>
 #include "screen-private.h"
 #include <meta/main.h>
@@ -40,6 +44,7 @@
 #include "xprops.h"
 #include <meta/compositor.h>
 #include "mutter-enum-types.h"
+#include "core.h"
 
 #include <X11/extensions/Xinerama.h>
 
@@ -51,6 +56,7 @@
 #include <locale.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static char* get_screen_name (MetaDisplay *display,
                               int          number);
@@ -87,6 +93,7 @@ enum
   STARTUP_SEQUENCE_CHANGED,
   WORKAREAS_CHANGED,
   MONITORS_CHANGED,
+  IN_FULLSCREEN_CHANGED,
 
   LAST_SIGNAL
 };
@@ -241,6 +248,14 @@ meta_screen_class_init (MetaScreenClass *klass)
           NULL, NULL, NULL,
 		  G_TYPE_NONE, 0);
 
+  screen_signals[IN_FULLSCREEN_CHANGED] =
+    g_signal_new ("in-fullscreen-changed",
+		  G_TYPE_FROM_CLASS (object_class),
+		  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL, NULL,
+		  G_TYPE_NONE, 0);
+
   g_object_class_install_property (object_class,
                                    PROP_N_WORKSPACES,
                                    pspec);
@@ -311,13 +326,20 @@ set_wm_icon_size_hint (MetaScreen *screen)
 #define N_VALS 6
   gulong vals[N_VALS];
 
+  /* We've bumped the real icon size up to 96x96, but
+   * we really should not add these sorts of constraints
+   * on clients still using the legacy WM_HINTS interface.
+   */
+#define LEGACY_ICON_SIZE 32
+
   /* min width, min height, max w, max h, width inc, height inc */
-  vals[0] = META_ICON_WIDTH;
-  vals[1] = META_ICON_HEIGHT;
-  vals[2] = META_ICON_WIDTH;
-  vals[3] = META_ICON_HEIGHT;
+  vals[0] = LEGACY_ICON_SIZE;
+  vals[1] = LEGACY_ICON_SIZE;
+  vals[2] = LEGACY_ICON_SIZE;
+  vals[3] = LEGACY_ICON_SIZE;
   vals[4] = 0;
   vals[5] = 0;
+#undef LEGACY_ICON_SIZE
   
   XChangeProperty (screen->display->xdisplay, screen->xroot,
                    screen->display->atom_WM_ICON_SIZE,
@@ -467,11 +489,13 @@ reload_monitor_infos (MetaScreen *screen)
       screen->monitor_infos[0].number = 0;
       screen->monitor_infos[0].rect = screen->rect;
       screen->monitor_infos[0].rect.width = screen->rect.width / 2;
+      screen->monitor_infos[0].in_fullscreen = -1;
 
       screen->monitor_infos[1].number = 1;
       screen->monitor_infos[1].rect = screen->rect;
       screen->monitor_infos[1].rect.x = screen->rect.width / 2;
       screen->monitor_infos[1].rect.width = screen->rect.width / 2;
+      screen->monitor_infos[0].in_fullscreen = -1;
     }
 
   if (screen->n_monitor_infos == 0 &&
@@ -501,6 +525,7 @@ reload_monitor_infos (MetaScreen *screen)
               screen->monitor_infos[i].rect.y = infos[i].y_org;
               screen->monitor_infos[i].rect.width = infos[i].width;
               screen->monitor_infos[i].rect.height = infos[i].height;
+              screen->monitor_infos[i].in_fullscreen = -1;
 
               meta_topic (META_DEBUG_XINERAMA,
                           "Monitor %d is %d,%d %d x %d\n",
@@ -560,6 +585,7 @@ reload_monitor_infos (MetaScreen *screen)
           
       screen->monitor_infos[0].number = 0;
       screen->monitor_infos[0].rect = screen->rect;
+      screen->monitor_infos[0].in_fullscreen = -1;
     }
 
   filter_mirrored_monitors (screen);
@@ -573,7 +599,10 @@ reload_monitor_infos (MetaScreen *screen)
 /* The guard window allows us to leave minimized windows mapped so
  * that compositor code may provide live previews of them.
  * Instead of being unmapped/withdrawn, they get pushed underneath
- * the guard window. */
+ * the guard window. We also select events on the guard window, which
+ * should effectively be forwarded to events on the background actor,
+ * providing that the scene graph is set up correctly.
+ */
 static Window
 create_guard_window (Display *xdisplay, MetaScreen *screen)
 {
@@ -601,6 +630,17 @@ create_guard_window (Display *xdisplay, MetaScreen *screen)
 		   CopyFromParent, /* visual */
 		   CWEventMask|CWOverrideRedirect|CWBackPixel,
 		   &attributes);
+
+  {
+    unsigned char mask_bits[XIMaskLen (XI_LASTEVENT)] = { 0 };
+    XIEventMask mask = { XIAllMasterDevices, sizeof (mask_bits), mask_bits };
+
+    XISetMask (mask.mask, XI_ButtonPress);
+    XISetMask (mask.mask, XI_ButtonRelease);
+    XISetMask (mask.mask, XI_Motion);
+    XISelectEvents (xdisplay, guard_window, &mask, 1);
+  }
+
   meta_stack_tracker_record_add (screen->stack_tracker,
                                  guard_window,
                                  create_serial);
@@ -779,6 +819,7 @@ meta_screen_new (MetaDisplay *display,
                                                                  xroot, 
                                                                  NoEventMask);
   screen->work_area_later = 0;
+  screen->check_fullscreen_later = 0;
 
   screen->active_workspace = NULL;
   screen->workspaces = NULL;
@@ -942,6 +983,8 @@ meta_screen_free (MetaScreen *screen,
   
   if (screen->work_area_later != 0)
     g_source_remove (screen->work_area_later);
+  if (screen->check_fullscreen_later != 0)
+    g_source_remove (screen->check_fullscreen_later);
 
   if (screen->monitor_infos)
     g_free (screen->monitor_infos);
@@ -1037,34 +1080,6 @@ meta_screen_manage_all_windows (MetaScreen *screen)
   g_list_free (windows);
 
   meta_display_ungrab (screen->display);
-}
-
-void
-meta_screen_composite_all_windows (MetaScreen *screen)
-{
-  MetaDisplay *display;
-  GSList *windows, *tmp;
-
-  display = screen->display;
-  if (!display->compositor)
-    return;
-
-  windows = meta_display_list_windows (display,
-                                       META_LIST_INCLUDE_OVERRIDE_REDIRECT);
-  for (tmp = windows; tmp != NULL; tmp = tmp->next)
-    {
-      MetaWindow *window = tmp->data;
-
-      meta_compositor_add_window (display->compositor, window);
-      if (window->visible_to_compositor)
-        meta_compositor_show_window (display->compositor, window,
-                                     META_COMP_EFFECT_NONE);
-    }
-
-  g_slist_free (windows);
-  
-  /* initialize the compositor's view of the stacking order */
-  meta_stack_tracker_sync_stack (screen->stack_tracker);
 }
 
 /**
@@ -1190,7 +1205,7 @@ meta_screen_foreach_window (MetaScreen *screen,
    */
   
   winlist = NULL;
-  g_hash_table_foreach (screen->display->window_ids,
+  g_hash_table_foreach (screen->display->xids,
                         listify_func,
                         &winlist);
   
@@ -1207,7 +1222,9 @@ meta_screen_foreach_window (MetaScreen *screen,
         {
           MetaWindow *window = tmp->data;
 
-          if (window->screen == screen && !window->override_redirect)
+          if (META_IS_WINDOW (window) &&
+              window->screen == screen &&
+              !window->override_redirect)
             (* func) (screen, window, data);
         }
       
@@ -1943,25 +1960,31 @@ meta_screen_get_mouse_window (MetaScreen  *screen,
 {
   MetaWindow *window;
   Window root_return, child_return;
-  int root_x_return, root_y_return;
-  int win_x_return, win_y_return;
-  unsigned int mask_return;
-  
+  double root_x_return, root_y_return;
+  double win_x_return, win_y_return;
+  XIButtonState buttons;
+  XIModifierState mods;
+  XIGroupState group;
+
   if (not_this_one)
     meta_topic (META_DEBUG_FOCUS,
                 "Focusing mouse window excluding %s\n", not_this_one->desc);
 
   meta_error_trap_push (screen->display);
-  XQueryPointer (screen->display->xdisplay,
-                 screen->xroot,
-                 &root_return,
-                 &child_return,
-                 &root_x_return,
-                 &root_y_return,
-                 &win_x_return,
-                 &win_y_return,
-                 &mask_return);
+  XIQueryPointer (screen->display->xdisplay,
+                  META_VIRTUAL_CORE_POINTER_ID,
+                  screen->xroot,
+                  &root_return,
+                  &child_return,
+                  &root_x_return,
+                  &root_y_return,
+                  &win_x_return,
+                  &win_y_return,
+                  &buttons,
+                  &mods,
+                  &group);
   meta_error_trap_pop (screen->display);
+  free (buttons.mask);
 
   window = meta_stack_get_default_focus_window_at_point (screen->stack,
                                                          screen->active_workspace,
@@ -1977,27 +2000,39 @@ meta_screen_get_monitor_for_rect (MetaScreen    *screen,
                                   MetaRectangle *rect)
 {
   int i;
-  int best_monitor, monitor_score;
+  int best_monitor, monitor_score, rect_area;
 
   if (screen->n_monitor_infos == 1)
     return &screen->monitor_infos[0];
 
   best_monitor = 0;
-  monitor_score = 0;
+  monitor_score = -1;
 
+  rect_area = meta_rectangle_area (rect);
   for (i = 0; i < screen->n_monitor_infos; i++)
     {
-      MetaRectangle dest;
-      if (meta_rectangle_intersect (&screen->monitor_infos[i].rect,
-                                    rect,
-                                    &dest))
+      gboolean result;
+      int cur;
+
+      if (rect_area > 0)
         {
-          int cur = meta_rectangle_area (&dest);
-          if (cur > monitor_score)
-            {
-              monitor_score = cur;
-              best_monitor = i;
-            }
+          MetaRectangle dest;
+          result = meta_rectangle_intersect (&screen->monitor_infos[i].rect,
+                                             rect,
+                                             &dest);
+          cur = meta_rectangle_area (&dest);
+        }
+      else
+        {
+          result = meta_rectangle_contains_rect (&screen->monitor_infos[i].rect,
+                                                 rect);
+          cur = rect_area;
+        }
+
+      if (result && cur > monitor_score)
+        {
+          monitor_score = cur;
+          best_monitor = i;
         }
     }
 
@@ -2013,6 +2048,14 @@ meta_screen_get_monitor_for_window (MetaScreen *screen,
   meta_window_get_outer_rect (window, &window_rect);
 
   return meta_screen_get_monitor_for_rect (screen, &window_rect);
+}
+
+int
+meta_screen_get_monitor_index_for_rect (MetaScreen    *screen,
+                                        MetaRectangle *rect)
+{
+  const MetaMonitorInfo *monitor = meta_screen_get_monitor_for_rect (screen, rect);
+  return monitor->number;
 }
 
 const MetaMonitorInfo* 
@@ -2171,23 +2214,33 @@ meta_screen_get_current_monitor (MetaScreen *screen)
   if (screen->display->monitor_cache_invalidated)
     {
       Window root_return, child_return;
-      int win_x_return, win_y_return;
-      unsigned int mask_return;
+      double win_x_return, win_y_return;
+      double root_x_return, root_y_return;
+      XIButtonState buttons;
+      XIModifierState mods;
+      XIGroupState group;
       int i;
       MetaRectangle pointer_position;
-      
+
       screen->display->monitor_cache_invalidated = FALSE;
       
+      XIQueryPointer (screen->display->xdisplay,
+                      META_VIRTUAL_CORE_POINTER_ID,
+                      screen->xroot,
+                      &root_return,
+                      &child_return,
+                      &root_x_return,
+                      &root_y_return,
+                      &win_x_return,
+                      &win_y_return,
+                      &buttons,
+                      &mods,
+                      &group);
+      free (buttons.mask);
+
+      pointer_position.x = root_x_return;
+      pointer_position.y = root_y_return;
       pointer_position.width = pointer_position.height = 1;
-      XQueryPointer (screen->display->xdisplay,
-                     screen->xroot,
-                     &root_return,
-                     &child_return,
-                     &pointer_position.x,
-                     &pointer_position.y,
-                     &win_x_return,
-                     &win_y_return,
-                     &mask_return);
 
       screen->last_monitor_index = 0;
       for (i = 0; i < screen->n_monitor_infos; i++)
@@ -2926,7 +2979,7 @@ meta_screen_resize (MetaScreen *screen,
 
   /* Fix up monitor for all windows on this screen */
   windows = meta_display_list_windows (screen->display,
-                                       META_LIST_INCLUDE_OVERRIDE_REDIRECT);
+                                       META_LIST_DEFAULT);
   for (tmp = windows; tmp != NULL; tmp = tmp->next)
     {
       MetaWindow *window = tmp->data;
@@ -2937,6 +2990,8 @@ meta_screen_resize (MetaScreen *screen,
 
   g_free (old_monitor_infos);
   g_slist_free (windows);
+
+  meta_screen_queue_check_fullscreen (screen);
 
   g_signal_emit (screen, screen_signals[MONITORS_CHANGED], 0);
 }
@@ -3429,6 +3484,7 @@ meta_screen_get_display (MetaScreen *screen)
 
 /**
  * meta_screen_get_xroot: (skip)
+ * @screen: A #MetaScreen
  *
  */
 Window
@@ -3459,6 +3515,7 @@ meta_screen_get_size (MetaScreen *screen,
 
 /**
  * meta_screen_get_compositor_data: (skip)
+ * @screen: A #MetaScreen
  *
  */
 gpointer
@@ -3527,6 +3584,7 @@ meta_screen_get_active_workspace_index (MetaScreen *screen)
 
 /**
  * meta_screen_get_active_workspace:
+ * @screen: A #MetaScreen
  *
  * Returns: (transfer none): The current workspace
  */
@@ -3534,6 +3592,15 @@ MetaWorkspace *
 meta_screen_get_active_workspace (MetaScreen *screen)
 {
   return screen->active_workspace;
+}
+
+void
+meta_screen_focus_default_window (MetaScreen *screen,
+                                  guint32     timestamp)
+{
+  meta_workspace_focus_default_window (screen->active_workspace,
+                                       NULL,
+                                       timestamp);
 }
 
 void
@@ -3578,3 +3645,142 @@ meta_screen_set_active_workspace_hint (MetaScreen *screen)
   meta_error_trap_pop (screen->display);
 }
 
+static gboolean
+check_fullscreen_func (gpointer data)
+{
+  MetaScreen *screen = data;
+  GSList *windows;
+  GSList *tmp;
+  GSList *fullscreen_monitors = NULL;
+  gboolean in_fullscreen_changed = FALSE;
+  int i;
+
+  screen->check_fullscreen_later = 0;
+
+  windows = meta_display_list_windows (screen->display,
+                                       META_LIST_INCLUDE_OVERRIDE_REDIRECT);
+
+  for (tmp = windows; tmp != NULL; tmp = tmp->next)
+    {
+      MetaWindow *window = tmp->data;
+      gboolean covers_monitors = FALSE;
+
+      if (window->screen != screen || window->hidden)
+        continue;
+
+      if (window->fullscreen)
+        /* The checks for determining a fullscreen window's layer are quite
+         * elaborate, and we do a poor job at keeping it dynamically up-to-date.
+         * (It depends, for example, on whether the focus window is on the
+         * same monitor as the fullscreen window.) But because we minimize
+         * fullscreen windows not in LAYER_FULLSCREEN (see below), if the
+         * layer is stale here, it's really bad, so just force recomputation for
+         * here. This is expensive, but hopefully this function won't be
+         * called too often.
+         */
+        meta_window_update_layer (window);
+
+      if (window->override_redirect)
+        {
+          /* We want to handle the case where an application is creating an
+           * override-redirect window the size of the screen (monitor) and treat
+           * it similarly to a fullscreen window, though it doesn't have fullscreen
+           * window management behavior. (Being O-R, it's not managed at all.)
+           */
+          if (meta_window_is_monitor_sized (window))
+            covers_monitors = TRUE;
+        }
+      else
+        {
+          if (window->layer == META_LAYER_FULLSCREEN)
+            covers_monitors = TRUE;
+        }
+
+      if (covers_monitors)
+        {
+          int *monitors;
+          gsize n_monitors;
+          gsize j;
+
+          monitors = meta_window_get_all_monitors (window, &n_monitors);
+          for (j = 0; j < n_monitors; j++)
+            {
+              /* + 1 to avoid NULL */
+              gpointer monitor_p = GINT_TO_POINTER(monitors[j] + 1);
+              if (!g_slist_find (fullscreen_monitors, monitor_p))
+                fullscreen_monitors = g_slist_prepend (fullscreen_monitors, monitor_p);
+            }
+
+          g_free (monitors);
+        }
+
+      /* If we find a window that is fullscreen but not in the FULLSCREEN
+       * layer, it means that we've kicked it out of the layer because
+       * we've focused another window on the same monitor. In this case
+       * it would be confusing to keep the window fullscreen and visible,
+       * so minimize it. We can't do the same thing for override-redirect
+       * windows, so we just hope the application does the right thing.
+       */
+      if (!covers_monitors && window->fullscreen)
+        {
+          meta_window_minimize (window);
+          meta_topic (META_DEBUG_WINDOW_OPS,
+                      "Minimizing %s: was fullscreen but in a lower layer\n",
+                      window->desc);
+        }
+    }
+
+  g_slist_free (windows);
+
+  for (i = 0; i < screen->n_monitor_infos; i++)
+    {
+      MetaMonitorInfo *info = &screen->monitor_infos[i];
+      gboolean in_fullscreen = g_slist_find (fullscreen_monitors, GINT_TO_POINTER (i + 1)) != NULL;
+      if (in_fullscreen != info->in_fullscreen)
+        {
+          info->in_fullscreen = in_fullscreen;
+          in_fullscreen_changed = TRUE;
+        }
+    }
+
+  g_slist_free (fullscreen_monitors);
+
+  if (in_fullscreen_changed)
+    g_signal_emit (screen, screen_signals[IN_FULLSCREEN_CHANGED], 0, NULL);
+
+  return FALSE;
+}
+
+void
+meta_screen_queue_check_fullscreen (MetaScreen *screen)
+{
+  if (!screen->check_fullscreen_later)
+    screen->check_fullscreen_later = meta_later_add (META_LATER_CHECK_FULLSCREEN,
+                                                     check_fullscreen_func,
+                                                     screen, NULL);
+}
+
+/**
+ * meta_screen_get_monitor_in_fullscreen:
+ * @screen: a #MetaScreen
+ * @monitor: the monitor number
+ *
+ * Determines whether there is a fullscreen window obscuring the specified
+ * monitor. If there is a fullscreen window, the desktop environment will
+ * typically hide any controls that might obscure the fullscreen window.
+ *
+ * You can get notification when this changes by connecting to
+ * MetaScreen::in-fullscreen-changed.
+ *
+ * Returns: %TRUE if there is a fullscreen window covering the specified monitor.
+ */
+gboolean
+meta_screen_get_monitor_in_fullscreen (MetaScreen  *screen,
+                                       int          monitor)
+{
+  g_return_val_if_fail (META_IS_SCREEN (screen), FALSE);
+  g_return_val_if_fail (monitor >= 0 && monitor < screen->n_monitor_infos, FALSE);
+
+  /* We use -1 as a flag to mean "not known yet" for notification purposes */
+  return screen->monitor_infos[monitor].in_fullscreen == TRUE;
+}

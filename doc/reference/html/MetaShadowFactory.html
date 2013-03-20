@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>MetaShadowFactory</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<link rel="home" href="index.html" title="Mutter Reference Manual">
+<link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
+<link rel="prev" href="MetaBackgroundActor.html" title="MetaBackgroundActor">
+<link rel="next" href="MetaShapedTexture.html" title="MetaShapedTexture">
+<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="MetaBackgroundActor.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Mutter Reference Manual</th>
+<td><a accesskey="n" href="MetaShapedTexture.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#MetaShadowFactory.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#MetaShadowFactory.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#MetaShadowFactory.object-hierarchy" class="shortcut">Object Hierarchy</a>
+                   | 
+                  <a href="#MetaShadowFactory.signals" class="shortcut">Signals</a>
+</td></tr>
+</table>
+<div class="refentry">
+<a name="MetaShadowFactory"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="MetaShadowFactory.top_of_page"></a>MetaShadowFactory</span></h2>
+<p>MetaShadowFactory — Create and cache shadow textures for abritrary window shapes</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv">
+<a name="MetaShadowFactory.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">struct              <a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams">MetaShadowParams</a>;
+<a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="returnvalue">MetaShadowFactory</span></a> * <a class="link" href="MetaShadowFactory.html#meta-shadow-factory-get-default" title="meta_shadow_factory_get_default ()">meta_shadow_factory_get_default</a>     (<em class="parameter"><code><span class="type">void</span></code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaShadowFactory.html#meta-shadow-factory-set-params" title="meta_shadow_factory_set_params ()">meta_shadow_factory_set_params</a>      (<em class="parameter"><code><a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *factory</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">char</span> *class_name</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focused</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams"><span class="type">MetaShadowParams</span></a> *params</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="MetaShadowFactory.html#meta-shadow-factory-get-params" title="meta_shadow_factory_get_params ()">meta_shadow_factory_get_params</a>      (<em class="parameter"><code><a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *factory</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">char</span> *class_name</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focused</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams"><span class="type">MetaShadowParams</span></a> *params</code></em>);
+                    <a class="link" href="MetaShadowFactory.html#MetaShadowFactory-struct" title="MetaShadowFactory">MetaShadowFactory</a>;
+                    <a class="link" href="MetaShadowFactory.html#MetaShadowFactoryClass" title="MetaShadowFactoryClass">MetaShadowFactoryClass</a>;
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaShadowFactory.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  GObject
+   +----MetaShadowFactory
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaShadowFactory.signals"></a><h2>Signals</h2>
+<pre class="synopsis">
+  "<a class="link" href="MetaShadowFactory.html#MetaShadowFactory-changed" title='The "changed" signal'>changed</a>"                                        : <code class="literal">Run Last</code>
+</pre>
+</div>
+<div class="refsect1">
+<a name="MetaShadowFactory.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="MetaShadowFactory.details"></a><h2>Details</h2>
+<div class="refsect2">
+<a name="MetaShadowParams"></a><h3>struct MetaShadowParams</h3>
+<pre class="programlisting">struct MetaShadowParams {
+  int radius;
+  int top_fade;
+  int x_offset;
+  int y_offset;
+  guint8 opacity;
+};
+</pre>
+<p>
+The <a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams"><span class="type">MetaShadowParams</span></a> structure holds information about how to draw
+a particular style of shadow.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaShadowParams.radius"></a>radius</code></em>;</span></p></td>
+<td>the radius (gaussian standard deviation) of the shadow</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaShadowParams.top-fade"></a>top_fade</code></em>;</span></p></td>
+<td>if &gt;= 0, the shadow doesn't extend above the top
+of the shape, and fades out over the given number of pixels</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaShadowParams.x-offset"></a>x_offset</code></em>;</span></p></td>
+<td>horizontal offset of the shadow with respect to the
+shape being shadowed, in pixels</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">int</span> <em class="structfield"><code><a name="MetaShadowParams.y-offset"></a>y_offset</code></em>;</span></p></td>
+<td>vertical offset of the shadow with respect to the
+shape being shadowed, in pixels</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">guint8</span> <em class="structfield"><code><a name="MetaShadowParams.opacity"></a>opacity</code></em>;</span></p></td>
+<td>opacity of the shadow, from 0 to 255</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-shadow-factory-get-default"></a><h3>meta_shadow_factory_get_default ()</h3>
+<pre class="programlisting"><a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="returnvalue">MetaShadowFactory</span></a> * meta_shadow_factory_get_default     (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>the global singleton shadow factory. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-shadow-factory-set-params"></a><h3>meta_shadow_factory_set_params ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_shadow_factory_set_params      (<em class="parameter"><code><a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *factory</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">char</span> *class_name</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focused</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams"><span class="type">MetaShadowParams</span></a> *params</code></em>);</pre>
+<p>
+Updates the shadow parameters for a particular class of shadows
+for either the focused or unfocused state. If the class name
+does not name an existing class, a new class will be created
+(the other focus state for that class will have default values
+assigned to it.)
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>factory</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>class_name</code></em> :</span></p></td>
+<td>name of the class of shadow to set the params for.
+the default shadow classes are the names of the different
+theme frame types (normal, dialog, modal_dialog, utility,
+border, menu, attached) and in addition, popup-menu
+and dropdown-menu.</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>focused</code></em> :</span></p></td>
+<td>whether the shadow is for a focused window</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>params</code></em> :</span></p></td>
+<td>new parameter values</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-shadow-factory-get-params"></a><h3>meta_shadow_factory_get_params ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_shadow_factory_get_params      (<em class="parameter"><code><a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *factory</code></em>,
+                                                         <em class="parameter"><code>const <span class="type">char</span> *class_name</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focused</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams"><span class="type">MetaShadowParams</span></a> *params</code></em>);</pre>
+<p>
+Gets the shadow parameters for a particular class of shadows
+for either the focused or unfocused state. If the class name
+does not name an existing class, default values will be returned
+without printing an error.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>factory</code></em> :</span></p></td>
+<td>a <a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>class_name</code></em> :</span></p></td>
+<td>name of the class of shadow to get the params for</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>focused</code></em> :</span></p></td>
+<td>whether the shadow is for a focused window</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>params</code></em> :</span></p></td>
+<td>location to store the current parameter values. <span class="annotation">[<acronym title="Parameter for returning results. Default is transfer full."><span class="acronym">out</span></acronym> caller-allocates]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaShadowFactory-struct"></a><h3>MetaShadowFactory</h3>
+<pre class="programlisting">typedef struct _MetaShadowFactory MetaShadowFactory;</pre>
+<p>
+<a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> is used to create window shadows. It caches shadows internally
+so that multiple shadows created for the same shape with the same radius will
+share the same MetaShadow.
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaShadowFactoryClass"></a><h3>MetaShadowFactoryClass</h3>
+<pre class="programlisting">typedef struct _MetaShadowFactoryClass MetaShadowFactoryClass;</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="MetaShadowFactory.signal-details"></a><h2>Signal Details</h2>
+<div class="refsect2">
+<a name="MetaShadowFactory-changed"></a><h3>The <code class="literal">"changed"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *metashadowfactory,
+                                                        <span class="type">gpointer</span>           user_data)              : <code class="literal">Run Last</code></pre>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.18</div>
+</body>
+</html>

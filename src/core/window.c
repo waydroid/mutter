@@ -1,7 +1,5 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* Mutter X managed windows */
-
 /*
  * Copyright (C) 2001 Havoc Pennington, Anders Carlsson
  * Copyright (C) 2002, 2003 Red Hat, Inc.
@@ -24,6 +22,12 @@
  * 02111-1307, USA.
  */
 
+/**
+ * SECTION:window
+ * @title: MetaWindow
+ * @short_description: Mutter X managed windows
+ */
+
 #include <config.h>
 #include "window-private.h"
 #include "boxes-private.h"
@@ -44,9 +48,11 @@
 #include "window-props.h"
 #include "constraints.h"
 #include "mutter-enum-types.h"
+#include "core.h"
 
 #include <X11/Xatom.h>
 #include <X11/Xlibint.h> /* For display->resource_mask */
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
@@ -226,6 +232,9 @@ meta_window_finalize (GObject *object)
   if (window->frame_bounds)
     cairo_region_destroy (window->frame_bounds);
 
+  if (window->opaque_region)
+    cairo_region_destroy (window->opaque_region);
+
   meta_icon_cache_free (&window->icon_cache);
 
   g_free (window->sm_client_id);
@@ -366,7 +375,7 @@ meta_window_class_init (MetaWindowClass *klass)
                                    PROP_ICON,
                                    g_param_spec_object ("icon",
                                                         "Icon",
-                                                        "32 pixel sized icon",
+                                                        "96 pixel sized icon",
                                                         GDK_TYPE_PIXBUF,
                                                         G_PARAM_READABLE));
 
@@ -1003,8 +1012,8 @@ meta_window_new_with_attrs (MetaDisplay       *display,
 #ifdef HAVE_XSYNC
   window->sync_request_counter = None;
   window->sync_request_serial = 0;
-  window->sync_request_time.tv_sec = 0;
-  window->sync_request_time.tv_usec = 0;
+  window->sync_request_timeout_id = 0;
+  window->sync_request_alarm = None;
 #endif
 
   window->screen = screen;
@@ -1144,6 +1153,7 @@ meta_window_new_with_attrs (MetaDisplay       *display,
   window->role = NULL;
   window->sm_client_id = NULL;
   window->wm_client_machine = NULL;
+  window->is_remote = FALSE;
   window->startup_id = NULL;
 
   window->net_wm_pid = -1;
@@ -1393,6 +1403,9 @@ meta_window_new_with_attrs (MetaDisplay       *display,
   if (!window->override_redirect)
     meta_stack_add (window->screen->stack,
                     window);
+  else if (window->screen->tile_preview != NULL &&
+           meta_tile_preview_get_xwindow (window->screen->tile_preview, NULL) == xwindow)
+    window->layer = META_LAYER_NORMAL;
   else
     window->layer = META_LAYER_OVERRIDE_REDIRECT; /* otherwise set by MetaStack */
 
@@ -1755,6 +1768,12 @@ meta_window_unmanage (MetaWindow  *window,
       invalidate_work_areas (window);
     }
 
+  if (window->sync_request_timeout_id)
+    {
+      g_source_remove (window->sync_request_timeout_id);
+      window->sync_request_timeout_id = 0;
+    }
+
   if (window->display->grab_window == window)
     meta_display_end_grab_op (window->display, timestamp);
 
@@ -1807,6 +1826,8 @@ meta_window_unmanage (MetaWindow  *window,
 
   if (!window->override_redirect)
     meta_stack_remove (window->screen->stack, window);
+
+  meta_window_destroy_sync_request_alarm (window);
 
   if (window->frame)
     meta_window_destroy_frame (window);
@@ -1909,6 +1930,8 @@ meta_window_unmanage (MetaWindow  *window,
   meta_error_trap_pop (window->display);
 
   meta_prefs_remove_listener (prefs_changed_callback, window);
+
+  meta_screen_queue_check_fullscreen (window->screen);
 
   g_signal_emit (window, window_signals[UNMANAGED], 0);
 
@@ -2099,6 +2122,14 @@ set_net_wm_state (MetaWindow *window)
     }
 }
 
+/**
+ * meta_window_located_on_workspace:
+ * @window: a #MetaWindow
+ * @workspace: a #MetaWorkspace
+ *
+ * Returns: whether @window is displayed on @workspace, or whether it
+ * will be displayed on all workspaces.
+ */
 gboolean
 meta_window_located_on_workspace (MetaWindow    *window,
                                   MetaWorkspace *workspace)
@@ -2486,7 +2517,7 @@ meta_window_queue (MetaWindow *window, guint queuebits)
 
           const MetaLaterType window_queue_later_when[NUMBER_OF_QUEUES] =
             {
-              META_LATER_BEFORE_REDRAW, /* CALC_SHOWING */
+              META_LATER_CALC_SHOWING, /* CALC_SHOWING */
               META_LATER_RESIZE,        /* MOVE_RESIZE */
               META_LATER_BEFORE_REDRAW  /* UPDATE_ICON */
             };
@@ -3010,7 +3041,7 @@ meta_window_show (MetaWindow *window)
 
   if (!window->placed)
     {
-      if (window->showing_for_first_time && window->has_maximize_func)
+      if (meta_prefs_get_auto_maximize() && window->showing_for_first_time && window->has_maximize_func)
         {
           MetaRectangle work_area;
           meta_window_get_work_area_for_monitor (window, window->monitor->number, &work_area);
@@ -3184,6 +3215,9 @@ meta_window_show (MetaWindow *window)
       invalidate_work_areas (window);
     }
 
+  if (did_show)
+    meta_screen_queue_check_fullscreen (window->screen);
+
   /*
    * Now that we have shown the window, we no longer want to consider the
    * initial timestamp in any subsequent deliberations whether to focus this
@@ -3304,14 +3338,20 @@ meta_window_hide (MetaWindow *window)
        * active workspace; when it is not, we need to pass in NULL, so as to
        * focus the default window for the active workspace (this scenario
        * arises when we are switching workspaces).
+       * We also pass in NULL if we are in the process of hiding all non-desktop
+       * windows to avoid unexpected changes to the stacking order.
        */
-      if (my_workspace == window->screen->active_workspace)
+      if (my_workspace == window->screen->active_workspace &&
+          !my_workspace->showing_desktop)
         not_this_one = window;
 
       meta_workspace_focus_default_window (window->screen->active_workspace,
                                            not_this_one,
                                            timestamp);
     }
+
+  if (did_hide)
+    meta_screen_queue_check_fullscreen (window->screen);
 }
 
 static gboolean
@@ -3560,6 +3600,7 @@ meta_window_maximize (MetaWindow        *window,
           saved_rect = &window->saved_rect;
 
           window->maximized_vertically = FALSE;
+          window->tile_mode = META_TILE_NONE;
         }
 
       meta_window_maximize_internal (window,
@@ -3592,6 +3633,7 @@ meta_window_maximize (MetaWindow        *window,
 
 /**
  * meta_window_get_maximized:
+ * @window: a #MetaWindow
  *
  * Gets the current maximization state of the window, as combination
  * of the %META_MAXIMIZE_HORIZONTAL and %META_MAXIMIZE_VERTICAL flags;
@@ -3607,6 +3649,7 @@ meta_window_get_maximized (MetaWindow *window)
 
 /**
  * meta_window_is_fullscreen:
+ * @window: a #MetaWindow
  *
  * Return value: %TRUE if the window is currently fullscreen
  */
@@ -3617,7 +3660,96 @@ meta_window_is_fullscreen (MetaWindow *window)
 }
 
 /**
+ * meta_window_get_all_monitors:
+ * @window: The #MetaWindow
+ * @length: (out): gint holding the length, may be %NULL to ignore
+ *
+ * Returns: (array length=length) (element-type gint) (transfer container):
+ *           List of the monitor indices the window is on.
+ */
+gint *
+meta_window_get_all_monitors (MetaWindow *window, gsize *length)
+{
+  GArray *monitors;
+  MetaRectangle window_rect;
+  int i;
+
+  monitors = g_array_new (FALSE, FALSE, sizeof (int));
+  meta_window_get_outer_rect (window, &window_rect);
+
+  for (i = 0; i < window->screen->n_monitor_infos; i++)
+    {
+      MetaRectangle *monitor_rect = &window->screen->monitor_infos[i].rect;
+
+      if (meta_rectangle_overlap (&window_rect, monitor_rect))
+        g_array_append_val (monitors, i);
+    }
+
+  if (length)
+    *length = monitors->len;
+
+  i = -1;
+  g_array_append_val (monitors, i);
+
+  return (gint*) g_array_free (monitors, FALSE);
+}
+
+/**
+ * meta_window_is_screen_sized:
+ * @window: A #MetaWindow
+ *
+ * Return value: %TRUE if the window is occupies the
+ *               the whole screen (all monitors).
+ */
+gboolean
+meta_window_is_screen_sized (MetaWindow *window)
+{
+  MetaRectangle window_rect;
+  int screen_width, screen_height;
+
+  meta_screen_get_size (window->screen, &screen_width, &screen_height);
+  meta_window_get_outer_rect (window, &window_rect);
+
+  if (window_rect.x == 0 && window_rect.y == 0 &&
+      window_rect.width == screen_width && window_rect.height == screen_height)
+    return TRUE;
+
+  return FALSE;
+}
+
+/**
+ * meta_window_is_monitor_sized:
+ * @window: a #MetaWindow
+ *
+ * Return value: %TRUE if the window is occupies an entire monitor or
+ *               the whole screen.
+ */
+gboolean
+meta_window_is_monitor_sized (MetaWindow *window)
+{
+  if (window->fullscreen)
+    return TRUE;
+
+  if (meta_window_is_screen_sized (window))
+    return TRUE;
+
+  if (window->override_redirect)
+    {
+      MetaRectangle window_rect, monitor_rect;
+
+      meta_window_get_outer_rect (window, &window_rect);
+      meta_screen_get_monitor_geometry (window->screen, window->monitor->number, &monitor_rect);
+
+      if (meta_rectangle_equal (&window_rect, &monitor_rect))
+        return TRUE;
+    }
+
+  return FALSE;
+}
+
+/**
  * meta_window_is_on_primary_monitor:
+ * @window: a #MetaWindow
  *
  * Return value: %TRUE if the window is on the primary monitor
  */
@@ -3625,6 +3757,30 @@ gboolean
 meta_window_is_on_primary_monitor (MetaWindow *window)
 {
   return window->monitor->is_primary;
+}
+
+/**
+ * meta_window_requested_bypass_compositor:
+ * @window: a #MetaWindow
+ *
+ * Return value: %TRUE if the window requested to bypass the compositor
+ */
+gboolean
+meta_window_requested_bypass_compositor (MetaWindow *window)
+{
+  return window->bypass_compositor == _NET_WM_BYPASS_COMPOSITOR_HINT_ON;
+}
+
+/**
+ * meta_window_requested_dont_bypass_compositor:
+ * @window: a #MetaWindow
+ *
+ * Return value: %TRUE if the window requested to opt out of unredirecting
+ */
+gboolean
+meta_window_requested_dont_bypass_compositor (MetaWindow *window)
+{
+  return window->bypass_compositor == _NET_WM_BYPASS_COMPOSITOR_HINT_OFF;
 }
 
 void
@@ -3777,13 +3933,6 @@ meta_window_unmaximize_internal (MetaWindow        *window,
         window->maximized_horizontally && !unmaximize_horizontally;
       window->maximized_vertically =
         window->maximized_vertically   && !unmaximize_vertically;
-
-      /* Reset the tile mode for maximized tiled windows for consistency
-       * with "normal" maximized windows, but keep other tile modes,
-       * as side-by-side tiled windows may snap back.
-       */
-      if (window->tile_mode == META_TILE_MAXIMIZED)
-        window->tile_mode = META_TILE_NONE;
 
       /* Unmaximize to the saved_rect position in the direction(s)
        * being unmaximized.
@@ -3980,6 +4129,9 @@ meta_window_make_fullscreen_internal (MetaWindow  *window)
 
       recalc_window_features (window);
       set_net_wm_state (window);
+
+      /* For the auto-minimize feature, if we fail to get focus */
+      meta_screen_queue_check_fullscreen (window->screen);
 
       g_object_notify (G_OBJECT (window), "fullscreen");
     }
@@ -4212,6 +4364,8 @@ window_activate (MetaWindow     *window,
               "Focusing window %s due to activation\n",
               window->desc);
   meta_window_focus (window, timestamp);
+
+  meta_window_check_alive (window, timestamp);
 }
 
 /* This function exists since most of the functionality in window_activate
@@ -4386,16 +4540,142 @@ static_gravity_works (MetaDisplay *display)
   return display->static_gravity_works;
 }
 
+void
+meta_window_create_sync_request_alarm (MetaWindow *window)
+{
 #ifdef HAVE_XSYNC
+  XSyncAlarmAttributes values;
+  XSyncValue init;
+
+  if (window->sync_request_counter == None ||
+      window->sync_request_alarm != None)
+    return;
+
+  meta_error_trap_push_with_return (window->display);
+
+  /* In the new (extended style), the counter value is initialized by
+   * the client before mapping the window. In the old style, we're
+   * responsible for setting the initial value of the counter.
+   */
+  if (window->extended_sync_request_counter)
+    {
+      if (!XSyncQueryCounter(window->display->xdisplay,
+                             window->sync_request_counter,
+                             &init))
+        {
+          meta_error_trap_pop_with_return (window->display);
+          window->sync_request_counter = None;
+          return;
+        }
+
+      window->sync_request_serial =
+        XSyncValueLow32 (init) + ((gint64)XSyncValueHigh32 (init) << 32);
+    }
+  else
+    {
+      XSyncIntToValue (&init, 0);
+      XSyncSetCounter (window->display->xdisplay,
+                       window->sync_request_counter, init);
+      window->sync_request_serial = 0;
+    }
+
+  values.trigger.counter = window->sync_request_counter;
+  values.trigger.test_type = XSyncPositiveComparison;
+
+  /* Initialize to one greater than the current value */
+  values.trigger.value_type = XSyncRelative;
+  XSyncIntToValue (&values.trigger.wait_value, 1);
+
+  /* After triggering, increment test_value by this until
+   * until the test condition is false */
+  XSyncIntToValue (&values.delta, 1);
+
+  /* we want events (on by default anyway) */
+  values.events = True;
+
+  window->sync_request_alarm = XSyncCreateAlarm (window->display->xdisplay,
+                                                 XSyncCACounter |
+                                                 XSyncCAValueType |
+                                                 XSyncCAValue |
+                                                 XSyncCATestType |
+                                                 XSyncCADelta |
+                                                 XSyncCAEvents,
+                                                 &values);
+
+  if (meta_error_trap_pop_with_return (window->display) == Success)
+    meta_display_register_sync_alarm (window->display, &window->sync_request_alarm, window);
+  else
+    {
+      window->sync_request_alarm = None;
+      window->sync_request_counter = None;
+    }
+#endif
+}
+
+void
+meta_window_destroy_sync_request_alarm (MetaWindow *window)
+{
+#ifdef HAVE_XSYNC
+  if (window->sync_request_alarm != None)
+    {
+      /* Has to be unregistered _before_ clearing the structure field */
+      meta_display_unregister_sync_alarm (window->display, window->sync_request_alarm);
+      XSyncDestroyAlarm (window->display->xdisplay,
+                         window->sync_request_alarm);
+      window->sync_request_alarm = None;
+    }
+#endif /* HAVE_XSYNC */
+}
+
+#ifdef HAVE_XSYNC
+static gboolean
+sync_request_timeout (gpointer data)
+{
+  MetaWindow *window = data;
+
+  window->sync_request_timeout_id = 0;
+
+  /* We have now waited for more than a second for the
+   * application to respond to the sync request
+   */
+  window->disable_sync = TRUE;
+
+  /* Reset the wait serial, so we don't continue freezing
+   * window updates
+   */
+  window->sync_request_wait_serial = 0;
+  meta_compositor_set_updates_frozen (window->display->compositor, window,
+                                      meta_window_updates_are_frozen (window));
+
+  if (window == window->display->grab_window &&
+      meta_grab_op_is_resizing (window->display->grab_op))
+    {
+      update_resize (window,
+                     window->display->grab_last_user_action_was_snap,
+                     window->display->grab_latest_motion_x,
+                     window->display->grab_latest_motion_y,
+                     TRUE);
+    }
+
+  return FALSE;
+}
+
 static void
 send_sync_request (MetaWindow *window)
 {
-  XSyncValue value;
   XClientMessageEvent ev;
+  gint64 wait_serial;
 
-  window->sync_request_serial++;
+  /* For the old style of _NET_WM_SYNC_REQUEST_COUNTER, we just have to
+   * increase the value, but for the new "extended" style we need to
+   * pick an even (unfrozen) value sufficiently ahead of the last serial
+   * that we received from the client; the same code still works
+   * for the old style. The increment of 240 is specified by the EWMH
+   * and is (1 second) * (60fps) * (an increment of 4 per frame).
+   */
+  wait_serial = window->sync_request_serial + 240;
 
-  XSyncIntToValue (&value, window->sync_request_serial);
+  window->sync_request_wait_serial = wait_serial;
 
   ev.type = ClientMessage;
   ev.window = window->xwindow;
@@ -4408,8 +4688,9 @@ send_sync_request (MetaWindow *window)
    * want to use _roundtrip, though?
    */
   ev.data.l[1] = meta_display_get_current_time (window->display);
-  ev.data.l[2] = XSyncValueLow32 (value);
-  ev.data.l[3] = XSyncValueHigh32 (value);
+  ev.data.l[2] = wait_serial & G_GUINT64_CONSTANT(0xffffffff);
+  ev.data.l[3] = wait_serial >> 32;
+  ev.data.l[4] = window->extended_sync_request_counter ? 1 : 0;
 
   /* We don't need to trap errors here as we are already
    * inside an error_trap_push()/pop() pair.
@@ -4417,9 +4698,45 @@ send_sync_request (MetaWindow *window)
   XSendEvent (window->display->xdisplay,
 	      window->xwindow, False, 0, (XEvent*) &ev);
 
-  g_get_current_time (&window->sync_request_time);
+  /* We give the window 1 sec to respond to _NET_WM_SYNC_REQUEST;
+   * if this time expires, we consider the window unresponsive
+   * and resize it unsynchonized.
+   */
+  window->sync_request_timeout_id = g_timeout_add (1000,
+                                                   sync_request_timeout,
+                                                   window);
+
+  meta_compositor_set_updates_frozen (window->display->compositor, window,
+                                      meta_window_updates_are_frozen (window));
 }
 #endif
+
+/**
+ * meta_window_updates_are_frozen:
+ * @window: a #MetaWindow
+ *
+ * Gets whether the compositor should be updating the window contents;
+ * window content updates may be frozen at client request by setting
+ * an odd value in the extended _NET_WM_SYNC_REQUEST_COUNTER counter r
+ * by the window manager during a resize operation while waiting for
+ * the client to redraw.
+ *
+ * Return value: %TRUE if updates are currently frozen
+ */
+gboolean
+meta_window_updates_are_frozen (MetaWindow *window)
+{
+#ifdef HAVE_XSYNC
+  if (window->extended_sync_request_counter &&
+      window->sync_request_serial % 2 == 1)
+    return TRUE;
+
+  if (window->sync_request_serial < window->sync_request_wait_serial)
+    return TRUE;
+#endif
+
+  return FALSE;
+}
 
 static gboolean
 maybe_move_attached_dialog (MetaWindow *window,
@@ -4585,6 +4902,7 @@ meta_window_move_resize_internal (MetaWindow          *window,
   gboolean is_configure_request;
   gboolean do_gravity_adjust;
   gboolean is_user_action;
+  gboolean did_placement;
   gboolean configure_frame_first;
   gboolean use_static_gravity;
   /* used for the configure request, but may not be final
@@ -4657,6 +4975,8 @@ meta_window_move_resize_internal (MetaWindow          *window,
                   "weird positioning; new pos %d,%d\n",
                   new_rect.x, new_rect.y);
     }
+
+  did_placement = !window->placed && window->calc_placement;
 
   meta_window_constrain (window,
                          window->frame ? &borders : NULL,
@@ -4869,12 +5189,28 @@ meta_window_move_resize_internal (MetaWindow          *window,
    * efficiently as possible
    */
 
-  /* configure frame first if we grow more than we shrink
+  /* Normally, we configure the frame first depending on whether
+   * we grow the frame more than we shrink. The idea is to avoid
+   * messing up the window contents by having a temporary situation
+   * where the frame is smaller than the window. However, if we're
+   * cooperating with the client to create an atomic frame upate,
+   * and the window is redirected, then we should always update
+   * the frame first, since updating the frame will force a new
+   * backing pixmap to be allocated, and the old backing pixmap
+   * will be left undisturbed for us to paint to the screen until
+   * the client finishes redrawing.
    */
-  size_dx = w - window->rect.width;
-  size_dy = h - window->rect.height;
+  if (window->extended_sync_request_counter)
+    {
+      configure_frame_first = TRUE;
+    }
+  else
+    {
+      size_dx = w - window->rect.width;
+      size_dy = h - window->rect.height;
 
-  configure_frame_first = (size_dx + size_dy >= 0);
+      configure_frame_first = size_dx + size_dy >= 0;
+    }
 
   if (use_static_gravity)
     meta_window_set_gravity (window, StaticGravity);
@@ -4915,15 +5251,13 @@ meta_window_move_resize_internal (MetaWindow          *window,
       meta_error_trap_push (window->display);
 
 #ifdef HAVE_XSYNC
-      if (window->sync_request_counter != None &&
-	  window->display->grab_sync_request_alarm != None &&
-	  window->sync_request_time.tv_usec == 0 &&
-	  window->sync_request_time.tv_sec == 0)
+      if (window == window->display->grab_window &&
+          meta_grab_op_is_resizing (window->display->grab_op) &&
+          !window->disable_sync &&
+          window->sync_request_counter != None &&
+	  window->sync_request_alarm != None &&
+          window->sync_request_timeout_id == 0)
 	{
-	  /* turn off updating */
-	  if (window->display->compositor)
-	    meta_compositor_set_updates (window->display->compositor, window, FALSE);
-
 	  send_sync_request (window);
 	}
 #endif
@@ -4954,7 +5288,8 @@ meta_window_move_resize_internal (MetaWindow          *window,
     save_user_window_placement (window);
 
   if (need_move_frame || need_resize_frame ||
-      need_move_client || need_resize_client)
+      need_move_client || need_resize_client ||
+      did_placement)
     {
       int newx, newy;
       meta_window_get_position (window, &newx, &newy);
@@ -4965,7 +5300,8 @@ meta_window_move_resize_internal (MetaWindow          *window,
                   window->user_rect.width, window->user_rect.height);
       if (window->display->compositor)
         meta_compositor_sync_window_geometry (window->display->compositor,
-                                              window);
+                                              window,
+                                              did_placement);
     }
   else
     {
@@ -5295,11 +5631,17 @@ meta_window_configure_notify (MetaWindow      *window,
   window->rect.height = event->height;
   meta_window_update_monitor (window);
 
+  /* Whether an override-redirect window is considered fullscreen depends
+   * on its geometry.
+   */
+  if (window->override_redirect)
+    meta_screen_queue_check_fullscreen (window->screen);
+
   if (!event->override_redirect && !event->send_event)
     meta_warning ("Unhandled change of windows override redirect status\n");
 
   if (window->display->compositor)
-    meta_compositor_sync_window_geometry (window->display->compositor, window);
+    meta_compositor_sync_window_geometry (window->display->compositor, window, FALSE);
 }
 
 void
@@ -6633,31 +6975,35 @@ meta_window_client_message (MetaWindow *window,
            */
           if (button == 0)
             {
-              int x, y, query_root_x, query_root_y;
+              double x, y, query_root_x, query_root_y;
               Window root, child;
-              guint mask;
+              XIButtonState buttons;
+              XIModifierState mods;
+              XIGroupState group;
 
               /* The race conditions in this _NET_WM_MOVERESIZE thing
                * are mind-boggling
                */
-              mask = 0;
               meta_error_trap_push (window->display);
-              XQueryPointer (window->display->xdisplay,
-                             window->xwindow,
-                             &root, &child,
-                             &query_root_x, &query_root_y,
-                             &x, &y,
-                             &mask);
+              XIQueryPointer (window->display->xdisplay,
+                              META_VIRTUAL_CORE_POINTER_ID,
+                              window->xwindow,
+                              &root, &child,
+                              &query_root_x, &query_root_y,
+                              &x, &y,
+                              &buttons, &mods, &group);
               meta_error_trap_pop (window->display);
 
-              if (mask & Button1Mask)
+              if (XIMaskIsSet (buttons.mask, Button1))
                 button = 1;
-              else if (mask & Button2Mask)
+              else if (XIMaskIsSet (buttons.mask, Button2))
                 button = 2;
-              else if (mask & Button3Mask)
+              else if (XIMaskIsSet (buttons.mask, Button3))
                 button = 3;
               else
                 button = 0;
+
+              free (buttons.mask);
             }
 
           if (button != 0)
@@ -6811,9 +7157,45 @@ meta_window_propagate_focus_appearance (MetaWindow *window,
     }
 }
 
+void
+meta_window_lost_focus (MetaWindow *window)
+{
+  if (window == window->display->focus_window)
+    {
+      meta_topic (META_DEBUG_FOCUS,
+                  "%s is now the previous focus window due to being focused out or unmapped\n",
+                  window->desc);
+
+      meta_topic (META_DEBUG_FOCUS,
+                  "* Focus --> NULL (was %s)\n", window->desc);
+
+      meta_window_propagate_focus_appearance (window, FALSE);
+
+      window->display->focus_window = NULL;
+      g_object_notify (G_OBJECT (window->display), "focus-window");
+      window->has_focus = FALSE;
+
+      if (!window->attached_focus_window)
+        meta_window_appears_focused_changed (window);
+
+      meta_error_trap_push (window->display);
+      XUninstallColormap (window->display->xdisplay,
+                          window->colormap);
+      meta_error_trap_pop (window->display);
+
+      /* move out of FOCUSED_WINDOW layer */
+      meta_window_update_layer (window);
+
+      /* Re-grab for click to focus and raise-on-click, if necessary */
+      if (meta_prefs_get_focus_mode () == G_DESKTOP_FOCUS_MODE_CLICK ||
+          !meta_prefs_get_raise_on_click ())
+        meta_display_grab_focus_window_button (window->display, window);
+    }
+}
+
 gboolean
-meta_window_notify_focus (MetaWindow *window,
-                          XEvent     *event)
+meta_window_notify_focus (MetaWindow   *window,
+                          XIEnterEvent *event)
 {
   /* note the event can be on either the window or the frame,
    * we focus the frame for shaded windows
@@ -6836,20 +7218,17 @@ meta_window_notify_focus (MetaWindow *window,
   meta_topic (META_DEBUG_FOCUS,
               "Focus %s event received on %s 0x%lx (%s) "
               "mode %s detail %s\n",
-              event->type == FocusIn ? "in" :
-              event->type == FocusOut ? "out" :
-              event->type == UnmapNotify ? "unmap" :
+              event->evtype == XI_FocusIn ? "in" :
+              event->evtype == XI_FocusOut ? "out" :
               "???",
-              window->desc, event->xany.window,
-              event->xany.window == window->xwindow ?
+              window->desc, event->event,
+              event->event == window->xwindow ?
               "client window" :
-              (window->frame && event->xany.window == window->frame->xwindow) ?
+              (window->frame && event->event == window->frame->xwindow) ?
               "frame window" :
               "unknown window",
-              event->type != UnmapNotify ?
-              meta_event_mode_to_string (event->xfocus.mode) : "n/a",
-              event->type != UnmapNotify ?
-              meta_event_detail_to_string (event->xfocus.detail) : "n/a");
+              meta_event_mode_to_string (event->mode),
+              meta_event_detail_to_string (event->detail));
 
   /* FIXME our pointer tracking is broken; see how
    * gtk+/gdk/x11/gdkevents-x11.c or XFree86/xc/programs/xterm/misc.c
@@ -6870,19 +7249,19 @@ meta_window_notify_focus (MetaWindow *window,
    * http://bugzilla.gnome.org/show_bug.cgi?id=90382
    */
 
-  if ((event->type == FocusIn ||
-       event->type == FocusOut) &&
-      (event->xfocus.mode == NotifyGrab ||
-       event->xfocus.mode == NotifyUngrab ||
+  if ((event->evtype == XI_FocusIn ||
+       event->evtype == XI_FocusOut) &&
+      (event->mode == NotifyGrab ||
+       event->mode == NotifyUngrab ||
        /* From WindowMaker, ignore all funky pointer root events */
-       event->xfocus.detail > NotifyNonlinearVirtual))
+       event->detail > NotifyNonlinearVirtual))
     {
       meta_topic (META_DEBUG_FOCUS,
                   "Ignoring focus event generated by a grab or other weirdness\n");
       return TRUE;
     }
 
-  if (event->type == FocusIn)
+  if (event->evtype == XI_FocusIn)
     {
       if (window->override_redirect)
         {
@@ -6962,11 +7341,9 @@ meta_window_notify_focus (MetaWindow *window,
           meta_window_propagate_focus_appearance (window, TRUE);
         }
     }
-  else if (event->type == FocusOut ||
-           event->type == UnmapNotify)
+  else if (event->evtype == XI_FocusOut)
     {
-      if (event->type == FocusOut &&
-          event->xfocus.detail == NotifyInferior)
+      if (event->detail == NotifyInferior)
         {
           /* This event means the client moved focus to a subwindow */
           meta_topic (META_DEBUG_FOCUS,
@@ -6974,38 +7351,10 @@ meta_window_notify_focus (MetaWindow *window,
                       window->desc);
           return TRUE;
         }
-
-      if (window == window->display->focus_window)
+      else
         {
-          meta_topic (META_DEBUG_FOCUS,
-                      "%s is now the previous focus window due to being focused out or unmapped\n",
-                      window->desc);
-
-          meta_topic (META_DEBUG_FOCUS,
-                      "* Focus --> NULL (was %s)\n", window->desc);
-
-          meta_window_propagate_focus_appearance (window, FALSE);
-
-          window->display->focus_window = NULL;
-          g_object_notify (G_OBJECT (window->display), "focus-window");
-          window->has_focus = FALSE;
-
-          if (!window->attached_focus_window)
-            meta_window_appears_focused_changed (window);
-
-          meta_error_trap_push (window->display);
-          XUninstallColormap (window->display->xdisplay,
-                              window->colormap);
-          meta_error_trap_pop (window->display);
-
-          /* move out of FOCUSED_WINDOW layer */
-          meta_window_update_layer (window);
-
-          /* Re-grab for click to focus and raise-on-click, if necessary */
-          if (meta_prefs_get_focus_mode () == G_DESKTOP_FOCUS_MODE_CLICK ||
-              !meta_prefs_get_raise_on_click ())
-            meta_display_grab_focus_window_button (window->display, window);
-       }
+          meta_window_lost_focus (window);
+        }
     }
 
   /* Now set _NET_ACTIVE_WINDOW hint */
@@ -7094,19 +7443,14 @@ send_configure_notify (MetaWindow *window)
   meta_error_trap_pop (window->display);
 }
 
-/* FIXME: @rect should be marked (out), but gjs doesn't currently support
- * this. See also http://bugzilla.gnome.org/show_bug.cgi?id=573314
- */
 /**
  * meta_window_get_icon_geometry:
  * @window: a #MetaWindow
- * @rect: rectangle into which to store the returned geometry.
+ * @rect: (out): rectangle into which to store the returned geometry.
  *
  * Gets the location of the icon corresponding to the window. The location
  * will be provided set by the task bar or other user interface element
- * displaying the icon, and is relative to the root window. This currently
- * retrieves the icon geometry from the X server as a round trip on every
- * call.
+ * displaying the icon, and is relative to the root window.
  *
  * Return value: %TRUE if the icon geometry was succesfully retrieved.
  */
@@ -7114,38 +7458,41 @@ gboolean
 meta_window_get_icon_geometry (MetaWindow    *window,
                                MetaRectangle *rect)
 {
-  gulong *geometry = NULL;
-  int nitems;
-
   g_return_val_if_fail (!window->override_redirect, FALSE);
 
-  if (meta_prop_get_cardinal_list (window->display,
-                                   window->xwindow,
-                                   window->display->atom__NET_WM_ICON_GEOMETRY,
-                                   &geometry, &nitems))
+  if (window->icon_geometry_set)
     {
-      if (nitems != 4)
-        {
-          meta_verbose ("_NET_WM_ICON_GEOMETRY on %s has %d values instead of 4\n",
-                        window->desc, nitems);
-          meta_XFree (geometry);
-          return FALSE;
-        }
-
       if (rect)
-        {
-          rect->x = geometry[0];
-          rect->y = geometry[1];
-          rect->width = geometry[2];
-          rect->height = geometry[3];
-        }
-
-      meta_XFree (geometry);
+        *rect = window->icon_geometry;
 
       return TRUE;
     }
 
   return FALSE;
+}
+
+/**
+ * meta_window_set_icon_geometry:
+ * @window: a #MetaWindow
+ * @rect: (allow-none): rectangle with the desired geometry or %NULL.
+ *
+ * Sets or unsets the location of the icon corresponding to the window. If
+ * set, the location should correspond to a dock, task bar or other user
+ * interface element displaying the icon, and is relative to the root window.
+ */
+void
+meta_window_set_icon_geometry (MetaWindow    *window,
+                               MetaRectangle *rect)
+{
+  if (rect)
+    {
+      window->icon_geometry = *rect;
+      window->icon_geometry_set = TRUE;
+    }
+  else
+    {
+      window->icon_geometry_set = FALSE;
+    }
 }
 
 static Window
@@ -7338,6 +7685,64 @@ meta_window_update_net_wm_type (MetaWindow *window)
     }
 
   meta_window_recalc_window_type (window);
+}
+
+void
+meta_window_update_opaque_region (MetaWindow *window)
+{
+  cairo_region_t *opaque_region = NULL;
+  gulong *region = NULL;
+  int nitems;
+
+  g_clear_pointer (&window->opaque_region, cairo_region_destroy);
+
+  if (meta_prop_get_cardinal_list (window->display,
+                                   window->xwindow,
+                                   window->display->atom__NET_WM_OPAQUE_REGION,
+                                   &region, &nitems))
+    {
+      cairo_rectangle_int_t *rects;
+      int i, rect_index, nrects;
+
+      if (nitems % 4 != 0)
+        {
+          meta_verbose ("_NET_WM_OPAQUE_REGION does not have a list of 4-tuples.");
+          goto out;
+        }
+
+      /* empty region */
+      if (nitems == 0)
+        goto out;
+
+      nrects = nitems / 4;
+
+      rects = g_new (cairo_rectangle_int_t, nrects);
+
+      rect_index = 0;
+      i = 0;
+      while (i < nitems)
+        {
+          cairo_rectangle_int_t *rect = &rects[rect_index];
+
+          rect->x = region[i++];
+          rect->y = region[i++];
+          rect->width = region[i++];
+          rect->height = region[i++];
+
+          rect_index++;
+        }
+
+      opaque_region = cairo_region_create_rectangles (rects, nrects);
+
+      g_free (rects);
+    }
+
+ out:
+  window->opaque_region = opaque_region;
+  meta_XFree (region);
+
+  if (window->display->compositor)
+    meta_compositor_window_shape_changed (window->display->compositor, window);
 }
 
 static void
@@ -7754,6 +8159,7 @@ recalc_window_type (MetaWindow *window)
       gboolean old_decorated = window->decorated;
       GObject  *object = G_OBJECT (window);
 
+      window->attached = meta_window_should_attach_to_parent (window);
       recalc_window_features (window);
 
       if (!window->override_redirect)
@@ -8470,73 +8876,39 @@ check_moveresize_frequency (MetaWindow *window,
 			    gdouble    *remaining)
 {
   GTimeVal current_time;
+  const double max_resizes_per_second = 25.0;
+  const double ms_between_resizes = 1000.0 / max_resizes_per_second;
+  double elapsed;
 
   g_get_current_time (&current_time);
 
 #ifdef HAVE_XSYNC
+  /* If we are throttling via _NET_WM_SYNC_REQUEST, we don't need
+   * an artificial timeout-based throttled */
   if (!window->disable_sync &&
-      window->display->grab_sync_request_alarm != None)
-    {
-      if (window->sync_request_time.tv_sec != 0 ||
-	  window->sync_request_time.tv_usec != 0)
-	{
-	  double elapsed =
-	    time_diff (&current_time, &window->sync_request_time);
-
-	  if (elapsed < 1000.0)
-	    {
-	      /* We want to be sure that the timeout happens at
-	       * a time where elapsed will definitely be
-	       * greater than 1000, so we can disable sync
-	       */
-	      if (remaining)
-		*remaining = 1000.0 - elapsed + 100;
-
-	      return FALSE;
-	    }
-	  else
-	    {
-	      /* We have now waited for more than a second for the
-	       * application to respond to the sync request
-	       */
-	      window->disable_sync = TRUE;
-	      return TRUE;
-	    }
-	}
-      else
-	{
-	  /* No outstanding sync requests. Go ahead and resize
-	   */
-	  return TRUE;
-	}
-    }
-  else
+      window->sync_request_alarm != None)
+    return TRUE;
 #endif /* HAVE_XSYNC */
+
+  elapsed = time_diff (&current_time, &window->display->grab_last_moveresize_time);
+
+  if (elapsed >= 0.0 && elapsed < ms_between_resizes)
     {
-      const double max_resizes_per_second = 25.0;
-      const double ms_between_resizes = 1000.0 / max_resizes_per_second;
-      double elapsed;
-
-      elapsed = time_diff (&current_time, &window->display->grab_last_moveresize_time);
-
-      if (elapsed >= 0.0 && elapsed < ms_between_resizes)
-	{
-	  meta_topic (META_DEBUG_RESIZING,
-		      "Delaying move/resize as only %g of %g ms elapsed\n",
-		      elapsed, ms_between_resizes);
-
-	  if (remaining)
-	    *remaining = (ms_between_resizes - elapsed);
-
-	  return FALSE;
-	}
-
       meta_topic (META_DEBUG_RESIZING,
-		  " Checked moveresize freq, allowing move/resize now (%g of %g seconds elapsed)\n",
-		  elapsed / 1000.0, 1.0 / max_resizes_per_second);
+                  "Delaying move/resize as only %g of %g ms elapsed\n",
+                  elapsed, ms_between_resizes);
 
-      return TRUE;
+      if (remaining)
+        *remaining = (ms_between_resizes - elapsed);
+
+      return FALSE;
     }
+
+  meta_topic (META_DEBUG_RESIZING,
+              " Checked moveresize freq, allowing move/resize now (%g of %g seconds elapsed)\n",
+              elapsed / 1000.0, 1.0 / max_resizes_per_second);
+
+  return TRUE;
 }
 
 static gboolean
@@ -9029,6 +9401,15 @@ update_resize (MetaWindow *window,
       break;
     }
 
+#ifdef HAVE_XSYNC
+  /* If we're waiting for a request for _NET_WM_SYNC_REQUEST, we'll
+   * resize the window when the window responds, or when we time
+   * the response out.
+   */
+  if (window->sync_request_timeout_id != 0)
+    return;
+#endif
+
   if (!check_moveresize_frequency (window, &remaining) && !force)
     {
       /* we are ignoring an event here, so we schedule a
@@ -9044,10 +9425,6 @@ update_resize (MetaWindow *window,
 
       return;
     }
-
-  /* If we get here, it means the client should have redrawn itself */
-  if (window->display->compositor)
-    meta_compositor_set_updates (window->display->compositor, window, TRUE);
 
   /* Remove any scheduled compensation events */
   if (window->display->grab_resize_timeout_id)
@@ -9130,31 +9507,46 @@ update_resize (MetaWindow *window,
 
 typedef struct
 {
-  const XEvent *current_event;
-  int           count;
-  guint32       last_time;
+  Window  window;
+  int     count;
+  guint32 last_time;
 } EventScannerData;
 
 static Bool
 find_last_time_predicate (Display  *display,
-                          XEvent   *xevent,
+                          XEvent   *ev,
                           XPointer  arg)
 {
   EventScannerData *esd = (void*) arg;
+  XIEvent *xev;
 
-  if (esd->current_event->type == xevent->type &&
-      esd->current_event->xany.window == xevent->xany.window)
-    {
-      esd->count += 1;
-      esd->last_time = xevent->xmotion.time;
-    }
+  if (ev->type != GenericEvent)
+    return False;
+
+  /* We are peeking into events not yet handled by GDK,
+   * Allocate cookie events here so we can handle XI2.
+   *
+   * GDK will handle later these events, and eventually
+   * free the cookie data itself.
+   */
+  XGetEventData (display, &ev->xcookie);
+  xev = (XIEvent *) ev->xcookie.data;
+
+  if (xev->evtype != XI_Motion)
+    return False;
+
+  if (esd->window != ((XIDeviceEvent *) xev)->event)
+    return False;
+
+  esd->count += 1;
+  esd->last_time = xev->time;
 
   return False;
 }
 
 static gboolean
 check_use_this_motion_notify (MetaWindow *window,
-                              XEvent     *event)
+                              XIDeviceEvent *xev)
 {
   EventScannerData esd;
   XEvent useless;
@@ -9165,11 +9557,11 @@ check_use_this_motion_notify (MetaWindow *window,
     {
       /* == is really the right test, but I'm all for paranoia */
       if (window->display->grab_motion_notify_time <=
-          event->xmotion.time)
+          xev->time)
         {
           meta_topic (META_DEBUG_RESIZING,
                       "Arrived at event with time %u (waiting for %u), using it\n",
-                      (unsigned int)event->xmotion.time,
+                      (unsigned int)xev->time,
                       window->display->grab_motion_notify_time);
           window->display->grab_motion_notify_time = 0;
           return TRUE;
@@ -9178,7 +9570,7 @@ check_use_this_motion_notify (MetaWindow *window,
         return FALSE; /* haven't reached the saved timestamp yet */
     }
 
-  esd.current_event = event;
+  esd.window = xev->event;
   esd.count = 0;
   esd.last_time = 0;
 
@@ -9222,65 +9614,69 @@ update_tile_mode (MetaWindow *window)
     }
 }
 
-void
-meta_window_handle_mouse_grab_op_event (MetaWindow *window,
-                                        XEvent     *event)
-{
 #ifdef HAVE_XSYNC
-  if (event->type == (window->display->xsync_event_base + XSyncAlarmNotify))
+void
+meta_window_update_sync_request_counter (MetaWindow *window,
+                                         gint64      new_counter_value)
+{
+  gboolean needs_frame_drawn = FALSE;
+  gboolean no_delay_frame = FALSE;
+
+  if (window->extended_sync_request_counter && new_counter_value % 2 == 0)
+    {
+      needs_frame_drawn = TRUE;
+      no_delay_frame = new_counter_value == window->sync_request_serial + 1;
+    }
+
+  window->sync_request_serial = new_counter_value;
+  meta_compositor_set_updates_frozen (window->display->compositor, window,
+                                      meta_window_updates_are_frozen (window));
+
+  if (window == window->display->grab_window &&
+      meta_grab_op_is_resizing (window->display->grab_op) &&
+      new_counter_value >= window->sync_request_wait_serial &&
+      (!window->extended_sync_request_counter || new_counter_value % 2 == 0) &&
+      window->sync_request_timeout_id)
     {
       meta_topic (META_DEBUG_RESIZING,
                   "Alarm event received last motion x = %d y = %d\n",
                   window->display->grab_latest_motion_x,
                   window->display->grab_latest_motion_y);
 
-      /* If sync was previously disabled, turn it back on and hope
-       * the application has come to its senses (maybe it was just
-       * busy with a pagefault or a long computation).
-       */
-      window->disable_sync = FALSE;
-      window->sync_request_time.tv_sec = 0;
-      window->sync_request_time.tv_usec = 0;
+      g_source_remove (window->sync_request_timeout_id);
+      window->sync_request_timeout_id = 0;
 
-      /* This means we are ready for another configure. */
-      switch (window->display->grab_op)
-        {
-        case META_GRAB_OP_RESIZING_E:
-        case META_GRAB_OP_RESIZING_W:
-        case META_GRAB_OP_RESIZING_S:
-        case META_GRAB_OP_RESIZING_N:
-        case META_GRAB_OP_RESIZING_SE:
-        case META_GRAB_OP_RESIZING_SW:
-        case META_GRAB_OP_RESIZING_NE:
-        case META_GRAB_OP_RESIZING_NW:
-        case META_GRAB_OP_KEYBOARD_RESIZING_S:
-        case META_GRAB_OP_KEYBOARD_RESIZING_N:
-        case META_GRAB_OP_KEYBOARD_RESIZING_W:
-        case META_GRAB_OP_KEYBOARD_RESIZING_E:
-        case META_GRAB_OP_KEYBOARD_RESIZING_SE:
-        case META_GRAB_OP_KEYBOARD_RESIZING_NE:
-        case META_GRAB_OP_KEYBOARD_RESIZING_SW:
-        case META_GRAB_OP_KEYBOARD_RESIZING_NW:
-          /* no pointer round trip here, to keep in sync */
-          update_resize (window,
-                         window->display->grab_last_user_action_was_snap,
-                         window->display->grab_latest_motion_x,
-                         window->display->grab_latest_motion_y,
-                         TRUE);
-          break;
-
-        default:
-          break;
-        }
+      /* This means we are ready for another configure;
+       * no pointer round trip here, to keep in sync */
+      update_resize (window,
+                     window->display->grab_last_user_action_was_snap,
+                     window->display->grab_latest_motion_x,
+                     window->display->grab_latest_motion_y,
+                     TRUE);
     }
+
+  /* If sync was previously disabled, turn it back on and hope
+   * the application has come to its senses (maybe it was just
+   * busy with a pagefault or a long computation).
+   */
+  window->disable_sync = FALSE;
+
+  if (needs_frame_drawn)
+    meta_compositor_queue_frame_drawn (window->display->compositor, window,
+                                       no_delay_frame);
+}
 #endif /* HAVE_XSYNC */
 
-  switch (event->type)
+void
+meta_window_handle_mouse_grab_op_event (MetaWindow *window,
+                                        XIDeviceEvent *xev)
+{
+  switch (xev->evtype)
     {
-    case ButtonRelease:
+    case XI_ButtonRelease:
       meta_display_check_threshold_reached (window->display,
-                                            event->xbutton.x_root,
-                                            event->xbutton.y_root);
+                                            xev->root_x,
+                                            xev->root_y);
       /* If the user was snap moving then ignore the button release
        * because they may have let go of shift before releasing the
        * mouse button and they almost certainly do not want a
@@ -9292,20 +9688,20 @@ meta_window_handle_mouse_grab_op_event (MetaWindow *window,
             {
               if (window->tile_mode != META_TILE_NONE)
                 meta_window_tile (window);
-              else if (event->xbutton.root == window->screen->xroot)
-                update_move (window, event->xbutton.state & ShiftMask,
-                             event->xbutton.x_root, event->xbutton.y_root);
+              else if (xev->root == window->screen->xroot)
+                update_move (window,
+                             xev->mods.effective & ShiftMask,
+                             xev->root_x,
+                             xev->root_y);
             }
           else if (meta_grab_op_is_resizing (window->display->grab_op))
             {
-              if (event->xbutton.root == window->screen->xroot)
+              if (xev->root == window->screen->xroot)
                 update_resize (window,
-                               event->xbutton.state & ShiftMask,
-                               event->xbutton.x_root,
-                               event->xbutton.y_root,
+                               xev->mods.effective & ShiftMask,
+                               xev->root_x,
+                               xev->root_y,
                                TRUE);
-	      if (window->display->compositor)
-		meta_compositor_set_updates (window->display->compositor, window, TRUE);
 
               /* If a tiled window has been dragged free with a
                * mouse resize without snapping back to the tiled
@@ -9318,35 +9714,35 @@ meta_window_handle_mouse_grab_op_event (MetaWindow *window,
             }
         }
 
-      meta_display_end_grab_op (window->display, event->xbutton.time);
+      meta_display_end_grab_op (window->display, xev->time);
       break;
 
-    case MotionNotify:
+    case XI_Motion:
       meta_display_check_threshold_reached (window->display,
-                                            event->xmotion.x_root,
-                                            event->xmotion.y_root);
+                                            xev->root_x,
+                                            xev->root_y);
       if (meta_grab_op_is_moving (window->display->grab_op))
         {
-          if (event->xmotion.root == window->screen->xroot)
+          if (xev->root == window->screen->xroot)
             {
               if (check_use_this_motion_notify (window,
-                                                event))
+                                                xev))
                 update_move (window,
-                             event->xmotion.state & ShiftMask,
-                             event->xmotion.x_root,
-                             event->xmotion.y_root);
+                             xev->mods.effective & ShiftMask,
+                             xev->root_x,
+                             xev->root_y);
             }
         }
       else if (meta_grab_op_is_resizing (window->display->grab_op))
         {
-          if (event->xmotion.root == window->screen->xroot)
+          if (xev->root == window->screen->xroot)
             {
               if (check_use_this_motion_notify (window,
-                                                event))
+                                                xev))
                 update_resize (window,
-                               event->xmotion.state & ShiftMask,
-                               event->xmotion.x_root,
-                               event->xmotion.y_root,
+                               xev->mods.effective & ShiftMask,
+                               xev->root_x,
+                               xev->root_y,
                                FALSE);
             }
         }
@@ -9408,6 +9804,13 @@ get_work_area_monitor (MetaWindow    *window,
               area->x, area->y, area->width, area->height);
 }
 
+/**
+ * meta_window_get_work_area_current_monitor:
+ * @window: a #MetaWindow
+ * @area: (out): a location to store the work area
+ *
+ * Get the work area for the monitor @window is currently on.
+ */
 void
 meta_window_get_work_area_current_monitor (MetaWindow    *window,
                                            MetaRectangle *area)
@@ -9421,6 +9824,15 @@ meta_window_get_work_area_current_monitor (MetaWindow    *window,
                                          area);
 }
 
+/**
+ * meta_window_get_work_area_for_monitor:
+ * @window: a #MetaWindow
+ * @which_monitor: a moniotr to get the work area for
+ * @area: (out): a location to store the work area
+ *
+ * Get the work area for @window, given the monitor index
+ * @which_monitor.
+ */
 void
 meta_window_get_work_area_for_monitor (MetaWindow    *window,
                                        int            which_monitor,
@@ -9433,6 +9845,13 @@ meta_window_get_work_area_for_monitor (MetaWindow    *window,
                          which_monitor);
 }
 
+/**
+ * meta_window_get_work_area_all_monitors:
+ * @window: a #MetaWindow
+ * @area: (out): a location to store the work area
+ *
+ * Get the work area for all monitors for @window.
+ */
 void
 meta_window_get_work_area_all_monitors (MetaWindow    *window,
                                         MetaRectangle *area)
@@ -9784,11 +10203,12 @@ warp_grab_pointer (MetaWindow          *window,
   meta_window_get_client_root_coords (window,
                                       &display->grab_anchor_window_pos);
 
-  XWarpPointer (display->xdisplay,
-                None,
-                window->screen->xroot,
-                0, 0, 0, 0,
-                *x, *y);
+  XIWarpPointer (display->xdisplay,
+                 META_VIRTUAL_CORE_POINTER_ID,
+                 None,
+                 window->screen->xroot,
+                 0, 0, 0, 0,
+                 *x, *y);
 
   if (meta_error_trap_pop_with_return (display) != Success)
     {
@@ -9835,15 +10255,11 @@ meta_window_update_keyboard_resize (MetaWindow *window,
 
   if (update_cursor)
     {
-      guint32 timestamp;
-      /* FIXME: Using CurrentTime is really bad mojo */
-      timestamp = CurrentTime;
       meta_display_set_grab_op_cursor (window->display,
-                                       NULL,
+                                       window->screen,
                                        window->display->grab_op,
-                                       TRUE,
                                        window->display->grab_xwindow,
-                                       timestamp);
+                                       window->display->grab_timestamp);
     }
 }
 
@@ -9940,6 +10356,7 @@ meta_window_stack_just_below (MetaWindow *window,
 
 /**
  * meta_window_get_user_time:
+ * @window: a #MetaWindow
  *
  * The user time represents a timestamp for the last time the user
  * interacted with this window.  Note this property is only available
@@ -10056,9 +10473,7 @@ meta_window_set_demands_attention (MetaWindow *window)
           other_window = stack->data;
           stack = stack->next;
 
-          if (other_window->on_all_workspaces ||
-              window->on_all_workspaces ||
-              other_window->workspace == window->workspace)
+          if (meta_window_located_on_workspace (other_window, window->workspace))
             {
               meta_window_get_outer_rect (other_window, &other_rect);
 
@@ -10110,6 +10525,7 @@ meta_window_unset_demands_attention (MetaWindow *window)
 
 /**
  * meta_window_get_frame: (skip)
+ * @window: a #MetaWindow
  *
  */
 MetaFrame *
@@ -10150,7 +10566,7 @@ meta_window_is_shaded (MetaWindow *window)
  * meta_window_is_override_redirect:
  * @window: A #MetaWindow
  *
- * Returns if this window isn't managed by mutter; it will
+ * Returns: %TRUE if this window isn't managed by mutter; it will
  * control its own positioning and mutter won't draw decorations
  * among other things.  In X terminology this is "override redirect".
  */
@@ -10218,6 +10634,7 @@ meta_window_get_display (MetaWindow *window)
 
 /**
  * meta_window_get_xwindow: (skip)
+ * @window: a #MetaWindow
  *
  */
 Window
@@ -10428,7 +10845,7 @@ meta_window_get_role (MetaWindow *window)
  * meta_window_get_title:
  * @window: a #MetaWindow
  *
- * Returns the current title of the window.
+ * Returns: the current title of the window.
  */
 const char *
 meta_window_get_title (MetaWindow *window)
@@ -10535,11 +10952,7 @@ meta_window_get_client_machine (MetaWindow *window)
 gboolean
 meta_window_is_remote (MetaWindow *window)
 {
-  g_return_val_if_fail (META_IS_WINDOW (window), FALSE);
-
-  if (window->wm_client_machine != NULL)
-    return g_strcmp0 (window->wm_client_machine, window->display->hostname) != 0;
-  return FALSE;
+  return window->is_remote;
 }
 
 /**
@@ -10659,6 +11072,7 @@ meta_window_get_frame_type (MetaWindow *window)
 
 /**
  * meta_window_get_frame_bounds:
+ * @window: a #MetaWindow
  *
  * Gets a region representing the outer bounds of the window's frame.
  *
@@ -10696,6 +11110,7 @@ meta_window_is_attached_dialog (MetaWindow *window)
 
 /**
  * meta_window_get_tile_match:
+ * @window: a #MetaWindow
  *
  * Returns the matching tiled window on the same monitor as @window. This is
  * the topmost tiled window in a complementary tile mode that is:

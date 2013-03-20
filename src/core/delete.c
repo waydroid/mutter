@@ -108,11 +108,7 @@ delete_ping_timeout_func (MetaDisplay *display,
 
   /* Translators: %s is a window title */
   if (window_title)
-    {
-      char *title = g_strdup_printf ("“%s”", window_title);
-      tmp = g_strdup_printf (_("%s is not responding."), title);
-      g_free (title);
-    }
+    tmp = g_strdup_printf (_("“%s” is not responding."), window_title);
   else
     tmp = g_strdup (_("Application is not responding."));
 
@@ -138,6 +134,18 @@ delete_ping_timeout_func (MetaDisplay *display,
 }
 
 void
+meta_window_check_alive (MetaWindow *window,
+                         guint32     timestamp)
+{
+  meta_display_ping_window (window->display,
+                            window,
+                            timestamp,
+                            delete_ping_reply_func,
+                            delete_ping_timeout_func,
+                            window);
+}
+
+void
 meta_window_delete (MetaWindow  *window,
                     guint32      timestamp)
 {
@@ -160,13 +168,8 @@ meta_window_delete (MetaWindow  *window,
     }
   meta_error_trap_pop (window->display);
 
-  meta_display_ping_window (window->display,
-                            window,
-                            timestamp,
-                            delete_ping_reply_func,
-                            delete_ping_timeout_func,
-                            window);
-  
+  meta_window_check_alive (window, timestamp);
+
   if (window->has_focus)
     {
       /* FIXME Clean this up someday 

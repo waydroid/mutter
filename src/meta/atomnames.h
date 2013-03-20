@@ -23,7 +23,7 @@
  * 02111-1307, USA.
  */
 
-/**
+/*
  * \file atomnames.h  A list of atom names.
  *
  * This is a list of the names of all the X atoms that Mutter uses.
@@ -172,6 +172,10 @@ item(_NET_WM_ACTION_BELOW)
 item(_NET_WM_STATE_STICKY)
 item(_NET_WM_FULLSCREEN_MONITORS)
 item(_NET_WM_STATE_FOCUSED)
+item(_NET_WM_BYPASS_COMPOSITOR)
+item(_NET_WM_OPAQUE_REGION)
+item(_NET_WM_FRAME_DRAWN)
+item(_NET_WM_FRAME_TIMINGS)
 
 #if 0
 /* We apparently never use: */

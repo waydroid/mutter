@@ -1,7 +1,5 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* Mutter utilities */
-
 /* 
  * Copyright (C) 2001 Havoc Pennington
  * Copyright (C) 2005 Elijah Newren
@@ -20,6 +18,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
+ */
+
+/**
+ * SECTION:util
+ * @title: Utility functions
+ * @short_description: Miscellaneous utility functions
  */
 
 #define _GNU_SOURCE
@@ -225,6 +229,7 @@ utf8_fputs (const char *str,
 
 /**
  * meta_free_gslist_and_elements: (skip)
+ * @list_to_deep_free: list to deep free
  *
  */
 void
@@ -555,6 +560,12 @@ meta_gravity_to_string (int gravity)
     }
 }
 
+char*
+meta_external_binding_name_for_action (guint keybinding_action)
+{
+  return g_strdup_printf ("external-grab-%u", keybinding_action);
+}
+
 static gboolean
 zenity_supports_option (const char *section, const char *option)
 {
@@ -593,6 +604,16 @@ append_argument (GPtrArray  *args,
 
 /**
  * meta_show_dialog: (skip)
+ * @type: type of dialog
+ * @message: message
+ * @timeout: timeout
+ * @display: display
+ * @ok_text: text for Ok button
+ * @cancel_text: text for Cancel button
+ * @icon_name: icon name
+ * @transient_for: window XID of parent
+ * @columns: columns
+ * @entries: entries
  *
  */
 GPid
@@ -888,6 +909,9 @@ meta_later_add (MetaLaterType  when,
       later->source = g_idle_add_full (META_PRIORITY_RESIZE, call_idle_later, later, NULL);
       ensure_later_repaint_func ();
       break;
+    case META_LATER_CALC_SHOWING:
+    case META_LATER_CHECK_FULLSCREEN:
+    case META_LATER_SYNC_STACK:
     case META_LATER_BEFORE_REDRAW:
       ensure_later_repaint_func ();
       break;
