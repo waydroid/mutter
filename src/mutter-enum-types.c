@@ -571,8 +571,6 @@ meta_background_effects_get_type (void)
     {
       static const GFlagsValue values[] = {
         { META_BACKGROUND_EFFECTS_NONE, "META_BACKGROUND_EFFECTS_NONE", "none" },
-        { META_BACKGROUND_EFFECTS_DESATURATE, "META_BACKGROUND_EFFECTS_DESATURATE", "desaturate" },
-        { META_BACKGROUND_EFFECTS_BLUR, "META_BACKGROUND_EFFECTS_BLUR", "blur" },
         { META_BACKGROUND_EFFECTS_VIGNETTE, "META_BACKGROUND_EFFECTS_VIGNETTE", "vignette" },
         { 0, NULL, NULL }
       };

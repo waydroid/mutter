@@ -3,12 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>MetaDisplay</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="meta-MetaCompositor.html" title="MetaCompositor">
 <link rel="next" href="meta-MetaGroup.html" title="MetaGroup">
-<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -76,17 +76,17 @@ unsigned <span class="returnvalue">int</span>        <a class="link" href="MetaD
 <span class="returnvalue">GList</span> *             <a class="link" href="MetaDisplay.html#meta-display-get-tab-list" title="meta_display_get_tab_list ()">meta_display_get_tab_list</a>           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
 <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        <a class="link" href="MetaDisplay.html#meta-display-get-tab-next" title="meta_display_get_tab_next ()">meta_display_get_tab_next</a>           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">gboolean</span> backward</code></em>);
 <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        <a class="link" href="MetaDisplay.html#meta-display-get-tab-current" title="meta_display_get_tab_current ()">meta_display_get_tab_current</a>        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
 <span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-begin-grab-op" title="meta_display_begin_grab_op ()">meta_display_begin_grab_op</a>          (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
@@ -556,7 +556,7 @@ when matching keybindings to events</td>
 <pre class="programlisting"><span class="returnvalue">GList</span> *             meta_display_get_tab_list           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <p>
 Determine the list of windows that should be displayed for Alt-TAB
 functionality.  The windows are returned in most recently used order.
@@ -603,7 +603,7 @@ all windows on <em class="parameter"><code>screen</code></em>.
 <pre class="programlisting"><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        meta_display_get_tab_next           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">gboolean</span> backward</code></em>);</pre>
 <p>
@@ -657,7 +657,7 @@ functionality.
 <pre class="programlisting"><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        meta_display_get_tab_current        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <p>
 Determine the active window that should be displayed for Alt-TAB.
 </p>
@@ -1109,6 +1109,6 @@ keybindings, and only in a manner compatible with core code.
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.18</div>
+          Generated by GTK-Doc V1.18.1</div>
 </body>
 </html>

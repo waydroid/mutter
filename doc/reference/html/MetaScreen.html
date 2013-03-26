@@ -3,22 +3,22 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>MetaScreen</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
-<link rel="prev" href="MetaPreview.html" title="MetaPreview">
-<link rel="next" href="meta-MetaTheme.html" title="MetaTheme">
-<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<link rel="prev" href="MetaWindowActor.html" title="MetaWindowActor">
+<link rel="next" href="MetaWindow.html" title="MetaWindow">
+<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
 <table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
 <tr valign="middle">
-<td><a accesskey="p" href="MetaPreview.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="p" href="MetaWindowActor.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
 <td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
 <th width="100%" align="center">Mutter Reference Manual</th>
-<td><a accesskey="n" href="meta-MetaTheme.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+<td><a accesskey="n" href="MetaWindow.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
 </tr>
 <tr><td colspan="5" class="shortcuts">
 <a href="#MetaScreen.synopsis" class="shortcut">Top</a>
@@ -60,17 +60,17 @@
 <span class="returnvalue">GSList</span> *            <a class="link" href="MetaScreen.html#meta-screen-get-startup-sequences" title="meta_screen_get_startup_sequences ()">meta_screen_get_startup_sequences</a>   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">GList</span> *             <a class="link" href="MetaScreen.html#meta-screen-get-workspaces" title="meta_screen_get_workspaces ()">meta_screen_get_workspaces</a>          (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaScreen.html#meta-screen-get-n-workspaces" title="meta_screen_get_n_workspaces ()">meta_screen_get_n_workspaces</a>        (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
-<a class="link" href="meta-workspace.html#MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaScreen.html#meta-screen-get-workspace-by-index" title="meta_screen_get_workspace_by_index ()">meta_screen_get_workspace_by_index</a>  (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+<a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaScreen.html#meta-screen-get-workspace-by-index" title="meta_screen_get_workspace_by_index ()">meta_screen_get_workspace_by_index</a>  (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> index</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaScreen.html#meta-screen-remove-workspace" title="meta_screen_remove_workspace ()">meta_screen_remove_workspace</a>        (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
-<a class="link" href="meta-workspace.html#MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaScreen.html#meta-screen-append-new-workspace" title="meta_screen_append_new_workspace ()">meta_screen_append_new_workspace</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+<a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaScreen.html#meta-screen-append-new-workspace" title="meta_screen_append_new_workspace ()">meta_screen_append_new_workspace</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><span class="type">gboolean</span> activate</code></em>,
                                                          <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaScreen.html#meta-screen-get-active-workspace-index" title="meta_screen_get_active_workspace_index ()">meta_screen_get_active_workspace_index</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
-<a class="link" href="meta-workspace.html#MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaScreen.html#meta-screen-get-active-workspace" title="meta_screen_get_active_workspace ()">meta_screen_get_active_workspace</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaScreen.html#meta-screen-get-active-workspace" title="meta_screen_get_active_workspace ()">meta_screen_get_active_workspace</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaScreen.html#meta-screen-get-n-monitors" title="meta_screen_get_n_monitors ()">meta_screen_get_n_monitors</a>          (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaScreen.html#meta-screen-get-primary-monitor" title="meta_screen_get_primary_monitor ()">meta_screen_get_primary_monitor</a>     (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaScreen.html#meta-screen-get-current-monitor" title="meta_screen_get_current_monitor ()">meta_screen_get_current_monitor</a>     (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
@@ -319,7 +319,7 @@ Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="
 <hr>
 <div class="refsect2">
 <a name="meta-screen-get-workspace-by-index"></a><h3>meta_screen_get_workspace_by_index ()</h3>
-<pre class="programlisting"><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     meta_screen_get_workspace_by_index  (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+<pre class="programlisting"><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     meta_screen_get_workspace_by_index  (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> index</code></em>);</pre>
 <p>
 Gets the workspace object for one of a screen's workspaces given the workspace
@@ -354,13 +354,13 @@ if the index is out of range. <span class="annotation">[<acronym title="Don't fr
 <div class="refsect2">
 <a name="meta-screen-remove-workspace"></a><h3>meta_screen_remove_workspace ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_screen_remove_workspace        (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-screen-append-new-workspace"></a><h3>meta_screen_append_new_workspace ()</h3>
-<pre class="programlisting"><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     meta_screen_append_new_workspace    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
+<pre class="programlisting"><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     meta_screen_append_new_workspace    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><span class="type">gboolean</span> activate</code></em>,
                                                          <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
 <p>
@@ -406,7 +406,7 @@ timestamp when available even if not switching workspaces.)</td>
 <hr>
 <div class="refsect2">
 <a name="meta-screen-get-active-workspace"></a><h3>meta_screen_get_active_workspace ()</h3>
-<pre class="programlisting"><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     meta_screen_get_active_workspace    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<pre class="programlisting"><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     meta_screen_get_active_workspace    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -723,6 +723,6 @@ _NET_DESKTOP_LAYOUT property on the root window are completely ignored.
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.18</div>
+          Generated by GTK-Doc V1.18.1</div>
 </body>
 </html>

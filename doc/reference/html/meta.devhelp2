@@ -22,11 +22,9 @@
       <sub name="MetaShadowFactory" link="MetaShadowFactory.html"/>
       <sub name="MetaShapedTexture" link="MetaShapedTexture.html"/>
       <sub name="MetaWindowActor" link="MetaWindowActor.html"/>
-      <sub name="MetaPreview" link="MetaPreview.html"/>
       <sub name="MetaScreen" link="MetaScreen.html"/>
-      <sub name="MetaTheme" link="meta-MetaTheme.html"/>
       <sub name="MetaWindow" link="MetaWindow.html"/>
-      <sub name="workspace" link="meta-workspace.html"/>
+      <sub name="MetaWorkspace" link="MetaWorkspace.html"/>
     </sub>
     <sub name="Object Hierarchy" link="object-tree.html"/>
     <sub name="API Index" link="api-index-full.html"/>
@@ -224,6 +222,7 @@
     <keyword type="function" name="meta_rectangle_horiz_overlap ()" link="MetaRectangle.html#meta-rectangle-horiz-overlap"/>
     <keyword type="function" name="meta_rectangle_could_fit_rect ()" link="MetaRectangle.html#meta-rectangle-could-fit-rect"/>
     <keyword type="function" name="meta_rectangle_contains_rect ()" link="MetaRectangle.html#meta-rectangle-contains-rect"/>
+    <keyword type="" name="Containers" link="meta-MetaCompositor.html#id-1.4.11.4.10"/>
     <keyword type="enum" name="enum MetaCompEffect" link="meta-MetaCompositor.html#MetaCompEffect"/>
     <keyword type="struct" name="MetaCompositor" link="meta-MetaCompositor.html#MetaCompositor"/>
     <keyword type="function" name="meta_compositor_new ()" link="meta-MetaCompositor.html#meta-compositor-new"/>
@@ -361,16 +360,6 @@
     <keyword type="property" name="The &quot;x-window&quot; property" link="MetaWindowActor.html#MetaWindowActor--x-window"/>
     <keyword type="signal" name="The &quot;position-changed&quot; signal" link="MetaWindowActor.html#MetaWindowActor-position-changed"/>
     <keyword type="signal" name="The &quot;size-changed&quot; signal" link="MetaWindowActor.html#MetaWindowActor-size-changed"/>
-    <keyword type="struct" name="struct MetaPreview" link="MetaPreview.html#MetaPreview-struct"/>
-    <keyword type="struct" name="struct MetaPreviewClass" link="MetaPreview.html#MetaPreviewClass"/>
-    <keyword type="function" name="meta_preview_new ()" link="MetaPreview.html#meta-preview-new"/>
-    <keyword type="function" name="meta_preview_set_theme ()" link="MetaPreview.html#meta-preview-set-theme"/>
-    <keyword type="function" name="meta_preview_set_title ()" link="MetaPreview.html#meta-preview-set-title"/>
-    <keyword type="function" name="meta_preview_set_frame_type ()" link="MetaPreview.html#meta-preview-set-frame-type"/>
-    <keyword type="function" name="meta_preview_set_frame_flags ()" link="MetaPreview.html#meta-preview-set-frame-flags"/>
-    <keyword type="function" name="meta_preview_set_button_layout ()" link="MetaPreview.html#meta-preview-set-button-layout"/>
-    <keyword type="function" name="meta_preview_get_icon ()" link="MetaPreview.html#meta-preview-get-icon"/>
-    <keyword type="function" name="meta_preview_get_mini_icon ()" link="MetaPreview.html#meta-preview-get-mini-icon"/>
     <keyword type="struct" name="MetaScreen" link="MetaScreen.html#MetaScreen-struct"/>
     <keyword type="struct" name="MetaScreenClass" link="MetaScreen.html#MetaScreenClass"/>
     <keyword type="function" name="meta_screen_get_screen_number ()" link="MetaScreen.html#meta-screen-get-screen-number"/>
@@ -410,13 +399,6 @@
     <keyword type="signal" name="The &quot;workspace-added&quot; signal" link="MetaScreen.html#MetaScreen-workspace-added"/>
     <keyword type="signal" name="The &quot;workspace-removed&quot; signal" link="MetaScreen.html#MetaScreen-workspace-removed"/>
     <keyword type="signal" name="The &quot;workspace-switched&quot; signal" link="MetaScreen.html#MetaScreen-workspace-switched"/>
-    <keyword type="function" name="meta_theme_get_current ()" link="meta-MetaTheme.html#meta-theme-get-current"/>
-    <keyword type="function" name="meta_theme_set_current ()" link="meta-MetaTheme.html#meta-theme-set-current"/>
-    <keyword type="function" name="meta_theme_new ()" link="meta-MetaTheme.html#meta-theme-new"/>
-    <keyword type="function" name="meta_theme_free ()" link="meta-MetaTheme.html#meta-theme-free"/>
-    <keyword type="function" name="meta_theme_validate ()" link="meta-MetaTheme.html#meta-theme-validate"/>
-    <keyword type="function" name="meta_theme_load ()" link="meta-MetaTheme.html#meta-theme-load"/>
-    <keyword type="struct" name="MetaTheme" link="meta-MetaTheme.html#MetaTheme"/>
     <keyword type="struct" name="MetaWindow" link="MetaWindow.html#MetaWindow-struct"/>
     <keyword type="struct" name="MetaWindowClass" link="MetaWindow.html#MetaWindowClass"/>
     <keyword type="enum" name="enum MetaWindowType" link="MetaWindow.html#MetaWindowType"/>
@@ -545,21 +527,21 @@
     <keyword type="signal" name="The &quot;raised&quot; signal" link="MetaWindow.html#MetaWindow-raised"/>
     <keyword type="signal" name="The &quot;unmanaged&quot; signal" link="MetaWindow.html#MetaWindow-unmanaged"/>
     <keyword type="signal" name="The &quot;workspace-changed&quot; signal" link="MetaWindow.html#MetaWindow-workspace-changed"/>
-    <keyword type="struct" name="MetaWorkspace" link="meta-workspace.html#MetaWorkspace-struct"/>
-    <keyword type="struct" name="MetaWorkspaceClass" link="meta-workspace.html#MetaWorkspaceClass"/>
-    <keyword type="function" name="meta_workspace_index ()" link="meta-workspace.html#meta-workspace-index"/>
-    <keyword type="function" name="meta_workspace_get_screen ()" link="meta-workspace.html#meta-workspace-get-screen"/>
-    <keyword type="function" name="meta_workspace_list_windows ()" link="meta-workspace.html#meta-workspace-list-windows"/>
-    <keyword type="function" name="meta_workspace_get_work_area_for_monitor ()" link="meta-workspace.html#meta-workspace-get-work-area-for-monitor"/>
-    <keyword type="function" name="meta_workspace_get_work_area_all_monitors ()" link="meta-workspace.html#meta-workspace-get-work-area-all-monitors"/>
-    <keyword type="function" name="meta_workspace_activate ()" link="meta-workspace.html#meta-workspace-activate"/>
-    <keyword type="function" name="meta_workspace_activate_with_focus ()" link="meta-workspace.html#meta-workspace-activate-with-focus"/>
-    <keyword type="function" name="meta_workspace_update_window_hints ()" link="meta-workspace.html#meta-workspace-update-window-hints"/>
-    <keyword type="function" name="meta_workspace_set_builtin_struts ()" link="meta-workspace.html#meta-workspace-set-builtin-struts"/>
-    <keyword type="function" name="meta_workspace_get_neighbor ()" link="meta-workspace.html#meta-workspace-get-neighbor"/>
-    <keyword type="property" name="The &quot;n-windows&quot; property" link="meta-workspace.html#MetaWorkspace--n-windows"/>
-    <keyword type="signal" name="The &quot;window-added&quot; signal" link="meta-workspace.html#MetaWorkspace-window-added"/>
-    <keyword type="signal" name="The &quot;window-removed&quot; signal" link="meta-workspace.html#MetaWorkspace-window-removed"/>
+    <keyword type="struct" name="MetaWorkspace" link="MetaWorkspace.html#MetaWorkspace-struct"/>
+    <keyword type="struct" name="MetaWorkspaceClass" link="MetaWorkspace.html#MetaWorkspaceClass"/>
+    <keyword type="function" name="meta_workspace_index ()" link="MetaWorkspace.html#meta-workspace-index"/>
+    <keyword type="function" name="meta_workspace_get_screen ()" link="MetaWorkspace.html#meta-workspace-get-screen"/>
+    <keyword type="function" name="meta_workspace_list_windows ()" link="MetaWorkspace.html#meta-workspace-list-windows"/>
+    <keyword type="function" name="meta_workspace_get_work_area_for_monitor ()" link="MetaWorkspace.html#meta-workspace-get-work-area-for-monitor"/>
+    <keyword type="function" name="meta_workspace_get_work_area_all_monitors ()" link="MetaWorkspace.html#meta-workspace-get-work-area-all-monitors"/>
+    <keyword type="function" name="meta_workspace_activate ()" link="MetaWorkspace.html#meta-workspace-activate"/>
+    <keyword type="function" name="meta_workspace_activate_with_focus ()" link="MetaWorkspace.html#meta-workspace-activate-with-focus"/>
+    <keyword type="function" name="meta_workspace_update_window_hints ()" link="MetaWorkspace.html#meta-workspace-update-window-hints"/>
+    <keyword type="function" name="meta_workspace_set_builtin_struts ()" link="MetaWorkspace.html#meta-workspace-set-builtin-struts"/>
+    <keyword type="function" name="meta_workspace_get_neighbor ()" link="MetaWorkspace.html#meta-workspace-get-neighbor"/>
+    <keyword type="property" name="The &quot;n-windows&quot; property" link="MetaWorkspace.html#MetaWorkspace--n-windows"/>
+    <keyword type="signal" name="The &quot;window-added&quot; signal" link="MetaWorkspace.html#MetaWorkspace-window-added"/>
+    <keyword type="signal" name="The &quot;window-removed&quot; signal" link="MetaWorkspace.html#MetaWorkspace-window-removed"/>
     <keyword type="constant" name="META_EXIT_SUCCESS" link="meta-Main.html#META-EXIT-SUCCESS:CAPS"/>
     <keyword type="constant" name="META_EXIT_ERROR" link="meta-Main.html#META-EXIT-ERROR:CAPS"/>
     <keyword type="constant" name="META_FRAME_ALLOWS_DELETE" link="meta-Common.html#META-FRAME-ALLOWS-DELETE:CAPS"/>

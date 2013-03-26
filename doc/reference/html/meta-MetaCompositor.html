@@ -3,12 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>MetaCompositor</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="MetaRectangle.html" title="MetaRectangle">
 <link rel="next" href="MetaDisplay.html" title="MetaDisplay">
-<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -66,8 +66,8 @@
                                                          <em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompEffect" title="enum MetaCompEffect"><span class="type">MetaCompEffect</span></a> effect</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-switch-workspace" title="meta_compositor_switch_workspace ()">meta_compositor_switch_workspace</a>    (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *from</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *to</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *from</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *to</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Common.html#MetaMotionDirection" title="enum MetaMotionDirection"><span class="type">MetaMotionDirection</span></a> direction</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-maximize-window" title="meta_compositor_maximize_window ()">meta_compositor_maximize_window</a>     (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
@@ -116,6 +116,90 @@
 </div>
 <div class="refsect1">
 <a name="meta-MetaCompositor.description"></a><h2>Description</h2>
+<p>
+At a high-level, a window is not-visible or visible. When a
+window is added (with <a class="link" href="meta-MetaCompositor.html#meta-compositor-add-window" title="meta_compositor_add_window ()"><code class="function">meta_compositor_add_window()</code></a>) it is not visible.
+<a class="link" href="meta-MetaCompositor.html#meta-compositor-show-window" title="meta_compositor_show_window ()"><code class="function">meta_compositor_show_window()</code></a> indicates a transition from not-visible to
+visible. Some of the reasons for this:
+</p>
+<p>
+</p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem"><p>Window newly created</p></li>
+<li class="listitem"><p>Window is unminimized</p></li>
+<li class="listitem"><p>Window is moved to the current desktop</p></li>
+<li class="listitem"><p>Window was made sticky</p></li>
+</ul></div>
+<p>
+</p>
+<p>
+<a class="link" href="meta-MetaCompositor.html#meta-compositor-hide-window" title="meta_compositor_hide_window ()"><code class="function">meta_compositor_hide_window()</code></a> indicates that the window has transitioned from
+visible to not-visible. Some reasons include:
+</p>
+<p>
+</p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem"><p>Window was destroyed</p></li>
+<li class="listitem"><p>Window is minimized</p></li>
+<li class="listitem"><p>Window is moved to a different desktop</p></li>
+<li class="listitem"><p>Window no longer sticky.</p></li>
+</ul></div>
+<p>
+</p>
+<p>
+Note that combinations are possible - a window might have first
+been minimized and then moved to a different desktop. The 'effect' parameter
+to <a class="link" href="meta-MetaCompositor.html#meta-compositor-show-window" title="meta_compositor_show_window ()"><code class="function">meta_compositor_show_window()</code></a> and <a class="link" href="meta-MetaCompositor.html#meta-compositor-hide-window" title="meta_compositor_hide_window ()"><code class="function">meta_compositor_hide_window()</code></a> is a hint
+as to the appropriate effect to show the user and should not
+be considered to be indicative of a state change.
+</p>
+<p>
+When the active workspace is changed, <a class="link" href="meta-MetaCompositor.html#meta-compositor-switch-workspace" title="meta_compositor_switch_workspace ()"><code class="function">meta_compositor_switch_workspace()</code></a> is
+called first, then <a class="link" href="meta-MetaCompositor.html#meta-compositor-show-window" title="meta_compositor_show_window ()"><code class="function">meta_compositor_show_window()</code></a> and
+<a class="link" href="meta-MetaCompositor.html#meta-compositor-hide-window" title="meta_compositor_hide_window ()"><code class="function">meta_compositor_hide_window()</code></a> are called individually for each window
+affected, with an effect of META_COMP_EFFECT_NONE.
+If hiding windows will affect the switch workspace animation, the
+compositor needs to delay hiding the windows until the switch
+workspace animation completes.
+</p>
+<p>
+<a class="link" href="meta-MetaCompositor.html#meta-compositor-maximize-window" title="meta_compositor_maximize_window ()"><code class="function">meta_compositor_maximize_window()</code></a> and <a class="link" href="meta-MetaCompositor.html#meta-compositor-unmaximize-window" title="meta_compositor_unmaximize_window ()"><code class="function">meta_compositor_unmaximize_window()</code></a>
+are transitions within the visible state. The window is resized __before__
+the call, so it may be necessary to readjust the display based on the
+old_rect to start the animation.
+</p>
+<p>
+<a class="link" href="meta-MetaCompositor.html#meta-compositor-window-mapped" title="meta_compositor_window_mapped ()"><code class="function">meta_compositor_window_mapped()</code></a> and <a class="link" href="meta-MetaCompositor.html#meta-compositor-window-unmapped" title="meta_compositor_window_unmapped ()"><code class="function">meta_compositor_window_unmapped()</code></a> are
+notifications when the toplevel window (frame or client window) is mapped or
+unmapped. That is, when the result of <a class="link" href="MetaWindow.html#meta-window-toplevel-is-mapped" title="meta_window_toplevel_is_mapped ()"><code class="function">meta_window_toplevel_is_mapped()</code></a>
+changes. The main use of this is to drop resources when a window is unmapped.
+A window will always be mapped before <a class="link" href="meta-MetaCompositor.html#meta-compositor-show-window" title="meta_compositor_show_window ()"><code class="function">meta_compositor_show_window()</code></a>
+is called and will not be unmapped until after <a class="link" href="meta-MetaCompositor.html#meta-compositor-hide-window" title="meta_compositor_hide_window ()"><code class="function">meta_compositor_hide_window()</code></a>
+is called. If the live_hidden_windows preference is set, windows will never
+be unmapped.
+</p>
+<div class="refsect2">
+<a name="id-1.4.11.4.10"></a><h3>Containers</h3>
+<p>
+There's three containers in the stage that can be used to place actors, here
+are listed in the order in which they are painted:
+</p>
+<p>
+</p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem"><p>window group, accessible with <a class="link" href="meta-MetaCompositor.html#meta-get-window-group-for-screen" title="meta_get_window_group_for_screen ()"><code class="function">meta_get_window_group_for_screen()</code></a></p></li>
+<li class="listitem"><p>top window group, accessible with <a class="link" href="meta-MetaCompositor.html#meta-get-top-window-group-for-screen" title="meta_get_top_window_group_for_screen ()"><code class="function">meta_get_top_window_group_for_screen()</code></a></p></li>
+<li class="listitem"><p>overlay group, accessible with <a class="link" href="meta-MetaCompositor.html#meta-get-overlay-group-for-screen" title="meta_get_overlay_group_for_screen ()"><code class="function">meta_get_overlay_group_for_screen()</code></a></p></li>
+</ul></div>
+<p>
+</p>
+<p>
+Mutter will place actors representing windows in the window group, except for
+override-redirect windows (ie. popups and menus) which will be placed in the
+top window group. Mutter won't put any actors in the overlay group, but it's
+intended for compositors to place there panel, dashes, status bars, etc.
+</p>
+</div>
 </div>
 <div class="refsect1">
 <a name="meta-MetaCompositor.details"></a><h2>Details</h2>
@@ -252,8 +336,8 @@ Indicates the appropriate effect to show the user for
 <a name="meta-compositor-switch-workspace"></a><h3>meta_compositor_switch_workspace ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_switch_workspace    (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *from</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *to</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *from</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *to</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Common.html#MetaMotionDirection" title="enum MetaMotionDirection"><span class="type">MetaMotionDirection</span></a> direction</code></em>);</pre>
 </div>
 <hr>
@@ -513,6 +597,6 @@ Enables unredirection which reduces the overhead for apps like games.
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.18</div>
+          Generated by GTK-Doc V1.18.1</div>
 </body>
 </html>

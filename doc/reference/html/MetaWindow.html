@@ -3,22 +3,22 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>MetaWindow</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.78.0">
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
-<link rel="prev" href="meta-MetaTheme.html" title="MetaTheme">
-<link rel="next" href="meta-workspace.html" title="workspace">
-<meta name="generator" content="GTK-Doc V1.18 (XML mode)">
+<link rel="prev" href="MetaScreen.html" title="MetaScreen">
+<link rel="next" href="MetaWorkspace.html" title="MetaWorkspace">
+<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
 <table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
 <tr valign="middle">
-<td><a accesskey="p" href="meta-MetaTheme.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="p" href="MetaScreen.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
 <td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
 <th width="100%" align="center">Mutter Reference Manual</th>
-<td><a accesskey="n" href="meta-workspace.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+<td><a accesskey="n" href="MetaWorkspace.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
 </tr>
 <tr><td colspan="5" class="shortcuts">
 <a href="#MetaWindow.synopsis" class="shortcut">Top</a>
@@ -64,17 +64,17 @@ enum                <a class="link" href="MetaWindow.html#MetaMaximizeFlags" tit
 <span class="returnvalue">Window</span>              <a class="link" href="MetaWindow.html#meta-window-get-xwindow" title="meta_window_get_xwindow ()">meta_window_get_xwindow</a>             (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <a class="link" href="MetaWindow.html#MetaWindowType" title="enum MetaWindowType"><span class="returnvalue">MetaWindowType</span></a>      <a class="link" href="MetaWindow.html#meta-window-get-window-type" title="meta_window_get_window_type ()">meta_window_get_window_type</a>         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">Atom</span>                <a class="link" href="MetaWindow.html#meta-window-get-window-type-atom" title="meta_window_get_window_type_atom ()">meta_window_get_window_type_atom</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<a class="link" href="meta-workspace.html#MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaWindow.html#meta-window-get-workspace" title="meta_window_get_workspace ()">meta_window_get_workspace</a>           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaWindow.html#meta-window-get-workspace" title="meta_window_get_workspace ()">meta_window_get_workspace</a>           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaWindow.html#meta-window-get-monitor" title="meta_window_get_monitor ()">meta_window_get_monitor</a>             (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-on-all-workspaces" title="meta_window_is_on_all_workspaces ()">meta_window_is_on_all_workspaces</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-located-on-workspace" title="meta_window_located_on_workspace ()">meta_window_located_on_workspace</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
 <span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-hidden" title="meta_window_is_hidden ()">meta_window_is_hidden</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-activate" title="meta_window_activate ()">meta_window_activate</a>                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">guint32</span> current_time</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-activate-with-workspace" title="meta_window_activate_with_workspace ()">meta_window_activate_with_workspace</a> (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">guint32</span> current_time</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-description" title="meta_window_get_description ()">meta_window_get_description</a>         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-wm-class" title="meta_window_get_wm_class ()">meta_window_get_wm_class</a>            (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-wm-class-instance" title="meta_window_get_wm_class_instance ()">meta_window_get_wm_class_instance</a>   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
@@ -119,7 +119,7 @@ const <span class="returnvalue">char</span> *        <a class="link" href="MetaW
                                                          <em class="parameter"><code><span class="type">gboolean</span> append</code></em>,
                                                          <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-change-workspace" title="meta_window_change_workspace ()">meta_window_change_workspace</a>        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
 <span class="returnvalue">GObject</span> *           <a class="link" href="MetaWindow.html#meta-window-get-compositor-private" title="meta_window_get_compositor_private ()">meta_window_get_compositor_private</a>  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-set-compositor-private" title="meta_window_set_compositor_private ()">meta_window_set_compositor_private</a>  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">GObject</span> *priv</code></em>);
@@ -721,9 +721,9 @@ type atom will be returned as None.)
 <hr>
 <div class="refsect2">
 <a name="meta-window-get-workspace"></a><h3>meta_window_get_workspace ()</h3>
-<pre class="programlisting"><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     meta_window_get_workspace           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     meta_window_get_workspace           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
-Gets the <a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> that the window is currently displayed on.
+Gets the <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> that the window is currently displayed on.
 If the window is on all workspaces, returns the currently active
 workspace.
 </p>
@@ -740,7 +740,7 @@ workspace.
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td>the <a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> for the window. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+<td>the <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> for the window. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
 </td>
 </tr>
 </tbody>
@@ -780,7 +780,7 @@ Gets index of the monitor that this window is on.
 <div class="refsect2">
 <a name="meta-window-located-on-workspace"></a><h3>meta_window_located_on_workspace ()</h3>
 <pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_located_on_workspace    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -794,7 +794,7 @@ Gets index of the monitor that this window is on.
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>workspace</code></em> :</span></p></td>
-<td>a <a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a>
+<td>a <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a>
 </td>
 </tr>
 <tr>
@@ -821,7 +821,7 @@ will be displayed on all workspaces.</td>
 <a name="meta-window-activate-with-workspace"></a><h3>meta_window_activate_with_workspace ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_activate_with_workspace (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">guint32</span> current_time</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -1248,7 +1248,7 @@ Resize the window to the desired size.
 <div class="refsect2">
 <a name="meta-window-change-workspace"></a><h3>meta_window_change_workspace ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_change_workspace        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-workspace.html#MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -2485,6 +2485,6 @@ Get the work area for all monitors for <em class="parameter"><code>window</code>
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.18</div>
+          Generated by GTK-Doc V1.18.1</div>
 </body>
 </html>
