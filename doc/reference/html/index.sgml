@@ -372,6 +372,7 @@
 <ANCHOR id="META-KEYBINDING-ACTION-MOVE-TO-SIDE-W:CAPS" href="meta/meta-Preferences.html#META-KEYBINDING-ACTION-MOVE-TO-SIDE-W:CAPS">
 <ANCHOR id="META-KEYBINDING-ACTION-MOVE-TO-CENTER:CAPS" href="meta/meta-Preferences.html#META-KEYBINDING-ACTION-MOVE-TO-CENTER:CAPS">
 <ANCHOR id="META-KEYBINDING-ACTION-OVERLAY-KEY:CAPS" href="meta/meta-Preferences.html#META-KEYBINDING-ACTION-OVERLAY-KEY:CAPS">
+<ANCHOR id="META-KEYBINDING-ACTION-ISO-NEXT-GROUP:CAPS" href="meta/meta-Preferences.html#META-KEYBINDING-ACTION-ISO-NEXT-GROUP:CAPS">
 <ANCHOR id="META-KEYBINDING-ACTION-LAST:CAPS" href="meta/meta-Preferences.html#META-KEYBINDING-ACTION-LAST:CAPS">
 <ANCHOR id="MetaKeyBindingFlags" href="meta/meta-Preferences.html#MetaKeyBindingFlags">
 <ANCHOR id="META-KEY-BINDING-NONE:CAPS" href="meta/meta-Preferences.html#META-KEY-BINDING-NONE:CAPS">
@@ -646,6 +647,7 @@
 <ANCHOR id="MetaDisplay-accelerator-activated" href="meta/MetaDisplay.html#MetaDisplay-accelerator-activated">
 <ANCHOR id="MetaDisplay-grab-op-begin" href="meta/MetaDisplay.html#MetaDisplay-grab-op-begin">
 <ANCHOR id="MetaDisplay-grab-op-end" href="meta/MetaDisplay.html#MetaDisplay-grab-op-end">
+<ANCHOR id="MetaDisplay-modifiers-accelerator-activated" href="meta/MetaDisplay.html#MetaDisplay-modifiers-accelerator-activated">
 <ANCHOR id="MetaDisplay-overlay-key" href="meta/MetaDisplay.html#MetaDisplay-overlay-key">
 <ANCHOR id="MetaDisplay-window-created" href="meta/MetaDisplay.html#MetaDisplay-window-created">
 <ANCHOR id="MetaDisplay-window-demands-attention" href="meta/MetaDisplay.html#MetaDisplay-window-demands-attention">
