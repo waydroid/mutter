@@ -2,7 +2,7 @@ AC_PREREQ(2.50)
 
 m4_define([mutter_major_version], [3])
 m4_define([mutter_minor_version], [8])
-m4_define([mutter_micro_version], [2])
+m4_define([mutter_micro_version], [3])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -73,7 +73,7 @@ MUTTER_PC_MODULES="
    cairo >= 1.10.0
    gsettings-desktop-schemas >= 3.7.3
    xcomposite >= 0.2 xfixes xrender xdamage xi >= 1.6.0
-   $CLUTTER_PACKAGE >= 1.13.5
+   $CLUTTER_PACKAGE >= 1.14.3
    cogl-1.0 >= 1.13.3
 "
 

@@ -155,6 +155,7 @@ unsigned <span class="returnvalue">int</span>        <a class="link" href="MetaD
   "<a class="link" href="MetaDisplay.html#MetaDisplay-accelerator-activated" title='The "accelerator-activated" signal'>accelerator-activated</a>"                          : <code class="literal">Run Last</code>
   "<a class="link" href="MetaDisplay.html#MetaDisplay-grab-op-begin" title='The "grab-op-begin" signal'>grab-op-begin</a>"                                  : <code class="literal">Run Last</code>
   "<a class="link" href="MetaDisplay.html#MetaDisplay-grab-op-end" title='The "grab-op-end" signal'>grab-op-end</a>"                                    : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-modifiers-accelerator-activated" title='The "modifiers-accelerator-activated" signal'>modifiers-accelerator-activated</a>"                : <code class="literal">Run Last</code>
   "<a class="link" href="MetaDisplay.html#MetaDisplay-overlay-key" title='The "overlay-key" signal'>overlay-key</a>"                                    : <code class="literal">Run Last</code>
   "<a class="link" href="MetaDisplay.html#MetaDisplay-window-created" title='The "window-created" signal'>window-created</a>"                                 : <code class="literal">Run Last</code>
   "<a class="link" href="MetaDisplay.html#MetaDisplay-window-demands-attention" title='The "window-demands-attention" signal'>window-demands-attention</a>"                       : <code class="literal">Run Last</code>
@@ -1077,6 +1078,39 @@ keybindings, and only in a manner compatible with core code.
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg2,
                                                         <a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a>   arg3,
                                                         <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplay-modifiers-accelerator-activated"></a><h3>The <code class="literal">"modifiers-accelerator-activated"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display,
+                                                        <span class="type">gpointer</span>     user_data)      : <code class="literal">Run Last</code></pre>
+<p>
+The ::modifiers-accelerator-activated signal will be emitted when
+a special modifiers-only keybinding is activated.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>display</code></em> :</span></p></td>
+<td>the <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> instance</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>
+<code class="literal">TRUE</code> means that the keyboard device should remain
+frozen and <code class="literal">FALSE</code> for the default behavior of unfreezing the
+keyboard.</td>
+</tr>
+</tbody>
+</table></div>
 </div>
 <hr>
 <div class="refsect2">

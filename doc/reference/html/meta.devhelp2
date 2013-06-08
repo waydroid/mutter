@@ -299,6 +299,7 @@
     <keyword type="signal" name="The &quot;accelerator-activated&quot; signal" link="MetaDisplay.html#MetaDisplay-accelerator-activated"/>
     <keyword type="signal" name="The &quot;grab-op-begin&quot; signal" link="MetaDisplay.html#MetaDisplay-grab-op-begin"/>
     <keyword type="signal" name="The &quot;grab-op-end&quot; signal" link="MetaDisplay.html#MetaDisplay-grab-op-end"/>
+    <keyword type="signal" name="The &quot;modifiers-accelerator-activated&quot; signal" link="MetaDisplay.html#MetaDisplay-modifiers-accelerator-activated"/>
     <keyword type="signal" name="The &quot;overlay-key&quot; signal" link="MetaDisplay.html#MetaDisplay-overlay-key"/>
     <keyword type="signal" name="The &quot;window-created&quot; signal" link="MetaDisplay.html#MetaDisplay-window-created"/>
     <keyword type="signal" name="The &quot;window-demands-attention&quot; signal" link="MetaDisplay.html#MetaDisplay-window-demands-attention"/>
@@ -809,6 +810,7 @@
     <keyword type="constant" name="META_KEYBINDING_ACTION_MOVE_TO_SIDE_W" link="meta-Preferences.html#META-KEYBINDING-ACTION-MOVE-TO-SIDE-W:CAPS"/>
     <keyword type="constant" name="META_KEYBINDING_ACTION_MOVE_TO_CENTER" link="meta-Preferences.html#META-KEYBINDING-ACTION-MOVE-TO-CENTER:CAPS"/>
     <keyword type="constant" name="META_KEYBINDING_ACTION_OVERLAY_KEY" link="meta-Preferences.html#META-KEYBINDING-ACTION-OVERLAY-KEY:CAPS"/>
+    <keyword type="constant" name="META_KEYBINDING_ACTION_ISO_NEXT_GROUP" link="meta-Preferences.html#META-KEYBINDING-ACTION-ISO-NEXT-GROUP:CAPS"/>
     <keyword type="constant" name="META_KEYBINDING_ACTION_LAST" link="meta-Preferences.html#META-KEYBINDING-ACTION-LAST:CAPS"/>
     <keyword type="constant" name="META_KEY_BINDING_NONE" link="meta-Preferences.html#META-KEY-BINDING-NONE:CAPS"/>
     <keyword type="constant" name="META_KEY_BINDING_PER_WINDOW" link="meta-Preferences.html#META-KEY-BINDING-PER-WINDOW:CAPS"/>
