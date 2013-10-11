@@ -8,7 +8,7 @@
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="MetaWindow.html" title="MetaWindow">
 <link rel="next" href="object-tree.html" title="Object Hierarchy">
-<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -47,7 +47,7 @@
                     <a class="link" href="MetaWorkspace.html#MetaWorkspaceClass" title="MetaWorkspaceClass">MetaWorkspaceClass</a>;
 <span class="returnvalue">int</span>                 <a class="link" href="MetaWorkspace.html#meta-workspace-index" title="meta_workspace_index ()">meta_workspace_index</a>                (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
 <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="returnvalue">MetaScreen</span></a> *        <a class="link" href="MetaWorkspace.html#meta-workspace-get-screen" title="meta_workspace_get_screen ()">meta_workspace_get_screen</a>           (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
-<span class="returnvalue">GList</span> *             <a class="link" href="MetaWorkspace.html#meta-workspace-list-windows" title="meta_workspace_list_windows ()">meta_workspace_list_windows</a>         (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             <a class="link" href="MetaWorkspace.html#meta-workspace-list-windows" title="meta_workspace_list_windows ()">meta_workspace_list_windows</a>         (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWorkspace.html#meta-workspace-get-work-area-for-monitor" title="meta_workspace_get_work_area_for_monitor ()">meta_workspace_get_work_area_for_monitor</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> which_monitor</code></em>,
@@ -56,13 +56,13 @@
                                                         (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *area</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWorkspace.html#meta-workspace-activate" title="meta_workspace_activate ()">meta_workspace_activate</a>             (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWorkspace.html#meta-workspace-activate-with-focus" title="meta_workspace_activate_with_focus ()">meta_workspace_activate_with_focus</a>  (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *focus_this</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWorkspace.html#meta-workspace-update-window-hints" title="meta_workspace_update_window_hints ()">meta_workspace_update_window_hints</a>  (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWorkspace.html#meta-workspace-set-builtin-struts" title="meta_workspace_set_builtin_struts ()">meta_workspace_set_builtin_struts</a>   (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
-                                                         <em class="parameter"><code><span class="type">GSList</span> *struts</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="type">GSList</span></a> *struts</code></em>);
 <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaWorkspace.html#meta-workspace-get-neighbor" title="meta_workspace_get_neighbor ()">meta_workspace_get_neighbor</a>         (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Common.html#MetaMotionDirection" title="enum MetaMotionDirection"><span class="type">MetaMotionDirection</span></a> direction</code></em>);
 </pre>
@@ -70,21 +70,21 @@
 <div class="refsect1">
 <a name="MetaWorkspace.object-hierarchy"></a><h2>Object Hierarchy</h2>
 <pre class="synopsis">
-  GObject
+  <a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
    +----MetaWorkspace
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaWorkspace.properties"></a><h2>Properties</h2>
 <pre class="synopsis">
-  "<a class="link" href="MetaWorkspace.html#MetaWorkspace--n-windows" title='The "n-windows" property'>n-windows</a>"                <span class="type">guint</span>                 : Read
+  "<a class="link" href="MetaWorkspace.html#MetaWorkspace--n-windows" title='The "n-windows" property'>n-windows</a>"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a>                 : Read
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaWorkspace.signals"></a><h2>Signals</h2>
 <pre class="synopsis">
-  "<a class="link" href="MetaWorkspace.html#MetaWorkspace-window-added" title='The "window-added" signal'>window-added</a>"                                   : <code class="literal">Run Last</code>
-  "<a class="link" href="MetaWorkspace.html#MetaWorkspace-window-removed" title='The "window-removed" signal'>window-removed</a>"                                 : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaWorkspace.html#MetaWorkspace-window-added" title='The "window-added" signal'>window-added</a>"                                   : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
+  "<a class="link" href="MetaWorkspace.html#MetaWorkspace-window-removed" title='The "window-removed" signal'>window-removed</a>"                                 : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
 </pre>
 </div>
 <div class="refsect1">
@@ -142,7 +142,7 @@ Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="
 <hr>
 <div class="refsect2">
 <a name="meta-workspace-list-windows"></a><h3>meta_workspace_list_windows ()</h3>
-<pre class="programlisting"><span class="returnvalue">GList</span> *             meta_workspace_list_windows         (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             meta_workspace_list_windows         (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <p>
 Gets windows contained on the workspace, including workspace-&gt;windows
 and also sticky windows. Override-redirect windows are not included.
@@ -232,14 +232,14 @@ Stores the work area in <em class="parameter"><code>area</code></em>.
 <div class="refsect2">
 <a name="meta-workspace-activate"></a><h3>meta_workspace_activate ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_workspace_activate             (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-workspace-activate-with-focus"></a><h3>meta_workspace_activate_with_focus ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_workspace_activate_with_focus  (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *focus_this</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 <p>
 Switches to <em class="parameter"><code>workspace</code></em> and possibly activates the window <em class="parameter"><code>focus_this</code></em>.
 </p>
@@ -270,7 +270,7 @@ no other window gets focused first before <em class="parameter"><code>focus_this
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>focus_this</code></em> :</span></p></td>
-<td>the <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> to be focused, or <a href="/home/florian/opt/gnome/share/gtk-doc/html/liboil/liboil-liboiljunk.html#NULL--CAPS"><code class="literal">NULL</code></a>
+<td>the <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> to be focused, or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
@@ -290,7 +290,7 @@ no other window gets focused first before <em class="parameter"><code>focus_this
 <div class="refsect2">
 <a name="meta-workspace-set-builtin-struts"></a><h3>meta_workspace_set_builtin_struts ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_workspace_set_builtin_struts   (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
-                                                         <em class="parameter"><code><span class="type">GSList</span> *struts</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="type">GSList</span></a> *struts</code></em>);</pre>
 <p>
 Sets a list of struts that will be used in addition to the struts
 of the windows in the workspace when computing the work area of
@@ -355,7 +355,7 @@ by <a class="link" href="MetaScreen.html#meta-screen-override-workspace-layout" 
 <a name="MetaWorkspace.property-details"></a><h2>Property Details</h2>
 <div class="refsect2">
 <a name="MetaWorkspace--n-windows"></a><h3>The <code class="literal">"n-windows"</code> property</h3>
-<pre class="programlisting">  "n-windows"                <span class="type">guint</span>                 : Read</pre>
+<pre class="programlisting">  "n-windows"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a>                 : Read</pre>
 <p>Number of windows.</p>
 <p>Default value: 0</p>
 </div>
@@ -366,19 +366,19 @@ by <a class="link" href="MetaScreen.html#meta-screen-override-workspace-layout" 
 <a name="MetaWorkspace-window-added"></a><h3>The <code class="literal">"window-added"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *metaworkspace,
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>    *arg1,
-                                                        <span class="type">gpointer</span>       user_data)          : <code class="literal">Run Last</code></pre>
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>       user_data)          : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWorkspace-window-removed"></a><h3>The <code class="literal">"window-removed"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *metaworkspace,
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>    *arg1,
-                                                        <span class="type">gpointer</span>       user_data)          : <code class="literal">Run Last</code></pre>
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>       user_data)          : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
 </div>
 </div>
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.18.1</div>
+          Generated by GTK-Doc V1.19</div>
 </body>
 </html>

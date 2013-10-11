@@ -8,7 +8,7 @@
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="MetaScreen.html" title="MetaScreen">
 <link rel="next" href="MetaWorkspace.html" title="MetaWorkspace">
-<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -48,12 +48,12 @@
 enum                <a class="link" href="MetaWindow.html#MetaWindowType" title="enum MetaWindowType">MetaWindowType</a>;
 enum                <a class="link" href="MetaWindow.html#MetaMaximizeFlags" title="enum MetaMaximizeFlags">MetaMaximizeFlags</a>;
 <span class="returnvalue">MetaFrame</span> *         <a class="link" href="MetaWindow.html#meta-window-get-frame" title="meta_window_get_frame ()">meta_window_get_frame</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-has-focus" title="meta_window_has_focus ()">meta_window_has_focus</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-appears-focused" title="meta_window_appears_focused ()">meta_window_appears_focused</a>         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-shaded" title="meta_window_is_shaded ()">meta_window_is_shaded</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-monitor-sized" title="meta_window_is_monitor_sized ()">meta_window_is_monitor_sized</a>        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-override-redirect" title="meta_window_is_override_redirect ()">meta_window_is_override_redirect</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-skip-taskbar" title="meta_window_is_skip_taskbar ()">meta_window_is_skip_taskbar</a>         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-has-focus" title="meta_window_has_focus ()">meta_window_has_focus</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-appears-focused" title="meta_window_appears_focused ()">meta_window_appears_focused</a>         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-shaded" title="meta_window_is_shaded ()">meta_window_is_shaded</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-monitor-sized" title="meta_window_is_monitor_sized ()">meta_window_is_monitor_sized</a>        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-override-redirect" title="meta_window_is_override_redirect ()">meta_window_is_override_redirect</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-skip-taskbar" title="meta_window_is_skip_taskbar ()">meta_window_is_skip_taskbar</a>         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="returnvalue">MetaRectangle</span></a> *     <a class="link" href="MetaWindow.html#meta-window-get-rect" title="meta_window_get_rect ()">meta_window_get_rect</a>                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-get-input-rect" title="meta_window_get_input_rect ()">meta_window_get_input_rect</a>          (<em class="parameter"><code>const <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);
@@ -66,19 +66,19 @@ enum                <a class="link" href="MetaWindow.html#MetaMaximizeFlags" tit
 <span class="returnvalue">Atom</span>                <a class="link" href="MetaWindow.html#meta-window-get-window-type-atom" title="meta_window_get_window_type_atom ()">meta_window_get_window_type_atom</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaWindow.html#meta-window-get-workspace" title="meta_window_get_workspace ()">meta_window_get_workspace</a>           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaWindow.html#meta-window-get-monitor" title="meta_window_get_monitor ()">meta_window_get_monitor</a>             (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-on-all-workspaces" title="meta_window_is_on_all_workspaces ()">meta_window_is_on_all_workspaces</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-located-on-workspace" title="meta_window_located_on_workspace ()">meta_window_located_on_workspace</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-on-all-workspaces" title="meta_window_is_on_all_workspaces ()">meta_window_is_on_all_workspaces</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-located-on-workspace" title="meta_window_located_on_workspace ()">meta_window_located_on_workspace</a>    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-hidden" title="meta_window_is_hidden ()">meta_window_is_hidden</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-hidden" title="meta_window_is_hidden ()">meta_window_is_hidden</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-activate" title="meta_window_activate ()">meta_window_activate</a>                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> current_time</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> current_time</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-activate-with-workspace" title="meta_window_activate_with_workspace ()">meta_window_activate_with_workspace</a> (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> current_time</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> current_time</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-description" title="meta_window_get_description ()">meta_window_get_description</a>         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-wm-class" title="meta_window_get_wm_class ()">meta_window_get_wm_class</a>            (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-wm-class-instance" title="meta_window_get_wm_class_instance ()">meta_window_get_wm_class_instance</a>   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-showing-on-its-workspace" title="meta_window_showing_on_its_workspace ()">meta_window_showing_on_its_workspace</a>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-showing-on-its-workspace" title="meta_window_showing_on_its_workspace ()">meta_window_showing_on_its_workspace</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-gtk-application-id" title="meta_window_get_gtk_application_id ()">meta_window_get_gtk_application_id</a>  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-gtk-unique-bus-name" title="meta_window_get_gtk_unique_bus_name ()">meta_window_get_gtk_unique_bus_name</a> (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
@@ -91,15 +91,15 @@ const <span class="returnvalue">char</span> *        <a class="link" href="MetaW
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-gtk-menubar-object-path" title="meta_window_get_gtk_menubar_object_path ()">meta_window_get_gtk_menubar_object_path</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-move" title="meta_window_move ()">meta_window_move</a>                    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> user_op</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_x_nw</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_y_nw</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-move-frame" title="meta_window_move_frame ()">meta_window_move_frame</a>              (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> user_op</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_x_nw</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_y_nw</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-move-resize-frame" title="meta_window_move_resize_frame ()">meta_window_move_resize_frame</a>       (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> user_op</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_x_nw</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_y_nw</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> w</code></em>,
@@ -107,7 +107,7 @@ const <span class="returnvalue">char</span> *        <a class="link" href="MetaW
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-move-to-monitor" title="meta_window_move_to_monitor ()">meta_window_move_to_monitor</a>         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> monitor</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-resize" title="meta_window_resize ()">meta_window_resize</a>                  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> user_op</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> w</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> h</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-set-demands-attention" title="meta_window_set_demands_attention ()">meta_window_set_demands_attention</a>   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
@@ -115,23 +115,23 @@ const <span class="returnvalue">char</span> *        <a class="link" href="MetaW
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-startup-id" title="meta_window_get_startup_id ()">meta_window_get_startup_id</a>          (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-change-workspace-by-index" title="meta_window_change_workspace_by_index ()">meta_window_change_workspace_by_index</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gint</span> space_index</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> append</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a> space_index</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> append</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-change-workspace" title="meta_window_change_workspace ()">meta_window_change_workspace</a>        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
-<span class="returnvalue">GObject</span> *           <a class="link" href="MetaWindow.html#meta-window-get-compositor-private" title="meta_window_get_compositor_private ()">meta_window_get_compositor_private</a>  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject"><span class="returnvalue">GObject</span></a> *           <a class="link" href="MetaWindow.html#meta-window-get-compositor-private" title="meta_window_get_compositor_private ()">meta_window_get_compositor_private</a>  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-set-compositor-private" title="meta_window_set_compositor_private ()">meta_window_set_compositor_private</a>  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">GObject</span> *priv</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject"><span class="type">GObject</span></a> *priv</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-configure-notify" title="meta_window_configure_notify ()">meta_window_configure_notify</a>        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">XConfigureEvent</span> *event</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-role" title="meta_window_get_role ()">meta_window_get_role</a>                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <a class="link" href="meta-Common.html#MetaStackLayer" title="enum MetaStackLayer"><span class="returnvalue">MetaStackLayer</span></a>      <a class="link" href="MetaWindow.html#meta-window-get-layer" title="meta_window_get_layer ()">meta_window_get_layer</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        <a class="link" href="MetaWindow.html#meta-window-find-root-ancestor" title="meta_window_find_root_ancestor ()">meta_window_find_root_ancestor</a>      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-ancestor-of-transient" title="meta_window_is_ancestor_of_transient ()">meta_window_is_ancestor_of_transient</a>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-ancestor-of-transient" title="meta_window_is_ancestor_of_transient ()">meta_window_is_ancestor_of_transient</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *transient</code></em>);
-<span class="returnvalue">gboolean</span>            (<a class="link" href="MetaWindow.html#MetaWindowForeachFunc" title="MetaWindowForeachFunc ()">*MetaWindowForeachFunc</a>)            (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            (<a class="link" href="MetaWindow.html#MetaWindowForeachFunc" title="MetaWindowForeachFunc ()">*MetaWindowForeachFunc</a>)            (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">void</span> *user_data</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-foreach-transient" title="meta_window_foreach_transient ()">meta_window_foreach_transient</a>       (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html#MetaWindowForeachFunc" title="MetaWindowForeachFunc ()"><span class="type">MetaWindowForeachFunc</span></a> func</code></em>,
@@ -140,15 +140,15 @@ const <span class="returnvalue">char</span> *        <a class="link" href="MetaW
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html#MetaWindowForeachFunc" title="MetaWindowForeachFunc ()"><span class="type">MetaWindowForeachFunc</span></a> func</code></em>,
                                                          <em class="parameter"><code><span class="type">void</span> *user_data</code></em>);
 <a class="link" href="MetaWindow.html#MetaMaximizeFlags" title="enum MetaMaximizeFlags"><span class="returnvalue">MetaMaximizeFlags</span></a>   <a class="link" href="MetaWindow.html#meta-window-get-maximized" title="meta_window_get_maximized ()">meta_window_get_maximized</a>           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-fullscreen" title="meta_window_is_fullscreen ()">meta_window_is_fullscreen</a>           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-on-primary-monitor" title="meta_window_is_on_primary_monitor ()">meta_window_is_on_primary_monitor</a>   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-requested-bypass-compositor" title="meta_window_requested_bypass_compositor ()">meta_window_requested_bypass_compositor</a>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-fullscreen" title="meta_window_is_fullscreen ()">meta_window_is_fullscreen</a>           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-on-primary-monitor" title="meta_window_is_on_primary_monitor ()">meta_window_is_on_primary_monitor</a>   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-requested-bypass-compositor" title="meta_window_requested_bypass_compositor ()">meta_window_requested_bypass_compositor</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-requested-dont-bypass-compositor" title="meta_window_requested_dont_bypass_compositor ()">meta_window_requested_dont_bypass_compositor</a>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-requested-dont-bypass-compositor" title="meta_window_requested_dont_bypass_compositor ()">meta_window_requested_dont_bypass_compositor</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-mapped" title="meta_window_is_mapped ()">meta_window_is_mapped</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-toplevel-is-mapped" title="meta_window_toplevel_is_mapped ()">meta_window_toplevel_is_mapped</a>      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-get-icon-geometry" title="meta_window_get_icon_geometry ()">meta_window_get_icon_geometry</a>       (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-mapped" title="meta_window_is_mapped ()">meta_window_is_mapped</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-toplevel-is-mapped" title="meta_window_toplevel_is_mapped ()">meta_window_toplevel_is_mapped</a>      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-get-icon-geometry" title="meta_window_get_icon_geometry ()">meta_window_get_icon_geometry</a>       (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-set-icon-geometry" title="meta_window_set_icon_geometry ()">meta_window_set_icon_geometry</a>       (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);
@@ -165,33 +165,33 @@ const <span class="returnvalue">char</span> *        <a class="link" href="MetaW
 <span class="returnvalue">Window</span>              <a class="link" href="MetaWindow.html#meta-window-get-transient-for-as-xid" title="meta_window_get_transient_for_as_xid ()">meta_window_get_transient_for_as_xid</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-delete" title="meta_window_delete ()">meta_window_delete</a>                  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
-<span class="returnvalue">guint</span>               <a class="link" href="MetaWindow.html#meta-window-get-stable-sequence" title="meta_window_get_stable_sequence ()">meta_window_get_stable_sequence</a>     (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">guint32</span>             <a class="link" href="MetaWindow.html#meta-window-get-user-time" title="meta_window_get_user_time ()">meta_window_get_user_time</a>           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>               <a class="link" href="MetaWindow.html#meta-window-get-stable-sequence" title="meta_window_get_stable_sequence ()">meta_window_get_stable_sequence</a>     (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="returnvalue">guint32</span></a>             <a class="link" href="MetaWindow.html#meta-window-get-user-time" title="meta_window_get_user_time ()">meta_window_get_user_time</a>           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaWindow.html#meta-window-get-pid" title="meta_window_get_pid ()">meta_window_get_pid</a>                 (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-client-machine" title="meta_window_get_client_machine ()">meta_window_get_client_machine</a>      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-remote" title="meta_window_is_remote ()">meta_window_is_remote</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-modal" title="meta_window_is_modal ()">meta_window_is_modal</a>                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="MetaWindow.html#meta-window-is-attached-dialog" title="meta_window_is_attached_dialog ()">meta_window_is_attached_dialog</a>      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-remote" title="meta_window_is_remote ()">meta_window_is_remote</a>               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-modal" title="meta_window_is_modal ()">meta_window_is_modal</a>                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaWindow.html#meta-window-is-attached-dialog" title="meta_window_is_attached_dialog ()">meta_window_is_attached_dialog</a>      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="MetaWindow.html#meta-window-get-mutter-hints" title="meta_window_get_mutter_hints ()">meta_window_get_mutter_hints</a>        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <a class="link" href="meta-Common.html#MetaFrameType" title="enum MetaFrameType"><span class="returnvalue">MetaFrameType</span></a>       <a class="link" href="MetaWindow.html#meta-window-get-frame-type" title="meta_window_get_frame_type ()">meta_window_get_frame_type</a>          (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="returnvalue">cairo_region_t</span></a> *    <a class="link" href="MetaWindow.html#meta-window-get-frame-bounds" title="meta_window_get_frame_bounds ()">meta_window_get_frame_bounds</a>        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
+<a href="/usr/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="returnvalue">cairo_region_t</span></a> *    <a class="link" href="MetaWindow.html#meta-window-get-frame-bounds" title="meta_window_get_frame_bounds ()">meta_window_get_frame_bounds</a>        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        <a class="link" href="MetaWindow.html#meta-window-get-tile-match" title="meta_window_get_tile_match ()">meta_window_get_tile_match</a>          (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-make-fullscreen" title="meta_window_make_fullscreen ()">meta_window_make_fullscreen</a>         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-unmake-fullscreen" title="meta_window_unmake_fullscreen ()">meta_window_unmake_fullscreen</a>       (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-make-above" title="meta_window_make_above ()">meta_window_make_above</a>              (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-unmake-above" title="meta_window_unmake_above ()">meta_window_unmake_above</a>            (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-shade" title="meta_window_shade ()">meta_window_shade</a>                   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-unshade" title="meta_window_unshade ()">meta_window_unshade</a>                 (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-stick" title="meta_window_stick ()">meta_window_stick</a>                   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-unstick" title="meta_window_unstick ()">meta_window_unstick</a>                 (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-kill" title="meta_window_kill ()">meta_window_kill</a>                    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-focus" title="meta_window_focus ()">meta_window_focus</a>                   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-check-alive" title="meta_window_check_alive ()">meta_window_check_alive</a>             (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-get-work-area-current-monitor" title="meta_window_get_work_area_current_monitor ()">meta_window_get_work_area_current_monitor</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *area</code></em>);
@@ -204,52 +204,52 @@ const <span class="returnvalue">char</span> *        <a class="link" href="MetaW
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *area</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaWindow.html#meta-window-begin-grab-op" title="meta_window_begin_grab_op ()">meta_window_begin_grab_op</a>           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a> op</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> frame_action</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> frame_action</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaWindow.object-hierarchy"></a><h2>Object Hierarchy</h2>
 <pre class="synopsis">
-  GObject
+  <a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
    +----MetaWindow
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaWindow.properties"></a><h2>Properties</h2>
 <pre class="synopsis">
-  "<a class="link" href="MetaWindow.html#MetaWindow--above" title='The "above" property'>above</a>"                    <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--appears-focused" title='The "appears-focused" property'>appears-focused</a>"          <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--decorated" title='The "decorated" property'>decorated</a>"                <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--demands-attention" title='The "demands-attention" property'>demands-attention</a>"        <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--fullscreen" title='The "fullscreen" property'>fullscreen</a>"               <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-app-menu-object-path" title='The "gtk-app-menu-object-path" property'>gtk-app-menu-object-path</a>" <span class="type">gchar</span>*                : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-application-id" title='The "gtk-application-id" property'>gtk-application-id</a>"       <span class="type">gchar</span>*                : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-application-object-path" title='The "gtk-application-object-path" property'>gtk-application-object-path</a>" <span class="type">gchar</span>*                : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-menubar-object-path" title='The "gtk-menubar-object-path" property'>gtk-menubar-object-path</a>"  <span class="type">gchar</span>*                : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-unique-bus-name" title='The "gtk-unique-bus-name" property'>gtk-unique-bus-name</a>"      <span class="type">gchar</span>*                : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-window-object-path" title='The "gtk-window-object-path" property'>gtk-window-object-path</a>"   <span class="type">gchar</span>*                : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--icon" title='The "icon" property'>icon</a>"                     <span class="type">GdkPixbuf</span>*            : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--maximized-horizontally" title='The "maximized-horizontally" property'>maximized-horizontally</a>"   <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--maximized-vertically" title='The "maximized-vertically" property'>maximized-vertically</a>"     <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--mini-icon" title='The "mini-icon" property'>mini-icon</a>"                <span class="type">GdkPixbuf</span>*            : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--minimized" title='The "minimized" property'>minimized</a>"                <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--mutter-hints" title='The "mutter-hints" property'>mutter-hints</a>"             <span class="type">gchar</span>*                : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--resizeable" title='The "resizeable" property'>resizeable</a>"               <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--title" title='The "title" property'>title</a>"                    <span class="type">gchar</span>*                : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--urgent" title='The "urgent" property'>urgent</a>"                   <span class="type">gboolean</span>              : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--user-time" title='The "user-time" property'>user-time</a>"                <span class="type">guint</span>                 : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--above" title='The "above" property'>above</a>"                    <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--appears-focused" title='The "appears-focused" property'>appears-focused</a>"          <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--decorated" title='The "decorated" property'>decorated</a>"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--demands-attention" title='The "demands-attention" property'>demands-attention</a>"        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--fullscreen" title='The "fullscreen" property'>fullscreen</a>"               <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-app-menu-object-path" title='The "gtk-app-menu-object-path" property'>gtk-app-menu-object-path</a>" <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-application-id" title='The "gtk-application-id" property'>gtk-application-id</a>"       <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-application-object-path" title='The "gtk-application-object-path" property'>gtk-application-object-path</a>" <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-menubar-object-path" title='The "gtk-menubar-object-path" property'>gtk-menubar-object-path</a>"  <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-unique-bus-name" title='The "gtk-unique-bus-name" property'>gtk-unique-bus-name</a>"      <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--gtk-window-object-path" title='The "gtk-window-object-path" property'>gtk-window-object-path</a>"   <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--icon" title='The "icon" property'>icon</a>"                     <a href="http://library.gnome.org/devel/gdk-pixbuf/unstable/gdk-pixbuf-The-GdkPixbuf-Structure.html#GdkPixbuf"><span class="type">GdkPixbuf</span></a>*            : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--maximized-horizontally" title='The "maximized-horizontally" property'>maximized-horizontally</a>"   <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--maximized-vertically" title='The "maximized-vertically" property'>maximized-vertically</a>"     <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--mini-icon" title='The "mini-icon" property'>mini-icon</a>"                <a href="http://library.gnome.org/devel/gdk-pixbuf/unstable/gdk-pixbuf-The-GdkPixbuf-Structure.html#GdkPixbuf"><span class="type">GdkPixbuf</span></a>*            : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--minimized" title='The "minimized" property'>minimized</a>"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--mutter-hints" title='The "mutter-hints" property'>mutter-hints</a>"             <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--resizeable" title='The "resizeable" property'>resizeable</a>"               <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--title" title='The "title" property'>title</a>"                    <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--urgent" title='The "urgent" property'>urgent</a>"                   <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--user-time" title='The "user-time" property'>user-time</a>"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a>                 : Read
   "<a class="link" href="MetaWindow.html#MetaWindow--window-type" title='The "window-type" property'>window-type</a>"              <a class="link" href="MetaWindow.html#MetaWindowType" title="enum MetaWindowType"><span class="type">MetaWindowType</span></a>        : Read
-  "<a class="link" href="MetaWindow.html#MetaWindow--wm-class" title='The "wm-class" property'>wm-class</a>"                 <span class="type">gchar</span>*                : Read
+  "<a class="link" href="MetaWindow.html#MetaWindow--wm-class" title='The "wm-class" property'>wm-class</a>"                 <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaWindow.signals"></a><h2>Signals</h2>
 <pre class="synopsis">
-  "<a class="link" href="MetaWindow.html#MetaWindow-focus" title='The "focus" signal'>focus</a>"                                          : <code class="literal">Run Last</code>
-  "<a class="link" href="MetaWindow.html#MetaWindow-raised" title='The "raised" signal'>raised</a>"                                         : <code class="literal">Run Last</code>
-  "<a class="link" href="MetaWindow.html#MetaWindow-unmanaged" title='The "unmanaged" signal'>unmanaged</a>"                                      : <code class="literal">Run Last</code>
-  "<a class="link" href="MetaWindow.html#MetaWindow-workspace-changed" title='The "workspace-changed" signal'>workspace-changed</a>"                              : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaWindow.html#MetaWindow-focus" title='The "focus" signal'>focus</a>"                                          : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
+  "<a class="link" href="MetaWindow.html#MetaWindow-raised" title='The "raised" signal'>raised</a>"                                         : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
+  "<a class="link" href="MetaWindow.html#MetaWindow-unmanaged" title='The "unmanaged" signal'>unmanaged</a>"                                      : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
+  "<a class="link" href="MetaWindow.html#MetaWindow-workspace-changed" title='The "workspace-changed" signal'>workspace-changed</a>"                              : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
 </pre>
 </div>
 <div class="refsect1">
@@ -425,12 +425,12 @@ const <span class="returnvalue">char</span> *        <a class="link" href="MetaW
 <hr>
 <div class="refsect2">
 <a name="meta-window-has-focus"></a><h3>meta_window_has_focus ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_has_focus               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_has_focus               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-window-appears-focused"></a><h3>meta_window_appears_focused ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_appears_focused         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_appears_focused         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 Determines if the window should be drawn with a focused appearance. This is
 true for focused windows but also true for windows with a focused modal
@@ -450,7 +450,7 @@ dialog attached.
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if the window should be drawn with a focused frame</td>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the window should be drawn with a focused frame</td>
 </tr>
 </tbody>
 </table></div>
@@ -458,12 +458,12 @@ dialog attached.
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-shaded"></a><h3>meta_window_is_shaded ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_shaded               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_shaded               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-monitor-sized"></a><h3>meta_window_is_monitor_sized ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_monitor_sized        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_monitor_sized        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -478,7 +478,7 @@ dialog attached.
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if the window is occupies an entire monitor or
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the window is occupies an entire monitor or
 the whole screen.</td>
 </tr>
 </tbody>
@@ -487,7 +487,7 @@ the whole screen.</td>
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-override-redirect"></a><h3>meta_window_is_override_redirect ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_override_redirect    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_override_redirect    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -502,7 +502,7 @@ the whole screen.</td>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if this window isn't managed by mutter; it will
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if this window isn't managed by mutter; it will
 control its own positioning and mutter won't draw decorations
 among other things.  In X terminology this is "override redirect".</td>
 </tr>
@@ -512,7 +512,7 @@ among other things.  In X terminology this is "override redirect".</td>
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-skip-taskbar"></a><h3>meta_window_is_skip_taskbar ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_skip_taskbar         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_skip_taskbar         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 Gets whether this window should be ignored by task lists.
 </p>
@@ -530,7 +530,7 @@ Gets whether this window should be ignored by task lists.
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if the skip bar hint is set.</td>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the skip bar hint is set.</td>
 </tr>
 </tbody>
 </table></div>
@@ -774,12 +774,12 @@ Gets index of the monitor that this window is on.
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-on-all-workspaces"></a><h3>meta_window_is_on_all_workspaces ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_on_all_workspaces    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_on_all_workspaces    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-window-located-on-workspace"></a><h3>meta_window_located_on_workspace ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_located_on_workspace    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_located_on_workspace    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -808,19 +808,19 @@ will be displayed on all workspaces.</td>
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-hidden"></a><h3>meta_window_is_hidden ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_hidden               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_hidden               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-window-activate"></a><h3>meta_window_activate ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_activate                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> current_time</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> current_time</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-window-activate-with-workspace"></a><h3>meta_window_activate_with_workspace ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_activate_with_workspace (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> current_time</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> current_time</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 </div>
 <hr>
@@ -869,7 +869,7 @@ Return the current value of the instance part of WM_CLASS X property.
 <hr>
 <div class="refsect2">
 <a name="meta-window-showing-on-its-workspace"></a><h3>meta_window_showing_on_its_workspace ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_showing_on_its_workspace
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_showing_on_its_workspace
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -885,7 +885,7 @@ Return the current value of the instance part of WM_CLASS X property.
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if window would be visible, if its workspace was current</td>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if window would be visible, if its workspace was current</td>
 </tr>
 </tbody>
 </table></div>
@@ -1036,7 +1036,7 @@ Return the current value of the instance part of WM_CLASS X property.
 <div class="refsect2">
 <a name="meta-window-move"></a><h3>meta_window_move ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_move                    (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> user_op</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_x_nw</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_y_nw</code></em>);</pre>
 <p>
@@ -1075,7 +1075,7 @@ itself.
 <div class="refsect2">
 <a name="meta-window-move-frame"></a><h3>meta_window_move_frame ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_move_frame              (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> user_op</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_x_nw</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_y_nw</code></em>);</pre>
 <p>
@@ -1114,7 +1114,7 @@ Otherwise, acts identically to <a class="link" href="MetaWindow.html#meta-window
 <div class="refsect2">
 <a name="meta-window-move-resize-frame"></a><h3>meta_window_move_resize_frame ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_move_resize_frame       (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> user_op</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_x_nw</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_y_nw</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> w</code></em>,
@@ -1188,7 +1188,7 @@ the relative position of the window's top left corner.
 <div class="refsect2">
 <a name="meta-window-resize"></a><h3>meta_window_resize ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_resize                  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> user_op</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> w</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> h</code></em>);</pre>
 <p>
@@ -1240,9 +1240,9 @@ Resize the window to the desired size.
 <a name="meta-window-change-workspace-by-index"></a><h3>meta_window_change_workspace_by_index ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_change_workspace_by_index
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gint</span> space_index</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> append</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a> space_index</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> append</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -1253,7 +1253,7 @@ Resize the window to the desired size.
 <hr>
 <div class="refsect2">
 <a name="meta-window-get-compositor-private"></a><h3>meta_window_get_compositor_private ()</h3>
-<pre class="programlisting"><span class="returnvalue">GObject</span> *           meta_window_get_compositor_private  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject"><span class="returnvalue">GObject</span></a> *           meta_window_get_compositor_private  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 Gets the compositor's wrapper object for <em class="parameter"><code>window</code></em>.
 </p>
@@ -1280,7 +1280,7 @@ Gets the compositor's wrapper object for <em class="parameter"><code>window</cod
 <div class="refsect2">
 <a name="meta-window-set-compositor-private"></a><h3>meta_window_set_compositor_private ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_set_compositor_private  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">GObject</span> *priv</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject"><span class="type">GObject</span></a> *priv</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -1350,7 +1350,7 @@ and return the "root" window which has no non-transient parent.
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-ancestor-of-transient"></a><h3>meta_window_is_ancestor_of_transient ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_ancestor_of_transient
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_ancestor_of_transient
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *transient</code></em>);</pre>
 <p>
@@ -1377,7 +1377,7 @@ or reaches an ancestor that is not transient.
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if window is an ancestor of transient. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if window is an ancestor of transient. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
 </td>
 </tr>
 </tbody>
@@ -1386,7 +1386,7 @@ or reaches an ancestor that is not transient.
 <hr>
 <div class="refsect2">
 <a name="MetaWindowForeachFunc"></a><h3>MetaWindowForeachFunc ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            (*MetaWindowForeachFunc)            (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            (*MetaWindowForeachFunc)            (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">void</span> *user_data</code></em>);</pre>
 </div>
 <hr>
@@ -1401,7 +1401,7 @@ a transient of a window which is in turn transient for <em class="parameter"><co
 The order of window enumeration is not defined.
 </p>
 <p>
-Iteration will stop if <em class="parameter"><code>func</code></em> at any point returns <code class="literal">FALSE</code>.
+Iteration will stop if <em class="parameter"><code>func</code></em> at any point returns <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>.
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -1434,7 +1434,7 @@ Iteration will stop if <em class="parameter"><code>func</code></em> at any point
                                                          <em class="parameter"><code><span class="type">void</span> *user_data</code></em>);</pre>
 <p>
 If <em class="parameter"><code>window</code></em> is transient, call <em class="parameter"><code>func</code></em> with the window for which it's transient,
-repeatedly until either we find a non-transient window, or <em class="parameter"><code>func</code></em> returns <code class="literal">FALSE</code>.
+repeatedly until either we find a non-transient window, or <em class="parameter"><code>func</code></em> returns <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>.
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -1488,7 +1488,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-fullscreen"></a><h3>meta_window_is_fullscreen ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_fullscreen           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_fullscreen           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -1503,7 +1503,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if the window is currently fullscreen</td>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the window is currently fullscreen</td>
 </tr>
 </tbody>
 </table></div>
@@ -1511,7 +1511,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-on-primary-monitor"></a><h3>meta_window_is_on_primary_monitor ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_on_primary_monitor   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_on_primary_monitor   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -1526,7 +1526,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if the window is on the primary monitor</td>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the window is on the primary monitor</td>
 </tr>
 </tbody>
 </table></div>
@@ -1534,7 +1534,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <hr>
 <div class="refsect2">
 <a name="meta-window-requested-bypass-compositor"></a><h3>meta_window_requested_bypass_compositor ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_requested_bypass_compositor
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_requested_bypass_compositor
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -1550,7 +1550,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if the window requested to bypass the compositor</td>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the window requested to bypass the compositor</td>
 </tr>
 </tbody>
 </table></div>
@@ -1558,7 +1558,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <hr>
 <div class="refsect2">
 <a name="meta-window-requested-dont-bypass-compositor"></a><h3>meta_window_requested_dont_bypass_compositor ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_requested_dont_bypass_compositor
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_requested_dont_bypass_compositor
                                                         (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -1574,7 +1574,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if the window requested to opt out of unredirecting</td>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the window requested to opt out of unredirecting</td>
 </tr>
 </tbody>
 </table></div>
@@ -1582,7 +1582,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-mapped"></a><h3>meta_window_is_mapped ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_mapped               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_mapped               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 Determines whether the X window for the MetaWindow is mapped.
 </p>
@@ -1601,7 +1601,7 @@ Determines whether the X window for the MetaWindow is mapped.
 <hr>
 <div class="refsect2">
 <a name="meta-window-toplevel-is-mapped"></a><h3>meta_window_toplevel_is_mapped ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_toplevel_is_mapped      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_toplevel_is_mapped      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 Determines whether the toplevel X window for the MetaWindow is
 mapped. (The frame window is mapped even without the client window
@@ -1621,7 +1621,7 @@ when a window is shaded.)
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if the toplevel is mapped.</td>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the toplevel is mapped.</td>
 </tr>
 </tbody>
 </table></div>
@@ -1629,7 +1629,7 @@ when a window is shaded.)
 <hr>
 <div class="refsect2">
 <a name="meta-window-get-icon-geometry"></a><h3>meta_window_get_icon_geometry ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_get_icon_geometry       (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_get_icon_geometry       (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);</pre>
 <p>
 Gets the location of the icon corresponding to the window. The location
@@ -1655,7 +1655,7 @@ displaying the icon, and is relative to the root window.
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if the icon geometry was succesfully retrieved.</td>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the icon geometry was succesfully retrieved.</td>
 </tr>
 </tbody>
 </table></div>
@@ -1683,7 +1683,7 @@ interface element displaying the icon, and is relative to the root window.
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>rect</code></em> :</span></p></td>
-<td>rectangle with the desired geometry or <a href="/home/florian/opt/gnome/share/gtk-doc/html/liboil/liboil-liboiljunk.html#NULL--CAPS"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+<td>rectangle with the desired geometry or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 </tbody>
@@ -1768,7 +1768,7 @@ above its associated window.
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>the window this window is transient for, or
-<a href="/home/florian/opt/gnome/share/gtk-doc/html/liboil/liboil-liboiljunk.html#NULL--CAPS"><code class="literal">NULL</code></a> if the WM_TRANSIENT_FOR hint is unset or does not point to a toplevel
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if the WM_TRANSIENT_FOR hint is unset or does not point to a toplevel
 window that Metacity knows about. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
 </td>
 </tr>
@@ -1811,12 +1811,12 @@ None if the WM_TRANSIENT_FOR hint is unset. <span class="annotation">[<acronym t
 <div class="refsect2">
 <a name="meta-window-delete"></a><h3>meta_window_delete ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_delete                  (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-window-get-stable-sequence"></a><h3>meta_window_get_stable_sequence ()</h3>
-<pre class="programlisting"><span class="returnvalue">guint</span>               meta_window_get_stable_sequence     (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>               meta_window_get_stable_sequence     (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 The stable sequence number is a monotonicially increasing
 unique integer assigned to each <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> upon creation.
@@ -1846,7 +1846,7 @@ fashion.
 <hr>
 <div class="refsect2">
 <a name="meta-window-get-user-time"></a><h3>meta_window_get_user_time ()</h3>
-<pre class="programlisting"><span class="returnvalue">guint32</span>             meta_window_get_user_time           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="returnvalue">guint32</span></a>             meta_window_get_user_time           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 The user time represents a timestamp for the last time the user
 interacted with this window.  Note this property is only available
@@ -1935,7 +1935,7 @@ caller. <span class="annotation">[<acronym title="Don't free data after the code
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-remote"></a><h3>meta_window_is_remote ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_remote               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_remote               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -1950,7 +1950,7 @@ caller. <span class="annotation">[<acronym title="Don't free data after the code
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<code class="literal">TRUE</code> if this window originates from a host
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if this window originates from a host
 different from the one running mutter.</td>
 </tr>
 </tbody>
@@ -1959,7 +1959,7 @@ different from the one running mutter.</td>
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-modal"></a><h3>meta_window_is_modal ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_modal                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_modal                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 Queries whether the window is in a modal state as described by the
 _NET_WM_STATE protocol.
@@ -1986,11 +1986,11 @@ _NET_WM_STATE protocol.
 <hr>
 <div class="refsect2">
 <a name="meta-window-is-attached-dialog"></a><h3>meta_window_is_attached_dialog ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_window_is_attached_dialog      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_window_is_attached_dialog      (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 Tests if <em class="parameter"><code>window</code></em> is should be attached to its parent window.
 (If the "attach_modal_dialogs" option is not enabled, this will
-always return <code class="literal">FALSE</code>.)
+always return <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>.)
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -2041,7 +2041,7 @@ by plugins.
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td>the _MUTTER_HINTS string, or <a href="/home/florian/opt/gnome/share/gtk-doc/html/liboil/liboil-liboiljunk.html#NULL--CAPS"><code class="literal">NULL</code></a> if no hints
+<td>the _MUTTER_HINTS string, or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if no hints
 are set. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
 </td>
 </tr>
@@ -2076,7 +2076,7 @@ Gets the type of window decorations that should be used for this window.
 <hr>
 <div class="refsect2">
 <a name="meta-window-get-frame-bounds"></a><h3>meta_window_get_frame_bounds ()</h3>
-<pre class="programlisting"><a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="returnvalue">cairo_region_t</span></a> *    meta_window_get_frame_bounds        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<pre class="programlisting"><a href="/usr/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="returnvalue">cairo_region_t</span></a> *    meta_window_get_frame_bounds        (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>
 Gets a region representing the outer bounds of the window's frame.
 </p>
@@ -2093,8 +2093,8 @@ Gets a region representing the outer bounds of the window's frame.
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td>a <a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="type">cairo_region_t</span></a>
-holding the outer bounds of the window, or <a href="/home/florian/opt/gnome/share/gtk-doc/html/liboil/liboil-liboiljunk.html#NULL--CAPS"><code class="literal">NULL</code></a> if the window
+<td>a <a href="/usr/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="type">cairo_region_t</span></a>
+holding the outer bounds of the window, or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if the window
 doesn't have a frame. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
@@ -2130,7 +2130,7 @@ the topmost tiled window in a complementary tile mode that is:
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>the matching tiled window or
-<a href="/home/florian/opt/gnome/share/gtk-doc/html/liboil/liboil-liboiljunk.html#NULL--CAPS"><code class="literal">NULL</code></a> if it doesn't exist. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if it doesn't exist. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 </tbody>
@@ -2160,13 +2160,13 @@ the topmost tiled window in a complementary tile mode that is:
 <div class="refsect2">
 <a name="meta-window-shade"></a><h3>meta_window_shade ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_shade                   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-window-unshade"></a><h3>meta_window_unshade ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_unshade                 (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -2187,13 +2187,13 @@ the topmost tiled window in a complementary tile mode that is:
 <div class="refsect2">
 <a name="meta-window-focus"></a><h3>meta_window_focus ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_focus                   (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-window-check-alive"></a><h3>meta_window_check_alive ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_check_alive             (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -2290,153 +2290,153 @@ Get the work area for all monitors for <em class="parameter"><code>window</code>
 <a name="meta-window-begin-grab-op"></a><h3>meta_window_begin_grab_op ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_window_begin_grab_op           (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a> op</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> frame_action</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> frame_action</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 </div>
 </div>
 <div class="refsect1">
 <a name="MetaWindow.property-details"></a><h2>Property Details</h2>
 <div class="refsect2">
 <a name="MetaWindow--above"></a><h3>The <code class="literal">"above"</code> property</h3>
-<pre class="programlisting">  "above"                    <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "above"                    <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether the window is shown as always-on-top.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--appears-focused"></a><h3>The <code class="literal">"appears-focused"</code> property</h3>
-<pre class="programlisting">  "appears-focused"          <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "appears-focused"          <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether the window is drawn as being focused.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--decorated"></a><h3>The <code class="literal">"decorated"</code> property</h3>
-<pre class="programlisting">  "decorated"                <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "decorated"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether window is decorated.</p>
 <p>Default value: TRUE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--demands-attention"></a><h3>The <code class="literal">"demands-attention"</code> property</h3>
-<pre class="programlisting">  "demands-attention"        <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "demands-attention"        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether the window has _NET_WM_STATE_DEMANDS_ATTENTION set.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--fullscreen"></a><h3>The <code class="literal">"fullscreen"</code> property</h3>
-<pre class="programlisting">  "fullscreen"               <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "fullscreen"               <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether window is fullscreened.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--gtk-app-menu-object-path"></a><h3>The <code class="literal">"gtk-app-menu-object-path"</code> property</h3>
-<pre class="programlisting">  "gtk-app-menu-object-path" <span class="type">gchar</span>*                : Read</pre>
+<pre class="programlisting">  "gtk-app-menu-object-path" <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read</pre>
 <p>Contents of the _GTK_APP_MENU_OBJECT_PATH property of this window.</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--gtk-application-id"></a><h3>The <code class="literal">"gtk-application-id"</code> property</h3>
-<pre class="programlisting">  "gtk-application-id"       <span class="type">gchar</span>*                : Read</pre>
+<pre class="programlisting">  "gtk-application-id"       <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read</pre>
 <p>Contents of the _GTK_APPLICATION_ID property of this window.</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--gtk-application-object-path"></a><h3>The <code class="literal">"gtk-application-object-path"</code> property</h3>
-<pre class="programlisting">  "gtk-application-object-path" <span class="type">gchar</span>*                : Read</pre>
+<pre class="programlisting">  "gtk-application-object-path" <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read</pre>
 <p>Contents of the _GTK_APPLICATION_OBJECT_PATH property of this window.</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--gtk-menubar-object-path"></a><h3>The <code class="literal">"gtk-menubar-object-path"</code> property</h3>
-<pre class="programlisting">  "gtk-menubar-object-path"  <span class="type">gchar</span>*                : Read</pre>
+<pre class="programlisting">  "gtk-menubar-object-path"  <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read</pre>
 <p>Contents of the _GTK_MENUBAR_OBJECT_PATH property of this window.</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--gtk-unique-bus-name"></a><h3>The <code class="literal">"gtk-unique-bus-name"</code> property</h3>
-<pre class="programlisting">  "gtk-unique-bus-name"      <span class="type">gchar</span>*                : Read</pre>
+<pre class="programlisting">  "gtk-unique-bus-name"      <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read</pre>
 <p>Contents of the _GTK_UNIQUE_BUS_NAME property of this window.</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--gtk-window-object-path"></a><h3>The <code class="literal">"gtk-window-object-path"</code> property</h3>
-<pre class="programlisting">  "gtk-window-object-path"   <span class="type">gchar</span>*                : Read</pre>
+<pre class="programlisting">  "gtk-window-object-path"   <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read</pre>
 <p>Contents of the _GTK_WINDOW_OBJECT_PATH property of this window.</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--icon"></a><h3>The <code class="literal">"icon"</code> property</h3>
-<pre class="programlisting">  "icon"                     <span class="type">GdkPixbuf</span>*            : Read</pre>
+<pre class="programlisting">  "icon"                     <a href="http://library.gnome.org/devel/gdk-pixbuf/unstable/gdk-pixbuf-The-GdkPixbuf-Structure.html#GdkPixbuf"><span class="type">GdkPixbuf</span></a>*            : Read</pre>
 <p>96 pixel sized icon.</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--maximized-horizontally"></a><h3>The <code class="literal">"maximized-horizontally"</code> property</h3>
-<pre class="programlisting">  "maximized-horizontally"   <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "maximized-horizontally"   <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether window is maximized horizontally.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--maximized-vertically"></a><h3>The <code class="literal">"maximized-vertically"</code> property</h3>
-<pre class="programlisting">  "maximized-vertically"     <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "maximized-vertically"     <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether window is maximized vertically.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--mini-icon"></a><h3>The <code class="literal">"mini-icon"</code> property</h3>
-<pre class="programlisting">  "mini-icon"                <span class="type">GdkPixbuf</span>*            : Read</pre>
+<pre class="programlisting">  "mini-icon"                <a href="http://library.gnome.org/devel/gdk-pixbuf/unstable/gdk-pixbuf-The-GdkPixbuf-Structure.html#GdkPixbuf"><span class="type">GdkPixbuf</span></a>*            : Read</pre>
 <p>16 pixel sized icon.</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--minimized"></a><h3>The <code class="literal">"minimized"</code> property</h3>
-<pre class="programlisting">  "minimized"                <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "minimized"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether window is minimized.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--mutter-hints"></a><h3>The <code class="literal">"mutter-hints"</code> property</h3>
-<pre class="programlisting">  "mutter-hints"             <span class="type">gchar</span>*                : Read</pre>
+<pre class="programlisting">  "mutter-hints"             <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read</pre>
 <p>Contents of the _MUTTER_HINTS property of this window.</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--resizeable"></a><h3>The <code class="literal">"resizeable"</code> property</h3>
-<pre class="programlisting">  "resizeable"               <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "resizeable"               <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether the window can be resized.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--title"></a><h3>The <code class="literal">"title"</code> property</h3>
-<pre class="programlisting">  "title"                    <span class="type">gchar</span>*                : Read</pre>
+<pre class="programlisting">  "title"                    <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read</pre>
 <p>The title of the window.</p>
 <p>Default value: NULL</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--urgent"></a><h3>The <code class="literal">"urgent"</code> property</h3>
-<pre class="programlisting">  "urgent"                   <span class="type">gboolean</span>              : Read</pre>
+<pre class="programlisting">  "urgent"                   <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
 <p>Whether the urgent flag of WM_HINTS is set.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--user-time"></a><h3>The <code class="literal">"user-time"</code> property</h3>
-<pre class="programlisting">  "user-time"                <span class="type">guint</span>                 : Read</pre>
+<pre class="programlisting">  "user-time"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a>                 : Read</pre>
 <p>Timestamp of last user interaction.</p>
 <p>Default value: 0</p>
 </div>
@@ -2450,7 +2450,7 @@ Get the work area for all monitors for <em class="parameter"><code>window</code>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow--wm-class"></a><h3>The <code class="literal">"wm-class"</code> property</h3>
-<pre class="programlisting">  "wm-class"                 <span class="type">gchar</span>*                : Read</pre>
+<pre class="programlisting">  "wm-class"                 <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read</pre>
 <p>Contents of the WM_CLASS property of this window.</p>
 <p>Default value: NULL</p>
 </div>
@@ -2460,31 +2460,31 @@ Get the work area for all monitors for <em class="parameter"><code>window</code>
 <div class="refsect2">
 <a name="MetaWindow-focus"></a><h3>The <code class="literal">"focus"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *metawindow,
-                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow-raised"></a><h3>The <code class="literal">"raised"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *metawindow,
-                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow-unmanaged"></a><h3>The <code class="literal">"unmanaged"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *metawindow,
-                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaWindow-workspace-changed"></a><h3>The <code class="literal">"workspace-changed"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *metawindow,
-                                                        <span class="type">gint</span>        arg1,
-                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>        arg1,
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
 </div>
 </div>
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.18.1</div>
+          Generated by GTK-Doc V1.19</div>
 </body>
 </html>

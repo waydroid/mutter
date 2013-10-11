@@ -8,7 +8,7 @@
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="MetaShadowFactory.html" title="MetaShadowFactory">
 <link rel="next" href="MetaWindowActor.html" title="MetaWindowActor">
-<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -43,10 +43,10 @@
 <a name="MetaShapedTexture.synopsis"></a><h2>Synopsis</h2>
 <pre class="synopsis">                    <a class="link" href="MetaShapedTexture.html#MetaShapedTexture-struct" title="MetaShapedTexture">MetaShapedTexture</a>;
 struct              <a class="link" href="MetaShapedTexture.html#MetaShapedTextureClass" title="struct MetaShapedTextureClass">MetaShapedTextureClass</a>;
-<span class="returnvalue">ClutterActor</span> *      <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-new" title="meta_shaped_texture_new ()">meta_shaped_texture_new</a>             (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-new" title="meta_shaped_texture_new ()">meta_shaped_texture_new</a>             (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-set-create-mipmaps" title="meta_shaped_texture_set_create_mipmaps ()">meta_shaped_texture_set_create_mipmaps</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> create_mipmaps</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> create_mipmaps</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-update-area" title="meta_shaped_texture_update_area ()">meta_shaped_texture_update_area</a>     (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> x</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> y</code></em>,
@@ -54,22 +54,22 @@ struct              <a class="link" href="MetaShapedTexture.html#MetaShapedTextu
                                                          <em class="parameter"><code><span class="type">int</span> height</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-set-pixmap" title="meta_shaped_texture_set_pixmap ()">meta_shaped_texture_set_pixmap</a>      (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
                                                          <em class="parameter"><code><span class="type">Pixmap</span> pixmap</code></em>);
-<span class="returnvalue">CoglTexture</span> *       <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-get-texture" title="meta_shaped_texture_get_texture ()">meta_shaped_texture_get_texture</a>     (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>);
+<a href="/usr/share/gtk-doc/html/cogl-2.0-experimental/cogl-2.0-experimental-The-Texture-Interface.html#CoglTexture"><span class="returnvalue">CoglTexture</span></a> *       <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-get-texture" title="meta_shaped_texture_get_texture ()">meta_shaped_texture_get_texture</a>     (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-set-mask-texture" title="meta_shaped_texture_set_mask_texture ()">meta_shaped_texture_set_mask_texture</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
-                                                         <em class="parameter"><code><span class="type">CoglTexture</span> *mask_texture</code></em>);
+                                                         <em class="parameter"><code><a href="/usr/share/gtk-doc/html/cogl-2.0-experimental/cogl-2.0-experimental-The-Texture-Interface.html#CoglTexture"><span class="type">CoglTexture</span></a> *mask_texture</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-set-clip-region" title="meta_shaped_texture_set_clip_region ()">meta_shaped_texture_set_clip_region</a> (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
-                                                         <em class="parameter"><code><a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="type">cairo_region_t</span></a> *clip_region</code></em>);
-<a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-cairo-surface-t.html#cairo-surface-t"><span class="returnvalue">cairo_surface_t</span></a> *   <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-get-image" title="meta_shaped_texture_get_image ()">meta_shaped_texture_get_image</a>       (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
-                                                         <em class="parameter"><code><a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-Types.html#cairo-rectangle-int-t"><span class="type">cairo_rectangle_int_t</span></a> *clip</code></em>);
+                                                         <em class="parameter"><code><a href="/usr/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="type">cairo_region_t</span></a> *clip_region</code></em>);
+<a href="/usr/share/gtk-doc/html/cairo/cairo-cairo-surface-t.html#cairo-surface-t"><span class="returnvalue">cairo_surface_t</span></a> *   <a class="link" href="MetaShapedTexture.html#meta-shaped-texture-get-image" title="meta_shaped_texture_get_image ()">meta_shaped_texture_get_image</a>       (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
+                                                         <em class="parameter"><code><a href="/usr/share/gtk-doc/html/cairo/cairo-Types.html#cairo-rectangle-int-t"><span class="type">cairo_rectangle_int_t</span></a> *clip</code></em>);
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaShapedTexture.object-hierarchy"></a><h2>Object Hierarchy</h2>
 <pre class="synopsis">
-  GObject
-   +----GInitiallyUnowned
-         +----ClutterActor
+  <a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+   +----<a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GInitiallyUnowned">GInitiallyUnowned</a>
+         +----<a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html">ClutterActor</a>
                +----MetaShapedTexture
 </pre>
 </div>
@@ -77,7 +77,7 @@ struct              <a class="link" href="MetaShapedTexture.html#MetaShapedTextu
 <a name="MetaShapedTexture.implemented-interfaces"></a><h2>Implemented Interfaces</h2>
 <p>
 MetaShapedTexture implements
- ClutterContainer,  ClutterScriptable,  ClutterAnimatable and  AtkImplementorIface.</p>
+ <a href="/usr/share/gtk-doc/html/clutter/ClutterContainer.html">ClutterContainer</a>,  <a href="/usr/share/gtk-doc/html/clutter/ClutterScriptable.html">ClutterScriptable</a>,  <a href="/usr/share/gtk-doc/html/clutter/ClutterAnimatable.html">ClutterAnimatable</a> and  AtkImplementorIface.</p>
 </div>
 <div class="refsect1">
 <a name="MetaShapedTexture.description"></a><h2>Description</h2>
@@ -102,14 +102,14 @@ only private data and should be accessed using the provided API
 <hr>
 <div class="refsect2">
 <a name="meta-shaped-texture-new"></a><h3>meta_shaped_texture_new ()</h3>
-<pre class="programlisting"><span class="returnvalue">ClutterActor</span> *      meta_shaped_texture_new             (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      meta_shaped_texture_new             (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-shaped-texture-set-create-mipmaps"></a><h3>meta_shaped_texture_set_create_mipmaps ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_shaped_texture_set_create_mipmaps
                                                         (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> create_mipmaps</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> create_mipmaps</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -146,7 +146,7 @@ only private data and should be accessed using the provided API
 <hr>
 <div class="refsect2">
 <a name="meta-shaped-texture-get-texture"></a><h3>meta_shaped_texture_get_texture ()</h3>
-<pre class="programlisting"><span class="returnvalue">CoglTexture</span> *       meta_shaped_texture_get_texture     (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>);</pre>
+<pre class="programlisting"><a href="/usr/share/gtk-doc/html/cogl-2.0-experimental/cogl-2.0-experimental-The-Texture-Interface.html#CoglTexture"><span class="returnvalue">CoglTexture</span></a> *       meta_shaped_texture_get_texture     (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -171,13 +171,13 @@ only private data and should be accessed using the provided API
 <a name="meta-shaped-texture-set-mask-texture"></a><h3>meta_shaped_texture_set_mask_texture ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_shaped_texture_set_mask_texture
                                                         (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
-                                                         <em class="parameter"><code><span class="type">CoglTexture</span> *mask_texture</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="/usr/share/gtk-doc/html/cogl-2.0-experimental/cogl-2.0-experimental-The-Texture-Interface.html#CoglTexture"><span class="type">CoglTexture</span></a> *mask_texture</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-shaped-texture-set-clip-region"></a><h3>meta_shaped_texture_set_clip_region ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_shaped_texture_set_clip_region (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
-                                                         <em class="parameter"><code><a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="type">cairo_region_t</span></a> *clip_region</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="/usr/share/gtk-doc/html/cairo/cairo-Regions.html#cairo-region-t"><span class="type">cairo_region_t</span></a> *clip_region</code></em>);</pre>
 <p>
 Provides a hint to the texture about what areas of the texture
 are not completely obscured and thus need to be painted. This
@@ -211,8 +211,8 @@ is visible and should be painted. <span class="annotation">[<acronym title="Free
 <hr>
 <div class="refsect2">
 <a name="meta-shaped-texture-get-image"></a><h3>meta_shaped_texture_get_image ()</h3>
-<pre class="programlisting"><a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-cairo-surface-t.html#cairo-surface-t"><span class="returnvalue">cairo_surface_t</span></a> *   meta_shaped_texture_get_image       (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
-                                                         <em class="parameter"><code><a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-Types.html#cairo-rectangle-int-t"><span class="type">cairo_rectangle_int_t</span></a> *clip</code></em>);</pre>
+<pre class="programlisting"><a href="/usr/share/gtk-doc/html/cairo/cairo-cairo-surface-t.html#cairo-surface-t"><span class="returnvalue">cairo_surface_t</span></a> *   meta_shaped_texture_get_image       (<em class="parameter"><code><a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture"><span class="type">MetaShapedTexture</span></a> *stex</code></em>,
+                                                         <em class="parameter"><code><a href="/usr/share/gtk-doc/html/cairo/cairo-Types.html#cairo-rectangle-int-t"><span class="type">cairo_rectangle_int_t</span></a> *clip</code></em>);</pre>
 <p>
 Flattens the two layers of the shaped texture into one ARGB32
 image by alpha blending the two images, and returns the flattened
@@ -238,7 +238,7 @@ outside the bounds of the texture, the rectangle will be clipped.</td>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>a new cairo surface to be freed with
-<a href="/home/florian/opt/gnome/share/gtk-doc/html/cairo/cairo-cairo-surface-t.html#cairo-surface-destroy"><code class="function">cairo_surface_destroy()</code></a>. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+<a href="/usr/share/gtk-doc/html/cairo/cairo-cairo-surface-t.html#cairo-surface-destroy"><code class="function">cairo_surface_destroy()</code></a>. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
 </td>
 </tr>
 </tbody>
@@ -248,6 +248,6 @@ outside the bounds of the texture, the rectangle will be clipped.</td>
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.18.1</div>
+          Generated by GTK-Doc V1.19</div>
 </body>
 </html>
