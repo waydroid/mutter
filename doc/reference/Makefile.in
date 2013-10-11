@@ -84,13 +84,14 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(top_srcdir)/gtk-doc.make $(srcdir)/Makefile.in \
-	$(srcdir)/Makefile.am $(srcdir)/meta-docs.sgml.in
+	$(srcdir)/Makefile.am $(top_srcdir)/mkinstalldirs \
+	$(srcdir)/meta-docs.sgml.in
 subdir = doc/reference
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES = meta-docs.sgml
 CONFIG_CLEAN_VPATH_FILES =

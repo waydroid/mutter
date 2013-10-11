@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>
 Uploaders: @GNOME_TEAM@
 Build-Depends: cdbs (>= 0.4.90),
-               debhelper (>= 8),
+               debhelper (>= 9),
                gnome-pkg-tools (>= 0.10),
                dh-autoreconf,
                intltool (>= 0.34.90),
@@ -35,8 +35,8 @@ Build-Depends: cdbs (>= 0.4.90),
                libsm-dev,
                libice-dev,
                zenity
-Standards-Version: 3.9.3
-Vcs-Svn: svn://anonscm.debian.org/svn/pkg-gnome/desktop/unstable/mutter
+Standards-Version: 3.9.4
+Vcs-Svn: svn://anonscm.debian.org/pkg-gnome/desktop/unstable/mutter
 Vcs-Browser: http://anonscm.debian.org/viewvc/pkg-gnome/desktop/unstable/mutter
 
 Package: mutter
@@ -89,7 +89,8 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          gsettings-desktop-schemas (>= 3.7.3),
          mutter-common (= ${source:Version})
-Conflicts: libmutter0, libmutter0a
+Breaks: libmutter0, libmutter0a
+Replaces: libmutter0, libmutter0a
 Description: window manager library from the Mutter window manager
  Mutter is a small window manager, using GTK+ and Clutter to do
  everything.

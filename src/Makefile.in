@@ -86,13 +86,14 @@ noinst_PROGRAMS = testboxes$(EXEEXT) testgradient$(EXEEXT) \
 	testasyncgetprop$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(srcdir)/libmutter.pc.in $(srcdir)/mutter-plugins.pc.in \
-	$(top_srcdir)/depcomp $(libmutterinclude_HEADERS)
+	$(top_srcdir)/mkinstalldirs $(srcdir)/libmutter.pc.in \
+	$(srcdir)/mutter-plugins.pc.in $(top_srcdir)/depcomp \
+	$(libmutterinclude_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES = libmutter.pc mutter-plugins.pc
 CONFIG_CLEAN_VPATH_FILES =

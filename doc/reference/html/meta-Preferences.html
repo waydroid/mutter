@@ -8,7 +8,7 @@
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="meta-Gradients.html" title="Gradients">
 <link rel="next" href="meta-Utility-functions.html" title="Utility functions">
-<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -39,39 +39,39 @@
 <a name="meta-Preferences.synopsis"></a><h2>Synopsis</h2>
 <pre class="synopsis">enum                <a class="link" href="meta-Preferences.html#MetaPreference" title="enum MetaPreference">MetaPreference</a>;
 <span class="returnvalue">void</span>                (<a class="link" href="meta-Preferences.html#MetaPrefsChangedFunc" title="MetaPrefsChangedFunc ()">*MetaPrefsChangedFunc</a>)             (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaPreference" title="enum MetaPreference"><span class="type">MetaPreference</span></a> pref</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-add-listener" title="meta_prefs_add_listener ()">meta_prefs_add_listener</a>             (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaPrefsChangedFunc" title="MetaPrefsChangedFunc ()"><span class="type">MetaPrefsChangedFunc</span></a> func</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-remove-listener" title="meta_prefs_remove_listener ()">meta_prefs_remove_listener</a>          (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaPrefsChangedFunc" title="MetaPrefsChangedFunc ()"><span class="type">MetaPrefsChangedFunc</span></a> func</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-init" title="meta_prefs_init ()">meta_prefs_init</a>                     (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-override-preference-schema" title="meta_prefs_override_preference_schema ()">meta_prefs_override_preference_schema</a>
                                                         (<em class="parameter"><code>const <span class="type">char</span> *key</code></em>,
                                                          <em class="parameter"><code>const <span class="type">char</span> *schema</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="meta-Preferences.html#meta-preference-to-string" title="meta_preference_to_string ()">meta_preference_to_string</a>           (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaPreference" title="enum MetaPreference"><span class="type">MetaPreference</span></a> pref</code></em>);
 <a class="link" href="meta-Common.html#MetaVirtualModifier" title="enum MetaVirtualModifier"><span class="returnvalue">MetaVirtualModifier</span></a> <a class="link" href="meta-Preferences.html#meta-prefs-get-mouse-button-mods" title="meta_prefs_get_mouse_button_mods ()">meta_prefs_get_mouse_button_mods</a>    (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gint</span>                <a class="link" href="meta-Preferences.html#meta-prefs-get-mouse-button-resize" title="meta_prefs_get_mouse_button_resize ()">meta_prefs_get_mouse_button_resize</a>  (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gint</span>                <a class="link" href="meta-Preferences.html#meta-prefs-get-mouse-button-menu" title="meta_prefs_get_mouse_button_menu ()">meta_prefs_get_mouse_button_menu</a>    (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="returnvalue">gint</span></a>                <a class="link" href="meta-Preferences.html#meta-prefs-get-mouse-button-resize" title="meta_prefs_get_mouse_button_resize ()">meta_prefs_get_mouse_button_resize</a>  (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="returnvalue">gint</span></a>                <a class="link" href="meta-Preferences.html#meta-prefs-get-mouse-button-menu" title="meta_prefs_get_mouse_button_menu ()">meta_prefs_get_mouse_button_menu</a>    (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">GDesktopFocusMode</span>   <a class="link" href="meta-Preferences.html#meta-prefs-get-focus-mode" title="meta_prefs_get_focus_mode ()">meta_prefs_get_focus_mode</a>           (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">GDesktopFocusNewWindows</span> <a class="link" href="meta-Preferences.html#meta-prefs-get-focus-new-windows" title="meta_prefs_get_focus_new_windows ()">meta_prefs_get_focus_new_windows</a>
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-attach-modal-dialogs" title="meta_prefs_get_attach_modal_dialogs ()">meta_prefs_get_attach_modal_dialogs</a> (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-raise-on-click" title="meta_prefs_get_raise_on_click ()">meta_prefs_get_raise_on_click</a>       (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-attach-modal-dialogs" title="meta_prefs_get_attach_modal_dialogs ()">meta_prefs_get_attach_modal_dialogs</a> (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-raise-on-click" title="meta_prefs_get_raise_on_click ()">meta_prefs_get_raise_on_click</a>       (<em class="parameter"><code><span class="type">void</span></code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="meta-Preferences.html#meta-prefs-get-theme" title="meta_prefs_get_theme ()">meta_prefs_get_theme</a>                (<em class="parameter"><code><span class="type">void</span></code></em>);
-const <span class="returnvalue">PangoFontDescription</span> * <a class="link" href="meta-Preferences.html#meta-prefs-get-titlebar-font" title="meta_prefs_get_titlebar_font ()">meta_prefs_get_titlebar_font</a>
+const <a href="/usr/share/gtk-doc/html/pango/pango-Fonts.html#PangoFontDescription"><span class="returnvalue">PangoFontDescription</span></a> * <a class="link" href="meta-Preferences.html#meta-prefs-get-titlebar-font" title="meta_prefs_get_titlebar_font ()">meta_prefs_get_titlebar_font</a>
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="meta-Preferences.html#meta-prefs-get-num-workspaces" title="meta_prefs_get_num_workspaces ()">meta_prefs_get_num_workspaces</a>       (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-dynamic-workspaces" title="meta_prefs_get_dynamic_workspaces ()">meta_prefs_get_dynamic_workspaces</a>   (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-application-based" title="meta_prefs_get_application_based ()">meta_prefs_get_application_based</a>    (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-disable-workarounds" title="meta_prefs_get_disable_workarounds ()">meta_prefs_get_disable_workarounds</a>  (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-auto-raise" title="meta_prefs_get_auto_raise ()">meta_prefs_get_auto_raise</a>           (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-dynamic-workspaces" title="meta_prefs_get_dynamic_workspaces ()">meta_prefs_get_dynamic_workspaces</a>   (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-application-based" title="meta_prefs_get_application_based ()">meta_prefs_get_application_based</a>    (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-disable-workarounds" title="meta_prefs_get_disable_workarounds ()">meta_prefs_get_disable_workarounds</a>  (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-auto-raise" title="meta_prefs_get_auto_raise ()">meta_prefs_get_auto_raise</a>           (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="meta-Preferences.html#meta-prefs-get-auto-raise-delay" title="meta_prefs_get_auto_raise_delay ()">meta_prefs_get_auto_raise_delay</a>     (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-focus-change-on-pointer-rest" title="meta_prefs_get_focus_change_on_pointer_rest ()">meta_prefs_get_focus_change_on_pointer_rest</a>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-focus-change-on-pointer-rest" title="meta_prefs_get_focus_change_on_pointer_rest ()">meta_prefs_get_focus_change_on_pointer_rest</a>
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-gnome-accessibility" title="meta_prefs_get_gnome_accessibility ()">meta_prefs_get_gnome_accessibility</a>  (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-gnome-animations" title="meta_prefs_get_gnome_animations ()">meta_prefs_get_gnome_animations</a>     (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-edge-tiling" title="meta_prefs_get_edge_tiling ()">meta_prefs_get_edge_tiling</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-auto-maximize" title="meta_prefs_get_auto_maximize ()">meta_prefs_get_auto_maximize</a>        (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-gnome-accessibility" title="meta_prefs_get_gnome_accessibility ()">meta_prefs_get_gnome_accessibility</a>  (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-gnome-animations" title="meta_prefs_get_gnome_animations ()">meta_prefs_get_gnome_animations</a>     (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-edge-tiling" title="meta_prefs_get_edge_tiling ()">meta_prefs_get_edge_tiling</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-auto-maximize" title="meta_prefs_get_auto_maximize ()">meta_prefs_get_auto_maximize</a>        (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-get-button-layout" title="meta_prefs_get_button_layout ()">meta_prefs_get_button_layout</a>        (<em class="parameter"><code><a class="link" href="meta-Common.html#MetaButtonLayout" title="struct MetaButtonLayout"><span class="type">MetaButtonLayout</span></a> *button_layout</code></em>);
 <span class="returnvalue">GDesktopTitlebarAction</span> <a class="link" href="meta-Preferences.html#meta-prefs-get-action-double-click-titlebar" title="meta_prefs_get_action_double_click_titlebar ()">meta_prefs_get_action_double_click_titlebar</a>
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);
@@ -85,19 +85,19 @@ const <span class="returnvalue">char</span> *        <a class="link" href="meta-
                                                          <em class="parameter"><code>const <span class="type">char</span> *name</code></em>);
 const <span class="returnvalue">char</span> *        <a class="link" href="meta-Preferences.html#meta-prefs-get-cursor-theme" title="meta_prefs_get_cursor_theme ()">meta_prefs_get_cursor_theme</a>         (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="meta-Preferences.html#meta-prefs-get-cursor-size" title="meta_prefs_get_cursor_size ()">meta_prefs_get_cursor_size</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-compositing-manager" title="meta_prefs_get_compositing_manager ()">meta_prefs_get_compositing_manager</a>  (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-force-fullscreen" title="meta_prefs_get_force_fullscreen ()">meta_prefs_get_force_fullscreen</a>     (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-set-force-fullscreen" title="meta_prefs_set_force_fullscreen ()">meta_prefs_set_force_fullscreen</a>     (<em class="parameter"><code><span class="type">gboolean</span> whether</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-workspaces-only-on-primary" title="meta_prefs_get_workspaces_only_on_primary ()">meta_prefs_get_workspaces_only_on_primary</a>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-compositing-manager" title="meta_prefs_get_compositing_manager ()">meta_prefs_get_compositing_manager</a>  (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-force-fullscreen" title="meta_prefs_get_force_fullscreen ()">meta_prefs_get_force_fullscreen</a>     (<em class="parameter"><code><span class="type">void</span></code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-set-force-fullscreen" title="meta_prefs_set_force_fullscreen ()">meta_prefs_set_force_fullscreen</a>     (<em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> whether</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-workspaces-only-on-primary" title="meta_prefs_get_workspaces_only_on_primary ()">meta_prefs_get_workspaces_only_on_primary</a>
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-no-tab-popup" title="meta_prefs_get_no_tab_popup ()">meta_prefs_get_no_tab_popup</a>         (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-set-no-tab-popup" title="meta_prefs_set_no_tab_popup ()">meta_prefs_set_no_tab_popup</a>         (<em class="parameter"><code><span class="type">gboolean</span> whether</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-no-tab-popup" title="meta_prefs_get_no_tab_popup ()">meta_prefs_get_no_tab_popup</a>         (<em class="parameter"><code><span class="type">void</span></code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-set-no-tab-popup" title="meta_prefs_set_no_tab_popup ()">meta_prefs_set_no_tab_popup</a>         (<em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> whether</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="meta-Preferences.html#meta-prefs-get-draggable-border-width" title="meta_prefs_get_draggable_border_width ()">meta_prefs_get_draggable_border_width</a>
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-ignore-request-hide-titlebar" title="meta_prefs_get_ignore_request_hide_titlebar ()">meta_prefs_get_ignore_request_hide_titlebar</a>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-ignore-request-hide-titlebar" title="meta_prefs_get_ignore_request_hide_titlebar ()">meta_prefs_get_ignore_request_hide_titlebar</a>
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-set-ignore-request-hide-titlebar" title="meta_prefs_set_ignore_request_hide_titlebar ()">meta_prefs_set_ignore_request_hide_titlebar</a>
-                                                        (<em class="parameter"><code><span class="type">gboolean</span> whether</code></em>);
+                                                        (<em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> whether</code></em>);
 enum                <a class="link" href="meta-Preferences.html#MetaKeyBindingAction" title="enum MetaKeyBindingAction">MetaKeyBindingAction</a>;
 enum                <a class="link" href="meta-Preferences.html#MetaKeyBindingFlags" title="enum MetaKeyBindingFlags">MetaKeyBindingFlags</a>;
 struct              <a class="link" href="meta-Preferences.html#MetaKeyCombo" title="struct MetaKeyCombo">MetaKeyCombo</a>;
@@ -106,15 +106,15 @@ struct              <a class="link" href="meta-Preferences.html#MetaKeyCombo" ti
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">XIDeviceEvent</span> *event</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);
-<span class="returnvalue">GList</span> *             <a class="link" href="meta-Preferences.html#meta-prefs-get-keybindings" title="meta_prefs_get_keybindings ()">meta_prefs_get_keybindings</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             <a class="link" href="meta-Preferences.html#meta-prefs-get-keybindings" title="meta_prefs_get_keybindings ()">meta_prefs_get_keybindings</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
 <a class="link" href="meta-Preferences.html#MetaKeyBindingAction" title="enum MetaKeyBindingAction"><span class="returnvalue">MetaKeyBindingAction</span></a> <a class="link" href="meta-Preferences.html#meta-prefs-get-keybinding-action" title="meta_prefs_get_keybinding_action ()">meta_prefs_get_keybinding_action</a>   (<em class="parameter"><code>const <span class="type">char</span> *name</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-get-window-binding" title="meta_prefs_get_window_binding ()">meta_prefs_get_window_binding</a>       (<em class="parameter"><code>const <span class="type">char</span> *name</code></em>,
                                                          <em class="parameter"><code>unsigned <span class="type">int</span> *keysym</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Common.html#MetaVirtualModifier" title="enum MetaVirtualModifier"><span class="type">MetaVirtualModifier</span></a> *modifiers</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-Preferences.html#meta-prefs-get-overlay-binding" title="meta_prefs_get_overlay_binding ()">meta_prefs_get_overlay_binding</a>      (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyCombo" title="struct MetaKeyCombo"><span class="type">MetaKeyCombo</span></a> *combo</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-get-visual-bell" title="meta_prefs_get_visual_bell ()">meta_prefs_get_visual_bell</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-Preferences.html#meta-prefs-bell-is-audible" title="meta_prefs_bell_is_audible ()">meta_prefs_bell_is_audible</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-get-visual-bell" title="meta_prefs_get_visual_bell ()">meta_prefs_get_visual_bell</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-Preferences.html#meta-prefs-bell-is-audible" title="meta_prefs_bell_is_audible ()">meta_prefs_bell_is_audible</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">GDesktopVisualBellType</span> <a class="link" href="meta-Preferences.html#meta-prefs-get-visual-bell-type" title="meta_prefs_get_visual_bell_type ()">meta_prefs_get_visual_bell_type</a>  (<em class="parameter"><code><span class="type">void</span></code></em>);
                     <a class="link" href="meta-Preferences.html#MetaKeyHandler" title="MetaKeyHandler">MetaKeyHandler</a>;
 </pre>
@@ -346,13 +346,13 @@ struct              <a class="link" href="meta-Preferences.html#MetaKeyCombo" ti
 <div class="refsect2">
 <a name="MetaPrefsChangedFunc"></a><h3>MetaPrefsChangedFunc ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                (*MetaPrefsChangedFunc)             (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaPreference" title="enum MetaPreference"><span class="type">MetaPreference</span></a> pref</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-add-listener"></a><h3>meta_prefs_add_listener ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_prefs_add_listener             (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaPrefsChangedFunc" title="MetaPrefsChangedFunc ()"><span class="type">MetaPrefsChangedFunc</span></a> func</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -375,7 +375,7 @@ struct              <a class="link" href="meta-Preferences.html#MetaKeyCombo" ti
 <div class="refsect2">
 <a name="meta-prefs-remove-listener"></a><h3>meta_prefs_remove_listener ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_prefs_remove_listener          (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaPrefsChangedFunc" title="MetaPrefsChangedFunc ()"><span class="type">MetaPrefsChangedFunc</span></a> func</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -444,12 +444,12 @@ isn't first loaded with one value then changed to another value.
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-mouse-button-resize"></a><h3>meta_prefs_get_mouse_button_resize ()</h3>
-<pre class="programlisting"><span class="returnvalue">gint</span>                meta_prefs_get_mouse_button_resize  (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="returnvalue">gint</span></a>                meta_prefs_get_mouse_button_resize  (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-mouse-button-menu"></a><h3>meta_prefs_get_mouse_button_menu ()</h3>
-<pre class="programlisting"><span class="returnvalue">gint</span>                meta_prefs_get_mouse_button_menu    (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="returnvalue">gint</span></a>                meta_prefs_get_mouse_button_menu    (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -465,12 +465,12 @@ isn't first loaded with one value then changed to another value.
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-attach-modal-dialogs"></a><h3>meta_prefs_get_attach_modal_dialogs ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_attach_modal_dialogs (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_attach_modal_dialogs (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-raise-on-click"></a><h3>meta_prefs_get_raise_on_click ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_raise_on_click       (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_raise_on_click       (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -480,7 +480,7 @@ isn't first loaded with one value then changed to another value.
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-titlebar-font"></a><h3>meta_prefs_get_titlebar_font ()</h3>
-<pre class="programlisting">const <span class="returnvalue">PangoFontDescription</span> * meta_prefs_get_titlebar_font
+<pre class="programlisting">const <a href="/usr/share/gtk-doc/html/pango/pango-Fonts.html#PangoFontDescription"><span class="returnvalue">PangoFontDescription</span></a> * meta_prefs_get_titlebar_font
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
@@ -491,22 +491,22 @@ isn't first loaded with one value then changed to another value.
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-dynamic-workspaces"></a><h3>meta_prefs_get_dynamic_workspaces ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_dynamic_workspaces   (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_dynamic_workspaces   (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-application-based"></a><h3>meta_prefs_get_application_based ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_application_based    (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_application_based    (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-disable-workarounds"></a><h3>meta_prefs_get_disable_workarounds ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_disable_workarounds  (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_disable_workarounds  (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-auto-raise"></a><h3>meta_prefs_get_auto_raise ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_auto_raise           (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_auto_raise           (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -516,28 +516,28 @@ isn't first loaded with one value then changed to another value.
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-focus-change-on-pointer-rest"></a><h3>meta_prefs_get_focus_change_on_pointer_rest ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_focus_change_on_pointer_rest
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_focus_change_on_pointer_rest
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-gnome-accessibility"></a><h3>meta_prefs_get_gnome_accessibility ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_gnome_accessibility  (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_gnome_accessibility  (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-gnome-animations"></a><h3>meta_prefs_get_gnome_animations ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_gnome_animations     (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_gnome_animations     (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-edge-tiling"></a><h3>meta_prefs_get_edge_tiling ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_edge_tiling          (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_edge_tiling          (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-auto-maximize"></a><h3>meta_prefs_get_auto_maximize ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_auto_maximize        (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_auto_maximize        (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -602,33 +602,33 @@ isn't first loaded with one value then changed to another value.
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-compositing-manager"></a><h3>meta_prefs_get_compositing_manager ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_compositing_manager  (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_compositing_manager  (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-force-fullscreen"></a><h3>meta_prefs_get_force_fullscreen ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_force_fullscreen     (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_force_fullscreen     (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-set-force-fullscreen"></a><h3>meta_prefs_set_force_fullscreen ()</h3>
-<pre class="programlisting"><span class="returnvalue">void</span>                meta_prefs_set_force_fullscreen     (<em class="parameter"><code><span class="type">gboolean</span> whether</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_prefs_set_force_fullscreen     (<em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> whether</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-workspaces-only-on-primary"></a><h3>meta_prefs_get_workspaces_only_on_primary ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_workspaces_only_on_primary
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_workspaces_only_on_primary
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-no-tab-popup"></a><h3>meta_prefs_get_no_tab_popup ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_no_tab_popup         (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_no_tab_popup         (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-set-no-tab-popup"></a><h3>meta_prefs_set_no_tab_popup ()</h3>
-<pre class="programlisting"><span class="returnvalue">void</span>                meta_prefs_set_no_tab_popup         (<em class="parameter"><code><span class="type">gboolean</span> whether</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">void</span>                meta_prefs_set_no_tab_popup         (<em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> whether</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -639,14 +639,14 @@ isn't first loaded with one value then changed to another value.
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-ignore-request-hide-titlebar"></a><h3>meta_prefs_get_ignore_request_hide_titlebar ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_ignore_request_hide_titlebar
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_ignore_request_hide_titlebar
                                                         (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-set-ignore-request-hide-titlebar"></a><h3>meta_prefs_set_ignore_request_hide_titlebar ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_prefs_set_ignore_request_hide_titlebar
-                                                        (<em class="parameter"><code><span class="type">gboolean</span> whether</code></em>);</pre>
+                                                        (<em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> whether</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -1256,7 +1256,7 @@ isn't first loaded with one value then changed to another value.
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><span class="type">XIDeviceEvent</span> *event</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -1298,7 +1298,7 @@ isn't first loaded with one value then changed to another value.
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-keybindings"></a><h3>meta_prefs_get_keybindings ()</h3>
-<pre class="programlisting"><span class="returnvalue">GList</span> *             meta_prefs_get_keybindings          (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             meta_prefs_get_keybindings          (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -1331,12 +1331,12 @@ isn't first loaded with one value then changed to another value.
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-get-visual-bell"></a><h3>meta_prefs_get_visual_bell ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_get_visual_bell          (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_get_visual_bell          (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-prefs-bell-is-audible"></a><h3>meta_prefs_bell_is_audible ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_prefs_bell_is_audible          (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_prefs_bell_is_audible          (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -1352,6 +1352,6 @@ isn't first loaded with one value then changed to another value.
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.18.1</div>
+          Generated by GTK-Doc V1.19</div>
 </body>
 </html>

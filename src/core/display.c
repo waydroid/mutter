@@ -3557,6 +3557,12 @@ meta_spew_event (MetaDisplay *display,
   if (event->type == (display->damage_event_base + XDamageNotify))
     return;
 
+  if (event->type == (display->xsync_event_base + XSyncAlarmNotify))
+    return;
+
+  if (event->type == PropertyNotify && event->xproperty.atom == display->atom__NET_WM_USER_TIME)
+    return;
+
   input_event = get_input_event (display, event);
 
   if (input_event)

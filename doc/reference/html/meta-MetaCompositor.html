@@ -8,7 +8,7 @@
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="MetaRectangle.html" title="MetaRectangle">
 <link rel="next" href="MetaDisplay.html" title="MetaDisplay">
-<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -48,10 +48,10 @@
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-window-shape-changed" title="meta_compositor_window_shape_changed ()">meta_compositor_window_shape_changed</a>
                                                         (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-MetaCompositor.html#meta-compositor-process-event" title="meta_compositor_process_event ()">meta_compositor_process_event</a>       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-MetaCompositor.html#meta-compositor-process-event" title="meta_compositor_process_event ()">meta_compositor_process_event</a>       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><span class="type">XEvent</span> *event</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);
-<span class="returnvalue">gboolean</span>            <a class="link" href="meta-MetaCompositor.html#meta-compositor-filter-keybinding" title="meta_compositor_filter_keybinding ()">meta_compositor_filter_keybinding</a>   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="meta-MetaCompositor.html#meta-compositor-filter-keybinding" title="meta_compositor_filter_keybinding ()">meta_compositor_filter_keybinding</a>   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-add-window" title="meta_compositor_add_window ()">meta_compositor_add_window</a>          (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
@@ -84,28 +84,28 @@
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-sync-window-geometry" title="meta_compositor_sync_window_geometry ()">meta_compositor_sync_window_geometry</a>
                                                         (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> did_placement</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> did_placement</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-set-updates-frozen" title="meta_compositor_set_updates_frozen ()">meta_compositor_set_updates_frozen</a>  (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> updates_frozen</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> updates_frozen</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-queue-frame-drawn" title="meta_compositor_queue_frame_drawn ()">meta_compositor_queue_frame_drawn</a>   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> no_delay_frame</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> no_delay_frame</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-sync-stack" title="meta_compositor_sync_stack ()">meta_compositor_sync_stack</a>          (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><span class="type">GList</span> *stack</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="type">GList</span></a> *stack</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-sync-screen-size" title="meta_compositor_sync_screen_size ()">meta_compositor_sync_screen_size</a>    (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint</span> width</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint</span> height</code></em>);
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a> width</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a> height</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-compositor-flash-screen" title="meta_compositor_flash_screen ()">meta_compositor_flash_screen</a>        (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
-<span class="returnvalue">ClutterActor</span> *      <a class="link" href="meta-MetaCompositor.html#meta-get-stage-for-screen" title="meta_get_stage_for_screen ()">meta_get_stage_for_screen</a>           (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
-<span class="returnvalue">ClutterActor</span> *      <a class="link" href="meta-MetaCompositor.html#meta-get-overlay-group-for-screen" title="meta_get_overlay_group_for_screen ()">meta_get_overlay_group_for_screen</a>   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      <a class="link" href="meta-MetaCompositor.html#meta-get-stage-for-screen" title="meta_get_stage_for_screen ()">meta_get_stage_for_screen</a>           (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      <a class="link" href="meta-MetaCompositor.html#meta-get-overlay-group-for-screen" title="meta_get_overlay_group_for_screen ()">meta_get_overlay_group_for_screen</a>   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">Window</span>              <a class="link" href="meta-MetaCompositor.html#meta-get-overlay-window" title="meta_get_overlay_window ()">meta_get_overlay_window</a>             (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
-<span class="returnvalue">GList</span> *             <a class="link" href="meta-MetaCompositor.html#meta-get-window-actors" title="meta_get_window_actors ()">meta_get_window_actors</a>              (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
-<span class="returnvalue">ClutterActor</span> *      <a class="link" href="meta-MetaCompositor.html#meta-get-window-group-for-screen" title="meta_get_window_group_for_screen ()">meta_get_window_group_for_screen</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
-<span class="returnvalue">ClutterActor</span> *      <a class="link" href="meta-MetaCompositor.html#meta-get-top-window-group-for-screen" title="meta_get_top_window_group_for_screen ()">meta_get_top_window_group_for_screen</a>
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             <a class="link" href="meta-MetaCompositor.html#meta-get-window-actors" title="meta_get_window_actors ()">meta_get_window_actors</a>              (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      <a class="link" href="meta-MetaCompositor.html#meta-get-window-group-for-screen" title="meta_get_window_group_for_screen ()">meta_get_window_group_for_screen</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      <a class="link" href="meta-MetaCompositor.html#meta-get-top-window-group-for-screen" title="meta_get_top_window_group_for_screen ()">meta_get_top_window_group_for_screen</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-disable-unredirect-for-screen" title="meta_disable_unredirect_for_screen ()">meta_disable_unredirect_for_screen</a>  (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="meta-MetaCompositor.html#meta-enable-unredirect-for-screen" title="meta_enable_unredirect_for_screen ()">meta_enable_unredirect_for_screen</a>   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
@@ -294,14 +294,14 @@ Indicates the appropriate effect to show the user for
 <hr>
 <div class="refsect2">
 <a name="meta-compositor-process-event"></a><h3>meta_compositor_process_event ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_compositor_process_event       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_compositor_process_event       (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><span class="type">XEvent</span> *event</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-compositor-filter-keybinding"></a><h3>meta_compositor_filter_keybinding ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_compositor_filter_keybinding   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_compositor_filter_keybinding   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>);</pre>
 </div>
@@ -374,36 +374,36 @@ Indicates the appropriate effect to show the user for
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_sync_window_geometry
                                                         (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> did_placement</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> did_placement</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-compositor-set-updates-frozen"></a><h3>meta_compositor_set_updates_frozen ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_set_updates_frozen  (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> updates_frozen</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> updates_frozen</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-compositor-queue-frame-drawn"></a><h3>meta_compositor_queue_frame_drawn ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_queue_frame_drawn   (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><span class="type">gboolean</span> no_delay_frame</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> no_delay_frame</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-compositor-sync-stack"></a><h3>meta_compositor_sync_stack ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_sync_stack          (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><span class="type">GList</span> *stack</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="type">GList</span></a> *stack</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-compositor-sync-screen-size"></a><h3>meta_compositor_sync_screen_size ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_compositor_sync_screen_size    (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint</span> width</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint</span> height</code></em>);</pre>
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a> width</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a> height</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -414,7 +414,7 @@ Indicates the appropriate effect to show the user for
 <hr>
 <div class="refsect2">
 <a name="meta-get-stage-for-screen"></a><h3>meta_get_stage_for_screen ()</h3>
-<pre class="programlisting"><span class="returnvalue">ClutterActor</span> *      meta_get_stage_for_screen           (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<pre class="programlisting"><a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      meta_get_stage_for_screen           (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -428,7 +428,7 @@ Indicates the appropriate effect to show the user for
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td>The <span class="type">ClutterStage</span> for the screen. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+<td>The <a href="/usr/share/gtk-doc/html/clutter/ClutterStage.html"><span class="type">ClutterStage</span></a> for the screen. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
 </td>
 </tr>
 </tbody>
@@ -437,7 +437,7 @@ Indicates the appropriate effect to show the user for
 <hr>
 <div class="refsect2">
 <a name="meta-get-overlay-group-for-screen"></a><h3>meta_get_overlay_group_for_screen ()</h3>
-<pre class="programlisting"><span class="returnvalue">ClutterActor</span> *      meta_get_overlay_group_for_screen   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<pre class="programlisting"><a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      meta_get_overlay_group_for_screen   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -476,7 +476,7 @@ Indicates the appropriate effect to show the user for
 <hr>
 <div class="refsect2">
 <a name="meta-get-window-actors"></a><h3>meta_get_window_actors ()</h3>
-<pre class="programlisting"><span class="returnvalue">GList</span> *             meta_get_window_actors              (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             meta_get_window_actors              (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -499,7 +499,7 @@ Indicates the appropriate effect to show the user for
 <hr>
 <div class="refsect2">
 <a name="meta-get-window-group-for-screen"></a><h3>meta_get_window_group_for_screen ()</h3>
-<pre class="programlisting"><span class="returnvalue">ClutterActor</span> *      meta_get_window_group_for_screen    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<pre class="programlisting"><a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      meta_get_window_group_for_screen    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -522,7 +522,7 @@ Indicates the appropriate effect to show the user for
 <hr>
 <div class="refsect2">
 <a name="meta-get-top-window-group-for-screen"></a><h3>meta_get_top_window_group_for_screen ()</h3>
-<pre class="programlisting"><span class="returnvalue">ClutterActor</span> *      meta_get_top_window_group_for_screen
+<pre class="programlisting"><a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html"><span class="returnvalue">ClutterActor</span></a> *      meta_get_top_window_group_for_screen
                                                         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -597,6 +597,6 @@ Enables unredirection which reduces the overhead for apps like games.
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.18.1</div>
+          Generated by GTK-Doc V1.19</div>
 </body>
 </html>
