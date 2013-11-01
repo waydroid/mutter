@@ -35,7 +35,6 @@
 
 /* Public compositor API */
 ClutterActor *meta_get_stage_for_screen         (MetaScreen *screen);
-ClutterActor *meta_get_overlay_group_for_screen (MetaScreen *screen);
 Window        meta_get_overlay_window           (MetaScreen *screen);
 GList        *meta_get_window_actors            (MetaScreen *screen);
 ClutterActor *meta_get_window_group_for_screen  (MetaScreen *screen);
@@ -47,5 +46,8 @@ void        meta_enable_unredirect_for_screen   (MetaScreen *screen);
 void meta_set_stage_input_region     (MetaScreen    *screen,
                                       XserverRegion  region);
 void meta_empty_stage_input_region   (MetaScreen    *screen);
+void meta_focus_stage_window         (MetaScreen    *screen,
+                                      guint32        timestamp);
+gboolean meta_stage_is_focused       (MetaScreen    *screen);
 
 #endif

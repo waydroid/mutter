@@ -2,32 +2,29 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>MetaRectangle</title>
+<title>Mutter Reference Manual: MetaRectangle</title>
 <meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="MetaBarrier.html" title="MetaBarrier">
 <link rel="next" href="meta-MetaCompositor.html" title="MetaCompositor">
-<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
-<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
-<tr valign="middle">
-<td><a accesskey="p" href="MetaBarrier.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
-<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
-<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
-<th width="100%" align="center">Mutter Reference Manual</th>
-<td><a accesskey="n" href="meta-MetaCompositor.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
-</tr>
-<tr><td colspan="5" class="shortcuts">
-<a href="#MetaRectangle.synopsis" class="shortcut">Top</a>
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="10"><tr valign="middle">
+<td width="100%" align="left">
+<a href="#" class="shortcut">Top</a>
                    | 
                   <a href="#MetaRectangle.description" class="shortcut">Description</a>
                    | 
                   <a href="#MetaRectangle.object-hierarchy" class="shortcut">Object Hierarchy</a>
-</td></tr>
-</table>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="MetaBarrier.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="meta-MetaCompositor.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
 <div class="refentry">
 <a name="MetaRectangle"></a><div class="titlepage"></div>
 <div class="refnamediv"><table width="100%"><tr>
@@ -50,23 +47,23 @@ struct              <a class="link" href="MetaRectangle.html#MetaEdge" title="st
                                                          <em class="parameter"><code><span class="type">int</span> width</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> height</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaRectangle.html#meta-rectangle-area" title="meta_rectangle_area ()">meta_rectangle_area</a>                 (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaRectangle.html#meta-rectangle-intersect" title="meta_rectangle_intersect ()">meta_rectangle_intersect</a>            (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-intersect" title="meta_rectangle_intersect ()">meta_rectangle_intersect</a>            (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src2</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *dest</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaRectangle.html#meta-rectangle-equal" title="meta_rectangle_equal ()">meta_rectangle_equal</a>                (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-equal" title="meta_rectangle_equal ()">meta_rectangle_equal</a>                (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src2</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaRectangle.html#meta-rectangle-union" title="meta_rectangle_union ()">meta_rectangle_union</a>                (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *dest</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaRectangle.html#meta-rectangle-overlap" title="meta_rectangle_overlap ()">meta_rectangle_overlap</a>              (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-overlap" title="meta_rectangle_overlap ()">meta_rectangle_overlap</a>              (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaRectangle.html#meta-rectangle-vert-overlap" title="meta_rectangle_vert_overlap ()">meta_rectangle_vert_overlap</a>         (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-vert-overlap" title="meta_rectangle_vert_overlap ()">meta_rectangle_vert_overlap</a>         (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaRectangle.html#meta-rectangle-horiz-overlap" title="meta_rectangle_horiz_overlap ()">meta_rectangle_horiz_overlap</a>        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-horiz-overlap" title="meta_rectangle_horiz_overlap ()">meta_rectangle_horiz_overlap</a>        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaRectangle.html#meta-rectangle-could-fit-rect" title="meta_rectangle_could_fit_rect ()">meta_rectangle_could_fit_rect</a>       (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-could-fit-rect" title="meta_rectangle_could_fit_rect ()">meta_rectangle_could_fit_rect</a>       (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *inner_rect</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaRectangle.html#meta-rectangle-contains-rect" title="meta_rectangle_contains_rect ()">meta_rectangle_contains_rect</a>        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaRectangle.html#meta-rectangle-contains-rect" title="meta_rectangle_contains_rect ()">meta_rectangle_contains_rect</a>        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *inner_rect</code></em>);
 </pre>
 </div>
@@ -233,7 +230,7 @@ struct              <a class="link" href="MetaRectangle.html#MetaEdge" title="st
 <hr>
 <div class="refsect2">
 <a name="meta-rectangle-intersect"></a><h3>meta_rectangle_intersect ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_rectangle_intersect            (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_intersect            (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src2</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *dest</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
@@ -269,7 +266,7 @@ otherwise.</td>
 <hr>
 <div class="refsect2">
 <a name="meta-rectangle-equal"></a><h3>meta_rectangle_equal ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_rectangle_equal                (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_equal                (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *src2</code></em>);</pre>
 </div>
 <hr>
@@ -306,37 +303,37 @@ with the coordinates of the bounding box. <span class="annotation">[<acronym tit
 <hr>
 <div class="refsect2">
 <a name="meta-rectangle-overlap"></a><h3>meta_rectangle_overlap ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_rectangle_overlap              (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_overlap              (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-rectangle-vert-overlap"></a><h3>meta_rectangle_vert_overlap ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_rectangle_vert_overlap         (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_vert_overlap         (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-rectangle-horiz-overlap"></a><h3>meta_rectangle_horiz_overlap ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_rectangle_horiz_overlap        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_horiz_overlap        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect1</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect2</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-rectangle-could-fit-rect"></a><h3>meta_rectangle_could_fit_rect ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_rectangle_could_fit_rect       (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_could_fit_rect       (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *inner_rect</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-rectangle-contains-rect"></a><h3>meta_rectangle_contains_rect ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_rectangle_contains_rect        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_rectangle_contains_rect        (<em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *outer_rect</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *inner_rect</code></em>);</pre>
 </div>
 </div>
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.19</div>
+          Generated by GTK-Doc V1.19.1</div>
 </body>
 </html>

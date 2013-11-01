@@ -2,26 +2,19 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>MetaDisplay</title>
+<title>Mutter Reference Manual: MetaDisplay</title>
 <meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="meta-MetaCompositor.html" title="MetaCompositor">
 <link rel="next" href="meta-MetaGroup.html" title="MetaGroup">
-<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
-<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
-<tr valign="middle">
-<td><a accesskey="p" href="meta-MetaCompositor.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
-<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
-<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
-<th width="100%" align="center">Mutter Reference Manual</th>
-<td><a accesskey="n" href="meta-MetaGroup.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
-</tr>
-<tr><td colspan="5" class="shortcuts">
-<a href="#MetaDisplay.synopsis" class="shortcut">Top</a>
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="10"><tr valign="middle">
+<td width="100%" align="left">
+<a href="#" class="shortcut">Top</a>
                    | 
                   <a href="#MetaDisplay.description" class="shortcut">Description</a>
                    | 
@@ -30,8 +23,12 @@
                   <a href="#MetaDisplay.properties" class="shortcut">Properties</a>
                    | 
                   <a href="#MetaDisplay.signals" class="shortcut">Signals</a>
-</td></tr>
-</table>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="meta-MetaCompositor.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="meta-MetaGroup.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
 <div class="refentry">
 <a name="MetaDisplay"></a><div class="titlepage"></div>
 <div class="refnamediv"><table width="100%"><tr>
@@ -50,30 +47,30 @@ enum                <a class="link" href="MetaDisplay.html#MetaTabShowType" titl
                                                          <em class="parameter"><code><span class="type">int</span> *major</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> *minor</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaDisplay.html#meta-display-get-xinput-opcode" title="meta_display_get_xinput_opcode ()">meta_display_get_xinput_opcode</a>      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaDisplay.html#meta-display-supports-extended-barriers" title="meta_display_supports_extended_barriers ()">meta_display_supports_extended_barriers</a>
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-supports-extended-barriers" title="meta_display_supports_extended_barriers ()">meta_display_supports_extended_barriers</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
 <span class="returnvalue">Display</span> *           <a class="link" href="MetaDisplay.html#meta-display-get-xdisplay" title="meta_display_get_xdisplay ()">meta_display_get_xdisplay</a>           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
 <a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="returnvalue">MetaCompositor</span></a> *    <a class="link" href="MetaDisplay.html#meta-display-get-compositor" title="meta_display_get_compositor ()">meta_display_get_compositor</a>         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="returnvalue">GSList</span></a> *            <a class="link" href="MetaDisplay.html#meta-display-get-screens" title="meta_display_get_screens ()">meta_display_get_screens</a>            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaDisplay.html#meta-display-has-shape" title="meta_display_has_shape ()">meta_display_has_shape</a>              (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">GSList</span> *            <a class="link" href="MetaDisplay.html#meta-display-get-screens" title="meta_display_get_screens ()">meta_display_get_screens</a>            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-has-shape" title="meta_display_has_shape ()">meta_display_has_shape</a>              (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
 <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="returnvalue">MetaScreen</span></a> *        <a class="link" href="MetaDisplay.html#meta-display-screen-for-root" title="meta_display_screen_for_root ()">meta_display_screen_for_root</a>        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><span class="type">Window</span> xroot</code></em>);
 <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        <a class="link" href="MetaDisplay.html#meta-display-get-focus-window" title="meta_display_get_focus_window ()">meta_display_get_focus_window</a>       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaDisplay.html#meta-display-xwindow-is-a-no-focus-window" title="meta_display_xwindow_is_a_no_focus_window ()">meta_display_xwindow_is_a_no_focus_window</a>
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-xwindow-is-a-no-focus-window" title="meta_display_xwindow_is_a_no_focus_window ()">meta_display_xwindow_is_a_no_focus_window</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><span class="type">Window</span> xwindow</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaDisplay.html#meta-display-get-damage-event-base" title="meta_display_get_damage_event_base ()">meta_display_get_damage_event_base</a>  (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaDisplay.html#meta-display-get-shape-event-base" title="meta_display_get_shape_event_base ()">meta_display_get_shape_event_base</a>   (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaDisplay.html#meta-display-xserver-time-is-before" title="meta_display_xserver_time_is_before ()">meta_display_xserver_time_is_before</a> (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> time1</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> time2</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="returnvalue">guint32</span></a>             <a class="link" href="MetaDisplay.html#meta-display-get-last-user-time" title="meta_display_get_last_user_time ()">meta_display_get_last_user_time</a>     (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="returnvalue">guint32</span></a>             <a class="link" href="MetaDisplay.html#meta-display-get-current-time" title="meta_display_get_current_time ()">meta_display_get_current_time</a>       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="returnvalue">guint32</span></a>             <a class="link" href="MetaDisplay.html#meta-display-get-current-time-roundtrip" title="meta_display_get_current_time_roundtrip ()">meta_display_get_current_time_roundtrip</a>
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-xserver-time-is-before" title="meta_display_xserver_time_is_before ()">meta_display_xserver_time_is_before</a> (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> time1</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> time2</code></em>);
+<span class="returnvalue">guint32</span>             <a class="link" href="MetaDisplay.html#meta-display-get-last-user-time" title="meta_display_get_last_user_time ()">meta_display_get_last_user_time</a>     (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">guint32</span>             <a class="link" href="MetaDisplay.html#meta-display-get-current-time" title="meta_display_get_current_time ()">meta_display_get_current_time</a>       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
+<span class="returnvalue">guint32</span>             <a class="link" href="MetaDisplay.html#meta-display-get-current-time-roundtrip" title="meta_display_get_current_time_roundtrip ()">meta_display_get_current_time_roundtrip</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
 unsigned <span class="returnvalue">int</span>        <a class="link" href="MetaDisplay.html#meta-display-get-ignored-modifier-mask" title="meta_display_get_ignored_modifier_mask ()">meta_display_get_ignored_modifier_mask</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             <a class="link" href="MetaDisplay.html#meta-display-get-tab-list" title="meta_display_get_tab_list ()">meta_display_get_tab_list</a>           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+<span class="returnvalue">GList</span> *             <a class="link" href="MetaDisplay.html#meta-display-get-tab-list" title="meta_display_get_tab_list ()">meta_display_get_tab_list</a>           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
@@ -82,55 +79,55 @@ unsigned <span class="returnvalue">int</span>        <a class="link" href="MetaD
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> backward</code></em>);
+                                                         <em class="parameter"><code><span class="type">gboolean</span> backward</code></em>);
 <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        <a class="link" href="MetaDisplay.html#meta-display-get-tab-current" title="meta_display_get_tab_current ()">meta_display_get_tab_current</a>        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaDisplay.html#meta-display-begin-grab-op" title="meta_display_begin_grab_op ()">meta_display_begin_grab_op</a>          (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-begin-grab-op" title="meta_display_begin_grab_op ()">meta_display_begin_grab_op</a>          (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a> op</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> pointer_already_grabbed</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> frame_action</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> pointer_already_grabbed</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> frame_action</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> button</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gulong"><span class="type">gulong</span></a> modmask</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>,
+                                                         <em class="parameter"><code><span class="type">gulong</span> modmask</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_x</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_y</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-end-grab-op" title="meta_display_end_grab_op ()">meta_display_end_grab_op</a>            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
 <a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="returnvalue">MetaGrabOp</span></a>          <a class="link" href="MetaDisplay.html#meta-display-get-grab-op" title="meta_display_get_grab_op ()">meta_display_get_grab_op</a>            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>               <a class="link" href="MetaDisplay.html#meta-display-add-keybinding" title="meta_display_add_keybinding ()">meta_display_add_keybinding</a>         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+<span class="returnvalue">guint</span>               <a class="link" href="MetaDisplay.html#meta-display-add-keybinding" title="meta_display_add_keybinding ()">meta_display_add_keybinding</a>         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code>const <span class="type">char</span> *name</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/gio/unstable/GSettings.html"><span class="type">GSettings</span></a> *settings</code></em>,
+                                                         <em class="parameter"><code><span class="type">GSettings</span> *settings</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyBindingFlags" title="enum MetaKeyBindingFlags"><span class="type">MetaKeyBindingFlags</span></a> flags</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyHandlerFunc" title="MetaKeyHandlerFunc ()"><span class="type">MetaKeyHandlerFunc</span></a> handler</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Datasets.html#GDestroyNotify"><span class="type">GDestroyNotify</span></a> free_data</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="MetaDisplay.html#meta-display-remove-keybinding" title="meta_display_remove_keybinding ()">meta_display_remove_keybinding</a>      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>,
+                                                         <em class="parameter"><code><span class="type">GDestroyNotify</span> free_data</code></em>);
+<span class="returnvalue">gboolean</span>            <a class="link" href="MetaDisplay.html#meta-display-remove-keybinding" title="meta_display_remove_keybinding ()">meta_display_remove_keybinding</a>      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code>const <span class="type">char</span> *name</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>               <a class="link" href="MetaDisplay.html#meta-display-get-keybinding-action" title="meta_display_get_keybinding_action ()">meta_display_get_keybinding_action</a>  (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+<span class="returnvalue">guint</span>               <a class="link" href="MetaDisplay.html#meta-display-get-keybinding-action" title="meta_display_get_keybinding_action ()">meta_display_get_keybinding_action</a>  (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code>unsigned <span class="type">int</span> keycode</code></em>,
                                                          <em class="parameter"><code><span class="type">unsigned long </span> mask</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-set-input-focus-window" title="meta_display_set_input_focus_window ()">meta_display_set_input_focus_window</a> (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> focus_frame</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focus_frame</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-focus-the-no-focus-window" title="meta_display_focus_the_no_focus_window ()">meta_display_focus_the_no_focus_window</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="returnvalue">GSList</span></a> *            <a class="link" href="MetaDisplay.html#meta-display-sort-windows-by-stacking" title="meta_display_sort_windows_by_stacking ()">meta_display_sort_windows_by_stacking</a>
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
+<span class="returnvalue">GSList</span> *            <a class="link" href="MetaDisplay.html#meta-display-sort-windows-by-stacking" title="meta_display_sort_windows_by_stacking ()">meta_display_sort_windows_by_stacking</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="type">GSList</span></a> *windows</code></em>);
+                                                         <em class="parameter"><code><span class="type">GSList</span> *windows</code></em>);
 <span class="returnvalue">Window</span>              <a class="link" href="MetaDisplay.html#meta-display-get-leader-window" title="meta_display_get_leader_window ()">meta_display_get_leader_window</a>      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-add-ignored-crossing-serial" title="meta_display_add_ignored_crossing_serial ()">meta_display_add_ignored_crossing_serial</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><span class="type">unsigned long </span> serial</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-unmanage-screen" title="meta_display_unmanage_screen ()">meta_display_unmanage_screen</a>        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaDisplay.html#meta-display-clear-mouse-mode" title="meta_display_clear_mouse_mode ()">meta_display_clear_mouse_mode</a>       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);
                     <a class="link" href="MetaDisplay.html#MetaDisplay-struct" title="MetaDisplay">MetaDisplay</a>;
                     <a class="link" href="MetaDisplay.html#MetaDisplayClass" title="MetaDisplayClass">MetaDisplayClass</a>;
@@ -139,7 +136,7 @@ unsigned <span class="returnvalue">int</span>        <a class="link" href="MetaD
 <div class="refsect1">
 <a name="MetaDisplay.object-hierarchy"></a><h2>Object Hierarchy</h2>
 <pre class="synopsis">
-  <a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+  GObject
    +----MetaDisplay
 </pre>
 </div>
@@ -152,14 +149,14 @@ unsigned <span class="returnvalue">int</span>        <a class="link" href="MetaD
 <div class="refsect1">
 <a name="MetaDisplay.signals"></a><h2>Signals</h2>
 <pre class="synopsis">
-  "<a class="link" href="MetaDisplay.html#MetaDisplay-accelerator-activated" title='The "accelerator-activated" signal'>accelerator-activated</a>"                          : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaDisplay.html#MetaDisplay-grab-op-begin" title='The "grab-op-begin" signal'>grab-op-begin</a>"                                  : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaDisplay.html#MetaDisplay-grab-op-end" title='The "grab-op-end" signal'>grab-op-end</a>"                                    : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaDisplay.html#MetaDisplay-modifiers-accelerator-activated" title='The "modifiers-accelerator-activated" signal'>modifiers-accelerator-activated</a>"                : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaDisplay.html#MetaDisplay-overlay-key" title='The "overlay-key" signal'>overlay-key</a>"                                    : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaDisplay.html#MetaDisplay-window-created" title='The "window-created" signal'>window-created</a>"                                 : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaDisplay.html#MetaDisplay-window-demands-attention" title='The "window-demands-attention" signal'>window-demands-attention</a>"                       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaDisplay.html#MetaDisplay-window-marked-urgent" title='The "window-marked-urgent" signal'>window-marked-urgent</a>"                           : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-accelerator-activated" title='The "accelerator-activated" signal'>accelerator-activated</a>"                          : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-grab-op-begin" title='The "grab-op-begin" signal'>grab-op-begin</a>"                                  : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-grab-op-end" title='The "grab-op-end" signal'>grab-op-end</a>"                                    : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-modifiers-accelerator-activated" title='The "modifiers-accelerator-activated" signal'>modifiers-accelerator-activated</a>"                : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-overlay-key" title='The "overlay-key" signal'>overlay-key</a>"                                    : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-window-created" title='The "window-created" signal'>window-created</a>"                                 : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-window-demands-attention" title='The "window-demands-attention" signal'>window-demands-attention</a>"                       : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaDisplay.html#MetaDisplay-window-marked-urgent" title='The "window-marked-urgent" signal'>window-marked-urgent</a>"                           : <code class="literal">Run Last</code>
 </pre>
 </div>
 <div class="refsect1">
@@ -267,7 +264,7 @@ The display is represented as a <a class="link" href="MetaDisplay.html" title="M
 <hr>
 <div class="refsect2">
 <a name="meta-display-supports-extended-barriers"></a><h3>meta_display_supports_extended_barriers ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_display_supports_extended_barriers
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_supports_extended_barriers
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -326,7 +323,7 @@ interfaces should depend on new barrier features.</td>
 <hr>
 <div class="refsect2">
 <a name="meta-display-get-screens"></a><h3>meta_display_get_screens ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="returnvalue">GSList</span></a> *            meta_display_get_screens            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">GSList</span> *            meta_display_get_screens            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -349,7 +346,7 @@ interfaces should depend on new barrier features.</td>
 <hr>
 <div class="refsect2">
 <a name="meta-display-has-shape"></a><h3>meta_display_has_shape ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_display_has_shape              (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_has_shape              (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -376,7 +373,7 @@ Return the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td>the screen for the specified root window ID, or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+<td>the screen for the specified root window ID, or <code class="literal">NULL</code>. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
 </td>
 </tr>
 </tbody>
@@ -387,11 +384,9 @@ Return the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class
 <a name="meta-display-get-focus-window"></a><h3>meta_display_get_focus_window ()</h3>
 <pre class="programlisting"><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *        meta_display_get_focus_window       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <p>
-Get the window that, according to events received from X server,
-currently has the input focus. We may have already sent a request
-to the X server to move the focus window elsewhere. (The
-expected_focus_window records where we've last set the input
-focus.)
+Get our best guess as to the "currently" focused window (that is,
+the window that we expect will be focused at the point when the X
+server processes our next request).
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -415,7 +410,7 @@ focus.)
 <hr>
 <div class="refsect2">
 <a name="meta-display-xwindow-is-a-no-focus-window"></a><h3>meta_display_xwindow_is_a_no_focus_window ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_display_xwindow_is_a_no_focus_window
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_xwindow_is_a_no_focus_window
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><span class="type">Window</span> xwindow</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
@@ -436,7 +431,7 @@ focus.)
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> iff window is one of mutter's internal "no focus" windows
+<code class="literal">TRUE</code> iff window is one of mutter's internal "no focus" windows
 (there is one per screen) which will have the focus when there is no
 actual client window focused.</td>
 </tr>
@@ -456,9 +451,9 @@ actual client window focused.</td>
 <hr>
 <div class="refsect2">
 <a name="meta-display-xserver-time-is-before"></a><h3>meta_display_xserver_time_is_before ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_display_xserver_time_is_before (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> time1</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> time2</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_xserver_time_is_before (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> time1</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> time2</code></em>);</pre>
 <p>
 Xserver time can wraparound, thus comparing two timestamps needs to take
 this into account. If no wraparound has occurred, this is equivalent to
@@ -497,7 +492,7 @@ the result.
 <hr>
 <div class="refsect2">
 <a name="meta-display-get-last-user-time"></a><h3>meta_display_get_last_user_time ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="returnvalue">guint32</span></a>             meta_display_get_last_user_time     (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">guint32</span>             meta_display_get_last_user_time     (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -519,12 +514,12 @@ the result.
 <hr>
 <div class="refsect2">
 <a name="meta-display-get-current-time"></a><h3>meta_display_get_current_time ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="returnvalue">guint32</span></a>             meta_display_get_current_time       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">guint32</span>             meta_display_get_current_time       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-display-get-current-time-roundtrip"></a><h3>meta_display_get_current_time_roundtrip ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="returnvalue">guint32</span></a>             meta_display_get_current_time_roundtrip
+<pre class="programlisting"><span class="returnvalue">guint32</span>             meta_display_get_current_time_roundtrip
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 </div>
 <hr>
@@ -554,14 +549,14 @@ when matching keybindings to events</td>
 <hr>
 <div class="refsect2">
 <a name="meta-display-get-tab-list"></a><h3>meta_display_get_tab_list ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             meta_display_get_tab_list           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+<pre class="programlisting"><span class="returnvalue">GList</span> *             meta_display_get_tab_list           (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <p>
 Determine the list of windows that should be displayed for Alt-TAB
 functionality.  The windows are returned in most recently used order.
-If <em class="parameter"><code>workspace</code></em> is not <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>, the list only conains windows that are on
+If <em class="parameter"><code>workspace</code></em> is not <code class="literal">NULL</code>, the list only conains windows that are on
 <em class="parameter"><code>workspace</code></em> or have the demands-attention hint set; otherwise it contains
 all windows on <em class="parameter"><code>screen</code></em>.
 </p>
@@ -606,7 +601,7 @@ all windows on <em class="parameter"><code>screen</code></em>.
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> backward</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">gboolean</span> backward</code></em>);</pre>
 <p>
 Determine the next window that should be displayed for Alt-TAB
 functionality.
@@ -642,7 +637,7 @@ functionality.
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>backward</code></em> :</span></p></td>
-<td>If <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a>, look for the previous window.</td>
+<td>If <code class="literal">TRUE</code>, look for the previous window.</td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
@@ -697,15 +692,15 @@ Determine the active window that should be displayed for Alt-TAB.
 <hr>
 <div class="refsect2">
 <a name="meta-display-begin-grab-op"></a><h3>meta_display_begin_grab_op ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_display_begin_grab_op          (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_begin_grab_op          (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a> op</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> pointer_already_grabbed</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> frame_action</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> pointer_already_grabbed</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> frame_action</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> button</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gulong"><span class="type">gulong</span></a> modmask</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>,
+                                                         <em class="parameter"><code><span class="type">gulong</span> modmask</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_x</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> root_y</code></em>);</pre>
 </div>
@@ -713,7 +708,7 @@ Determine the active window that should be displayed for Alt-TAB.
 <div class="refsect2">
 <a name="meta-display-end-grab-op"></a><h3>meta_display_end_grab_op ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_display_end_grab_op            (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -745,16 +740,16 @@ be returned if a compositor-plugin modal operation is in effect
 <hr>
 <div class="refsect2">
 <a name="meta-display-add-keybinding"></a><h3>meta_display_add_keybinding ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>               meta_display_add_keybinding         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+<pre class="programlisting"><span class="returnvalue">guint</span>               meta_display_add_keybinding         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code>const <span class="type">char</span> *name</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/gio/unstable/GSettings.html"><span class="type">GSettings</span></a> *settings</code></em>,
+                                                         <em class="parameter"><code><span class="type">GSettings</span> *settings</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyBindingFlags" title="enum MetaKeyBindingFlags"><span class="type">MetaKeyBindingFlags</span></a> flags</code></em>,
                                                          <em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaKeyHandlerFunc" title="MetaKeyHandlerFunc ()"><span class="type">MetaKeyHandlerFunc</span></a> handler</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Datasets.html#GDestroyNotify"><span class="type">GDestroyNotify</span></a> free_data</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>,
+                                                         <em class="parameter"><code><span class="type">GDestroyNotify</span> free_data</code></em>);</pre>
 <p>
 Add a keybinding at runtime. The key <em class="parameter"><code>name</code></em> in <em class="parameter"><code>schema</code></em> needs to be of
-type <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariantType.html#G-VARIANT-TYPE-STRING-ARRAY:CAPS"><code class="literal">G_VARIANT_TYPE_STRING_ARRAY</code></a>, with each string describing a
+type <code class="literal">G_VARIANT_TYPE_STRING_ARRAY</code>, with each string describing a
 keybinding in the form of "&lt;Control&gt;a" or "&lt;Shift&gt;&lt;Alt&gt;F1". The parser
 is fairly liberal and allows lower or upper case, and also abbreviations
 such as "&lt;Ctl&gt;" and "&lt;Ctrl&gt;". If the key is set to the empty list or a
@@ -785,7 +780,7 @@ Use <a class="link" href="MetaDisplay.html#meta-display-remove-keybinding" title
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>settings</code></em> :</span></p></td>
-<td>the <a href="http://library.gnome.org/devel/gio/unstable/GSettings.html"><span class="type">GSettings</span></a> object where <em class="parameter"><code>name</code></em> is stored</td>
+<td>the <span class="type">GSettings</span> object where <em class="parameter"><code>name</code></em> is stored</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>flags</code></em> :</span></p></td>
@@ -817,7 +812,7 @@ added successfully, otherwise <a class="link" href="meta-Preferences.html#META-K
 <hr>
 <div class="refsect2">
 <a name="meta-display-remove-keybinding"></a><h3>meta_display_remove_keybinding ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            meta_display_remove_keybinding      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            meta_display_remove_keybinding      (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code>const <span class="type">char</span> *name</code></em>);</pre>
 <p>
 Remove keybinding <em class="parameter"><code>name</code></em>; the function will fail if <em class="parameter"><code>name</code></em> is not a known
@@ -841,8 +836,8 @@ keybinding or has not been added with <a class="link" href="MetaDisplay.html#met
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the binding has been removed sucessfully,
-otherwise <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>
+<code class="literal">TRUE</code> if the binding has been removed sucessfully,
+otherwise <code class="literal">FALSE</code>
 </td>
 </tr>
 </tbody>
@@ -851,7 +846,7 @@ otherwise <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Ma
 <hr>
 <div class="refsect2">
 <a name="meta-display-get-keybinding-action"></a><h3>meta_display_get_keybinding_action ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="returnvalue">guint</span></a>               meta_display_get_keybinding_action  (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
+<pre class="programlisting"><span class="returnvalue">guint</span>               meta_display_get_keybinding_action  (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code>unsigned <span class="type">int</span> keycode</code></em>,
                                                          <em class="parameter"><code><span class="type">unsigned long </span> mask</code></em>);</pre>
 <p>
@@ -892,8 +887,8 @@ dynamically the function will return the keybinding action
 <a name="meta-display-set-input-focus-window"></a><h3>meta_display_set_input_focus_window ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_display_set_input_focus_window (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> focus_frame</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focus_frame</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -901,14 +896,14 @@ dynamically the function will return the keybinding action
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_display_focus_the_no_focus_window
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-display-sort-windows-by-stacking"></a><h3>meta_display_sort_windows_by_stacking ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="returnvalue">GSList</span></a> *            meta_display_sort_windows_by_stacking
+<pre class="programlisting"><span class="returnvalue">GSList</span> *            meta_display_sort_windows_by_stacking
                                                         (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="type">GSList</span></a> *windows</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">GSList</span> *windows</code></em>);</pre>
 <p>
 Sorts a set of windows according to their current stacking order. If windows
 from multiple screens are present in the set of input windows, then all the
@@ -1009,14 +1004,14 @@ end up in a new window.
 <a name="meta-display-unmanage-screen"></a><h3>meta_display_unmanage_screen ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_display_unmanage_screen        (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-display-clear-mouse-mode"></a><h3>meta_display_clear_mouse_mode ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_display_clear_mouse_mode       (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <p>
-Sets the mouse-mode flag to <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>, which means that motion events are
+Sets the mouse-mode flag to <code class="literal">FALSE</code>, which means that motion events are
 no longer ignored in mouse or sloppy focus.
 This is an internal function. It should be used only for reimplementing
 keybindings, and only in a manner compatible with core code.
@@ -1057,9 +1052,10 @@ keybindings, and only in a manner compatible with core code.
 <div class="refsect2">
 <a name="MetaDisplay-accelerator-activated"></a><h3>The <code class="literal">"accelerator-activated"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a>        arg1,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a>        arg2,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)        : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">guint</span>        arg1,
+                                                        <span class="type">guint</span>        arg2,
+                                                        <span class="type">guint</span>        arg3,
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -1068,7 +1064,7 @@ keybindings, and only in a manner compatible with core code.
                                                         <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>  *arg1,
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg2,
                                                         <a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a>   arg3,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)        : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -1077,13 +1073,13 @@ keybindings, and only in a manner compatible with core code.
                                                         <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>  *arg1,
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg2,
                                                         <a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp"><span class="type">MetaGrabOp</span></a>   arg3,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)        : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaDisplay-modifiers-accelerator-activated"></a><h3>The <code class="literal">"modifiers-accelerator-activated"</code> signal</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)      : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>            user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display,
+                                                        <span class="type">gpointer</span>     user_data)      : <code class="literal">Run Last</code></pre>
 <p>
 The ::modifiers-accelerator-activated signal will be emitted when
 a special modifiers-only keybinding is activated.
@@ -1105,8 +1101,8 @@ a special modifiers-only keybinding is activated.
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> means that the keyboard device should remain
-frozen and <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> for the default behavior of unfreezing the
+<code class="literal">TRUE</code> means that the keyboard device should remain
+frozen and <code class="literal">FALSE</code> for the default behavior of unfreezing the
 keyboard.</td>
 </tr>
 </tbody>
@@ -1116,33 +1112,33 @@ keyboard.</td>
 <div class="refsect2">
 <a name="MetaDisplay-overlay-key"></a><h3>The <code class="literal">"overlay-key"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)        : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaDisplay-window-created"></a><h3>The <code class="literal">"window-created"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg1,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)        : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaDisplay-window-demands-attention"></a><h3>The <code class="literal">"window-demands-attention"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg1,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)        : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaDisplay-window-marked-urgent"></a><h3>The <code class="literal">"window-marked-urgent"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *metadisplay,
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>  *arg1,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)        : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>     user_data)        : <code class="literal">Run Last</code></pre>
 </div>
 </div>
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.19</div>
+          Generated by GTK-Doc V1.19.1</div>
 </body>
 </html>

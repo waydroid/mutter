@@ -234,6 +234,9 @@ meta_window_finalize (GObject *object)
   if (window->frame_bounds)
     cairo_region_destroy (window->frame_bounds);
 
+  if (window->shape_region)
+    cairo_region_destroy (window->shape_region);
+
   if (window->opaque_region)
     cairo_region_destroy (window->opaque_region);
 
@@ -825,7 +828,6 @@ meta_window_new_with_attrs (MetaDisplay       *display,
   gulong existing_wm_state;
   gulong event_mask;
   MetaMoveResizeFlags flags;
-  gboolean has_shape;
   MetaScreen *screen;
 
   g_assert (attrs != NULL);
@@ -959,29 +961,9 @@ meta_window_new_with_attrs (MetaDisplay       *display,
     XISelectEvents (display->xdisplay, xwindow, &mask, 1);
   }
 
-  has_shape = FALSE;
 #ifdef HAVE_SHAPE
   if (META_DISPLAY_HAS_SHAPE (display))
-    {
-      int x_bounding, y_bounding, x_clip, y_clip;
-      unsigned w_bounding, h_bounding, w_clip, h_clip;
-      int bounding_shaped, clip_shaped;
-
-      XShapeSelectInput (display->xdisplay, xwindow, ShapeNotifyMask);
-
-      XShapeQueryExtents (display->xdisplay, xwindow,
-                          &bounding_shaped, &x_bounding, &y_bounding,
-                          &w_bounding, &h_bounding,
-                          &clip_shaped, &x_clip, &y_clip,
-                          &w_clip, &h_clip);
-
-      has_shape = bounding_shaped != FALSE;
-
-      meta_topic (META_DEBUG_SHAPES,
-                  "Window has_shape = %d extents %d,%d %u x %u\n",
-                  has_shape, x_bounding, y_bounding,
-                  w_bounding, h_bounding);
-    }
+    XShapeSelectInput (display->xdisplay, xwindow, ShapeNotifyMask);
 #endif
 
   /* Get rid of any borders */
@@ -1040,8 +1022,6 @@ meta_window_new_with_attrs (MetaDisplay       *display,
 
   /* avoid tons of stack updates */
   meta_stack_freeze (window->screen->stack);
-
-  window->has_shape = has_shape;
 
   window->rect.x = attrs->x;
   window->rect.y = attrs->y;
@@ -1212,6 +1192,8 @@ meta_window_new_with_attrs (MetaDisplay       *display,
     }
 
   meta_display_register_x_window (display, &window->xwindow, window);
+
+  meta_window_update_shape_region_x11 (window);
 
   /* Assign this #MetaWindow a sequence number which can be used
    * for sorting.
@@ -1756,22 +1738,14 @@ meta_window_unmanage (MetaWindow  *window,
                                            window,
                                            timestamp);
     }
-  else if (window->display->expected_focus_window == window)
-    {
-      meta_topic (META_DEBUG_FOCUS,
-                  "Focusing default window since expected focus window freed %s\n",
-                  window->desc);
-      window->display->expected_focus_window = NULL;
-      meta_workspace_focus_default_window (window->screen->active_workspace,
-                                           window,
-                                           timestamp);
-    }
   else
     {
       meta_topic (META_DEBUG_FOCUS,
                   "Unmanaging window %s which doesn't currently have focus\n",
                   window->desc);
     }
+
+  g_assert (window->display->focus_window != window);
 
   if (window->struts)
     {
@@ -1794,12 +1768,6 @@ meta_window_unmanage (MetaWindow  *window,
     meta_display_end_grab_op (window->display, timestamp);
 
   g_assert (window->display->grab_window != window);
-
-  if (window->display->focus_window == window)
-    {
-      window->display->focus_window = NULL;
-      g_object_notify (G_OBJECT (window->display), "focus-window");
-    }
 
   if (window->maximized_horizontally || window->maximized_vertically)
     unmaximize_window_before_freeing (window);
@@ -2122,10 +2090,14 @@ set_net_wm_state (MetaWindow *window)
 
   if (window->fullscreen)
     {
-      data[0] = window->fullscreen_monitors[0];
-      data[1] = window->fullscreen_monitors[1];
-      data[2] = window->fullscreen_monitors[2];
-      data[3] = window->fullscreen_monitors[3];
+      data[0] = meta_screen_monitor_index_to_xinerama_index (window->screen,
+                                                             window->fullscreen_monitors[0]);
+      data[1] = meta_screen_monitor_index_to_xinerama_index (window->screen,
+                                                             window->fullscreen_monitors[1]);
+      data[2] = meta_screen_monitor_index_to_xinerama_index (window->screen,
+                                                             window->fullscreen_monitors[2]);
+      data[3] = meta_screen_monitor_index_to_xinerama_index (window->screen,
+                                                             window->fullscreen_monitors[3]);
 
       meta_verbose ("Setting _NET_WM_FULLSCREEN_MONITORS\n");
       meta_error_trap_push (window->display);
@@ -3334,14 +3306,7 @@ meta_window_hide (MetaWindow *window)
       invalidate_work_areas (window);
     }
 
-  /* The check on expected_focus_window is a temporary workaround for
-   *  https://bugzilla.gnome.org/show_bug.cgi?id=597352
-   * We may have already switched away from this window but not yet
-   * gotten FocusIn/FocusOut events. A more complete comprehensive
-   * fix for these type of issues is described in the bug.
-   */
-  if (window->has_focus &&
-      window == window->display->expected_focus_window)
+  if (window->has_focus)
     {
       MetaWindow *not_this_one = NULL;
       MetaWorkspace *my_workspace = meta_window_get_workspace (window);
@@ -4806,7 +4771,8 @@ meta_window_update_for_monitors_changed (MetaWindow *window)
     {
       MetaMonitorInfo *info = &window->screen->monitor_infos[i];
 
-      if (info->output == old->output)
+      if (info->output_id != 0 &&
+          info->output_id == old->output_id)
         {
           new = info;
           break;
@@ -5842,7 +5808,18 @@ meta_window_get_outer_rect (const MetaWindow *window,
       rect->height -= borders.invisible.top  + borders.invisible.bottom;
     }
   else
-    *rect = window->rect;
+    {
+      *rect = window->rect;
+
+      if (window->has_custom_frame_extents)
+        {
+          const GtkBorder *extents = &window->custom_frame_extents;
+          rect->x += extents->left;
+          rect->y += extents->top;
+          rect->width -= extents->left + extents->right;
+          rect->height -= extents->top + extents->bottom;
+        }
+    }
 }
 
 const char*
@@ -5983,10 +5960,10 @@ meta_window_focus (MetaWindow  *window,
           meta_topic (META_DEBUG_FOCUS,
                       "Sending WM_TAKE_FOCUS to %s since take_focus = true\n",
                       window->desc);
-          meta_window_send_icccm_message (window,
-                                          window->display->atom_WM_TAKE_FOCUS,
-                                          timestamp);
-          window->display->expected_focus_window = window;
+
+          meta_display_request_take_focus (window->display,
+                                           window,
+                                           timestamp);
         }
     }
 
@@ -6526,7 +6503,7 @@ meta_window_configure_request (MetaWindow *window,
   if (event->xconfigurerequest.value_mask & CWStackMode)
     {
       MetaWindow *active_window;
-      active_window = window->display->expected_focus_window;
+      active_window = window->display->focus_window;
       if (meta_prefs_get_disable_workarounds ())
         {
           meta_topic (META_DEBUG_STACK,
@@ -7140,10 +7117,14 @@ meta_window_client_message (MetaWindow *window,
       meta_verbose ("_NET_WM_FULLSCREEN_MONITORS request for window '%s'\n",
                     window->desc);
 
-      top = event->xclient.data.l[0];
-      bottom = event->xclient.data.l[1];
-      left = event->xclient.data.l[2];
-      right = event->xclient.data.l[3];
+      top = meta_screen_xinerama_index_to_monitor_index (window->screen,
+                                                         event->xclient.data.l[0]);
+      bottom = meta_screen_xinerama_index_to_monitor_index (window->screen,
+                                                            event->xclient.data.l[1]);
+      left = meta_screen_xinerama_index_to_monitor_index (window->screen,
+                                                          event->xclient.data.l[2]);
+      right = meta_screen_xinerama_index_to_monitor_index (window->screen,
+                                                           event->xclient.data.l[3]);
       /* source_indication = event->xclient.data.l[4]; */
 
       meta_window_update_fullscreen_monitors (window, top, bottom, left, right);
@@ -7205,8 +7186,7 @@ meta_window_propagate_focus_appearance (MetaWindow *window,
           parent->attached_focus_window = NULL;
         }
 
-      if (child_focus_state_changed && !parent->has_focus &&
-          parent != window->display->expected_focus_window)
+      if (child_focus_state_changed && !parent->has_focus)
         {
           meta_window_appears_focused_changed (parent);
         }
@@ -7217,22 +7197,84 @@ meta_window_propagate_focus_appearance (MetaWindow *window,
 }
 
 void
-meta_window_lost_focus (MetaWindow *window)
+meta_window_set_focused_internal (MetaWindow *window,
+                                  gboolean    focused)
 {
-  if (window == window->display->focus_window)
+  if (focused)
     {
-      meta_topic (META_DEBUG_FOCUS,
-                  "%s is now the previous focus window due to being focused out or unmapped\n",
-                  window->desc);
+      window->has_focus = TRUE;
+      if (window->override_redirect)
+        return;
 
-      meta_topic (META_DEBUG_FOCUS,
-                  "* Focus --> NULL (was %s)\n", window->desc);
+      /* Move to the front of the focusing workspace's MRU list.
+       * We should only be "removing" it from the MRU list if it's
+       * not already there.  Note that it's possible that we might
+       * be processing this FocusIn after we've changed to a
+       * different workspace; we should therefore update the MRU
+       * list only if the window is actually on the active
+       * workspace.
+       */
+      if (window->screen->active_workspace &&
+          meta_window_located_on_workspace (window,
+                                            window->screen->active_workspace))
+        {
+          GList* link;
+          link = g_list_find (window->screen->active_workspace->mru_list,
+                              window);
+          g_assert (link);
+
+          window->screen->active_workspace->mru_list =
+            g_list_remove_link (window->screen->active_workspace->mru_list,
+                                link);
+          g_list_free (link);
+
+          window->screen->active_workspace->mru_list =
+            g_list_prepend (window->screen->active_workspace->mru_list,
+                            window);
+        }
+
+      if (window->frame)
+        meta_frame_queue_draw (window->frame);
+
+      meta_error_trap_push (window->display);
+      XInstallColormap (window->display->xdisplay,
+                        window->colormap);
+      meta_error_trap_pop (window->display);
+
+      /* move into FOCUSED_WINDOW layer */
+      meta_window_update_layer (window);
+
+      /* Ungrab click to focus button since the sync grab can interfere
+       * with some things you might do inside the focused window, by
+       * causing the client to get funky enter/leave events.
+       *
+       * The reason we usually have a passive grab on the window is
+       * so that we can intercept clicks and raise the window in
+       * response. For click-to-focus we don't need that since the
+       * focused window is already raised. When raise_on_click is
+       * FALSE we also don't need that since we don't do anything
+       * when the window is clicked.
+       *
+       * There is dicussion in bugs 102209, 115072, and 461577
+       */
+      if (meta_prefs_get_focus_mode () == G_DESKTOP_FOCUS_MODE_CLICK ||
+          !meta_prefs_get_raise_on_click())
+        meta_display_ungrab_focus_window_button (window->display, window);
+
+      g_signal_emit (window, window_signals[FOCUS], 0);
+
+      if (!window->attached_focus_window)
+        meta_window_appears_focused_changed (window);
+
+      meta_window_propagate_focus_appearance (window, TRUE);
+    }
+  else
+    {
+      window->has_focus = FALSE;
+      if (window->override_redirect)
+        return;
 
       meta_window_propagate_focus_appearance (window, FALSE);
-
-      window->display->focus_window = NULL;
-      g_object_notify (G_OBJECT (window->display), "focus-window");
-      window->has_focus = FALSE;
 
       if (!window->attached_focus_window)
         meta_window_appears_focused_changed (window);
@@ -7250,176 +7292,6 @@ meta_window_lost_focus (MetaWindow *window)
           !meta_prefs_get_raise_on_click ())
         meta_display_grab_focus_window_button (window->display, window);
     }
-}
-
-gboolean
-meta_window_notify_focus (MetaWindow   *window,
-                          XIEnterEvent *event)
-{
-  /* note the event can be on either the window or the frame,
-   * we focus the frame for shaded windows
-   */
-
-  /* The event can be FocusIn, FocusOut, or UnmapNotify.
-   * On UnmapNotify we have to pretend it's focus out,
-   * because we won't get a focus out if it occurs, apparently.
-   */
-
-  /* We ignore grabs, though this is questionable.
-   * It may be better to increase the intelligence of
-   * the focus window tracking.
-   *
-   * The problem is that keybindings for windows are done with
-   * XGrabKey, which means focus_window disappears and the front of
-   * the MRU list gets confused from what the user expects once a
-   * keybinding is used.
-   */
-  meta_topic (META_DEBUG_FOCUS,
-              "Focus %s event received on %s 0x%lx (%s) "
-              "mode %s detail %s\n",
-              event->evtype == XI_FocusIn ? "in" :
-              event->evtype == XI_FocusOut ? "out" :
-              "???",
-              window->desc, event->event,
-              event->event == window->xwindow ?
-              "client window" :
-              (window->frame && event->event == window->frame->xwindow) ?
-              "frame window" :
-              "unknown window",
-              meta_event_mode_to_string (event->mode),
-              meta_event_detail_to_string (event->detail));
-
-  /* FIXME our pointer tracking is broken; see how
-   * gtk+/gdk/x11/gdkevents-x11.c or XFree86/xc/programs/xterm/misc.c
-   * handle it for the correct way.  In brief you need to track
-   * pointer focus and regular focus, and handle EnterNotify in
-   * PointerRoot mode with no window manager.  However as noted above,
-   * accurate focus tracking will break things because we want to keep
-   * windows "focused" when using keybindings on them, and also we
-   * sometimes "focus" a window by focusing its frame or
-   * no_focus_window; so this all needs rethinking massively.
-   *
-   * My suggestion is to change it so that we clearly separate
-   * actual keyboard focus tracking using the xterm algorithm,
-   * and mutter's "pretend" focus window, and go through all
-   * the code and decide which one should be used in each place;
-   * a hard bit is deciding on a policy for that.
-   *
-   * http://bugzilla.gnome.org/show_bug.cgi?id=90382
-   */
-
-  if ((event->evtype == XI_FocusIn ||
-       event->evtype == XI_FocusOut) &&
-      (event->mode == NotifyGrab ||
-       event->mode == NotifyUngrab ||
-       /* From WindowMaker, ignore all funky pointer root events */
-       event->detail > NotifyNonlinearVirtual))
-    {
-      meta_topic (META_DEBUG_FOCUS,
-                  "Ignoring focus event generated by a grab or other weirdness\n");
-      return TRUE;
-    }
-
-  if (event->evtype == XI_FocusIn)
-    {
-      if (window->override_redirect)
-        {
-          window->display->focus_window = NULL;
-          g_object_notify (G_OBJECT (window->display), "focus-window");
-          return FALSE;
-        }
-
-      if (window != window->display->focus_window)
-        {
-          meta_topic (META_DEBUG_FOCUS,
-                      "* Focus --> %s\n", window->desc);
-          window->display->focus_window = window;
-          window->has_focus = TRUE;
-
-          /* Move to the front of the focusing workspace's MRU list.
-           * We should only be "removing" it from the MRU list if it's
-           * not already there.  Note that it's possible that we might
-           * be processing this FocusIn after we've changed to a
-           * different workspace; we should therefore update the MRU
-           * list only if the window is actually on the active
-           * workspace.
-           */
-          if (window->screen->active_workspace &&
-              meta_window_located_on_workspace (window,
-                                                window->screen->active_workspace))
-            {
-              GList* link;
-              link = g_list_find (window->screen->active_workspace->mru_list,
-                                  window);
-              g_assert (link);
-
-              window->screen->active_workspace->mru_list =
-                g_list_remove_link (window->screen->active_workspace->mru_list,
-                                    link);
-              g_list_free (link);
-
-              window->screen->active_workspace->mru_list =
-                g_list_prepend (window->screen->active_workspace->mru_list,
-                                window);
-            }
-
-          if (window->frame)
-            meta_frame_queue_draw (window->frame);
-
-          meta_error_trap_push (window->display);
-          XInstallColormap (window->display->xdisplay,
-                            window->colormap);
-          meta_error_trap_pop (window->display);
-
-          /* move into FOCUSED_WINDOW layer */
-          meta_window_update_layer (window);
-
-          /* Ungrab click to focus button since the sync grab can interfere
-           * with some things you might do inside the focused window, by
-           * causing the client to get funky enter/leave events.
-           *
-           * The reason we usually have a passive grab on the window is
-           * so that we can intercept clicks and raise the window in
-           * response. For click-to-focus we don't need that since the
-           * focused window is already raised. When raise_on_click is
-           * FALSE we also don't need that since we don't do anything
-           * when the window is clicked.
-           *
-           * There is dicussion in bugs 102209, 115072, and 461577
-           */
-          if (meta_prefs_get_focus_mode () == G_DESKTOP_FOCUS_MODE_CLICK ||
-              !meta_prefs_get_raise_on_click())
-            meta_display_ungrab_focus_window_button (window->display, window);
-
-          g_signal_emit (window, window_signals[FOCUS], 0);
-          g_object_notify (G_OBJECT (window->display), "focus-window");
-
-          if (!window->attached_focus_window)
-            meta_window_appears_focused_changed (window);
-
-          meta_window_propagate_focus_appearance (window, TRUE);
-        }
-    }
-  else if (event->evtype == XI_FocusOut)
-    {
-      if (event->detail == NotifyInferior)
-        {
-          /* This event means the client moved focus to a subwindow */
-          meta_topic (META_DEBUG_FOCUS,
-                      "Ignoring focus out on %s with NotifyInferior\n",
-                      window->desc);
-          return TRUE;
-        }
-      else
-        {
-          meta_window_lost_focus (window);
-        }
-    }
-
-  /* Now set _NET_ACTIVE_WINDOW hint */
-  meta_display_update_active_window_hint (window->display);
-
-  return FALSE;
 }
 
 static gboolean
@@ -7747,13 +7619,24 @@ meta_window_update_net_wm_type (MetaWindow *window)
 }
 
 void
-meta_window_update_opaque_region (MetaWindow *window)
+meta_window_set_opaque_region (MetaWindow     *window,
+                               cairo_region_t *region)
+{
+  g_clear_pointer (&window->opaque_region, cairo_region_destroy);
+
+  if (region != NULL)
+    window->opaque_region = cairo_region_reference (region);
+
+  if (window->display->compositor)
+    meta_compositor_window_shape_changed (window->display->compositor, window);
+}
+
+void
+meta_window_update_opaque_region_x11 (MetaWindow *window)
 {
   cairo_region_t *opaque_region = NULL;
   gulong *region = NULL;
   int nitems;
-
-  g_clear_pointer (&window->opaque_region, cairo_region_destroy);
 
   if (meta_prop_get_cardinal_list (window->display,
                                    window->xwindow,
@@ -7797,11 +7680,106 @@ meta_window_update_opaque_region (MetaWindow *window)
     }
 
  out:
-  window->opaque_region = opaque_region;
   meta_XFree (region);
+
+  meta_window_set_opaque_region (window, opaque_region);
+  cairo_region_destroy (opaque_region);
+}
+
+static cairo_region_t *
+region_create_from_x_rectangles (const XRectangle *rects,
+                                 int n_rects)
+{
+  int i;
+  cairo_rectangle_int_t *cairo_rects = g_newa (cairo_rectangle_int_t, n_rects);
+
+  for (i = 0; i < n_rects; i ++)
+    {
+      cairo_rects[i].x = rects[i].x;
+      cairo_rects[i].y = rects[i].y;
+      cairo_rects[i].width = rects[i].width;
+      cairo_rects[i].height = rects[i].height;
+    }
+
+  return cairo_region_create_rectangles (cairo_rects, n_rects);
+}
+
+void
+meta_window_set_shape_region (MetaWindow     *window,
+                              cairo_region_t *region)
+{
+  g_clear_pointer (&window->shape_region, cairo_region_destroy);
+
+  if (region != NULL)
+    window->shape_region = cairo_region_reference (region);
 
   if (window->display->compositor)
     meta_compositor_window_shape_changed (window->display->compositor, window);
+}
+
+void
+meta_window_update_shape_region_x11 (MetaWindow *window)
+{
+  cairo_region_t *region = NULL;
+
+#ifdef HAVE_SHAPE
+  if (META_DISPLAY_HAS_SHAPE (window->display))
+    {
+      /* Translate the set of XShape rectangles that we
+       * get from the X server to a cairo_region. */
+      XRectangle *rects = NULL;
+      int n_rects, ordering;
+
+      int x_bounding, y_bounding, x_clip, y_clip;
+      unsigned w_bounding, h_bounding, w_clip, h_clip;
+      int bounding_shaped, clip_shaped;
+
+      meta_error_trap_push (window->display);
+      XShapeQueryExtents (window->display->xdisplay, window->xwindow,
+                          &bounding_shaped, &x_bounding, &y_bounding,
+                          &w_bounding, &h_bounding,
+                          &clip_shaped, &x_clip, &y_clip,
+                          &w_clip, &h_clip);
+
+      if (bounding_shaped)
+        {
+          rects = XShapeGetRectangles (window->display->xdisplay,
+                                       window->xwindow,
+                                       ShapeBounding,
+                                       &n_rects,
+                                       &ordering);
+        }
+      meta_error_trap_pop (window->display);
+
+      if (rects)
+        {
+          region = region_create_from_x_rectangles (rects, n_rects);
+          XFree (rects);
+        }
+    }
+#endif
+
+  if (region != NULL)
+    {
+      cairo_rectangle_int_t client_area;
+
+      client_area.x = 0;
+      client_area.y = 0;
+      client_area.width = window->rect.width;
+      client_area.height = window->rect.height;
+
+      /* The shape we get back from the client may have coordinates
+       * outside of the frame. The X SHAPE Extension requires that
+       * the overall shape the client provides never exceeds the
+       * "bounding rectangle" of the window -- the shape that the
+       * window would have gotten if it was unshaped. In our case,
+       * this is simply the client area.
+       */
+      cairo_region_intersect_rectangle (region, &client_area);
+    }
+
+  meta_window_set_shape_region (window, region);
+  cairo_region_destroy (region);
 }
 
 static void
@@ -8381,9 +8359,6 @@ recalc_window_features (MetaWindow *window)
   if (window->type == META_WINDOW_TOOLBAR)
     window->decorated = FALSE;
 
-  if (meta_window_is_attached_dialog (window))
-    window->border_only = TRUE;
-
   if (window->type == META_WINDOW_DESKTOP ||
       window->type == META_WINDOW_DOCK ||
       window->override_redirect)
@@ -8508,10 +8483,13 @@ recalc_window_features (MetaWindow *window)
 
     case META_WINDOW_DIALOG:
     case META_WINDOW_MODAL_DIALOG:
-      /* only skip taskbar if we have a real transient parent */
+      /* only skip taskbar if we have a real transient parent
+         (and ignore the application hints) */
       if (window->xtransient_for != None &&
           window->xtransient_for != window->screen->xroot)
         window->skip_taskbar = TRUE;
+      else
+        window->skip_taskbar = FALSE;
       break;
 
     case META_WINDOW_NORMAL:
@@ -9733,47 +9711,50 @@ meta_window_handle_mouse_grab_op_event (MetaWindow *window,
   switch (xev->evtype)
     {
     case XI_ButtonRelease:
-      meta_display_check_threshold_reached (window->display,
-                                            xev->root_x,
-                                            xev->root_y);
-      /* If the user was snap moving then ignore the button release
-       * because they may have let go of shift before releasing the
-       * mouse button and they almost certainly do not want a
-       * non-snapped movement to occur from the button release.
-       */
-      if (!window->display->grab_last_user_action_was_snap)
+      if (xev->detail == 1)
         {
-          if (meta_grab_op_is_moving (window->display->grab_op))
+          meta_display_check_threshold_reached (window->display,
+                                                xev->root_x,
+                                                xev->root_y);
+          /* If the user was snap moving then ignore the button
+           * release because they may have let go of shift before
+           * releasing the mouse button and they almost certainly do
+           * not want a non-snapped movement to occur from the button
+           * release.
+           */
+          if (!window->display->grab_last_user_action_was_snap)
             {
-              if (window->tile_mode != META_TILE_NONE)
-                meta_window_tile (window);
-              else if (xev->root == window->screen->xroot)
-                update_move (window,
-                             xev->mods.effective & ShiftMask,
-                             xev->root_x,
-                             xev->root_y);
-            }
-          else if (meta_grab_op_is_resizing (window->display->grab_op))
-            {
-              if (xev->root == window->screen->xroot)
-                update_resize (window,
-                               xev->mods.effective & ShiftMask,
-                               xev->root_x,
-                               xev->root_y,
-                               TRUE);
+              if (meta_grab_op_is_moving (window->display->grab_op))
+                {
+                  if (window->tile_mode != META_TILE_NONE)
+                    meta_window_tile (window);
+                  else if (xev->root == window->screen->xroot)
+                    update_move (window,
+                                 xev->mods.effective & ShiftMask,
+                                 xev->root_x,
+                                 xev->root_y);
+                }
+              else if (meta_grab_op_is_resizing (window->display->grab_op))
+                {
+                  if (xev->root == window->screen->xroot)
+                    update_resize (window,
+                                   xev->mods.effective & ShiftMask,
+                                   xev->root_x,
+                                   xev->root_y,
+                                   TRUE);
 
-              /* If a tiled window has been dragged free with a
-               * mouse resize without snapping back to the tiled
-               * state, it will end up with an inconsistent tile
-               * mode on mouse release; cleaning the mode earlier
-               * would break the ability to snap back to the tiled
-               * state, so we wait until mouse release.
-               */
-              update_tile_mode (window);
+                  /* If a tiled window has been dragged free with a
+                   * mouse resize without snapping back to the tiled
+                   * state, it will end up with an inconsistent tile
+                   * mode on mouse release; cleaning the mode earlier
+                   * would break the ability to snap back to the tiled
+                   * state, so we wait until mouse release.
+                   */
+                  update_tile_mode (window);
+                }
             }
+          meta_display_end_grab_op (window->display, xev->time);
         }
-
-      meta_display_end_grab_op (window->display, xev->time);
       break;
 
     case XI_Motion:
@@ -11116,7 +11097,7 @@ meta_window_get_frame_type (MetaWindow *window)
       /* can't add border if undecorated */
       return META_FRAME_TYPE_LAST;
     }
-  else if ((window->border_only && base_type != META_FRAME_TYPE_ATTACHED) ||
+  else if (window->border_only ||
            (window->hide_titlebar_when_maximized && META_WINDOW_MAXIMIZED (window)) ||
            (window->hide_titlebar_when_maximized && META_WINDOW_TILED_SIDE_BY_SIDE (window)))
     {
@@ -11262,4 +11243,10 @@ meta_window_compute_tile_match (MetaWindow *window)
 
       window->tile_match = match;
     }
+}
+
+gboolean
+meta_window_can_close (MetaWindow *window)
+{
+  return window->has_close_func;
 }

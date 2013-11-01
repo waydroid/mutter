@@ -215,6 +215,14 @@ meta_cursor_get_type (void)
         { META_CURSOR_NW_RESIZE, "META_CURSOR_NW_RESIZE", "nw-resize" },
         { META_CURSOR_MOVE_OR_RESIZE_WINDOW, "META_CURSOR_MOVE_OR_RESIZE_WINDOW", "move-or-resize-window" },
         { META_CURSOR_BUSY, "META_CURSOR_BUSY", "busy" },
+        { META_CURSOR_DND_IN_DRAG, "META_CURSOR_DND_IN_DRAG", "dnd-in-drag" },
+        { META_CURSOR_DND_MOVE, "META_CURSOR_DND_MOVE", "dnd-move" },
+        { META_CURSOR_DND_COPY, "META_CURSOR_DND_COPY", "dnd-copy" },
+        { META_CURSOR_DND_UNSUPPORTED_TARGET, "META_CURSOR_DND_UNSUPPORTED_TARGET", "dnd-unsupported-target" },
+        { META_CURSOR_POINTING_HAND, "META_CURSOR_POINTING_HAND", "pointing-hand" },
+        { META_CURSOR_CROSSHAIR, "META_CURSOR_CROSSHAIR", "crosshair" },
+        { META_CURSOR_IBEAM, "META_CURSOR_IBEAM", "ibeam" },
+        { META_CURSOR_LAST, "META_CURSOR_LAST", "last" },
         { 0, NULL, NULL }
       };
       GType g_enum_type_id;
@@ -637,7 +645,6 @@ meta_preference_get_type (void)
         { META_PREF_TITLEBAR_FONT, "META_PREF_TITLEBAR_FONT", "titlebar-font" },
         { META_PREF_NUM_WORKSPACES, "META_PREF_NUM_WORKSPACES", "num-workspaces" },
         { META_PREF_DYNAMIC_WORKSPACES, "META_PREF_DYNAMIC_WORKSPACES", "dynamic-workspaces" },
-        { META_PREF_APPLICATION_BASED, "META_PREF_APPLICATION_BASED", "application-based" },
         { META_PREF_KEYBINDINGS, "META_PREF_KEYBINDINGS", "keybindings" },
         { META_PREF_DISABLE_WORKAROUNDS, "META_PREF_DISABLE_WORKAROUNDS", "disable-workarounds" },
         { META_PREF_BUTTON_LAYOUT, "META_PREF_BUTTON_LAYOUT", "button-layout" },
@@ -861,6 +868,7 @@ meta_debug_topic_get_type (void)
         { META_DEBUG_SHAPES, "META_DEBUG_SHAPES", "shapes" },
         { META_DEBUG_COMPOSITOR, "META_DEBUG_COMPOSITOR", "compositor" },
         { META_DEBUG_EDGE_RESISTANCE, "META_DEBUG_EDGE_RESISTANCE", "edge-resistance" },
+        { META_DEBUG_DBUS, "META_DEBUG_DBUS", "dbus" },
         { 0, NULL, NULL }
       };
       GType g_enum_type_id;

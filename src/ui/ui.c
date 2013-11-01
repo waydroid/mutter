@@ -4,7 +4,6 @@
 
 /* 
  * Copyright (C) 2002 Havoc Pennington
- * stock icon code Copyright (C) 2002 Jorn Baayen <jorn@nl.linux.org>
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -31,13 +30,10 @@
 #include "core.h"
 #include "theme-private.h"
 
-#include "inlinepixbufs.h"
-
 #include <string.h>
 #include <stdlib.h>
 #include <cairo-xlib.h>
 
-static void meta_stock_icons_init (void);
 static void meta_ui_accelerator_parse (const char      *accel,
                                        guint           *keysym,
                                        guint           *keycode,
@@ -63,7 +59,10 @@ meta_ui_init (void)
   if (!gtk_init_check (NULL, NULL))
     meta_fatal ("Unable to open X display %s\n", XDisplayName (NULL));
 
-  meta_stock_icons_init ();
+  /* We need to be able to fully trust that the window and monitor sizes
+     that Gdk reports corresponds to the X ones, so we disable the automatic
+     scale handling */
+  gdk_x11_display_set_window_scale (gdk_display_get_default (), 1);
 }
 
 Display*
@@ -325,25 +324,22 @@ meta_ui_free (MetaUI *ui)
 }
 
 void
+meta_ui_get_frame_mask (MetaUI  *ui,
+                        Window   frame_xwindow,
+                        guint    width,
+                        guint    height,
+                        cairo_t *cr)
+{
+  meta_frames_get_mask (ui->frames, frame_xwindow, width, height, cr);
+}
+
+void
 meta_ui_get_frame_borders (MetaUI *ui,
                            Window frame_xwindow,
                            MetaFrameBorders *borders)
 {
   meta_frames_get_borders (ui->frames, frame_xwindow,
                            borders);
-}
-
-void
-meta_ui_get_corner_radiuses (MetaUI *ui,
-                             Window  xwindow,
-                             float  *top_left,
-                             float  *top_right,
-                             float  *bottom_left,
-                             float  *bottom_right)
-{
-  meta_frames_get_corner_radiuses (ui->frames, xwindow,
-                                   top_left, top_right,
-                                   bottom_left, bottom_right);
 }
 
 Window
@@ -778,10 +774,9 @@ meta_ui_theme_get_frame_borders (MetaUI *ui,
 }
 
 void
-meta_ui_set_current_theme (const char *name,
-                           gboolean    force_reload)
+meta_ui_set_current_theme (const char *name)
 {
-  meta_theme_set_current (name, force_reload);
+  meta_theme_set_current (name);
   meta_invalidate_default_icons ();
 }
 
@@ -999,48 +994,6 @@ meta_ui_window_is_widget (MetaUI *ui,
     }
   else
     return FALSE;
-}
-
-/* stock icon code Copyright (C) 2002 Jorn Baayen <jorn@nl.linux.org> */
-typedef struct
-{
-  char *stock_id;
-  const guint8 *icon_data;
-} MetaStockIcon;
-
-static void
-meta_stock_icons_init (void)
-{
-  GtkIconFactory *factory;
-  int i;
-
-  MetaStockIcon items[] =
-  {
-    { METACITY_STOCK_DELETE,   stock_delete_data   },
-    { METACITY_STOCK_MINIMIZE, stock_minimize_data },
-    { METACITY_STOCK_MAXIMIZE, stock_maximize_data }
-  };
-
-  factory = gtk_icon_factory_new ();
-  gtk_icon_factory_add_default (factory);
-
-  for (i = 0; i < (gint) G_N_ELEMENTS (items); i++)
-    {
-      GtkIconSet *icon_set;
-      GdkPixbuf *pixbuf;
-
-      pixbuf = gdk_pixbuf_new_from_inline (-1, items[i].icon_data,
-					   FALSE,
-					   NULL);
-
-      icon_set = gtk_icon_set_new_from_pixbuf (pixbuf);
-      gtk_icon_factory_add (factory, items[i].stock_id, icon_set);
-      gtk_icon_set_unref (icon_set);
-      
-      g_object_unref (G_OBJECT (pixbuf));
-    }
-
-  g_object_unref (G_OBJECT (factory));
 }
 
 int
