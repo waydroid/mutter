@@ -430,7 +430,11 @@ locate_attributes (GMarkupParseContext *context,
 
   while (name != NULL)
     {
-      g_return_val_if_fail (retloc != NULL, FALSE);
+      if (retloc == NULL)
+        {
+          retval = FALSE;
+          goto out;
+        }
 
       g_assert (n_attrs < MAX_ATTRS);
       
@@ -3209,9 +3213,6 @@ parse_style_set_element (GMarkupParseContext  *context,
                          state, focus);
               return;
             }
-          meta_frame_style_ref (frame_style);
-          info->style_set->tiled_right_styles[frame_focus] = frame_style;
-          break;
           meta_frame_style_ref (frame_style);
           info->style_set->tiled_right_styles[frame_focus] = frame_style;
           break;

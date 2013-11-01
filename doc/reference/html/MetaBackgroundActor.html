@@ -2,34 +2,31 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>MetaBackgroundActor</title>
+<title>Mutter Reference Manual: MetaBackgroundActor</title>
 <meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="meta-MetaKeybinding.html" title="MetaKeybinding">
 <link rel="next" href="MetaShadowFactory.html" title="MetaShadowFactory">
-<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
-<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
-<tr valign="middle">
-<td><a accesskey="p" href="meta-MetaKeybinding.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
-<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
-<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
-<th width="100%" align="center">Mutter Reference Manual</th>
-<td><a accesskey="n" href="MetaShadowFactory.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
-</tr>
-<tr><td colspan="5" class="shortcuts">
-<a href="#MetaBackgroundActor.synopsis" class="shortcut">Top</a>
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="10"><tr valign="middle">
+<td width="100%" align="left">
+<a href="#" class="shortcut">Top</a>
                    | 
                   <a href="#MetaBackgroundActor.description" class="shortcut">Description</a>
                    | 
                   <a href="#MetaBackgroundActor.object-hierarchy" class="shortcut">Object Hierarchy</a>
                    | 
                   <a href="#MetaBackgroundActor.implemented-interfaces" class="shortcut">Implemented Interfaces</a>
-</td></tr>
-</table>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="meta-MetaKeybinding.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="MetaShadowFactory.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
 <div class="refentry">
 <a name="MetaBackgroundActor"></a><div class="titlepage"></div>
 <div class="refnamediv"><table width="100%"><tr>
@@ -41,16 +38,16 @@
 </tr></table></div>
 <div class="refsynopsisdiv">
 <a name="MetaBackgroundActor.synopsis"></a><h2>Synopsis</h2>
-<pre class="synopsis">                    <a class="link" href="MetaBackgroundActor.html#MetaBackgroundActor-struct" title="MetaBackgroundActor">MetaBackgroundActor</a>;
+<pre class="synopsis">struct              <a class="link" href="MetaBackgroundActor.html#MetaBackgroundActor-struct" title="struct MetaBackgroundActor">MetaBackgroundActor</a>;
 struct              <a class="link" href="MetaBackgroundActor.html#MetaBackgroundActorClass" title="struct MetaBackgroundActorClass">MetaBackgroundActorClass</a>;
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaBackgroundActor.object-hierarchy"></a><h2>Object Hierarchy</h2>
 <pre class="synopsis">
-  <a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
-   +----<a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GInitiallyUnowned">GInitiallyUnowned</a>
-         +----<a href="/usr/share/gtk-doc/html/clutter/ClutterActor.html">ClutterActor</a>
+  GObject
+   +----GInitiallyUnowned
+         +----ClutterActor
                +----MetaBackgroundActor
 </pre>
 </div>
@@ -58,7 +55,7 @@ struct              <a class="link" href="MetaBackgroundActor.html#MetaBackgroun
 <a name="MetaBackgroundActor.implemented-interfaces"></a><h2>Implemented Interfaces</h2>
 <p>
 MetaBackgroundActor implements
- <a href="/usr/share/gtk-doc/html/clutter/ClutterContainer.html">ClutterContainer</a>,  <a href="/usr/share/gtk-doc/html/clutter/ClutterScriptable.html">ClutterScriptable</a>,  <a href="/usr/share/gtk-doc/html/clutter/ClutterAnimatable.html">ClutterAnimatable</a> and  AtkImplementorIface.</p>
+ ClutterContainer,  ClutterScriptable,  ClutterAnimatable and  AtkImplementorIface.</p>
 </div>
 <div class="refsect1">
 <a name="MetaBackgroundActor.description"></a><h2>Description</h2>
@@ -66,8 +63,8 @@ MetaBackgroundActor implements
 <div class="refsect1">
 <a name="MetaBackgroundActor.details"></a><h2>Details</h2>
 <div class="refsect2">
-<a name="MetaBackgroundActor-struct"></a><h3>MetaBackgroundActor</h3>
-<pre class="programlisting">typedef struct _MetaBackgroundActor MetaBackgroundActor;</pre>
+<a name="MetaBackgroundActor-struct"></a><h3>struct MetaBackgroundActor</h3>
+<pre class="programlisting">struct MetaBackgroundActor;</pre>
 <p>
 This class handles tracking and painting the root window background.
 By integrating with <span class="type">MetaWindowGroup</span> we can avoid painting parts of
@@ -85,6 +82,6 @@ the background that are obscured by other windows.
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.19</div>
+          Generated by GTK-Doc V1.19.1</div>
 </body>
 </html>

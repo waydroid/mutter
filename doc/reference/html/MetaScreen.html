@@ -2,26 +2,19 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>MetaScreen</title>
+<title>Mutter Reference Manual: MetaScreen</title>
 <meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="MetaWindowActor.html" title="MetaWindowActor">
 <link rel="next" href="MetaWindow.html" title="MetaWindow">
-<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
-<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
-<tr valign="middle">
-<td><a accesskey="p" href="MetaWindowActor.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
-<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
-<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
-<th width="100%" align="center">Mutter Reference Manual</th>
-<td><a accesskey="n" href="MetaWindow.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
-</tr>
-<tr><td colspan="5" class="shortcuts">
-<a href="#MetaScreen.synopsis" class="shortcut">Top</a>
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="10"><tr valign="middle">
+<td width="100%" align="left">
+<a href="#" class="shortcut">Top</a>
                    | 
                   <a href="#MetaScreen.description" class="shortcut">Description</a>
                    | 
@@ -30,8 +23,12 @@
                   <a href="#MetaScreen.properties" class="shortcut">Properties</a>
                    | 
                   <a href="#MetaScreen.signals" class="shortcut">Signals</a>
-</td></tr>
-</table>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="MetaWindowActor.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="MetaWindow.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
 <div class="refentry">
 <a name="MetaScreen"></a><div class="titlepage"></div>
 <div class="refnamediv"><table width="100%"><tr>
@@ -51,23 +48,23 @@
 <span class="returnvalue">void</span>                <a class="link" href="MetaScreen.html#meta-screen-get-size" title="meta_screen_get_size ()">meta_screen_get_size</a>                (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> *width</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> *height</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="returnvalue">gpointer</span></a>            <a class="link" href="MetaScreen.html#meta-screen-get-compositor-data" title="meta_screen_get_compositor_data ()">meta_screen_get_compositor_data</a>     (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">gpointer</span>            <a class="link" href="MetaScreen.html#meta-screen-get-compositor-data" title="meta_screen_get_compositor_data ()">meta_screen_get_compositor_data</a>     (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaScreen.html#meta-screen-set-compositor-data" title="meta_screen_set_compositor_data ()">meta_screen_set_compositor_data</a>     (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> info</code></em>);
+                                                         <em class="parameter"><code><span class="type">gpointer</span> info</code></em>);
 <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="returnvalue">MetaScreen</span></a> *        <a class="link" href="MetaScreen.html#meta-screen-for-x-screen" title="meta_screen_for_x_screen ()">meta_screen_for_x_screen</a>            (<em class="parameter"><code><span class="type">Screen</span> *xscreen</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaScreen.html#meta-screen-set-cm-selection" title="meta_screen_set_cm_selection ()">meta_screen_set_cm_selection</a>        (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaScreen.html#meta-screen-unset-cm-selection" title="meta_screen_unset_cm_selection ()">meta_screen_unset_cm_selection</a>      (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="returnvalue">GSList</span></a> *            <a class="link" href="MetaScreen.html#meta-screen-get-startup-sequences" title="meta_screen_get_startup_sequences ()">meta_screen_get_startup_sequences</a>   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             <a class="link" href="MetaScreen.html#meta-screen-get-workspaces" title="meta_screen_get_workspaces ()">meta_screen_get_workspaces</a>          (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">GSList</span> *            <a class="link" href="MetaScreen.html#meta-screen-get-startup-sequences" title="meta_screen_get_startup_sequences ()">meta_screen_get_startup_sequences</a>   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
+<span class="returnvalue">GList</span> *             <a class="link" href="MetaScreen.html#meta-screen-get-workspaces" title="meta_screen_get_workspaces ()">meta_screen_get_workspaces</a>          (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaScreen.html#meta-screen-get-n-workspaces" title="meta_screen_get_n_workspaces ()">meta_screen_get_n_workspaces</a>        (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaScreen.html#meta-screen-get-workspace-by-index" title="meta_screen_get_workspace_by_index ()">meta_screen_get_workspace_by_index</a>  (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> index</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaScreen.html#meta-screen-remove-workspace" title="meta_screen_remove_workspace ()">meta_screen_remove_workspace</a>        (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
 <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaScreen.html#meta-screen-append-new-workspace" title="meta_screen_append_new_workspace ()">meta_screen_append_new_workspace</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> activate</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
+                                                         <em class="parameter"><code><span class="type">gboolean</span> activate</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
 <span class="returnvalue">int</span>                 <a class="link" href="MetaScreen.html#meta-screen-get-active-workspace-index" title="meta_screen_get_active_workspace_index ()">meta_screen_get_active_workspace_index</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
 <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     <a class="link" href="MetaScreen.html#meta-screen-get-active-workspace" title="meta_screen_get_active_workspace ()">meta_screen_get_active_workspace</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);
@@ -81,12 +78,12 @@
                                                         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaScreen.html#meta-screen-focus-default-window" title="meta_screen_focus_default_window ()">meta_screen_focus_default_window</a>    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);
 enum                <a class="link" href="MetaScreen.html#MetaScreenCorner" title="enum MetaScreenCorner">MetaScreenCorner</a>;
 <span class="returnvalue">void</span>                <a class="link" href="MetaScreen.html#meta-screen-override-workspace-layout" title="meta_screen_override_workspace_layout ()">meta_screen_override_workspace_layout</a>
                                                         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html#MetaScreenCorner" title="enum MetaScreenCorner"><span class="type">MetaScreenCorner</span></a> starting_corner</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> vertical_layout</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> vertical_layout</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> n_rows</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> n_columns</code></em>);
 </pre>
@@ -94,30 +91,30 @@ enum                <a class="link" href="MetaScreen.html#MetaScreenCorner" titl
 <div class="refsect1">
 <a name="MetaScreen.object-hierarchy"></a><h2>Object Hierarchy</h2>
 <pre class="synopsis">
-  <a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+  GObject
    +----MetaScreen
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaScreen.properties"></a><h2>Properties</h2>
 <pre class="synopsis">
-  "<a class="link" href="MetaScreen.html#MetaScreen--keyboard-grabbed" title='The "keyboard-grabbed" property'>keyboard-grabbed</a>"         <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
-  "<a class="link" href="MetaScreen.html#MetaScreen--n-workspaces" title='The "n-workspaces" property'>n-workspaces</a>"             <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>                  : Read
+  "<a class="link" href="MetaScreen.html#MetaScreen--keyboard-grabbed" title='The "keyboard-grabbed" property'>keyboard-grabbed</a>"         <span class="type">gboolean</span>              : Read
+  "<a class="link" href="MetaScreen.html#MetaScreen--n-workspaces" title='The "n-workspaces" property'>n-workspaces</a>"             <span class="type">gint</span>                  : Read
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaScreen.signals"></a><h2>Signals</h2>
 <pre class="synopsis">
-  "<a class="link" href="MetaScreen.html#MetaScreen-in-fullscreen-changed" title='The "in-fullscreen-changed" signal'>in-fullscreen-changed</a>"                          : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaScreen.html#MetaScreen-monitors-changed" title='The "monitors-changed" signal'>monitors-changed</a>"                               : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaScreen.html#MetaScreen-restacked" title='The "restacked" signal'>restacked</a>"                                      : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaScreen.html#MetaScreen-startup-sequence-changed" title='The "startup-sequence-changed" signal'>startup-sequence-changed</a>"                       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaScreen.html#MetaScreen-window-entered-monitor" title='The "window-entered-monitor" signal'>window-entered-monitor</a>"                         : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaScreen.html#MetaScreen-window-left-monitor" title='The "window-left-monitor" signal'>window-left-monitor</a>"                            : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaScreen.html#MetaScreen-workareas-changed" title='The "workareas-changed" signal'>workareas-changed</a>"                              : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaScreen.html#MetaScreen-workspace-added" title='The "workspace-added" signal'>workspace-added</a>"                                : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaScreen.html#MetaScreen-workspace-removed" title='The "workspace-removed" signal'>workspace-removed</a>"                              : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
-  "<a class="link" href="MetaScreen.html#MetaScreen-workspace-switched" title='The "workspace-switched" signal'>workspace-switched</a>"                             : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
+  "<a class="link" href="MetaScreen.html#MetaScreen-in-fullscreen-changed" title='The "in-fullscreen-changed" signal'>in-fullscreen-changed</a>"                          : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaScreen.html#MetaScreen-monitors-changed" title='The "monitors-changed" signal'>monitors-changed</a>"                               : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaScreen.html#MetaScreen-restacked" title='The "restacked" signal'>restacked</a>"                                      : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaScreen.html#MetaScreen-startup-sequence-changed" title='The "startup-sequence-changed" signal'>startup-sequence-changed</a>"                       : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaScreen.html#MetaScreen-window-entered-monitor" title='The "window-entered-monitor" signal'>window-entered-monitor</a>"                         : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaScreen.html#MetaScreen-window-left-monitor" title='The "window-left-monitor" signal'>window-left-monitor</a>"                            : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaScreen.html#MetaScreen-workareas-changed" title='The "workareas-changed" signal'>workareas-changed</a>"                              : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaScreen.html#MetaScreen-workspace-added" title='The "workspace-added" signal'>workspace-added</a>"                                : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaScreen.html#MetaScreen-workspace-removed" title='The "workspace-removed" signal'>workspace-removed</a>"                              : <code class="literal">Run Last</code>
+  "<a class="link" href="MetaScreen.html#MetaScreen-workspace-switched" title='The "workspace-switched" signal'>workspace-switched</a>"                             : <code class="literal">Run Last</code>
 </pre>
 </div>
 <div class="refsect1">
@@ -217,7 +214,7 @@ Retrieve the size of the screen.
 <hr>
 <div class="refsect2">
 <a name="meta-screen-get-compositor-data"></a><h3>meta_screen_get_compositor_data ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="returnvalue">gpointer</span></a>            meta_screen_get_compositor_data     (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">gpointer</span>            meta_screen_get_compositor_data     (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -234,7 +231,7 @@ Retrieve the size of the screen.
 <div class="refsect2">
 <a name="meta-screen-set-compositor-data"></a><h3>meta_screen_set_compositor_data ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_screen_set_compositor_data     (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> info</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">gpointer</span> info</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -256,7 +253,7 @@ Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
 <td>the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> for the X screen
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if Metacity is not managing the screen. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+<code class="literal">NULL</code> if Metacity is not managing the screen. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
 </td>
 </tr>
 </tbody>
@@ -275,7 +272,7 @@ Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="
 <hr>
 <div class="refsect2">
 <a name="meta-screen-get-startup-sequences"></a><h3>meta_screen_get_startup_sequences ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="returnvalue">GSList</span></a> *            meta_screen_get_startup_sequences   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">GSList</span> *            meta_screen_get_startup_sequences   (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -291,7 +288,7 @@ Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="
 <hr>
 <div class="refsect2">
 <a name="meta-screen-get-workspaces"></a><h3>meta_screen_get_workspaces ()</h3>
-<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             meta_screen_get_workspaces          (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<pre class="programlisting"><span class="returnvalue">GList</span> *             meta_screen_get_workspaces          (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
 <col align="left" valign="top">
@@ -324,7 +321,7 @@ Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="
 <p>
 Gets the workspace object for one of a screen's workspaces given the workspace
 index. It's valid to call this function with an out-of-range index and it
-will robustly return <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.
+will robustly return <code class="literal">NULL</code>.
 </p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -343,7 +340,7 @@ will robustly return <a href="http://library.gnome.org/devel/glib/unstable/glib-
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td>the workspace object with specified index, or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>
+<td>the workspace object with specified index, or <code class="literal">NULL</code>
 if the index is out of range. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
 </td>
 </tr>
@@ -355,14 +352,14 @@ if the index is out of range. <span class="annotation">[<acronym title="Don't fr
 <a name="meta-screen-remove-workspace"></a><h3>meta_screen_remove_workspace ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_screen_remove_workspace        (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="meta-screen-append-new-workspace"></a><h3>meta_screen_append_new_workspace ()</h3>
 <pre class="programlisting"><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="returnvalue">MetaWorkspace</span></a> *     meta_screen_append_new_workspace    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> activate</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">gboolean</span> activate</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
 <p>
 Append a new workspace to the screen and (optionally) switch to that
 screen.
@@ -381,7 +378,7 @@ screen.
 <tr>
 <td><p><span class="term"><em class="parameter"><code>activate</code></em> :</span></p></td>
 <td>
-<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the workspace should be switched to after creation</td>
+<code class="literal">TRUE</code> if the workspace should be switched to after creation</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>timestamp</code></em> :</span></p></td>
@@ -544,7 +541,7 @@ Stores the location and size of the indicated monitor in <em class="parameter"><
 <div class="refsect2">
 <a name="meta-screen-focus-default-window"></a><h3>meta_screen_focus_default_window ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_screen_focus_default_window    (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
+                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -591,7 +588,7 @@ Stores the location and size of the indicated monitor in <em class="parameter"><
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_screen_override_workspace_layout
                                                         (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaScreen.html#MetaScreenCorner" title="enum MetaScreenCorner"><span class="type">MetaScreenCorner</span></a> starting_corner</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> vertical_layout</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> vertical_layout</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> n_rows</code></em>,
                                                          <em class="parameter"><code><span class="type">int</span> n_columns</code></em>);</pre>
 <p>
@@ -615,7 +612,7 @@ _NET_DESKTOP_LAYOUT property on the root window are completely ignored.
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>vertical_layout</code></em> :</span></p></td>
-<td>if <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> the workspaces are laid out in columns rather than rows</td>
+<td>if <code class="literal">TRUE</code> the workspaces are laid out in columns rather than rows</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>n_rows</code></em> :</span></p></td>
@@ -635,14 +632,14 @@ _NET_DESKTOP_LAYOUT property on the root window are completely ignored.
 <a name="MetaScreen.property-details"></a><h2>Property Details</h2>
 <div class="refsect2">
 <a name="MetaScreen--keyboard-grabbed"></a><h3>The <code class="literal">"keyboard-grabbed"</code> property</h3>
-<pre class="programlisting">  "keyboard-grabbed"         <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
+<pre class="programlisting">  "keyboard-grabbed"         <span class="type">gboolean</span>              : Read</pre>
 <p>Whether the keyboard is grabbed.</p>
 <p>Default value: FALSE</p>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen--n-workspaces"></a><h3>The <code class="literal">"n-workspaces"</code> property</h3>
-<pre class="programlisting">  "n-workspaces"             <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>                  : Read</pre>
+<pre class="programlisting">  "n-workspaces"             <span class="type">gint</span>                  : Read</pre>
 <p>Number of workspaces.</p>
 <p>Allowed values: &gt;= 1</p>
 <p>Default value: 1</p>
@@ -653,76 +650,76 @@ _NET_DESKTOP_LAYOUT property on the root window are completely ignored.
 <div class="refsect2">
 <a name="MetaScreen-in-fullscreen-changed"></a><h3>The <code class="literal">"in-fullscreen-changed"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen-monitors-changed"></a><h3>The <code class="literal">"monitors-changed"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen-restacked"></a><h3>The <code class="literal">"restacked"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen-startup-sequence-changed"></a><h3>The <code class="literal">"startup-sequence-changed"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    arg1,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>    arg1,
+                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen-window-entered-monitor"></a><h3>The <code class="literal">"window-entered-monitor"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>        arg1,
+                                                        <span class="type">gint</span>        arg1,
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *arg2,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen-window-left-monitor"></a><h3>The <code class="literal">"window-left-monitor"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>        arg1,
+                                                        <span class="type">gint</span>        arg1,
                                                         <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *arg2,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen-workareas-changed"></a><h3>The <code class="literal">"workareas-changed"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen-workspace-added"></a><h3>The <code class="literal">"workspace-added"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>        arg1,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gint</span>        arg1,
+                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen-workspace-removed"></a><h3>The <code class="literal">"workspace-removed"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>        arg1,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>    user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gint</span>        arg1,
+                                                        <span class="type">gpointer</span>    user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaScreen-workspace-switched"></a><h3>The <code class="literal">"workspace-switched"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a>         *metascreen,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>                arg1,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>                arg2,
+                                                        <span class="type">gint</span>                arg1,
+                                                        <span class="type">gint</span>                arg2,
                                                         <a class="link" href="meta-Common.html#MetaMotionDirection" title="enum MetaMotionDirection"><span class="type">MetaMotionDirection</span></a> arg3,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>            user_data)       : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>            user_data)       : <code class="literal">Run Last</code></pre>
 </div>
 </div>
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.19</div>
+          Generated by GTK-Doc V1.19.1</div>
 </body>
 </html>

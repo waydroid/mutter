@@ -94,7 +94,6 @@
     <keyword type="function" name="meta_prefs_get_titlebar_font ()" link="meta-Preferences.html#meta-prefs-get-titlebar-font"/>
     <keyword type="function" name="meta_prefs_get_num_workspaces ()" link="meta-Preferences.html#meta-prefs-get-num-workspaces"/>
     <keyword type="function" name="meta_prefs_get_dynamic_workspaces ()" link="meta-Preferences.html#meta-prefs-get-dynamic-workspaces"/>
-    <keyword type="function" name="meta_prefs_get_application_based ()" link="meta-Preferences.html#meta-prefs-get-application-based"/>
     <keyword type="function" name="meta_prefs_get_disable_workarounds ()" link="meta-Preferences.html#meta-prefs-get-disable-workarounds"/>
     <keyword type="function" name="meta_prefs_get_auto_raise ()" link="meta-Preferences.html#meta-prefs-get-auto-raise"/>
     <keyword type="function" name="meta_prefs_get_auto_raise_delay ()" link="meta-Preferences.html#meta-prefs-get-auto-raise-delay"/>
@@ -248,7 +247,6 @@
     <keyword type="function" name="meta_compositor_sync_screen_size ()" link="meta-MetaCompositor.html#meta-compositor-sync-screen-size"/>
     <keyword type="function" name="meta_compositor_flash_screen ()" link="meta-MetaCompositor.html#meta-compositor-flash-screen"/>
     <keyword type="function" name="meta_get_stage_for_screen ()" link="meta-MetaCompositor.html#meta-get-stage-for-screen"/>
-    <keyword type="function" name="meta_get_overlay_group_for_screen ()" link="meta-MetaCompositor.html#meta-get-overlay-group-for-screen"/>
     <keyword type="function" name="meta_get_overlay_window ()" link="meta-MetaCompositor.html#meta-get-overlay-window"/>
     <keyword type="function" name="meta_get_window_actors ()" link="meta-MetaCompositor.html#meta-get-window-actors"/>
     <keyword type="function" name="meta_get_window_group_for_screen ()" link="meta-MetaCompositor.html#meta-get-window-group-for-screen"/>
@@ -325,7 +323,7 @@
     <keyword type="function" name="meta_keybindings_switch_window ()" link="meta-MetaKeybinding.html#meta-keybindings-switch-window"/>
     <keyword type="function" name="meta_screen_ungrab_all_keys ()" link="meta-MetaKeybinding.html#meta-screen-ungrab-all-keys"/>
     <keyword type="function" name="meta_screen_grab_all_keys ()" link="meta-MetaKeybinding.html#meta-screen-grab-all-keys"/>
-    <keyword type="struct" name="MetaBackgroundActor" link="MetaBackgroundActor.html#MetaBackgroundActor-struct"/>
+    <keyword type="struct" name="struct MetaBackgroundActor" link="MetaBackgroundActor.html#MetaBackgroundActor-struct"/>
     <keyword type="struct" name="struct MetaBackgroundActorClass" link="MetaBackgroundActor.html#MetaBackgroundActorClass"/>
     <keyword type="struct" name="struct MetaShadowParams" link="MetaShadowFactory.html#MetaShadowParams"/>
     <keyword type="function" name="meta_shadow_factory_get_default ()" link="MetaShadowFactory.html#meta-shadow-factory-get-default"/>
@@ -334,7 +332,7 @@
     <keyword type="struct" name="MetaShadowFactory" link="MetaShadowFactory.html#MetaShadowFactory-struct"/>
     <keyword type="struct" name="MetaShadowFactoryClass" link="MetaShadowFactory.html#MetaShadowFactoryClass"/>
     <keyword type="signal" name="The &quot;changed&quot; signal" link="MetaShadowFactory.html#MetaShadowFactory-changed"/>
-    <keyword type="struct" name="MetaShapedTexture" link="MetaShapedTexture.html#MetaShapedTexture-struct"/>
+    <keyword type="struct" name="struct MetaShapedTexture" link="MetaShapedTexture.html#MetaShapedTexture-struct"/>
     <keyword type="struct" name="struct MetaShapedTextureClass" link="MetaShapedTexture.html#MetaShapedTextureClass"/>
     <keyword type="function" name="meta_shaped_texture_new ()" link="MetaShapedTexture.html#meta-shaped-texture-new"/>
     <keyword type="function" name="meta_shaped_texture_set_create_mipmaps ()" link="MetaShapedTexture.html#meta-shaped-texture-set-create-mipmaps"/>
@@ -344,14 +342,13 @@
     <keyword type="function" name="meta_shaped_texture_set_mask_texture ()" link="MetaShapedTexture.html#meta-shaped-texture-set-mask-texture"/>
     <keyword type="function" name="meta_shaped_texture_set_clip_region ()" link="MetaShapedTexture.html#meta-shaped-texture-set-clip-region"/>
     <keyword type="function" name="meta_shaped_texture_get_image ()" link="MetaShapedTexture.html#meta-shaped-texture-get-image"/>
-    <keyword type="struct" name="MetaWindowActor" link="MetaWindowActor.html#MetaWindowActor-struct"/>
+    <keyword type="struct" name="struct MetaWindowActor" link="MetaWindowActor.html#MetaWindowActor-struct"/>
     <keyword type="struct" name="struct MetaWindowActorClass" link="MetaWindowActor.html#MetaWindowActorClass"/>
     <keyword type="function" name="meta_window_actor_get_x_window ()" link="MetaWindowActor.html#meta-window-actor-get-x-window"/>
     <keyword type="function" name="meta_window_actor_get_workspace ()" link="MetaWindowActor.html#meta-window-actor-get-workspace"/>
     <keyword type="function" name="meta_window_actor_get_meta_window ()" link="MetaWindowActor.html#meta-window-actor-get-meta-window"/>
     <keyword type="function" name="meta_window_actor_get_texture ()" link="MetaWindowActor.html#meta-window-actor-get-texture"/>
     <keyword type="function" name="meta_window_actor_is_override_redirect ()" link="MetaWindowActor.html#meta-window-actor-is-override-redirect"/>
-    <keyword type="function" name="meta_window_actor_get_description ()" link="MetaWindowActor.html#meta-window-actor-get-description"/>
     <keyword type="function" name="meta_window_actor_showing_on_its_workspace ()" link="MetaWindowActor.html#meta-window-actor-showing-on-its-workspace"/>
     <keyword type="function" name="meta_window_actor_is_destroyed ()" link="MetaWindowActor.html#meta-window-actor-is-destroyed"/>
     <keyword type="property" name="The &quot;meta-screen&quot; property" link="MetaWindowActor.html#MetaWindowActor--meta-screen"/>
@@ -631,6 +628,14 @@
     <keyword type="constant" name="META_CURSOR_NW_RESIZE" link="meta-Common.html#META-CURSOR-NW-RESIZE:CAPS"/>
     <keyword type="constant" name="META_CURSOR_MOVE_OR_RESIZE_WINDOW" link="meta-Common.html#META-CURSOR-MOVE-OR-RESIZE-WINDOW:CAPS"/>
     <keyword type="constant" name="META_CURSOR_BUSY" link="meta-Common.html#META-CURSOR-BUSY:CAPS"/>
+    <keyword type="constant" name="META_CURSOR_DND_IN_DRAG" link="meta-Common.html#META-CURSOR-DND-IN-DRAG:CAPS"/>
+    <keyword type="constant" name="META_CURSOR_DND_MOVE" link="meta-Common.html#META-CURSOR-DND-MOVE:CAPS"/>
+    <keyword type="constant" name="META_CURSOR_DND_COPY" link="meta-Common.html#META-CURSOR-DND-COPY:CAPS"/>
+    <keyword type="constant" name="META_CURSOR_DND_UNSUPPORTED_TARGET" link="meta-Common.html#META-CURSOR-DND-UNSUPPORTED-TARGET:CAPS"/>
+    <keyword type="constant" name="META_CURSOR_POINTING_HAND" link="meta-Common.html#META-CURSOR-POINTING-HAND:CAPS"/>
+    <keyword type="constant" name="META_CURSOR_CROSSHAIR" link="meta-Common.html#META-CURSOR-CROSSHAIR:CAPS"/>
+    <keyword type="constant" name="META_CURSOR_IBEAM" link="meta-Common.html#META-CURSOR-IBEAM:CAPS"/>
+    <keyword type="constant" name="META_CURSOR_LAST" link="meta-Common.html#META-CURSOR-LAST:CAPS"/>
     <keyword type="constant" name="META_FRAME_TYPE_NORMAL" link="meta-Common.html#META-FRAME-TYPE-NORMAL:CAPS"/>
     <keyword type="constant" name="META_FRAME_TYPE_DIALOG" link="meta-Common.html#META-FRAME-TYPE-DIALOG:CAPS"/>
     <keyword type="constant" name="META_FRAME_TYPE_MODAL_DIALOG" link="meta-Common.html#META-FRAME-TYPE-MODAL-DIALOG:CAPS"/>
@@ -708,7 +713,6 @@
     <keyword type="constant" name="META_PREF_TITLEBAR_FONT" link="meta-Preferences.html#META-PREF-TITLEBAR-FONT:CAPS"/>
     <keyword type="constant" name="META_PREF_NUM_WORKSPACES" link="meta-Preferences.html#META-PREF-NUM-WORKSPACES:CAPS"/>
     <keyword type="constant" name="META_PREF_DYNAMIC_WORKSPACES" link="meta-Preferences.html#META-PREF-DYNAMIC-WORKSPACES:CAPS"/>
-    <keyword type="constant" name="META_PREF_APPLICATION_BASED" link="meta-Preferences.html#META-PREF-APPLICATION-BASED:CAPS"/>
     <keyword type="constant" name="META_PREF_KEYBINDINGS" link="meta-Preferences.html#META-PREF-KEYBINDINGS:CAPS"/>
     <keyword type="constant" name="META_PREF_DISABLE_WORKAROUNDS" link="meta-Preferences.html#META-PREF-DISABLE-WORKAROUNDS:CAPS"/>
     <keyword type="constant" name="META_PREF_BUTTON_LAYOUT" link="meta-Preferences.html#META-PREF-BUTTON-LAYOUT:CAPS"/>
@@ -840,6 +844,7 @@
     <keyword type="constant" name="META_DEBUG_SHAPES" link="meta-Utility-functions.html#META-DEBUG-SHAPES:CAPS"/>
     <keyword type="constant" name="META_DEBUG_COMPOSITOR" link="meta-Utility-functions.html#META-DEBUG-COMPOSITOR:CAPS"/>
     <keyword type="constant" name="META_DEBUG_EDGE_RESISTANCE" link="meta-Utility-functions.html#META-DEBUG-EDGE-RESISTANCE:CAPS"/>
+    <keyword type="constant" name="META_DEBUG_DBUS" link="meta-Utility-functions.html#META-DEBUG-DBUS:CAPS"/>
     <keyword type="constant" name="META_LATER_RESIZE" link="meta-Utility-functions.html#META-LATER-RESIZE:CAPS"/>
     <keyword type="constant" name="META_LATER_CALC_SHOWING" link="meta-Utility-functions.html#META-LATER-CALC-SHOWING:CAPS"/>
     <keyword type="constant" name="META_LATER_CHECK_FULLSCREEN" link="meta-Utility-functions.html#META-LATER-CHECK-FULLSCREEN:CAPS"/>

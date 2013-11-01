@@ -103,19 +103,20 @@ struct _MetaDisplay
 #include <meta/atomnames.h>
 #undef item
 
-  /* This is the actual window from focus events,
-   * not the one we last set
+  /* The window and serial of the most recent FocusIn event. */
+  Window server_focus_window;
+  gulong server_focus_serial;
+
+  /* Our best guess as to the "currently" focused window (that is, the
+   * window that we expect will be focused at the point when the X
+   * server processes our next request), and the serial of the request
+   * or event that caused this.
    */
   MetaWindow *focus_window;
-
-  /* window we are expecting a FocusIn event for or the current focus
-   * window if we are not expecting any FocusIn/FocusOut events; not
-   * perfect because applications can call XSetInputFocus directly.
-   * (It could also be messed up if a timestamp later than current
-   * time is sent to meta_display_set_input_focus_window, though that
-   * would be a programming error).  See bug 154598 for more info.
-   */
-  MetaWindow *expected_focus_window;
+  /* For windows we've focused that don't necessarily have an X window,
+   * like the no_focus_window or the stage X window. */
+  Window focus_xwindow;
+  gulong focus_serial;
 
   /* last timestamp passed to XSetInputFocus */
   guint32 last_focus_time;
@@ -459,7 +460,8 @@ void meta_display_remove_autoraise_callback (MetaDisplay *display);
 void meta_display_overlay_key_activate (MetaDisplay *display);
 void meta_display_accelerator_activate (MetaDisplay *display,
                                         guint        action,
-                                        guint        deviceid);
+                                        guint        deviceid,
+                                        guint        timestamp);
 gboolean meta_display_modifiers_accelerator_activate (MetaDisplay *display);
 
 /* In above-tab-keycode.c */
@@ -469,5 +471,10 @@ guint meta_display_get_above_tab_keycode (MetaDisplay *display);
 gboolean meta_display_process_barrier_event (MetaDisplay    *display,
                                              XIBarrierEvent *event);
 #endif /* HAVE_XI23 */
+
+void meta_display_set_input_focus_xwindow (MetaDisplay *display,
+                                           MetaScreen  *screen,
+                                           Window       window,
+                                           guint32      timestamp);
 
 #endif

@@ -111,6 +111,14 @@
 <ANCHOR id="META-CURSOR-NW-RESIZE:CAPS" href="meta/meta-Common.html#META-CURSOR-NW-RESIZE:CAPS">
 <ANCHOR id="META-CURSOR-MOVE-OR-RESIZE-WINDOW:CAPS" href="meta/meta-Common.html#META-CURSOR-MOVE-OR-RESIZE-WINDOW:CAPS">
 <ANCHOR id="META-CURSOR-BUSY:CAPS" href="meta/meta-Common.html#META-CURSOR-BUSY:CAPS">
+<ANCHOR id="META-CURSOR-DND-IN-DRAG:CAPS" href="meta/meta-Common.html#META-CURSOR-DND-IN-DRAG:CAPS">
+<ANCHOR id="META-CURSOR-DND-MOVE:CAPS" href="meta/meta-Common.html#META-CURSOR-DND-MOVE:CAPS">
+<ANCHOR id="META-CURSOR-DND-COPY:CAPS" href="meta/meta-Common.html#META-CURSOR-DND-COPY:CAPS">
+<ANCHOR id="META-CURSOR-DND-UNSUPPORTED-TARGET:CAPS" href="meta/meta-Common.html#META-CURSOR-DND-UNSUPPORTED-TARGET:CAPS">
+<ANCHOR id="META-CURSOR-POINTING-HAND:CAPS" href="meta/meta-Common.html#META-CURSOR-POINTING-HAND:CAPS">
+<ANCHOR id="META-CURSOR-CROSSHAIR:CAPS" href="meta/meta-Common.html#META-CURSOR-CROSSHAIR:CAPS">
+<ANCHOR id="META-CURSOR-IBEAM:CAPS" href="meta/meta-Common.html#META-CURSOR-IBEAM:CAPS">
+<ANCHOR id="META-CURSOR-LAST:CAPS" href="meta/meta-Common.html#META-CURSOR-LAST:CAPS">
 <ANCHOR id="MetaFrameType" href="meta/meta-Common.html#MetaFrameType">
 <ANCHOR id="META-FRAME-TYPE-NORMAL:CAPS" href="meta/meta-Common.html#META-FRAME-TYPE-NORMAL:CAPS">
 <ANCHOR id="META-FRAME-TYPE-DIALOG:CAPS" href="meta/meta-Common.html#META-FRAME-TYPE-DIALOG:CAPS">
@@ -225,7 +233,6 @@
 <ANCHOR id="META-PREF-TITLEBAR-FONT:CAPS" href="meta/meta-Preferences.html#META-PREF-TITLEBAR-FONT:CAPS">
 <ANCHOR id="META-PREF-NUM-WORKSPACES:CAPS" href="meta/meta-Preferences.html#META-PREF-NUM-WORKSPACES:CAPS">
 <ANCHOR id="META-PREF-DYNAMIC-WORKSPACES:CAPS" href="meta/meta-Preferences.html#META-PREF-DYNAMIC-WORKSPACES:CAPS">
-<ANCHOR id="META-PREF-APPLICATION-BASED:CAPS" href="meta/meta-Preferences.html#META-PREF-APPLICATION-BASED:CAPS">
 <ANCHOR id="META-PREF-KEYBINDINGS:CAPS" href="meta/meta-Preferences.html#META-PREF-KEYBINDINGS:CAPS">
 <ANCHOR id="META-PREF-DISABLE-WORKAROUNDS:CAPS" href="meta/meta-Preferences.html#META-PREF-DISABLE-WORKAROUNDS:CAPS">
 <ANCHOR id="META-PREF-BUTTON-LAYOUT:CAPS" href="meta/meta-Preferences.html#META-PREF-BUTTON-LAYOUT:CAPS">
@@ -261,7 +268,6 @@
 <ANCHOR id="meta-prefs-get-titlebar-font" href="meta/meta-Preferences.html#meta-prefs-get-titlebar-font">
 <ANCHOR id="meta-prefs-get-num-workspaces" href="meta/meta-Preferences.html#meta-prefs-get-num-workspaces">
 <ANCHOR id="meta-prefs-get-dynamic-workspaces" href="meta/meta-Preferences.html#meta-prefs-get-dynamic-workspaces">
-<ANCHOR id="meta-prefs-get-application-based" href="meta/meta-Preferences.html#meta-prefs-get-application-based">
 <ANCHOR id="meta-prefs-get-disable-workarounds" href="meta/meta-Preferences.html#meta-prefs-get-disable-workarounds">
 <ANCHOR id="meta-prefs-get-auto-raise" href="meta/meta-Preferences.html#meta-prefs-get-auto-raise">
 <ANCHOR id="meta-prefs-get-auto-raise-delay" href="meta/meta-Preferences.html#meta-prefs-get-auto-raise-delay">
@@ -430,6 +436,7 @@
 <ANCHOR id="META-DEBUG-SHAPES:CAPS" href="meta/meta-Utility-functions.html#META-DEBUG-SHAPES:CAPS">
 <ANCHOR id="META-DEBUG-COMPOSITOR:CAPS" href="meta/meta-Utility-functions.html#META-DEBUG-COMPOSITOR:CAPS">
 <ANCHOR id="META-DEBUG-EDGE-RESISTANCE:CAPS" href="meta/meta-Utility-functions.html#META-DEBUG-EDGE-RESISTANCE:CAPS">
+<ANCHOR id="META-DEBUG-DBUS:CAPS" href="meta/meta-Utility-functions.html#META-DEBUG-DBUS:CAPS">
 <ANCHOR id="meta-topic-real" href="meta/meta-Utility-functions.html#meta-topic-real">
 <ANCHOR id="meta-add-verbose-topic" href="meta/meta-Utility-functions.html#meta-add-verbose-topic">
 <ANCHOR id="meta-remove-verbose-topic" href="meta/meta-Utility-functions.html#meta-remove-verbose-topic">
@@ -581,7 +588,6 @@
 <ANCHOR id="meta-compositor-sync-screen-size" href="meta/meta-MetaCompositor.html#meta-compositor-sync-screen-size">
 <ANCHOR id="meta-compositor-flash-screen" href="meta/meta-MetaCompositor.html#meta-compositor-flash-screen">
 <ANCHOR id="meta-get-stage-for-screen" href="meta/meta-MetaCompositor.html#meta-get-stage-for-screen">
-<ANCHOR id="meta-get-overlay-group-for-screen" href="meta/meta-MetaCompositor.html#meta-get-overlay-group-for-screen">
 <ANCHOR id="meta-get-overlay-window" href="meta/meta-MetaCompositor.html#meta-get-overlay-window">
 <ANCHOR id="meta-get-window-actors" href="meta/meta-MetaCompositor.html#meta-get-window-actors">
 <ANCHOR id="meta-get-window-group-for-screen" href="meta/meta-MetaCompositor.html#meta-get-window-group-for-screen">
@@ -736,7 +742,6 @@
 <ANCHOR id="meta-window-actor-get-meta-window" href="meta/MetaWindowActor.html#meta-window-actor-get-meta-window">
 <ANCHOR id="meta-window-actor-get-texture" href="meta/MetaWindowActor.html#meta-window-actor-get-texture">
 <ANCHOR id="meta-window-actor-is-override-redirect" href="meta/MetaWindowActor.html#meta-window-actor-is-override-redirect">
-<ANCHOR id="meta-window-actor-get-description" href="meta/MetaWindowActor.html#meta-window-actor-get-description">
 <ANCHOR id="meta-window-actor-showing-on-its-workspace" href="meta/MetaWindowActor.html#meta-window-actor-showing-on-its-workspace">
 <ANCHOR id="meta-window-actor-is-destroyed" href="meta/MetaWindowActor.html#meta-window-actor-is-destroyed">
 <ANCHOR id="MetaWindowActor.property-details" href="meta/MetaWindowActor.html#MetaWindowActor.property-details">
@@ -979,14 +984,14 @@
 <ANCHOR id="MetaWorkspace.signal-details" href="meta/MetaWorkspace.html#MetaWorkspace.signal-details">
 <ANCHOR id="MetaWorkspace-window-added" href="meta/MetaWorkspace.html#MetaWorkspace-window-added">
 <ANCHOR id="MetaWorkspace-window-removed" href="meta/MetaWorkspace.html#MetaWorkspace-window-removed">
+<ANCHOR id="annotation-glossterm-transfer full" href="meta/annotation-glossary.html#annotation-glossterm-transfer full">
 <ANCHOR id="annotation-glossterm-out" href="meta/annotation-glossary.html#annotation-glossterm-out">
-<ANCHOR id="annotation-glossterm-out caller-allocates" href="meta/annotation-glossary.html#annotation-glossterm-out caller-allocates">
-<ANCHOR id="annotation-glossterm-allow-none" href="meta/annotation-glossary.html#annotation-glossterm-allow-none">
-<ANCHOR id="annotation-glossterm-closure" href="meta/annotation-glossary.html#annotation-glossterm-closure">
 <ANCHOR id="annotation-glossterm-transfer none" href="meta/annotation-glossary.html#annotation-glossterm-transfer none">
-<ANCHOR id="annotation-glossterm-array" href="meta/annotation-glossary.html#annotation-glossterm-array">
+<ANCHOR id="annotation-glossterm-type" href="meta/annotation-glossary.html#annotation-glossterm-type">
 <ANCHOR id="annotation-glossterm-element-type" href="meta/annotation-glossary.html#annotation-glossterm-element-type">
 <ANCHOR id="annotation-glossterm-transfer container" href="meta/annotation-glossary.html#annotation-glossterm-transfer container">
 <ANCHOR id="annotation-glossterm-scope call" href="meta/annotation-glossary.html#annotation-glossterm-scope call">
-<ANCHOR id="annotation-glossterm-transfer full" href="meta/annotation-glossary.html#annotation-glossterm-transfer full">
-<ANCHOR id="annotation-glossterm-type" href="meta/annotation-glossary.html#annotation-glossterm-type">
+<ANCHOR id="annotation-glossterm-out caller-allocates" href="meta/annotation-glossary.html#annotation-glossterm-out caller-allocates">
+<ANCHOR id="annotation-glossterm-array" href="meta/annotation-glossary.html#annotation-glossterm-array">
+<ANCHOR id="annotation-glossterm-closure" href="meta/annotation-glossary.html#annotation-glossterm-closure">
+<ANCHOR id="annotation-glossterm-allow-none" href="meta/annotation-glossary.html#annotation-glossterm-allow-none">

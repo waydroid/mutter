@@ -1,8 +1,8 @@
 AC_PREREQ(2.50)
 
 m4_define([mutter_major_version], [3])
-m4_define([mutter_minor_version], [8])
-m4_define([mutter_micro_version], [4])
+m4_define([mutter_minor_version], [10])
+m4_define([mutter_micro_version], [1])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -12,6 +12,7 @@ m4_define([mutter_plugin_api_version], [3])
 AC_INIT([mutter], [mutter_version],
         [http://bugzilla.gnome.org/enter_bug.cgi?product=mutter])
 
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR(src/core/display.c)
 AC_CONFIG_HEADERS(config.h)
 
@@ -67,14 +68,16 @@ CANBERRA_GTK_VERSION=0.26
 CLUTTER_PACKAGE=clutter-1.0
 
 MUTTER_PC_MODULES="
-   gtk+-3.0 >= 3.3.7
+   gtk+-3.0 >= 3.9.11
    gio-2.0 >= 2.25.10
    pango >= 1.2.0
    cairo >= 1.10.0
    gsettings-desktop-schemas >= 3.7.3
    xcomposite >= 0.2 xfixes xrender xdamage xi >= 1.6.0
-   $CLUTTER_PACKAGE >= 1.14.3
-   cogl-1.0 >= 1.13.3
+   $CLUTTER_PACKAGE >= 1.15.90
+   cogl-1.0 >= 1.15.6
+   upower-glib > 0.9.11
+   gnome-desktop-3.0
 "
 
 GLIB_GSETTINGS
@@ -118,9 +121,6 @@ AM_GLIB_GNU_GETTEXT
 ## here we get the flags we'll actually use
 # GRegex requires Glib-2.14.0
 PKG_CHECK_MODULES(ALL, glib-2.0 >= 2.14.0)
-# gtk_window_set_icon_name requires gtk2+-2.6.0
-PKG_CHECK_MODULES(MUTTER_MESSAGE, gtk+-3.0)
-PKG_CHECK_MODULES(MUTTER_WINDOW_DEMO, gtk+-3.0)
 
 # Unconditionally use this dir to avoid a circular dep with gnomecc
 GNOME_KEYBINDINGS_KEYSDIR="${datadir}/gnome-control-center/keybindings"
@@ -307,9 +307,6 @@ if test "x$found_xsync" = "xyes"; then
 fi
 
 MUTTER_LIBS="$MUTTER_LIBS $XSYNC_LIBS $RANDR_LIBS $SHAPE_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lm"
-MUTTER_MESSAGE_LIBS="$MUTTER_MESSAGE_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS"
-MUTTER_WINDOW_DEMO_LIBS="$MUTTER_WINDOW_DEMO_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lm"
-MUTTER_PROPS_LIBS="$MUTTER_PROPS_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS"
 
 found_sm=no
 case "$MUTTER_LIBS" in
@@ -434,10 +431,8 @@ doc/man/Makefile
 doc/reference/Makefile
 doc/reference/meta-docs.sgml
 src/Makefile
-src/wm-tester/Makefile
 src/libmutter.pc
 src/mutter-plugins.pc
-src/tools/Makefile
 src/compositor/plugins/Makefile
 po/Makefile.in
 ])

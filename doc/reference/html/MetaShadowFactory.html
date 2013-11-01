@@ -2,34 +2,31 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>MetaShadowFactory</title>
+<title>Mutter Reference Manual: MetaShadowFactory</title>
 <meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="MetaBackgroundActor.html" title="MetaBackgroundActor">
 <link rel="next" href="MetaShapedTexture.html" title="MetaShapedTexture">
-<meta name="generator" content="GTK-Doc V1.19 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.19.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
-<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
-<tr valign="middle">
-<td><a accesskey="p" href="MetaBackgroundActor.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
-<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
-<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
-<th width="100%" align="center">Mutter Reference Manual</th>
-<td><a accesskey="n" href="MetaShapedTexture.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
-</tr>
-<tr><td colspan="5" class="shortcuts">
-<a href="#MetaShadowFactory.synopsis" class="shortcut">Top</a>
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="10"><tr valign="middle">
+<td width="100%" align="left">
+<a href="#" class="shortcut">Top</a>
                    | 
                   <a href="#MetaShadowFactory.description" class="shortcut">Description</a>
                    | 
                   <a href="#MetaShadowFactory.object-hierarchy" class="shortcut">Object Hierarchy</a>
                    | 
                   <a href="#MetaShadowFactory.signals" class="shortcut">Signals</a>
-</td></tr>
-</table>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="core-reference.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="MetaBackgroundActor.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="MetaShapedTexture.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
 <div class="refentry">
 <a name="MetaShadowFactory"></a><div class="titlepage"></div>
 <div class="refnamediv"><table width="100%"><tr>
@@ -45,11 +42,11 @@
 <a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="returnvalue">MetaShadowFactory</span></a> * <a class="link" href="MetaShadowFactory.html#meta-shadow-factory-get-default" title="meta_shadow_factory_get_default ()">meta_shadow_factory_get_default</a>     (<em class="parameter"><code><span class="type">void</span></code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaShadowFactory.html#meta-shadow-factory-set-params" title="meta_shadow_factory_set_params ()">meta_shadow_factory_set_params</a>      (<em class="parameter"><code><a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *factory</code></em>,
                                                          <em class="parameter"><code>const <span class="type">char</span> *class_name</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> focused</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focused</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams"><span class="type">MetaShadowParams</span></a> *params</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="MetaShadowFactory.html#meta-shadow-factory-get-params" title="meta_shadow_factory_get_params ()">meta_shadow_factory_get_params</a>      (<em class="parameter"><code><a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *factory</code></em>,
                                                          <em class="parameter"><code>const <span class="type">char</span> *class_name</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> focused</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focused</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams"><span class="type">MetaShadowParams</span></a> *params</code></em>);
                     <a class="link" href="MetaShadowFactory.html#MetaShadowFactory-struct" title="MetaShadowFactory">MetaShadowFactory</a>;
                     <a class="link" href="MetaShadowFactory.html#MetaShadowFactoryClass" title="MetaShadowFactoryClass">MetaShadowFactoryClass</a>;
@@ -58,14 +55,14 @@
 <div class="refsect1">
 <a name="MetaShadowFactory.object-hierarchy"></a><h2>Object Hierarchy</h2>
 <pre class="synopsis">
-  <a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+  GObject
    +----MetaShadowFactory
 </pre>
 </div>
 <div class="refsect1">
 <a name="MetaShadowFactory.signals"></a><h2>Signals</h2>
 <pre class="synopsis">
-  "<a class="link" href="MetaShadowFactory.html#MetaShadowFactory-changed" title='The "changed" signal'>changed</a>"                                        : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a>
+  "<a class="link" href="MetaShadowFactory.html#MetaShadowFactory-changed" title='The "changed" signal'>changed</a>"                                        : <code class="literal">Run Last</code>
 </pre>
 </div>
 <div class="refsect1">
@@ -113,7 +110,7 @@ shape being shadowed, in pixels</td>
 shape being shadowed, in pixels</td>
 </tr>
 <tr>
-<td><p><span class="term"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#guint8"><span class="type">guint8</span></a> <em class="structfield"><code><a name="MetaShadowParams.opacity"></a>opacity</code></em>;</span></p></td>
+<td><p><span class="term"><span class="type">guint8</span> <em class="structfield"><code><a name="MetaShadowParams.opacity"></a>opacity</code></em>;</span></p></td>
 <td>opacity of the shadow, from 0 to 255</td>
 </tr>
 </tbody>
@@ -140,7 +137,7 @@ shape being shadowed, in pixels</td>
 <a name="meta-shadow-factory-set-params"></a><h3>meta_shadow_factory_set_params ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_shadow_factory_set_params      (<em class="parameter"><code><a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *factory</code></em>,
                                                          <em class="parameter"><code>const <span class="type">char</span> *class_name</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> focused</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focused</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams"><span class="type">MetaShadowParams</span></a> *params</code></em>);</pre>
 <p>
 Updates the shadow parameters for a particular class of shadows
@@ -184,7 +181,7 @@ and dropdown-menu.</td>
 <a name="meta-shadow-factory-get-params"></a><h3>meta_shadow_factory_get_params ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                meta_shadow_factory_get_params      (<em class="parameter"><code><a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *factory</code></em>,
                                                          <em class="parameter"><code>const <span class="type">char</span> *class_name</code></em>,
-                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> focused</code></em>,
+                                                         <em class="parameter"><code><span class="type">gboolean</span> focused</code></em>,
                                                          <em class="parameter"><code><a class="link" href="MetaShadowFactory.html#MetaShadowParams" title="struct MetaShadowParams"><span class="type">MetaShadowParams</span></a> *params</code></em>);</pre>
 <p>
 Gets the shadow parameters for a particular class of shadows
@@ -240,12 +237,12 @@ share the same MetaShadow.
 <div class="refsect2">
 <a name="MetaShadowFactory-changed"></a><h3>The <code class="literal">"changed"</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="MetaShadowFactory.html" title="MetaShadowFactory"><span class="type">MetaShadowFactory</span></a> *metashadowfactory,
-                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>           user_data)              : <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS"><code class="literal">Run Last</code></a></pre>
+                                                        <span class="type">gpointer</span>           user_data)              : <code class="literal">Run Last</code></pre>
 </div>
 </div>
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.19</div>
+          Generated by GTK-Doc V1.19.1</div>
 </body>
 </html>

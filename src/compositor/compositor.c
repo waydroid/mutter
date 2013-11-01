@@ -53,17 +53,15 @@
  *
  * # Containers #
  *
- * There's three containers in the stage that can be used to place actors, here
+ * There's two containers in the stage that are used to place window actors, here
  * are listed in the order in which they are painted:
  *
  * - window group, accessible with meta_get_window_group_for_screen()
  * - top window group, accessible with meta_get_top_window_group_for_screen()
- * - overlay group, accessible with meta_get_overlay_group_for_screen()
  *
  * Mutter will place actors representing windows in the window group, except for
  * override-redirect windows (ie. popups and menus) which will be placed in the
- * top window group. Mutter won't put any actors in the overlay group, but it's
- * intended for compositors to place there panel, dashes, status bars, etc.
+ * top window group.
  */
 
 #include <config.h>
@@ -256,23 +254,6 @@ meta_get_stage_for_screen (MetaScreen *screen)
 }
 
 /**
- * meta_get_overlay_group_for_screen:
- * @screen: a #MetaScreen
- *
- * Returns: (transfer none): The overlay group corresponding to @screen
- */
-ClutterActor *
-meta_get_overlay_group_for_screen (MetaScreen *screen)
-{
-  MetaCompScreen *info = meta_screen_get_compositor_data (screen);
-
-  if (!info)
-    return NULL;
-
-  return info->overlay_group;
-}
-
-/**
  * meta_get_window_group_for_screen:
  * @screen: a #MetaScreen
  *
@@ -388,11 +369,49 @@ meta_empty_stage_input_region (MetaScreen *screen)
   meta_set_stage_input_region (screen, region);
 }
 
+void
+meta_focus_stage_window (MetaScreen *screen,
+                         guint32     timestamp)
+{
+  ClutterStage *stage;
+  Window window;
+
+  stage = CLUTTER_STAGE (meta_get_stage_for_screen (screen));
+  if (!stage)
+    return;
+
+  window = clutter_x11_get_stage_window (stage);
+
+  if (window == None)
+    return;
+
+  meta_display_set_input_focus_xwindow (screen->display,
+                                        screen,
+                                        window,
+                                        timestamp);
+}
+
+gboolean
+meta_stage_is_focused (MetaScreen *screen)
+{
+  ClutterStage *stage;
+  Window window;
+
+  stage = CLUTTER_STAGE (meta_get_stage_for_screen (screen));
+  if (!stage)
+    return FALSE;
+
+  window = clutter_x11_get_stage_window (stage);
+
+  if (window == None)
+    return FALSE;
+
+  return (screen->display->focus_xwindow == window);
+}
+
 gboolean
 meta_begin_modal_for_plugin (MetaScreen       *screen,
                              MetaPlugin       *plugin,
-                             Window            grab_window,
-                             Cursor            cursor,
                              MetaModalOptions  options,
                              guint32           timestamp)
 {
@@ -403,9 +422,18 @@ meta_begin_modal_for_plugin (MetaScreen       *screen,
   MetaDisplay    *display    = meta_screen_get_display (screen);
   Display        *xdpy       = meta_display_get_xdisplay (display);
   MetaCompositor *compositor = display->compositor;
+  ClutterStage *stage;
+  Window grab_window;
+  Cursor cursor = None;
   gboolean pointer_grabbed = FALSE;
   gboolean keyboard_grabbed = FALSE;
   int result;
+
+  stage = CLUTTER_STAGE (meta_get_stage_for_screen (screen));
+  if (!stage)
+    return FALSE;
+
+  grab_window = clutter_x11_get_stage_window (stage);
 
   if (compositor->modal_plugin != NULL || display->grab_op != META_GRAB_OP_NONE)
     return FALSE;
@@ -653,11 +681,9 @@ meta_compositor_manage_screen (MetaCompositor *compositor,
 
   info->window_group = meta_window_group_new (screen);
   info->top_window_group = meta_window_group_new (screen);
-  info->overlay_group = clutter_actor_new ();
 
   clutter_actor_add_child (info->stage, info->window_group);
   clutter_actor_add_child (info->stage, info->top_window_group);
-  clutter_actor_add_child (info->stage, info->overlay_group);
 
   info->plugin_mgr = meta_plugin_manager_new (screen);
 
@@ -687,8 +713,6 @@ meta_compositor_manage_screen (MetaCompositor *compositor,
       XFixesDestroyRegion (xdisplay, info->pending_input_region);
       info->pending_input_region = None;
     }
-
-  clutter_actor_show (info->overlay_group);
 
   /* Map overlay window before redirecting windows offscreen so we catch their
    * contents until we show the stage.
@@ -920,10 +944,7 @@ meta_compositor_process_event (MetaCompositor *compositor,
 {
   if (compositor->modal_plugin && is_grabbed_event (compositor->display, event))
     {
-      MetaPluginClass *klass = META_PLUGIN_GET_CLASS (compositor->modal_plugin);
-
-      if (klass->xevent_filter)
-        klass->xevent_filter (compositor->modal_plugin, event);
+      _meta_plugin_xevent_filter (compositor->modal_plugin, event);
 
       /* We always consume events even if the plugin says it didn't handle them;
        * exclusive is exclusive */
@@ -1128,6 +1149,7 @@ sync_actor_stacking (MetaCompScreen *info)
    * we go ahead and do it */
 
   children = clutter_actor_get_children (info->window_group);
+  has_windows = FALSE;
   reordered = FALSE;
 
   /* We allow for actors in the window group other than the actors we
