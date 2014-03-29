@@ -1,3 +1,135 @@
+3.12.0
+======
+
+Translations:
+  Ask H. Larsen [da], Мирослав Николић [sr, sr@latin], Andika Triwidada [id],
+  Daniel Korostil [uk], Petr Kovar [cs]
+
+3.11.92
+=======
+* Fix identification of CSD windows [Owen; #723029]
+* Add minimal handling of touch events [Carlos; #723552]
+* Misc bug fixes and cleanups [Owen, Adel, Jasper; #723580, #726352]
+
+Contributors:
+  Adel Gadllah, Carlos Garnacho, Rui Matos, Jasper St. Pierre, Owen W. Taylor
+
+Translations:
+  Changwoo Ryu [ko], Rūdolfs Mazurs [lv], Wylmer Wang [zh_CN],
+  Chao-Hsiung Liao [zh_HK, zh_TW], Yuri Myasoedov [ru], Tiagosdot [pt],
+  Claude Paroz [fr], Duarte Loreto [pt], A S Alam [pa]
+
+3.11.91
+=======
+* Don't use keysym to match keybindings [Rui; #678001]
+* Fix message tray icons showing up blank (again) [Adel; #725180]
+* Improve keybinding lookups [Rui; #725588]
+* Fix dynamic updates of titlebar style properties [Owen; #725751]
+* Fix positioning of manually positioned windows [Owen; #724049]
+* Misc. bug fixes [Carlos, Giovanni, Florian, Jasper; #724969, #724402, #722266,
+  #725338]
+
+Contributors:
+  Giovanni Campagna, Adel Gadllah, Carlos Garnacho, Rui Matos, Florian Müllner,
+  Jasper St. Pierre
+
+Translations:
+  Aurimas Černius [lt], Milo Casagrande [it], Balázs Úr [hu],
+  Matej Urbančič [sl], Enrico Nicoletto [pt_BR], Yosef Or Boczko [he],
+  Piotr Drąg [pl], Fran Diéguez [gl]
+
+3.11.90
+=======
+* Use correct output property for backlight control [Robert; #723606]
+* Fix double-scaling on high DPI resolutions [Adel; #723931]
+* Make tile previews a compositor effect [Stefano, Florian; #665758]
+* Misc. bug fixes and cleanups [Ryan, Giovanni, Jasper; #722530, #724257,
+  #724258, #724364, #720631, #707851, #707897]
+
+Contributors:
+  Robert Ancell, Giovanni Campagna, Stefano Facchini, Adel Gadllah,
+  Ryan Lortie, Florian Müllner, Jasper St. Pierre, Rico Tzschichholz
+
+Translations:
+  Shankar Prasad [kn], Khaled Hosny [ar], Marek Černocký [cs],
+  Kjartan Maraas [nb], Daniel Korostil [uk]
+
+3.11.5
+======
+* Fix CSD titlebars being placed off-screen [Jasper; #719772]
+* Expose MetaWindow:skip-taskbar property [Florian; #723307]
+* Fix legacy tray icons showing up blank [Adel; #721596]
+* Fix configuration of cloned monitors [Adel; #710610]
+* Misc bug fixes and cleanups [Jasper, Adel, Jonas; #720631, #723468, #723563]
+
+Contributors:
+  Jonas Ådahl, Marek Ch, Adel Gadllah, Florian Müllner, Jasper St. Pierre
+
+Translations:
+  Rafael Ferreira [pt_BR], Enrico Nicoletto [pt_BR], Fran Diéguez [gl],
+  Chao-Hsiung Liao [zh_HK, zh_TW]
+
+3.11.4
+======
+* Don't leave focus on windows that are being unmanaged [Owen; #711618]
+* Reduce server grabs [Daniel Drake; #721345, #721709]
+* Improve heuristic to determine display output name [Cosimo Cecchi; #721674]
+* Atomically unmaximize both directions [Jasper; #722108]
+* Misc bug fixes [Debarshi, Andika; #721517, #721674]
+
+Contributors:
+  Cosimo Cecchi, Daniel Drake, Debarshi Ray, Jasper St. Pierre,
+  Andika Triwidada, Owen W. Taylor
+
+Translations:
+  Rafael Ferreira [pt_BR], Dimitris Spingos [el], Daniel Mustieles [es],
+  Milo Casagrande [it], Yosef Or Boczko [he]
+
+3.11.3
+======
+* xrandr: Use "hotplug_mode_update" property [Marc-André; #711216]
+* Fix position of attached dialogs for CSD windows [Giovanni, Owen; #707194]
+* Fix focus issues with external OSKs [Jasper; #715030]
+* Add a MetaCullable interface [Jasper; #714706]
+* Fix window group paint volume [Owen; #719669]
+* Fix frame extents problems [Owen; #714707]
+* Add shortcut to move windows between monitors [Florian; #671054]
+* Fix problems with focus tracking [Owen; #720558]
+* Misc. bug fixes and cleanups [Rui, Jasper, Owen; #712833, #678989, #720106,
+  #720417, #720630]
+
+Contributors:
+  Robert Bragg, Giovanni Campagna, Marc-André Lureau, Rui Matos, Alberto Milone,
+  Florian Müllner, Sindhu S, Jasper St. Pierre, Rico Tzschichholz,
+  Owen W. Taylor
+
+Translations:
+  甘露(Gan  Lu) [zh_CN], Khaled Hosny [ar]
+
+3.11.2
+======
+* Fix resize operations using mouse-button-modifier [Lionel; #710251]
+* Misc. fixes and cleanups [Jasper, Rico, Florian; #711731]
+
+Contributors:
+  Lionel Landwerlin, Florian Müllner, Jasper St. Pierre, Rico Tzschichholz
+
+3.11.1
+======
+* Don't require at least one output device to be connected [Giovanni; #709009]
+* Name the guard window [Andrew; #710346]
+* Use new UPower API [Bastien]
+* Expose min-backlight-step [Asad; #710380]
+* Don't focus the no-focus-window for globally active windows [Jasper; #710296]
+* Misc. fixes and cleanups [Jasper, Rico, Olav, Magdalen; #709776]
+
+Contributors:
+  Magdalen Berns, Giovanni Campagna, Asad Mehmood, Bastien Nocera,
+  Jasper St. Pierre, Rico Tzschichholz, Olav Vitters, Andrew Walton
+
+Translations:
+  Reinout van Schouwen [nl]
+
 3.10.1
 ======
 * Don't apply fullscreen workarounds to CSD windows [Giovanni; #708718]

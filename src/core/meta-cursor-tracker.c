@@ -14,9 +14,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Giovanni Campagna <gcampagn@redhat.com>
  */
@@ -36,8 +34,11 @@
 #include <clutter/clutter.h>
 
 #include <gdk/gdk.h>
+#include <gdk/gdkx.h>
 
+#include <X11/cursorfont.h>
 #include <X11/extensions/Xfixes.h>
+#include <X11/Xcursor/Xcursor.h>
 
 #include "meta-cursor-tracker-private.h"
 #include "screen-private.h"
@@ -68,6 +69,106 @@ enum {
 };
 
 static guint signals[LAST_SIGNAL];
+
+static void
+translate_meta_cursor (MetaCursor   cursor,
+                       guint       *glyph_out,
+                       const char **name_out)
+{
+  guint glyph = XC_num_glyphs;
+  const char *name = NULL;
+
+  switch (cursor)
+    {
+    case META_CURSOR_DEFAULT:
+      glyph = XC_left_ptr;
+      break;
+    case META_CURSOR_NORTH_RESIZE:
+      glyph = XC_top_side;
+      break;
+    case META_CURSOR_SOUTH_RESIZE:
+      glyph = XC_bottom_side;
+      break;
+    case META_CURSOR_WEST_RESIZE:
+      glyph = XC_left_side;
+      break;
+    case META_CURSOR_EAST_RESIZE:
+      glyph = XC_right_side;
+      break;
+    case META_CURSOR_SE_RESIZE:
+      glyph = XC_bottom_right_corner;
+      break;
+    case META_CURSOR_SW_RESIZE:
+      glyph = XC_bottom_left_corner;
+      break;
+    case META_CURSOR_NE_RESIZE:
+      glyph = XC_top_right_corner;
+      break;
+    case META_CURSOR_NW_RESIZE:
+      glyph = XC_top_left_corner;
+      break;
+    case META_CURSOR_MOVE_OR_RESIZE_WINDOW:
+      glyph = XC_fleur;
+      break;
+    case META_CURSOR_BUSY:
+      glyph = XC_watch;
+      break;
+    case META_CURSOR_DND_IN_DRAG:
+      name = "dnd-none";
+      break;
+    case META_CURSOR_DND_MOVE:
+      name = "dnd-move";
+      break;
+    case META_CURSOR_DND_COPY:
+      name = "dnd-copy";
+      break;
+    case META_CURSOR_DND_UNSUPPORTED_TARGET:
+      name = "dnd-none";
+      break;
+    case META_CURSOR_POINTING_HAND:
+      glyph = XC_hand2;
+      break;
+    case META_CURSOR_CROSSHAIR:
+      glyph = XC_crosshair;
+      break;
+    case META_CURSOR_IBEAM:
+      glyph = XC_xterm;
+      break;
+
+    default:
+      g_assert_not_reached ();
+      glyph = 0; /* silence compiler */
+      break;
+    }
+
+  *glyph_out = glyph;
+  *name_out = name;
+}
+
+static Cursor
+load_cursor_on_server (MetaDisplay *display,
+                       MetaCursor   cursor)
+{
+  Cursor xcursor;
+  guint glyph;
+  const char *name;
+
+  translate_meta_cursor (cursor, &glyph, &name);
+
+  if (name != NULL)
+    xcursor = XcursorLibraryLoadCursor (display->xdisplay, name);
+  else
+    xcursor = XCreateFontCursor (display->xdisplay, glyph);
+
+  return xcursor;
+}
+
+Cursor
+meta_display_create_x_cursor (MetaDisplay *display,
+                              MetaCursor cursor)
+{
+  return load_cursor_on_server (display, cursor);
+}
 
 static void
 meta_cursor_tracker_init (MetaCursorTracker *self)
@@ -207,7 +308,6 @@ ensure_xfixes_cursor (MetaCursorTracker *tracker)
                                           cursor_image->width,
                                           cursor_image->height,
                                           CLUTTER_CAIRO_FORMAT_ARGB32,
-                                          COGL_PIXEL_FORMAT_ANY,
                                           cursor_image->width * 4, /* stride */
                                           cursor_data,
                                           NULL);
@@ -287,7 +387,7 @@ meta_cursor_tracker_get_pointer (MetaCursorTracker   *tracker,
   GdkScreen *gscreen;
 
   gmanager = gdk_display_get_device_manager (gdk_display_get_default ());
-  gdevice = gdk_device_manager_get_client_pointer (gmanager);
+  gdevice = gdk_x11_device_manager_lookup (gmanager, META_VIRTUAL_CORE_POINTER_ID);
 
   gdk_device_get_position (gdevice, &gscreen, x, y);
   gdk_device_get_state (gdevice,

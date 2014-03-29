@@ -14,9 +14,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef META_COMPOSITOR_H
@@ -66,6 +64,8 @@ void meta_compositor_unmanage_screen (MetaCompositor *compositor,
 
 void meta_compositor_window_shape_changed (MetaCompositor *compositor,
                                            MetaWindow     *window);
+void meta_compositor_window_opacity_changed (MetaCompositor *compositor,
+                                             MetaWindow     *window);
 
 gboolean meta_compositor_process_event (MetaCompositor *compositor,
                                         XEvent         *event,
@@ -75,11 +75,10 @@ gboolean meta_compositor_filter_keybinding (MetaCompositor *compositor,
                                             MetaScreen     *screen,
                                             MetaKeyBinding *binding);
 
-void meta_compositor_add_window    (MetaCompositor *compositor,
-                                    MetaWindow     *window);
-void meta_compositor_remove_window (MetaCompositor *compositor,
-                                    MetaWindow     *window);
-
+void meta_compositor_add_window        (MetaCompositor      *compositor,
+                                        MetaWindow          *window);
+void meta_compositor_remove_window     (MetaCompositor      *compositor,
+                                        MetaWindow          *window);
 void meta_compositor_show_window       (MetaCompositor      *compositor,
                                         MetaWindow          *window,
                                         MetaCompEffect       effect);
@@ -101,10 +100,6 @@ void meta_compositor_unmaximize_window (MetaCompositor      *compositor,
                                         MetaRectangle       *old_rect,
                                         MetaRectangle       *new_rect);
 
-void meta_compositor_window_mapped        (MetaCompositor *compositor,
-                                           MetaWindow     *window);
-void meta_compositor_window_unmapped      (MetaCompositor *compositor,
-                                           MetaWindow     *window);
 void meta_compositor_sync_window_geometry (MetaCompositor *compositor,
                                            MetaWindow     *window,
                                            gboolean        did_placement);
@@ -125,5 +120,13 @@ void meta_compositor_sync_screen_size          (MetaCompositor *compositor,
 
 void meta_compositor_flash_screen              (MetaCompositor *compositor,
                                                 MetaScreen     *screen);
+
+void meta_compositor_show_tile_preview (MetaCompositor *compositor,
+                                        MetaScreen     *screen,
+                                        MetaWindow     *window,
+                                        MetaRectangle  *tile_rect,
+                                        int             tile_monitor_number);
+void meta_compositor_hide_tile_preview (MetaCompositor *compositor,
+                                        MetaScreen     *screen);
 
 #endif /* META_COMPOSITOR_H */

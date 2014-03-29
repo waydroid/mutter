@@ -20,9 +20,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "config.h"
@@ -187,7 +185,7 @@ output_get_backlight_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
 
   XRRGetOutputProperty (manager_xrandr->xdisplay,
                         (XID)output->output_id,
-                        display->atom_BACKLIGHT,
+                        display->atom_Backlight,
                         0, G_MAXLONG, False, False, XA_INTEGER,
                         &actual_type, &actual_format,
                         &nitems, &bytes_after, &buffer);
@@ -212,7 +210,7 @@ output_get_backlight_limits_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
   meta_error_trap_push (display);
   info = XRRQueryOutputProperty (manager_xrandr->xdisplay,
                                  (XID)output->output_id,
-                                 display->atom_BACKLIGHT);
+                                 display->atom_Backlight);
   meta_error_trap_pop (display);
 
   if (info == NULL)
@@ -310,6 +308,29 @@ read_output_edid (MetaMonitorManagerXrandr *manager_xrandr,
 
   return NULL;
 }
+
+static gboolean
+output_get_hotplug_mode_update (MetaMonitorManagerXrandr *manager_xrandr,
+                                XID                       output_id)
+{
+  MetaDisplay *display = meta_get_display ();
+  XRRPropertyInfo *info;
+  gboolean result = FALSE;
+
+  meta_error_trap_push (display);
+  info = XRRQueryOutputProperty (manager_xrandr->xdisplay, output_id,
+                                 display->atom_hotplug_mode_update);
+  meta_error_trap_pop (display);
+
+  if (info)
+    {
+      result = TRUE;
+      XFree (info);
+    }
+
+  return result;
+}
+
 
 static void
 meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
@@ -430,8 +451,10 @@ meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
       XRRFreeCrtcInfo (crtc);
     }
 
+  meta_error_trap_push (meta_get_display ());
   primary_output = XRRGetOutputPrimary (manager_xrandr->xdisplay,
 					DefaultRootWindow (manager_xrandr->xdisplay));
+  meta_error_trap_pop (meta_get_display ());
 
   n_actual_outputs = 0;
   for (i = 0; i < (unsigned)resources->noutput; i++)
@@ -484,6 +507,8 @@ meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
 	  meta_output->width_mm = output->mm_width;
 	  meta_output->height_mm = output->mm_height;
 	  meta_output->subpixel_order = COGL_SUBPIXEL_ORDER_UNKNOWN;
+          meta_output->hotplug_mode_update =
+              output_get_hotplug_mode_update (manager_xrandr, meta_output->output_id);
 
 	  meta_output->n_modes = output->nmode;
 	  meta_output->modes = g_new0 (MetaMonitorMode *, meta_output->n_modes);
@@ -668,10 +693,11 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
 						 unsigned int         n_outputs)
 {
   MetaMonitorManagerXrandr *manager_xrandr = META_MONITOR_MANAGER_XRANDR (manager);
+  MetaDisplay *display = meta_get_display ();
   unsigned i;
   int width, height, width_mm, height_mm;
 
-  meta_display_grab (meta_get_display ());
+  meta_display_grab (display);
 
   /* First compute the new size of the screen (framebuffer) */
   width = 0; height = 0;
@@ -765,10 +791,10 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
    */
   width_mm = (width / DPI_FALLBACK) * 25.4 + 0.5;
   height_mm = (height / DPI_FALLBACK) * 25.4 + 0.5;
-  meta_error_trap_push (meta_get_display ());
+  meta_error_trap_push (display);
   XRRSetScreenSize (manager_xrandr->xdisplay, DefaultRootWindow (manager_xrandr->xdisplay),
                     width, height, width_mm, height_mm);
-  meta_error_trap_pop (meta_get_display ());
+  meta_error_trap_pop (display);
 
   for (i = 0; i < n_crtcs; i++)
     {
@@ -825,7 +851,7 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
               goto next;
             }
 
-          meta_error_trap_push (meta_get_display ());
+          meta_error_trap_push (display);
           ok = XRRSetCrtcConfig (manager_xrandr->xdisplay,
                                  manager_xrandr->resources,
                                  (XID)crtc->crtc_id,
@@ -834,7 +860,7 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
                                  (XID)mode->mode_id,
                                  wl_transform_to_xrandr (crtc_info->transform),
                                  outputs, n_outputs);
-          meta_error_trap_pop (meta_get_display ());
+          meta_error_trap_pop (display);
 
           if (ok != Success)
             {
@@ -875,9 +901,11 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
 
       if (output_info->is_primary)
         {
+          meta_error_trap_push (display);
           XRRSetOutputPrimary (manager_xrandr->xdisplay,
                                DefaultRootWindow (manager_xrandr->xdisplay),
                                (XID)output_info->output->output_id);
+          meta_error_trap_pop (display);
         }
 
       output_set_presentation_xrandr (manager_xrandr,
@@ -903,7 +931,7 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
       output->is_primary = FALSE;
     }
 
-  meta_display_ungrab (meta_get_display ());
+  meta_display_ungrab (display);
 }
 
 static void
@@ -920,7 +948,7 @@ meta_monitor_manager_xrandr_change_backlight (MetaMonitorManager *manager,
   meta_error_trap_push (display);
   XRRChangeOutputProperty (manager_xrandr->xdisplay,
                            (XID)output->output_id,
-                           display->atom_BACKLIGHT,
+                           display->atom_Backlight,
                            XA_INTEGER, 32, PropModeReplace,
                            (unsigned char *) &hw_value, 1);
   meta_error_trap_pop (display);
@@ -971,6 +999,16 @@ meta_monitor_manager_xrandr_set_crtc_gamma (MetaMonitorManager *manager,
   XRRFreeGamma (gamma);
 }
 
+static void
+meta_monitor_manager_xrandr_rebuild_derived (MetaMonitorManager *manager)
+{
+  /* This will be a no-op if the change was from our side, as
+     we already called it in the DBus method handler */
+  meta_monitor_config_update_current (manager->config, manager);
+
+  meta_monitor_manager_rebuild_derived (manager);
+}
+
 static gboolean
 meta_monitor_manager_xrandr_handle_xevent (MetaMonitorManager *manager,
 					   XEvent             *event)
@@ -980,6 +1018,7 @@ meta_monitor_manager_xrandr_handle_xevent (MetaMonitorManager *manager,
   MetaCRTC *old_crtcs;
   MetaMonitorMode *old_modes;
   int n_old_outputs;
+  gboolean new_config;
 
   if ((event->type - manager_xrandr->rr_event_base) != RRScreenChangeNotify)
     return FALSE;
@@ -995,31 +1034,36 @@ meta_monitor_manager_xrandr_handle_xevent (MetaMonitorManager *manager,
   manager->serial++;
   meta_monitor_manager_xrandr_read_current (manager);
 
-  /* Check if the current intended configuration has the same outputs
-     as the new real one, or if the event is a result of an XRandR call.
-     If so, we can go straight to rebuild the logical config and tell
-     the outside world.
-     Otherwise, this event was caused by hotplug, so give a chance to
-     MetaMonitorConfig.
+  new_config = manager_xrandr->resources->timestamp >=
+    manager_xrandr->resources->configTimestamp;
+  if (meta_monitor_manager_has_hotplug_mode_update (manager))
 
-     Note that we need to check both the timestamps and the list of
-     outputs, because the X server might emit spurious events with
-     new configTimestamps (bug 702804), and the driver may have
-     changed the EDID for some other reason (old broken qxl and vbox
-     drivers...).
-  */
-  if (manager_xrandr->resources->timestamp >= manager_xrandr->resources->configTimestamp ||
-      meta_monitor_config_match_current (manager->config, manager))
     {
-      /* This will be a no-op if the change was from our side, as
-         we already called it in the DBus method handler */
-      meta_monitor_config_update_current (manager->config, manager);
-
-      meta_monitor_manager_rebuild_derived (manager);
+      /* Check if the current intended configuration is a result of an
+         XRandR call.  Otherwise, hotplug_mode_update tells us to get
+         a new preferred mode on hotplug events to handle dynamic
+         guest resizing. */
+      if (new_config)
+        meta_monitor_manager_xrandr_rebuild_derived (manager);
+      else
+        meta_monitor_config_make_default (manager->config, manager);
     }
   else
     {
-      if (!meta_monitor_config_apply_stored (manager->config, manager))
+      /* Check if the current intended configuration has the same outputs
+         as the new real one, or if the event is a result of an XRandR call.
+         If so, we can go straight to rebuild the logical config and tell
+         the outside world.
+         Otherwise, this event was caused by hotplug, so give a chance to
+         MetaMonitorConfig.
+
+         Note that we need to check both the timestamps and the list of
+         outputs, because the X server might emit spurious events with new
+         configTimestamps (bug 702804), and the driver may have changed
+         the EDID for some other reason (old qxl and vbox drivers). */
+      if (new_config || meta_monitor_config_match_current (manager->config, manager))
+        meta_monitor_manager_xrandr_rebuild_derived (manager);
+      else if (!meta_monitor_config_apply_stored (manager->config, manager))
         meta_monitor_config_make_default (manager->config, manager);
     }
 

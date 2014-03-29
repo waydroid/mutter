@@ -19,9 +19,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef META_COMMON_H
@@ -215,21 +213,6 @@ typedef enum
   META_GRAB_OP_KEYBOARD_RESIZING_SW,
   META_GRAB_OP_KEYBOARD_RESIZING_NW,
 
-  /* Alt+Tab */
-  META_GRAB_OP_KEYBOARD_TABBING_NORMAL,
-  META_GRAB_OP_KEYBOARD_TABBING_DOCK,
-
-  /* Alt+Esc */
-  META_GRAB_OP_KEYBOARD_ESCAPING_NORMAL,
-  META_GRAB_OP_KEYBOARD_ESCAPING_DOCK,
-
-  META_GRAB_OP_KEYBOARD_ESCAPING_GROUP,
-  
-  /* Alt+F6 */
-  META_GRAB_OP_KEYBOARD_TABBING_GROUP,
-  
-  META_GRAB_OP_KEYBOARD_WORKSPACE_SWITCHING,
-  
   /* Frame button ops */
   META_GRAB_OP_CLICKING_MINIMIZE,
   META_GRAB_OP_CLICKING_MAXIMIZE,

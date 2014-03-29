@@ -19,9 +19,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 /**
@@ -33,7 +31,7 @@
 #include <config.h>
 #include "screen-private.h"
 #include <meta/main.h>
-#include <meta/util.h>
+#include "util-private.h"
 #include <meta/errors.h>
 #include "window-private.h"
 #include "frame.h"
@@ -392,6 +390,8 @@ int
 meta_screen_monitor_index_to_xinerama_index (MetaScreen *screen,
                                              int         index)
 {
+  g_return_val_if_fail (index >= 0 && index < screen->n_monitor_infos, -1);
+
   meta_screen_ensure_xinerama_indices (screen);
 
   return screen->monitor_infos[index].xinerama_index;
@@ -454,10 +454,9 @@ create_guard_window (Display *xdisplay, MetaScreen *screen)
   XSetWindowAttributes attributes;
   Window guard_window;
   gulong create_serial;
-  
+
   attributes.event_mask = NoEventMask;
   attributes.override_redirect = True;
-  attributes.background_pixel = BlackPixel (xdisplay, screen->number);
 
   /* We have to call record_add() after we have the new window ID,
    * so save the serial for the CreateWindow request until then */
@@ -470,11 +469,14 @@ create_guard_window (Display *xdisplay, MetaScreen *screen)
 		   screen->rect.width,
 		   screen->rect.height,
 		   0, /* border width */
-		   CopyFromParent, /* depth */
-		   CopyFromParent, /* class */
+		   0, /* depth */
+		   InputOnly, /* class */
 		   CopyFromParent, /* visual */
-		   CWEventMask|CWOverrideRedirect|CWBackPixel,
+		   CWEventMask|CWOverrideRedirect,
 		   &attributes);
+
+  /* https://bugzilla.gnome.org/show_bug.cgi?id=710346 */
+  XStoreName (xdisplay, guard_window, "mutter guard window");
 
   {
     unsigned char mask_bits[XIMaskLen (XI_LASTEVENT)] = { 0 };
@@ -758,10 +760,6 @@ meta_screen_new (MetaDisplay *display,
   screen->ui = meta_ui_new (screen->display->xdisplay,
                             screen->xscreen);
 
-  screen->tab_popup = NULL;
-  screen->ws_popup = NULL;
-  screen->tile_preview = NULL;
-
   screen->tile_preview_timeout_id = 0;
 
   screen->stack = meta_stack_new (screen);
@@ -856,9 +854,9 @@ meta_screen_free (MetaScreen *screen,
                   screen->wm_sn_selection_window);
   
   if (screen->work_area_later != 0)
-    g_source_remove (screen->work_area_later);
+    meta_later_remove (screen->work_area_later);
   if (screen->check_fullscreen_later != 0)
-    g_source_remove (screen->check_fullscreen_later);
+    meta_later_remove (screen->check_fullscreen_later);
 
   if (screen->monitor_infos)
     g_free (screen->monitor_infos);
@@ -866,9 +864,6 @@ meta_screen_free (MetaScreen *screen,
   if (screen->tile_preview_timeout_id)
     g_source_remove (screen->tile_preview_timeout_id);
 
-  if (screen->tile_preview)
-    meta_tile_preview_free (screen->tile_preview);
-  
   g_free (screen->screen_name);
 
   g_object_unref (screen);
@@ -877,83 +872,31 @@ meta_screen_free (MetaScreen *screen,
   meta_display_ungrab (display);
 }
 
-typedef struct
-{
-  Window		xwindow;
-  XWindowAttributes	attrs;
-} WindowInfo;
-
-static GList *
-list_windows (MetaScreen *screen)
-{
-  Window ignored1, ignored2;
-  Window *children;
-  guint n_children, i;
-  GList *result;
-
-  XQueryTree (screen->display->xdisplay,
-              screen->xroot,
-              &ignored1, &ignored2, &children, &n_children);
-
-  result = NULL;
-  for (i = 0; i < n_children; ++i)
-    {
-      WindowInfo *info = g_new0 (WindowInfo, 1);
-
-      meta_error_trap_push_with_return (screen->display);
-      
-      XGetWindowAttributes (screen->display->xdisplay,
-                            children[i], &info->attrs);
-
-      if (meta_error_trap_pop_with_return (screen->display))
-	{
-          meta_verbose ("Failed to get attributes for window 0x%lx\n",
-                        children[i]);
-	  g_free (info);
-        }
-      else
-        {
-	  info->xwindow = children[i];
-	}
-
-      result = g_list_prepend (result, info);
-    }
-
-  if (children)
-    XFree (children);
-
-  return g_list_reverse (result);
-}
-
 void
 meta_screen_manage_all_windows (MetaScreen *screen)
 {
-  GList *windows;
-  GList *list;
-
-  meta_display_grab (screen->display);
+  Window *_children;
+  Window *children;
+  int n_children, i;
 
   if (screen->guard_window == None)
     screen->guard_window = create_guard_window (screen->display->xdisplay,
                                                 screen);
 
-  windows = list_windows (screen);
-
   meta_stack_freeze (screen->stack);
-  for (list = windows; list != NULL; list = list->next)
+  meta_stack_tracker_get_stack (screen->stack_tracker, &_children, &n_children);
+
+  /* Copy the stack as it will be modified as part of the loop */
+  children = g_memdup (_children, sizeof (Window) * n_children);
+
+  for (i = 0; i < n_children; ++i)
     {
-      WindowInfo *info = list->data;
-
-      meta_window_new_with_attrs (screen->display, info->xwindow, TRUE,
-                                  META_COMP_EFFECT_NONE,
-                                  &info->attrs);
+      meta_window_new (screen->display, children[i], TRUE,
+                       META_COMP_EFFECT_NONE);
     }
+
+  g_free (children);
   meta_stack_thaw (screen->stack);
-
-  g_list_foreach (windows, (GFunc)g_free, NULL);
-  g_list_free (windows);
-
-  meta_display_ungrab (screen->display);
 }
 
 /**
@@ -1479,274 +1422,14 @@ meta_screen_update_cursor (MetaScreen *screen)
                                        screen->current_cursor);
 }
 
-void
-meta_screen_tab_popup_create (MetaScreen      *screen,
-                              MetaTabList      list_type,
-                              MetaTabShowType  show_type,
-                              MetaWindow      *initial_selection)
-{
-  MetaTabEntry *entries;
-  GList *tab_list;
-  GList *tmp;
-  int len;
-  int i;
-
-  if (screen->tab_popup)
-    return;
-
-  tab_list = meta_display_get_tab_list (screen->display,
-                                        list_type,
-                                        screen,
-                                        screen->active_workspace);
-
-  len = g_list_length (tab_list);
-
-  entries = g_new (MetaTabEntry, len + 1);
-  entries[len].key = NULL;
-  entries[len].title = NULL;
-  entries[len].icon = NULL;
-
-  i = 0;
-  tmp = tab_list;
-  while (i < len)
-    {
-      MetaWindow *window;
-      MetaRectangle r;
-
-      window = tmp->data;
-
-      entries[i].key = (MetaTabEntryKey) window;
-      entries[i].title = window->title;
-      entries[i].icon = g_object_ref (window->icon);
-      entries[i].blank = FALSE;
-      entries[i].hidden = !meta_window_showing_on_its_workspace (window);
-      entries[i].demands_attention = window->wm_state_demands_attention;
-
-      if (show_type == META_TAB_SHOW_INSTANTLY ||
-          !entries[i].hidden                   ||
-          !meta_window_get_icon_geometry (window, &r))
-        meta_window_get_outer_rect (window, &r);
-
-      entries[i].rect = r;
-
-      /* Find inside of highlight rectangle to be used when window is
-       * outlined for tabbing.  This should be the size of the
-       * east/west frame, and the size of the south frame, on those
-       * sides.  On the top it should be the size of the south frame
-       * edge.
-       */
-#define OUTLINE_WIDTH 5
-      /* Top side */
-      if (!entries[i].hidden &&
-          window->frame && window->frame->bottom_height > 0 &&
-          window->frame->child_y >= window->frame->bottom_height)
-        entries[i].inner_rect.y = window->frame->bottom_height;
-      else
-        entries[i].inner_rect.y = OUTLINE_WIDTH;
-
-      /* Bottom side */
-      if (!entries[i].hidden &&
-          window->frame && window->frame->bottom_height != 0)
-        entries[i].inner_rect.height = r.height
-          - entries[i].inner_rect.y - window->frame->bottom_height;
-      else
-        entries[i].inner_rect.height = r.height
-          - entries[i].inner_rect.y - OUTLINE_WIDTH;
-
-      /* Left side */
-      if (!entries[i].hidden && window->frame && window->frame->child_x != 0)
-        entries[i].inner_rect.x = window->frame->child_x;
-      else
-        entries[i].inner_rect.x = OUTLINE_WIDTH;
-
-      /* Right side */
-      if (!entries[i].hidden &&
-          window->frame && window->frame->right_width != 0)
-        entries[i].inner_rect.width = r.width
-          - entries[i].inner_rect.x - window->frame->right_width;
-      else
-        entries[i].inner_rect.width = r.width
-          - entries[i].inner_rect.x - OUTLINE_WIDTH;
-
-      ++i;
-      tmp = tmp->next;
-    }
-
-  if (!meta_prefs_get_no_tab_popup ())
-    screen->tab_popup = meta_ui_tab_popup_new (entries,
-                                               screen->number,
-                                               len,
-                                               5, /* FIXME */
-                                               TRUE);
-
-  for (i = 0; i < len; i++)
-    g_object_unref (entries[i].icon);
-
-  g_free (entries);
-
-  g_list_free (tab_list);
-
-  meta_ui_tab_popup_select (screen->tab_popup,
-                            (MetaTabEntryKey) initial_selection);
-
-  if (show_type != META_TAB_SHOW_INSTANTLY)
-    meta_ui_tab_popup_set_showing (screen->tab_popup, TRUE);
-}
-
-void
-meta_screen_tab_popup_forward (MetaScreen *screen)
-{
-  g_return_if_fail (screen->tab_popup != NULL);
-
-  meta_ui_tab_popup_forward (screen->tab_popup);
-}
-
-void
-meta_screen_tab_popup_backward (MetaScreen *screen)
-{
-  g_return_if_fail (screen->tab_popup != NULL);
-
-  meta_ui_tab_popup_backward (screen->tab_popup);
-}
-
-MetaWindow *
-meta_screen_tab_popup_get_selected (MetaScreen *screen)
-{
-  g_return_val_if_fail (screen->tab_popup != NULL, NULL);
-
-  return (MetaWindow *) meta_ui_tab_popup_get_selected (screen->tab_popup);
-}
-
-void
-meta_screen_tab_popup_destroy (MetaScreen *screen)
-{
-  if (screen->tab_popup)
-    {
-      meta_ui_tab_popup_free (screen->tab_popup);
-      screen->tab_popup = NULL;
-    }
-}
-
-void
-meta_screen_workspace_popup_create (MetaScreen    *screen,
-                                    MetaWorkspace *initial_selection)
-{
-  MetaTabEntry *entries;
-  int len;
-  int i;
-  MetaWorkspaceLayout layout;
-  int n_workspaces;
-  int current_workspace;
-
-  if (screen->ws_popup || meta_prefs_get_no_tab_popup ())
-    return;
-
-  current_workspace = meta_workspace_index (screen->active_workspace);
-  n_workspaces = meta_screen_get_n_workspaces (screen);
-
-  meta_screen_calc_workspace_layout (screen, n_workspaces,
-                                     current_workspace, &layout);
-
-  len = layout.grid_area;
-  
-  entries = g_new (MetaTabEntry, len + 1);
-  entries[len].key = NULL;
-  entries[len].title = NULL;
-  entries[len].icon = NULL;
-
-  i = 0;
-  while (i < len)
-    {
-      if (layout.grid[i] >= 0)
-        {
-          MetaWorkspace *workspace;
-          
-          workspace = meta_screen_get_workspace_by_index (screen,
-                                                          layout.grid[i]);
-          
-          entries[i].key = (MetaTabEntryKey) workspace;
-          entries[i].title = meta_workspace_get_name (workspace);
-          entries[i].icon = NULL;
-          entries[i].blank = FALSE;
-          
-          g_assert (entries[i].title != NULL);
-        }
-      else
-        {
-          entries[i].key = NULL;
-          entries[i].title = NULL;
-          entries[i].icon = NULL;
-          entries[i].blank = TRUE;
-        }
-      entries[i].hidden = FALSE;
-      entries[i].demands_attention = FALSE;
-
-      ++i;
-    }
-
-  screen->ws_popup = meta_ui_tab_popup_new (entries,
-                                            screen->number,
-                                            len,
-                                            layout.cols,
-                                            FALSE);
-
-  g_free (entries);
-  meta_screen_free_workspace_layout (&layout);
-
-  meta_ui_tab_popup_select (screen->ws_popup,
-                            (MetaTabEntryKey) initial_selection);
-  meta_ui_tab_popup_set_showing (screen->ws_popup, TRUE);
-}
-
-void
-meta_screen_workspace_popup_select (MetaScreen    *screen,
-                                    MetaWorkspace *workspace)
-{
-  g_return_if_fail (screen->ws_popup != NULL);
-
-  meta_ui_tab_popup_select (screen->ws_popup,
-                            (MetaTabEntryKey) workspace);
-}
-
-MetaWorkspace *
-meta_screen_workspace_popup_get_selected (MetaScreen *screen)
-{
-  g_return_val_if_fail (screen->ws_popup != NULL, NULL);
-
-  return (MetaWorkspace *) meta_ui_tab_popup_get_selected (screen->ws_popup);
-}
-
-void
-meta_screen_workspace_popup_destroy (MetaScreen *screen)
-{
-  if (screen->ws_popup)
-    {
-      meta_ui_tab_popup_free (screen->ws_popup);
-      screen->ws_popup = NULL;
-    }
-}
-
 static gboolean
-meta_screen_tile_preview_update_timeout (gpointer data)
+meta_screen_update_tile_preview_timeout (gpointer data)
 {
   MetaScreen *screen = data;
   MetaWindow *window = screen->display->grab_window;
   gboolean needs_preview = FALSE;
 
   screen->tile_preview_timeout_id = 0;
-
-  if (!screen->tile_preview)
-    {
-      Window xwindow;
-      gulong create_serial;
-
-      screen->tile_preview = meta_tile_preview_new (screen->number);
-      xwindow = meta_tile_preview_get_xwindow (screen->tile_preview,
-                                               &create_serial);
-      meta_stack_tracker_record_add (screen->stack_tracker,
-                                     xwindow,
-                                     create_serial);
-    }
 
   if (window)
     {
@@ -1772,12 +1455,16 @@ meta_screen_tile_preview_update_timeout (gpointer data)
   if (needs_preview)
     {
       MetaRectangle tile_rect;
+      int monitor;
 
+      monitor = meta_window_get_current_tile_monitor_number (window);
       meta_window_get_current_tile_area (window, &tile_rect);
-      meta_tile_preview_show (screen->tile_preview, &tile_rect);
+      meta_compositor_show_tile_preview (screen->display->compositor,
+                                         screen, window, &tile_rect, monitor);
     }
   else
-    meta_tile_preview_hide (screen->tile_preview);
+    meta_compositor_hide_tile_preview (screen->display->compositor,
+                                       screen);
 
   return FALSE;
 }
@@ -1785,7 +1472,7 @@ meta_screen_tile_preview_update_timeout (gpointer data)
 #define TILE_PREVIEW_TIMEOUT_MS 200
 
 void
-meta_screen_tile_preview_update (MetaScreen *screen,
+meta_screen_update_tile_preview (MetaScreen *screen,
                                  gboolean    delay)
 {
   if (delay)
@@ -1795,7 +1482,7 @@ meta_screen_tile_preview_update (MetaScreen *screen,
 
       screen->tile_preview_timeout_id =
         g_timeout_add (TILE_PREVIEW_TIMEOUT_MS,
-                       meta_screen_tile_preview_update_timeout,
+                       meta_screen_update_tile_preview_timeout,
                        screen);
     }
   else
@@ -1803,18 +1490,18 @@ meta_screen_tile_preview_update (MetaScreen *screen,
       if (screen->tile_preview_timeout_id > 0)
         g_source_remove (screen->tile_preview_timeout_id);
 
-      meta_screen_tile_preview_update_timeout ((gpointer)screen);
+      meta_screen_update_tile_preview_timeout ((gpointer)screen);
     }
 }
 
 void
-meta_screen_tile_preview_hide (MetaScreen *screen)
+meta_screen_hide_tile_preview (MetaScreen *screen)
 {
   if (screen->tile_preview_timeout_id > 0)
     g_source_remove (screen->tile_preview_timeout_id);
 
-  if (screen->tile_preview)
-    meta_tile_preview_hide (screen->tile_preview);
+  meta_compositor_hide_tile_preview (screen->display->compositor,
+                                     screen);
 }
 
 MetaWindow*
@@ -1908,7 +1595,7 @@ meta_screen_get_monitor_for_window (MetaScreen *screen,
 {
   MetaRectangle window_rect;
   
-  meta_window_get_outer_rect (window, &window_rect);
+  meta_window_get_frame_rect (window, &window_rect);
 
   return meta_screen_get_monitor_for_rect (screen, &window_rect);
 }

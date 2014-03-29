@@ -26,9 +26,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef META_WINDOW_PRIVATE_H
@@ -352,6 +350,12 @@ struct _MetaWindow
   /* if non-NULL, the opaque region _NET_WM_OPAQUE_REGION */
   cairo_region_t *opaque_region;
 
+  /* the input shape region for picking */
+  cairo_region_t *input_region;
+
+  /* _NET_WM_WINDOW_OPACITY */
+  guint opacity;
+
   /* if TRUE, the we have the new form of sync request counter which
    * also handles application frames */
   guint extended_sync_request_counter : 1;
@@ -484,12 +488,8 @@ struct _MetaWindowClass
 
 MetaWindow* meta_window_new                (MetaDisplay *display,
                                             Window       xwindow,
-                                            gboolean     must_be_viewable);
-MetaWindow* meta_window_new_with_attrs     (MetaDisplay       *display,
-                                            Window             xwindow,
-                                            gboolean           must_be_viewable,
-                                            MetaCompEffect     effect,
-                                            XWindowAttributes *attrs);
+                                            gboolean     must_be_viewable,
+                                            MetaCompEffect     effect);
 void        meta_window_unmanage           (MetaWindow  *window,
                                             guint32      timestamp);
 void        meta_window_calc_showing       (MetaWindow  *window);
@@ -511,6 +511,7 @@ void        meta_window_update_fullscreen_monitors (MetaWindow    *window,
                                                     unsigned long  bottom,
                                                     unsigned long  left,
                                                     unsigned long  right);
+
 
 /* args to move are window pos, not frame pos */
 void        meta_window_move               (MetaWindow  *window,
@@ -606,9 +607,6 @@ void meta_window_show_menu (MetaWindow *window,
                             int         button,
                             guint32     timestamp);
 
-gboolean meta_window_titlebar_is_onscreen    (MetaWindow *window);
-void     meta_window_shove_titlebar_onscreen (MetaWindow *window);
-
 void meta_window_set_gravity (MetaWindow *window,
                               int         gravity);
 
@@ -622,6 +620,7 @@ void meta_window_handle_mouse_grab_op_event (MetaWindow *window,
 
 GList* meta_window_get_workspaces (MetaWindow *window);
 
+int meta_window_get_current_tile_monitor_number (MetaWindow *window);
 void meta_window_get_current_tile_area         (MetaWindow    *window,
                                                 MetaRectangle *tile_area);
 
@@ -655,6 +654,8 @@ void meta_window_recalc_features    (MetaWindow *window);
 
 void meta_window_recalc_window_type (MetaWindow *window);
 
+void meta_window_frame_size_changed (MetaWindow *window);
+
 void meta_window_stack_just_below (MetaWindow *window,
                                    MetaWindow *below_this_one);
 
@@ -678,12 +679,18 @@ void meta_window_compute_tile_match (MetaWindow *window);
 
 gboolean meta_window_updates_are_frozen (MetaWindow *window);
 
-void meta_window_set_opaque_region        (MetaWindow     *window,
-                                           cairo_region_t *region);
 void meta_window_update_opaque_region_x11 (MetaWindow *window);
-
-void meta_window_set_shape_region         (MetaWindow     *window,
-                                           cairo_region_t *region);
+void meta_window_update_input_region_x11  (MetaWindow *window);
 void meta_window_update_shape_region_x11  (MetaWindow *window);
+
+void meta_window_set_opacity              (MetaWindow *window,
+                                           guint       opacity);
+
+Window meta_window_get_toplevel_xwindow (MetaWindow *window);
+
+void meta_window_get_client_area_rect (const MetaWindow      *window,
+                                       cairo_rectangle_int_t *rect);
+
+gboolean meta_window_is_client_decorated (MetaWindow *window);
 
 #endif

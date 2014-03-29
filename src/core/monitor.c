@@ -20,9 +20,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "config.h"
@@ -33,7 +31,7 @@
 #include <clutter/clutter.h>
 
 #include <meta/main.h>
-#include <meta/util.h>
+#include "util-private.h"
 #include <meta/errors.h>
 #include "monitor-private.h"
 
@@ -406,7 +404,7 @@ make_logical_config (MetaMonitorManager *manager)
 
       for (j = 0; j < monitor_infos->len; j++)
         {
-          MetaMonitorInfo *info = &g_array_index (monitor_infos, MetaMonitorInfo, i);
+          MetaMonitorInfo *info = &g_array_index (monitor_infos, MetaMonitorInfo, j);
           if (meta_rectangle_equal (&crtc->rect,
                                     &info->rect))
             {
@@ -691,46 +689,60 @@ static char *
 make_display_name (MetaMonitorManager *manager,
                    MetaOutput         *output)
 {
+  char *inches = NULL;
+  char *vendor_name = NULL;
+  char *ret;
+
   if (g_str_has_prefix (output->name, "LVDS") ||
       g_str_has_prefix (output->name, "eDP"))
-    return g_strdup (_("Built-in display"));
+    {
+      ret = g_strdup (_("Built-in display"));
+      goto out;
+    }
 
-  if (output->width_mm != -1 && output->height_mm != -1)
+  if (output->width_mm > 0 && output->height_mm > 0)
     {
       double d = sqrt (output->width_mm * output->width_mm +
                        output->height_mm * output->height_mm);
-      char *inches = diagonal_to_str (d / 25.4);
-      char *vendor_name;
-      char *ret;
+      inches = diagonal_to_str (d / 25.4);
+    }
 
-      if (g_strcmp0 (output->vendor, "unknown") != 0)
-        {
-          if (!manager->pnp_ids)
-            manager->pnp_ids = gnome_pnp_ids_new ();
+  if (g_strcmp0 (output->vendor, "unknown") != 0)
+    {
+      if (!manager->pnp_ids)
+        manager->pnp_ids = gnome_pnp_ids_new ();
 
-          vendor_name = gnome_pnp_ids_get_pnp_id (manager->pnp_ids,
-                                                  output->vendor);
+      vendor_name = gnome_pnp_ids_get_pnp_id (manager->pnp_ids,
+                                              output->vendor);
 
-          ret = g_strdup_printf ("%s %s", vendor_name, inches);
-
-          g_free (vendor_name);
-        }
-      else
-        {
-          /* TRANSLATORS: this is a monitor name (in case we don't know
-             the vendor), it's Unknown followed by a size in inches,
-             like 'Unknown 15"'
-          */
-          ret = g_strdup_printf (_("Unknown %s"), inches);
-        }
-
-      g_free (inches);
-      return ret;
+      if (!vendor_name)
+        vendor_name = g_strdup (output->vendor);
     }
   else
     {
-      return g_strdup (output->vendor);
+      if (inches != NULL)
+        vendor_name = g_strdup (_("Unknown"));
+      else
+        vendor_name = g_strdup (_("Unknown Display"));
     }
+
+  if (inches != NULL)
+    {
+      /* TRANSLATORS: this is a monitor vendor name, followed by a
+       * size in inches, like 'Dell 15"'
+       */
+      ret = g_strdup_printf (_("%s %s"), vendor_name, inches);
+    }
+  else
+    {
+      ret = g_strdup (vendor_name);
+    }
+
+ out:
+  g_free (inches);
+  g_free (vendor_name);
+
+  return ret;
 }
 
 static gboolean
@@ -806,6 +818,9 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
                              g_variant_new_take_string (make_display_name (manager, output)));
       g_variant_builder_add (&properties, "{sv}", "backlight",
                              g_variant_new_int32 (output->backlight));
+      g_variant_builder_add (&properties, "{sv}", "min-backlight-step",
+                             g_variant_new_int32 ((output->backlight_max - output->backlight_min) ?
+                                                  100 / (output->backlight_max - output->backlight_min) : -1));
       g_variant_builder_add (&properties, "{sv}", "primary",
                              g_variant_new_boolean (output->is_primary));
       g_variant_builder_add (&properties, "{sv}", "presentation",

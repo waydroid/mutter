@@ -14,9 +14,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef META_WINDOW_H
@@ -74,11 +72,13 @@ typedef enum
  * MetaMaximizeFlags:
  * @META_MAXIMIZE_HORIZONTAL: Horizontal
  * @META_MAXIMIZE_VERTICAL: Vertical
+ * @META_MAXIMIZE_BOTH: Both
  */
 typedef enum
 {
   META_MAXIMIZE_HORIZONTAL = 1 << 0,
-  META_MAXIMIZE_VERTICAL   = 1 << 1
+  META_MAXIMIZE_VERTICAL   = 1 << 1,
+  META_MAXIMIZE_BOTH       = (1 << 0 | 1 << 1),
 } MetaMaximizeFlags;
 
 #define META_TYPE_WINDOW            (meta_window_get_type ())
@@ -100,7 +100,17 @@ gboolean meta_window_is_override_redirect (MetaWindow *window);
 gboolean meta_window_is_skip_taskbar (MetaWindow *window);
 MetaRectangle *meta_window_get_rect (MetaWindow *window);
 void meta_window_get_input_rect (const MetaWindow *window, MetaRectangle *rect);
-void meta_window_get_outer_rect (const MetaWindow *window, MetaRectangle *rect);
+
+void meta_window_get_frame_rect (const MetaWindow *window, MetaRectangle *rect);
+void meta_window_get_outer_rect (const MetaWindow *window, MetaRectangle *rect) G_GNUC_DEPRECATED;
+
+void meta_window_client_rect_to_frame_rect (MetaWindow    *window,
+                                            MetaRectangle *client_rect,
+                                            MetaRectangle *frame_rect);
+void meta_window_frame_rect_to_client_rect (MetaWindow    *window,
+                                            MetaRectangle *frame_rect,
+                                            MetaRectangle *client_rect);
+
 MetaScreen *meta_window_get_screen (MetaWindow *window);
 MetaDisplay *meta_window_get_display (MetaWindow *window);
 Window meta_window_get_xwindow (MetaWindow *window);
@@ -140,8 +150,7 @@ void meta_window_unset_demands_attention (MetaWindow *window);
 const char* meta_window_get_startup_id (MetaWindow *window);
 void meta_window_change_workspace_by_index (MetaWindow *window,
                                             gint        space_index,
-                                            gboolean    append,
-                                            guint32     timestamp);
+                                            gboolean    append);
 void meta_window_change_workspace          (MetaWindow  *window,
                                             MetaWorkspace *workspace);
 GObject *meta_window_get_compositor_private (MetaWindow *window);
@@ -172,8 +181,6 @@ gboolean          meta_window_requested_bypass_compositor (MetaWindow *window);
 gboolean          meta_window_requested_dont_bypass_compositor (MetaWindow *window);
 gint             *meta_window_get_all_monitors (MetaWindow *window, gsize *length);
 
-gboolean meta_window_is_mapped (MetaWindow  *window);
-gboolean meta_window_toplevel_is_mapped (MetaWindow  *window);
 gboolean meta_window_get_icon_geometry (MetaWindow    *window,
                                         MetaRectangle *rect);
 void meta_window_set_icon_geometry (MetaWindow    *window,
@@ -237,6 +244,16 @@ void meta_window_begin_grab_op (MetaWindow *window,
                                 gboolean    frame_action,
                                 guint32     timestamp);
 
+gboolean meta_window_can_maximize (MetaWindow *window);
+gboolean meta_window_can_minimize (MetaWindow *window);
+gboolean meta_window_can_shade (MetaWindow *window);
 gboolean meta_window_can_close (MetaWindow *window);
+gboolean meta_window_is_always_on_all_workspaces (MetaWindow *window);
+gboolean meta_window_is_above (MetaWindow *window);
+gboolean meta_window_allows_move (MetaWindow *window);
+gboolean meta_window_allows_resize (MetaWindow *window);
+
+gboolean meta_window_titlebar_is_onscreen    (MetaWindow *window);
+void     meta_window_shove_titlebar_onscreen (MetaWindow *window);
 
 #endif

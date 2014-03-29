@@ -17,9 +17,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef META_UTIL_H
@@ -31,12 +29,8 @@
 #include <meta/common.h>
 
 gboolean meta_is_verbose  (void);
-void     meta_set_verbose (gboolean setting);
 gboolean meta_is_debugging (void);
-void     meta_set_debugging (gboolean setting);
 gboolean meta_is_syncing (void);
-void     meta_set_syncing (gboolean setting);
-void     meta_set_replace_current_wm (gboolean setting);
 
 void meta_debug_spew_real (const char *format,
                            ...) G_GNUC_PRINTF (1, 2);
@@ -121,10 +115,6 @@ const char* meta_frame_type_to_string (MetaFrameType type);
 const char* meta_gravity_to_string (int gravity);
 
 char* meta_external_binding_name_for_action (guint keybinding_action);
-
-#include <libintl.h>
-#define _(x) dgettext (GETTEXT_PACKAGE, x)
-#define N_(x) x
 
 char* meta_g_utf8_strndup (const gchar *src, gsize n);
 

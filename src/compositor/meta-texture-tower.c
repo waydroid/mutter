@@ -17,9 +17,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <math.h>
@@ -361,18 +359,10 @@ texture_tower_create_texture (MetaTextureTower *tower,
   if ((!is_power_of_two (width) || !is_power_of_two (height)) &&
       meta_texture_rectangle_check (tower->textures[level - 1]))
     {
-      tower->textures[level] =
-        meta_texture_rectangle_new (width, height,
-                                    /* data format */
-                                    TEXTURE_FORMAT,
-                                    /* internal cogl format */
-                                    TEXTURE_FORMAT,
-                                    /* rowstride */
-                                    width * 4,
-                                    /* data */
-                                    NULL,
-                                    /* error */
-                                    NULL);
+      ClutterBackend *backend = clutter_get_default_backend ();
+      CoglContext *context = clutter_backend_get_cogl_context (backend);
+
+      tower->textures[level] = cogl_texture_rectangle_new_with_size (context, width, height);
     }
   else
     {

@@ -16,9 +16,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef META_FRAME_PRIVATE_H
@@ -41,15 +39,17 @@ struct _MetaFrame
    */
   MetaRectangle rect;
 
+  MetaFrameBorders cached_borders; /* valid if borders_cached is set */
+
   /* position of client, size of frame */
   int child_x;
   int child_y;
   int right_width;
   int bottom_height;
 
-  guint mapped : 1;
   guint need_reapply_frame_shape : 1;
   guint is_flashing : 1; /* used by the visual bell flash */
+  guint borders_cached : 1;
 };
 
 void     meta_window_ensure_frame           (MetaWindow *window);
@@ -67,6 +67,8 @@ gboolean meta_frame_sync_to_window (MetaFrame         *frame,
                                     int                gravity,
                                     gboolean           need_move,
                                     gboolean           need_resize);
+
+void meta_frame_clear_cached_borders (MetaFrame *frame);
 
 cairo_region_t *meta_frame_get_frame_bounds (MetaFrame *frame);
 

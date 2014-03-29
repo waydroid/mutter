@@ -55,7 +55,8 @@ libmutter_la_SOURCES =				\
 	compositor/meta-background-actor.c	\
 	compositor/meta-background-actor-private.h	\
 	compositor/meta-background-group.c	\
-	compositor/meta-background-group-private.h	\
+	compositor/meta-cullable.c		\
+	compositor/meta-cullable.h		\
 	compositor/meta-module.c		\
 	compositor/meta-module.h		\
 	compositor/meta-plugin.c		\
@@ -64,6 +65,7 @@ libmutter_la_SOURCES =				\
 	compositor/meta-shadow-factory.c	\
 	compositor/meta-shadow-factory-private.h	\
 	compositor/meta-shaped-texture.c	\
+	compositor/meta-shaped-texture-private.h	\
 	compositor/meta-texture-rectangle.c	\
 	compositor/meta-texture-rectangle.h	\
 	compositor/meta-texture-tower.c		\
@@ -92,8 +94,6 @@ libmutter_la_SOURCES =				\
 	core/display.c				\
 	core/display-private.h			\
 	meta/display.h				\
-	ui/draw-workspace.c			\
-	ui/draw-workspace.h			\
 	core/edge-resistance.c			\
 	core/edge-resistance.h			\
 	core/edid-parse.c			\
@@ -140,6 +140,7 @@ libmutter_la_SOURCES =				\
 	core/stack-tracker.h			\
 	core/util.c				\
 	meta/util.h				\
+	core/util-private.h			\
 	core/window-props.c			\
 	core/window-props.h			\
 	core/window.c				\
@@ -160,15 +161,13 @@ libmutter_la_SOURCES =				\
 	ui/metaaccellabel.h			\
 	ui/resizepopup.c			\
 	ui/resizepopup.h			\
-	ui/tabpopup.c				\
-	ui/tabpopup.h				\
-	ui/tile-preview.c			\
-	ui/tile-preview.h			\
 	ui/theme-parser.c			\
 	ui/theme.c				\
 	meta/theme.h				\
 	ui/theme-private.h			\
-	ui/ui.c					\
+	ui/ui.c
+
+nodist_libmutter_la_SOURCES =			\
 	$(mutter_built_sources)
 
 libmutter_la_LDFLAGS = -no-undefined
@@ -249,7 +248,7 @@ Meta-$(api_version).gir: libmutter.la
 @META_GIR@_FILES =				\
 	mutter-enum-types.h			\
 	$(libmutterinclude_base_headers)	\
-	$(filter %.c,$(libmutter_la_SOURCES))
+	$(filter %.c,$(libmutter_la_SOURCES) $(nodist_libmutter_la_SOURCES))
 @META_GIR@_SCANNERFLAGS = --warn-all --warn-error
 
 endif
