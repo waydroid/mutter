@@ -96,8 +96,6 @@ meta_compositor_hide_window
 meta_compositor_switch_workspace
 meta_compositor_maximize_window
 meta_compositor_unmaximize_window
-meta_compositor_window_mapped
-meta_compositor_window_unmapped
 meta_compositor_sync_window_geometry
 meta_compositor_set_updates_frozen
 meta_compositor_queue_frame_drawn
@@ -207,7 +205,6 @@ meta_key_binding_get_modifiers
 meta_key_binding_get_mask
 meta_key_binding_is_builtin
 meta_keybindings_set_custom_handler
-meta_keybindings_switch_window
 meta_screen_ungrab_all_keys
 meta_screen_grab_all_keys
 </SECTION>
@@ -390,6 +387,23 @@ meta_window_actor_get_type
 </SECTION>
 
 <SECTION>
+<FILE>meta-cullable</FILE>
+<TITLE>MetaCullable</TITLE>
+MetaCullable
+MetaCullableInterface
+meta_cullable_cull_out
+meta_cullable_reset_culling
+meta_cullable_cull_out_children
+meta_cullable_reset_culling_children
+<SUBSECTION Standard>
+META_TYPE_CULLABLE
+META_CULLABLE
+META_IS_CULLABLE
+META_CULLABLE_GET_IFACE
+meta_cullable_get_type
+</SECTION>
+
+<SECTION>
 <FILE>prefs</FILE>
 MetaPreference
 MetaPrefsChangedFunc
@@ -542,7 +556,10 @@ meta_window_is_override_redirect
 meta_window_is_skip_taskbar
 meta_window_get_rect
 meta_window_get_input_rect
+meta_window_get_frame_rect
 meta_window_get_outer_rect
+meta_window_client_rect_to_frame_rect
+meta_window_frame_rect_to_client_rect
 meta_window_get_screen
 meta_window_get_display
 meta_window_get_xwindow

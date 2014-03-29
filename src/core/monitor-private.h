@@ -29,9 +29,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef META_MONITOR_PRIVATE_H
@@ -116,6 +114,9 @@ struct _MetaOutput
   */
   gboolean is_primary;
   gboolean is_presentation;
+
+  /* get a new preferred mode on hotplug events, to handle dynamic guest resizing */
+  gboolean hotplug_mode_update;
 };
 
 struct _MetaCRTC
@@ -383,6 +384,7 @@ void               meta_output_info_free (MetaOutputInfo *info);
 
 void               meta_monitor_manager_free_output_array (MetaOutput *old_outputs,
                                                            int         n_old_outputs);
+gboolean           meta_monitor_manager_has_hotplug_mode_update (MetaMonitorManager *manager);
 
 /* Returns true if transform causes width and height to be inverted
    This is true for the odd transforms in the enum */

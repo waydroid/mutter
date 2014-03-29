@@ -19,9 +19,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef META_DISPLAY_PRIVATE_H
@@ -138,6 +136,14 @@ struct _MetaDisplay
    */
   guint allow_terminal_deactivation : 1;
 
+  /* If true, server->focus_serial refers to us changing the focus; in
+   * this case, we can ignore focus events that have exactly focus_serial,
+   * since we take care to make another request immediately afterwards.
+   * But if focus is being changed by another client, we have to accept
+   * multiple events with the same serial.
+   */
+  guint focused_by_us : 1;
+
   guint static_gravity_works : 1;
   
   /*< private-ish >*/
@@ -224,8 +230,8 @@ struct _MetaDisplay
   int	      grab_resize_timeout_id;
 
   /* Keybindings stuff */
-  MetaKeyBinding *key_bindings;
-  int             n_key_bindings;
+  GHashTable     *key_bindings;
+  GHashTable     *key_bindings_index;
   int             min_keycode;
   int             max_keycode;
   KeySym *keymap;

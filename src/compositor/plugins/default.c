@@ -16,20 +16,17 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <config.h>
 
 #include <meta/meta-plugin.h>
 #include <meta/window.h>
-#include <meta/util.h>
 #include <meta/meta-background-group.h>
 #include <meta/meta-background-actor.h>
-
-#include <libintl.h>
-#define _(x) dgettext (GETTEXT_PACKAGE, x)
-#define N_(x) x
+#include <meta/util.h>
+#include <glib/gi18n-lib.h>
 
 #include <clutter/clutter.h>
 #include <gmodule.h>
@@ -42,6 +39,7 @@
 #define SWITCH_TIMEOUT    500
 
 #define ACTOR_DATA_KEY "MCCP-Default-actor-data"
+#define SCREEN_TILE_PREVIEW_DATA_KEY "MCCP-Default-screen-tile-preview-data"
 
 #define META_TYPE_DEFAULT_PLUGIN            (meta_default_plugin_get_type ())
 #define META_DEFAULT_PLUGIN(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), META_TYPE_DEFAULT_PLUGIN, MetaDefaultPlugin))
@@ -70,6 +68,7 @@ struct _MetaDefaultPluginClass
 };
 
 static GQuark actor_data_quark = 0;
+static GQuark screen_tile_preview_data_quark = 0;
 
 static void start      (MetaPlugin      *plugin);
 static void minimize   (MetaPlugin      *plugin,
@@ -99,6 +98,12 @@ static void switch_workspace (MetaPlugin          *plugin,
 static void kill_window_effects   (MetaPlugin      *plugin,
                                    MetaWindowActor *actor);
 static void kill_switch_workspace (MetaPlugin      *plugin);
+
+static void show_tile_preview (MetaPlugin      *plugin,
+                               MetaWindow      *window,
+                               MetaRectangle   *tile_rect,
+                               int              tile_monitor_number);
+static void hide_tile_preview (MetaPlugin      *plugin);
 
 static void confirm_display_change (MetaPlugin *plugin);
 
@@ -145,6 +150,15 @@ typedef struct
   MetaPlugin *plugin;
 } EffectCompleteData;
 
+
+typedef struct _ScreenTilePreview
+{
+  ClutterActor   *actor;
+
+  GdkRGBA        *preview_color;
+
+  MetaRectangle   tile_rect;
+} ScreenTilePreview;
 
 static void
 meta_default_plugin_dispose (GObject *object)
@@ -206,6 +220,8 @@ meta_default_plugin_class_init (MetaDefaultPluginClass *klass)
   plugin_class->unmaximize       = unmaximize;
   plugin_class->destroy          = destroy;
   plugin_class->switch_workspace = switch_workspace;
+  plugin_class->show_tile_preview = show_tile_preview;
+  plugin_class->hide_tile_preview = hide_tile_preview;
   plugin_class->plugin_info      = plugin_info;
   plugin_class->kill_window_effects   = kill_window_effects;
   plugin_class->kill_switch_workspace = kill_switch_workspace;
@@ -292,26 +308,13 @@ on_switch_workspace_effect_complete (ClutterTimeline *timeline, gpointer data)
   meta_plugin_switch_workspace_completed (plugin);
 }
 
-static gboolean
-show_stage (MetaPlugin *plugin)
-{
-  MetaScreen *screen;
-  ClutterActor *stage;
-
-  screen = meta_plugin_get_screen (plugin);
-  stage = meta_get_stage_for_screen (screen);
-
-  clutter_actor_show (stage);
-
-  return FALSE;
-}
-
 static void
 on_monitors_changed (MetaScreen *screen,
                      MetaPlugin *plugin)
 {
   MetaDefaultPlugin *self = META_DEFAULT_PLUGIN (plugin);
   int i, n;
+  GRand *rand = g_rand_new_with_seed (12345);
 
   clutter_actor_destroy_all_children (self->priv->background_group);
 
@@ -334,14 +337,16 @@ on_monitors_changed (MetaScreen *screen,
          reproducible.
       */
       clutter_color_init (&color,
-                          g_random_int () % 255,
-                          g_random_int () % 255,
-                          g_random_int () % 255,
+                          g_rand_int_range (rand, 0, 255),
+                          g_rand_int_range (rand, 0, 255),
+                          g_rand_int_range (rand, 0, 255),
                           255);
       clutter_actor_set_background_color (background, &color);
 
       clutter_actor_add_child (self->priv->background_group, background);
     }
+
+  g_rand_free (rand);
 }
 
 static void
@@ -358,10 +363,7 @@ start (MetaPlugin *plugin)
                     G_CALLBACK (on_monitors_changed), plugin);
   on_monitors_changed (screen, plugin);
 
-  meta_later_add (META_LATER_BEFORE_REDRAW,
-                  (GSourceFunc) show_stage,
-                  plugin,
-                  NULL);
+  clutter_actor_show (meta_get_stage_for_screen (screen));
 }
 
 static void
@@ -410,9 +412,11 @@ switch_workspace (MetaPlugin *plugin,
       MetaWindowActor *window_actor = l->data;
       ActorPrivate    *apriv	    = get_actor_private (window_actor);
       ClutterActor    *actor	    = CLUTTER_ACTOR (window_actor);
+      MetaWorkspace   *workspace;
       gint             win_workspace;
 
-      win_workspace = meta_window_actor_get_workspace (window_actor);
+      workspace = meta_window_get_workspace (meta_window_actor_get_meta_window (window_actor));
+      win_workspace = meta_workspace_index (workspace);
 
       if (win_workspace == to || win_workspace == from)
         {
@@ -705,15 +709,15 @@ map (MetaPlugin *plugin, MetaWindowActor *window_actor)
       EffectCompleteData *data = g_new0 (EffectCompleteData, 1);
       ActorPrivate *apriv = get_actor_private (window_actor);
 
-      clutter_actor_move_anchor_point_from_gravity (actor,
-                                                    CLUTTER_GRAVITY_CENTER);
-
-      clutter_actor_set_scale (actor, 0.0, 0.0);
+      clutter_actor_set_pivot_point (actor, 0.5, 0.5);
+      clutter_actor_set_opacity (actor, 0);
+      clutter_actor_set_scale (actor, 0.5, 0.5);
       clutter_actor_show (actor);
 
       animation = clutter_actor_animate (actor,
-                                         CLUTTER_EASE_IN_SINE,
+                                         CLUTTER_EASE_OUT_QUAD,
                                          MAP_TIMEOUT,
+                                         "opacity", 255,
                                          "scale-x", 1.0,
                                          "scale-y", 1.0,
                                          NULL);
@@ -783,6 +787,82 @@ destroy (MetaPlugin *plugin, MetaWindowActor *window_actor)
     }
   else
     meta_plugin_destroy_completed (plugin, window_actor);
+}
+
+/*
+ * Tile preview private data accessor
+ */
+static void
+free_screen_tile_preview (gpointer data)
+{
+  ScreenTilePreview *preview = data;
+
+  if (G_LIKELY (preview != NULL)) {
+    clutter_actor_destroy (preview->actor);
+    g_slice_free (ScreenTilePreview, preview);
+  }
+}
+
+static ScreenTilePreview *
+get_screen_tile_preview (MetaScreen *screen)
+{
+  ScreenTilePreview *preview = g_object_get_qdata (G_OBJECT (screen), screen_tile_preview_data_quark);
+
+  if (G_UNLIKELY (screen_tile_preview_data_quark == 0))
+    screen_tile_preview_data_quark = g_quark_from_static_string (SCREEN_TILE_PREVIEW_DATA_KEY);
+
+  if (G_UNLIKELY (!preview))
+    {
+      preview = g_slice_new0 (ScreenTilePreview);
+
+      preview->actor = clutter_actor_new ();
+      clutter_actor_set_background_color (preview->actor, CLUTTER_COLOR_Blue);
+      clutter_actor_set_opacity (preview->actor, 100);
+
+      clutter_actor_add_child (meta_get_window_group_for_screen (screen), preview->actor);
+      g_object_set_qdata_full (G_OBJECT (screen),
+                               screen_tile_preview_data_quark, preview,
+                               free_screen_tile_preview);
+    }
+
+  return preview;
+}
+
+static void
+show_tile_preview (MetaPlugin    *plugin,
+                   MetaWindow    *window,
+                   MetaRectangle *tile_rect,
+                   int            tile_monitor_number)
+{
+  MetaScreen *screen = meta_plugin_get_screen (plugin);
+  ScreenTilePreview *preview = get_screen_tile_preview (screen);
+  ClutterActor *window_actor;
+
+  if (CLUTTER_ACTOR_IS_VISIBLE (preview->actor)
+      && preview->tile_rect.x == tile_rect->x
+      && preview->tile_rect.y == tile_rect->y
+      && preview->tile_rect.width == tile_rect->width
+      && preview->tile_rect.height == tile_rect->height)
+    return; /* nothing to do */
+
+  clutter_actor_set_position (preview->actor, tile_rect->x, tile_rect->y);
+  clutter_actor_set_size (preview->actor, tile_rect->width, tile_rect->height);
+
+  clutter_actor_show (preview->actor);
+
+  window_actor = CLUTTER_ACTOR (meta_window_get_compositor_private (window));
+  clutter_actor_lower (preview->actor, window_actor);
+
+  preview->tile_rect = *tile_rect;
+}
+
+static void
+hide_tile_preview (MetaPlugin *plugin)
+{
+  MetaScreen *screen = meta_plugin_get_screen (plugin);
+  ScreenTilePreview *preview = get_screen_tile_preview (screen);
+
+  clutter_actor_hide (preview->actor);
 }
 
 static void

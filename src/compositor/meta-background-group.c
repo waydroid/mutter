@@ -16,87 +16,43 @@
 
 #include <config.h>
 
-#include "compositor-private.h"
-#include "clutter-utils.h"
-#include "meta-background-actor-private.h"
-#include "meta-background-group-private.h"
+#include <meta/meta-background-group.h>
+#include "meta-cullable.h"
 
-G_DEFINE_TYPE (MetaBackgroundGroup, meta_background_group, CLUTTER_TYPE_ACTOR);
+static void cullable_iface_init (MetaCullableInterface *iface);
 
-struct _MetaBackgroundGroupPrivate
-{
-  gpointer dummy;
-};
-
-static void
-meta_background_group_dispose (GObject *object)
-{
-  G_OBJECT_CLASS (meta_background_group_parent_class)->dispose (object);
-}
-
-static gboolean
-meta_background_group_get_paint_volume (ClutterActor       *actor,
-                                        ClutterPaintVolume *volume)
-{
-  return clutter_paint_volume_set_from_allocation (volume, actor);
-}
+G_DEFINE_TYPE_WITH_CODE (MetaBackgroundGroup, meta_background_group, CLUTTER_TYPE_ACTOR,
+                         G_IMPLEMENT_INTERFACE (META_TYPE_CULLABLE, cullable_iface_init));
 
 static void
 meta_background_group_class_init (MetaBackgroundGroupClass *klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ClutterActorClass *actor_class = CLUTTER_ACTOR_CLASS (klass);
+}
 
-  actor_class->get_paint_volume = meta_background_group_get_paint_volume;
-  object_class->dispose = meta_background_group_dispose;
+static void
+meta_background_group_cull_out (MetaCullable   *cullable,
+                                cairo_region_t *unobscured_region,
+                                cairo_region_t *clip_region)
+{
+  meta_cullable_cull_out_children (cullable, unobscured_region, clip_region);
+}
 
-  g_type_class_add_private (klass, sizeof (MetaBackgroundGroupPrivate));
+static void
+meta_background_group_reset_culling (MetaCullable *cullable)
+{
+  meta_cullable_reset_culling_children (cullable);
+}
+
+static void
+cullable_iface_init (MetaCullableInterface *iface)
+{
+  iface->cull_out = meta_background_group_cull_out;
+  iface->reset_culling = meta_background_group_reset_culling;
 }
 
 static void
 meta_background_group_init (MetaBackgroundGroup *self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                            META_TYPE_BACKGROUND_GROUP,
-                                            MetaBackgroundGroupPrivate);
-}
-
-/**
- * meta_background_group_set_clip_region:
- * @self: a #MetaBackgroundGroup
- * @region: (allow-none): the parts of the background to paint
- *
- * Sets the area of the backgrounds that is unobscured by overlapping windows.
- * This is used to optimize and only paint the visible portions.
- */
-void
-meta_background_group_set_clip_region (MetaBackgroundGroup *self,
-                                       cairo_region_t      *region)
-{
-  GList *children, *l;
-
-  children = clutter_actor_get_children (CLUTTER_ACTOR (self));
-  for (l = children; l; l = l->next)
-    {
-      ClutterActor *actor = l->data;
-
-      if (META_IS_BACKGROUND_ACTOR (actor))
-        {
-          meta_background_actor_set_clip_region (META_BACKGROUND_ACTOR (actor), region);
-        }
-      else if (META_IS_BACKGROUND_GROUP (actor))
-        {
-          int x, y;
-
-          if (!meta_actor_is_untransformed (actor, &x, &y))
-            continue;
-
-          cairo_region_translate (region, -x, -y);
-          meta_background_group_set_clip_region (META_BACKGROUND_GROUP (actor), region);
-          cairo_region_translate (region, x, y);
-        }
-    }
-  g_list_free (children);
 }
 
 ClutterActor *

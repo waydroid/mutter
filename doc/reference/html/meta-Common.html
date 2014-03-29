@@ -8,15 +8,14 @@
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="meta-Main.html" title="Main">
 <link rel="next" href="meta-Gradients.html" title="Gradients">
-<meta name="generator" content="GTK-Doc V1.19.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.20.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
-<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="10"><tr valign="middle">
-<td width="100%" align="left">
-<a href="#" class="shortcut">Top</a>
-                   | 
-                  <a href="#meta-Common.description" class="shortcut">Description</a>
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
+<td width="100%" align="left" class="shortcuts">
+<a href="#" class="shortcut">Top</a><span id="nav_description">  <span class="dim">|</span> 
+                  <a href="#meta-Common.description" class="shortcut">Description</a></span>
 </td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
 <td><a accesskey="u" href="core-reference.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
@@ -30,55 +29,214 @@
 <h2><span class="refentrytitle"><a name="meta-Common.top_of_page"></a>Common</span></h2>
 <p>Common — Mutter common types</p>
 </td>
-<td valign="top" align="right"></td>
+<td class="gallery_image" valign="top" align="right"></td>
 </tr></table></div>
-<div class="refsynopsisdiv">
-<a name="meta-Common.synopsis"></a><h2>Synopsis</h2>
-<pre class="synopsis">#define             <a class="link" href="meta-Common.html#META-VIRTUAL-CORE-POINTER-ID:CAPS" title="META_VIRTUAL_CORE_POINTER_ID">META_VIRTUAL_CORE_POINTER_ID</a>
-#define             <a class="link" href="meta-Common.html#META-VIRTUAL-CORE-KEYBOARD-ID:CAPS" title="META_VIRTUAL_CORE_KEYBOARD_ID">META_VIRTUAL_CORE_KEYBOARD_ID</a>
-enum                <a class="link" href="meta-Common.html#MetaFrameFlags" title="enum MetaFrameFlags">MetaFrameFlags</a>;
-enum                <a class="link" href="meta-Common.html#MetaMenuOp" title="enum MetaMenuOp">MetaMenuOp</a>;
-<span class="returnvalue">void</span>                (<a class="link" href="meta-Common.html#MetaWindowMenuFunc" title="MetaWindowMenuFunc ()">*MetaWindowMenuFunc</a>)               (<em class="parameter"><code><a class="link" href="meta-Common.html#MetaWindowMenu" title="MetaWindowMenu"><span class="type">MetaWindowMenu</span></a> *menu</code></em>,
-                                                         <em class="parameter"><code><span class="type">Display</span> *xdisplay</code></em>,
-                                                         <em class="parameter"><code><span class="type">Window</span> client_xwindow</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-Common.html#MetaMenuOp" title="enum MetaMenuOp"><span class="type">MetaMenuOp</span></a> op</code></em>,
-                                                         <em class="parameter"><code><span class="type">int</span> workspace</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);
-enum                <a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp">MetaGrabOp</a>;
-enum                <a class="link" href="meta-Common.html#MetaCursor" title="enum MetaCursor">MetaCursor</a>;
-enum                <a class="link" href="meta-Common.html#MetaFrameType" title="enum MetaFrameType">MetaFrameType</a>;
-enum                <a class="link" href="meta-Common.html#MetaVirtualModifier" title="enum MetaVirtualModifier">MetaVirtualModifier</a>;
-enum                <a class="link" href="meta-Common.html#MetaDirection" title="enum MetaDirection">MetaDirection</a>;
-enum                <a class="link" href="meta-Common.html#MetaMotionDirection" title="enum MetaMotionDirection">MetaMotionDirection</a>;
-enum                <a class="link" href="meta-Common.html#MetaSide" title="enum MetaSide">MetaSide</a>;
-enum                <a class="link" href="meta-Common.html#MetaButtonFunction" title="enum MetaButtonFunction">MetaButtonFunction</a>;
-#define             <a class="link" href="meta-Common.html#MAX-BUTTONS-PER-CORNER:CAPS" title="MAX_BUTTONS_PER_CORNER">MAX_BUTTONS_PER_CORNER</a>
-struct              <a class="link" href="meta-Common.html#MetaButtonLayout" title="struct MetaButtonLayout">MetaButtonLayout</a>;
-struct              <a class="link" href="meta-Common.html#MetaFrameBorders" title="struct MetaFrameBorders">MetaFrameBorders</a>;
-<span class="returnvalue">void</span>                <a class="link" href="meta-Common.html#meta-frame-borders-clear" title="meta_frame_borders_clear ()">meta_frame_borders_clear</a>            (<em class="parameter"><code><a class="link" href="meta-Common.html#MetaFrameBorders" title="struct MetaFrameBorders"><span class="type">MetaFrameBorders</span></a> *self</code></em>);
-#define             <a class="link" href="meta-Common.html#META-ICON-WIDTH:CAPS" title="META_ICON_WIDTH">META_ICON_WIDTH</a>
-#define             <a class="link" href="meta-Common.html#META-ICON-HEIGHT:CAPS" title="META_ICON_HEIGHT">META_ICON_HEIGHT</a>
-#define             <a class="link" href="meta-Common.html#META-MINI-ICON-WIDTH:CAPS" title="META_MINI_ICON_WIDTH">META_MINI_ICON_WIDTH</a>
-#define             <a class="link" href="meta-Common.html#META-MINI-ICON-HEIGHT:CAPS" title="META_MINI_ICON_HEIGHT">META_MINI_ICON_HEIGHT</a>
-#define             <a class="link" href="meta-Common.html#META-DEFAULT-ICON-NAME:CAPS" title="META_DEFAULT_ICON_NAME">META_DEFAULT_ICON_NAME</a>
-#define             <a class="link" href="meta-Common.html#META-PRIORITY-RESIZE:CAPS" title="META_PRIORITY_RESIZE">META_PRIORITY_RESIZE</a>
-#define             <a class="link" href="meta-Common.html#META-PRIORITY-BEFORE-REDRAW:CAPS" title="META_PRIORITY_BEFORE_REDRAW">META_PRIORITY_BEFORE_REDRAW</a>
-#define             <a class="link" href="meta-Common.html#META-PRIORITY-REDRAW:CAPS" title="META_PRIORITY_REDRAW">META_PRIORITY_REDRAW</a>
-#define             <a class="link" href="meta-Common.html#META-PRIORITY-PREFS-NOTIFY:CAPS" title="META_PRIORITY_PREFS_NOTIFY">META_PRIORITY_PREFS_NOTIFY</a>
-#define             <a class="link" href="meta-Common.html#POINT-IN-RECT:CAPS" title="POINT_IN_RECT()">POINT_IN_RECT</a>                       (xcoord,
-                                                         ycoord,
-                                                         rect)
-enum                <a class="link" href="meta-Common.html#MetaStackLayer" title="enum MetaStackLayer">MetaStackLayer</a>;
-                    <a class="link" href="meta-Common.html#MetaWindowMenu" title="MetaWindowMenu">MetaWindowMenu</a>;
-                    <a class="link" href="meta-Common.html#MetaResizePopup" title="MetaResizePopup">MetaResizePopup</a>;
-</pre>
+<div class="refsect1">
+<a name="meta-Common.functions"></a><h2>Functions</h2>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="functions_return">
+<col class="functions_name">
+</colgroup>
+<tbody>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<span class="c_punctuation">(</span><a class="link" href="meta-Common.html#MetaWindowMenuFunc" title="MetaWindowMenuFunc ()">*MetaWindowMenuFunc</a><span class="c_punctuation">)</span> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a class="link" href="meta-Common.html#meta-frame-borders-clear" title="meta_frame_borders_clear ()">meta_frame_borders_clear</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-PRIORITY-RESIZE:CAPS" title="META_PRIORITY_RESIZE">META_PRIORITY_RESIZE</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-PRIORITY-BEFORE-REDRAW:CAPS" title="META_PRIORITY_BEFORE_REDRAW">META_PRIORITY_BEFORE_REDRAW</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-PRIORITY-REDRAW:CAPS" title="META_PRIORITY_REDRAW">META_PRIORITY_REDRAW</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-PRIORITY-PREFS-NOTIFY:CAPS" title="META_PRIORITY_PREFS_NOTIFY">META_PRIORITY_PREFS_NOTIFY</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name">
+<a class="link" href="meta-Common.html#POINT-IN-RECT:CAPS" title="POINT_IN_RECT()">POINT_IN_RECT</a><span class="c_punctuation">()</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="meta-Common.other"></a><h2>Types and Values</h2>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="name">
+<col class="description">
+</colgroup>
+<tbody>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-VIRTUAL-CORE-POINTER-ID:CAPS" title="META_VIRTUAL_CORE_POINTER_ID">META_VIRTUAL_CORE_POINTER_ID</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-VIRTUAL-CORE-KEYBOARD-ID:CAPS" title="META_VIRTUAL_CORE_KEYBOARD_ID">META_VIRTUAL_CORE_KEYBOARD_ID</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaFrameFlags" title="enum MetaFrameFlags">MetaFrameFlags</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaMenuOp" title="enum MetaMenuOp">MetaMenuOp</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaGrabOp" title="enum MetaGrabOp">MetaGrabOp</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaCursor" title="enum MetaCursor">MetaCursor</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaFrameType" title="enum MetaFrameType">MetaFrameType</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaVirtualModifier" title="enum MetaVirtualModifier">MetaVirtualModifier</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaDirection" title="enum MetaDirection">MetaDirection</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaMotionDirection" title="enum MetaMotionDirection">MetaMotionDirection</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaSide" title="enum MetaSide">MetaSide</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaButtonFunction" title="enum MetaButtonFunction">MetaButtonFunction</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MAX-BUTTONS-PER-CORNER:CAPS" title="MAX_BUTTONS_PER_CORNER">MAX_BUTTONS_PER_CORNER</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">struct</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaButtonLayout" title="struct MetaButtonLayout">MetaButtonLayout</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">struct</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaFrameBorders" title="struct MetaFrameBorders">MetaFrameBorders</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-ICON-WIDTH:CAPS" title="META_ICON_WIDTH">META_ICON_WIDTH</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-ICON-HEIGHT:CAPS" title="META_ICON_HEIGHT">META_ICON_HEIGHT</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-MINI-ICON-WIDTH:CAPS" title="META_MINI_ICON_WIDTH">META_MINI_ICON_WIDTH</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-MINI-ICON-HEIGHT:CAPS" title="META_MINI_ICON_HEIGHT">META_MINI_ICON_HEIGHT</a></td>
+</tr>
+<tr>
+<td class="define_keyword">#define</td>
+<td class="function_name"><a class="link" href="meta-Common.html#META-DEFAULT-ICON-NAME:CAPS" title="META_DEFAULT_ICON_NAME">META_DEFAULT_ICON_NAME</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">enum</td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaStackLayer" title="enum MetaStackLayer">MetaStackLayer</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword"> </td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaWindowMenu" title="MetaWindowMenu">MetaWindowMenu</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword"> </td>
+<td class="function_name"><a class="link" href="meta-Common.html#MetaResizePopup" title="MetaResizePopup">MetaResizePopup</a></td>
+</tr>
+</tbody>
+</table></div>
 </div>
 <div class="refsect1">
 <a name="meta-Common.description"></a><h2>Description</h2>
 </div>
 <div class="refsect1">
-<a name="meta-Common.details"></a><h2>Details</h2>
+<a name="meta-Common.functions_details"></a><h2>Functions</h2>
+<div class="refsect2">
+<a name="MetaWindowMenuFunc"></a><h3>MetaWindowMenuFunc ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+<span class="c_punctuation">(</span>*MetaWindowMenuFunc<span class="c_punctuation">)</span> (<em class="parameter"><code><a class="link" href="meta-Common.html#MetaWindowMenu" title="MetaWindowMenu"><span class="type">MetaWindowMenu</span></a> *menu</code></em>,
+                       <em class="parameter"><code><span class="type">Display</span> *xdisplay</code></em>,
+                       <em class="parameter"><code><span class="type">Window</span> client_xwindow</code></em>,
+                       <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>,
+                       <em class="parameter"><code><a class="link" href="meta-Common.html#MetaMenuOp" title="enum MetaMenuOp"><span class="type">MetaMenuOp</span></a> op</code></em>,
+                       <em class="parameter"><code><span class="type">int</span> workspace</code></em>,
+                       <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-frame-borders-clear"></a><h3>meta_frame_borders_clear ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+meta_frame_borders_clear (<em class="parameter"><code><a class="link" href="meta-Common.html#MetaFrameBorders" title="struct MetaFrameBorders"><span class="type">MetaFrameBorders</span></a> *self</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="META-PRIORITY-RESIZE:CAPS"></a><h3>META_PRIORITY_RESIZE</h3>
+<pre class="programlisting">#define META_PRIORITY_RESIZE    (G_PRIORITY_HIGH_IDLE + 15)
+</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="META-PRIORITY-BEFORE-REDRAW:CAPS"></a><h3>META_PRIORITY_BEFORE_REDRAW</h3>
+<pre class="programlisting">#define META_PRIORITY_BEFORE_REDRAW  (G_PRIORITY_HIGH_IDLE + 40)
+</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="META-PRIORITY-REDRAW:CAPS"></a><h3>META_PRIORITY_REDRAW</h3>
+<pre class="programlisting">#define META_PRIORITY_REDRAW    (G_PRIORITY_HIGH_IDLE + 50)
+</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="META-PRIORITY-PREFS-NOTIFY:CAPS"></a><h3>META_PRIORITY_PREFS_NOTIFY</h3>
+<pre class="programlisting">#define META_PRIORITY_PREFS_NOTIFY   (G_PRIORITY_DEFAULT_IDLE + 10)
+</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="POINT-IN-RECT:CAPS"></a><h3>POINT_IN_RECT()</h3>
+<pre class="programlisting">#define             POINT_IN_RECT(xcoord, ycoord, rect)</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="meta-Common.other_details"></a><h2>Types and Values</h2>
 <div class="refsect2">
 <a name="META-VIRTUAL-CORE-POINTER-ID:CAPS"></a><h3>META_VIRTUAL_CORE_POINTER_ID</h3>
 <pre class="programlisting">#define META_VIRTUAL_CORE_POINTER_ID 2
@@ -93,1049 +251,1115 @@ enum                <a class="link" href="meta-Common.html#MetaStackLayer" title
 <hr>
 <div class="refsect2">
 <a name="MetaFrameFlags"></a><h3>enum MetaFrameFlags</h3>
-<pre class="programlisting">typedef enum {
-  META_FRAME_ALLOWS_DELETE            = 1 &lt;&lt; 0,
-  META_FRAME_ALLOWS_MENU              = 1 &lt;&lt; 1,
-  META_FRAME_ALLOWS_MINIMIZE          = 1 &lt;&lt; 2,
-  META_FRAME_ALLOWS_MAXIMIZE          = 1 &lt;&lt; 3,
-  META_FRAME_ALLOWS_VERTICAL_RESIZE   = 1 &lt;&lt; 4,
-  META_FRAME_ALLOWS_HORIZONTAL_RESIZE = 1 &lt;&lt; 5,
-  META_FRAME_HAS_FOCUS                = 1 &lt;&lt; 6,
-  META_FRAME_SHADED                   = 1 &lt;&lt; 7,
-  META_FRAME_STUCK                    = 1 &lt;&lt; 8,
-  META_FRAME_MAXIMIZED                = 1 &lt;&lt; 9,
-  META_FRAME_ALLOWS_SHADE             = 1 &lt;&lt; 10,
-  META_FRAME_ALLOWS_MOVE              = 1 &lt;&lt; 11,
-  META_FRAME_FULLSCREEN               = 1 &lt;&lt; 12,
-  META_FRAME_IS_FLASHING              = 1 &lt;&lt; 13,
-  META_FRAME_ABOVE                    = 1 &lt;&lt; 14,
-  META_FRAME_TILED_LEFT               = 1 &lt;&lt; 15,
-  META_FRAME_TILED_RIGHT              = 1 &lt;&lt; 16
-} MetaFrameFlags;
-</pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.4.3"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-FRAME-ALLOWS-DELETE:CAPS"></a><span class="term"><code class="literal">META_FRAME_ALLOWS_DELETE</code></span></p></td>
-<td>frame allows delete
+<td class="enum_member_name"><p><a name="META-FRAME-ALLOWS-DELETE:CAPS"></a>META_FRAME_ALLOWS_DELETE</p></td>
+<td class="enum_member_description">
+<p>frame allows delete</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-ALLOWS-MENU:CAPS"></a><span class="term"><code class="literal">META_FRAME_ALLOWS_MENU</code></span></p></td>
-<td>frame allows menu
+<td class="enum_member_name"><p><a name="META-FRAME-ALLOWS-MENU:CAPS"></a>META_FRAME_ALLOWS_MENU</p></td>
+<td class="enum_member_description">
+<p>frame allows menu</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-ALLOWS-MINIMIZE:CAPS"></a><span class="term"><code class="literal">META_FRAME_ALLOWS_MINIMIZE</code></span></p></td>
-<td>frame allows minimize
+<td class="enum_member_name"><p><a name="META-FRAME-ALLOWS-MINIMIZE:CAPS"></a>META_FRAME_ALLOWS_MINIMIZE</p></td>
+<td class="enum_member_description">
+<p>frame allows minimize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-ALLOWS-MAXIMIZE:CAPS"></a><span class="term"><code class="literal">META_FRAME_ALLOWS_MAXIMIZE</code></span></p></td>
-<td>frame allows maximize
+<td class="enum_member_name"><p><a name="META-FRAME-ALLOWS-MAXIMIZE:CAPS"></a>META_FRAME_ALLOWS_MAXIMIZE</p></td>
+<td class="enum_member_description">
+<p>frame allows maximize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-ALLOWS-VERTICAL-RESIZE:CAPS"></a><span class="term"><code class="literal">META_FRAME_ALLOWS_VERTICAL_RESIZE</code></span></p></td>
-<td>frame allows vertical resize
+<td class="enum_member_name"><p><a name="META-FRAME-ALLOWS-VERTICAL-RESIZE:CAPS"></a>META_FRAME_ALLOWS_VERTICAL_RESIZE</p></td>
+<td class="enum_member_description">
+<p>frame allows vertical resize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-ALLOWS-HORIZONTAL-RESIZE:CAPS"></a><span class="term"><code class="literal">META_FRAME_ALLOWS_HORIZONTAL_RESIZE</code></span></p></td>
-<td>frame allows horizontal resize
+<td class="enum_member_name"><p><a name="META-FRAME-ALLOWS-HORIZONTAL-RESIZE:CAPS"></a>META_FRAME_ALLOWS_HORIZONTAL_RESIZE</p></td>
+<td class="enum_member_description">
+<p>frame allows horizontal resize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-HAS-FOCUS:CAPS"></a><span class="term"><code class="literal">META_FRAME_HAS_FOCUS</code></span></p></td>
-<td>frame has focus
+<td class="enum_member_name"><p><a name="META-FRAME-HAS-FOCUS:CAPS"></a>META_FRAME_HAS_FOCUS</p></td>
+<td class="enum_member_description">
+<p>frame has focus</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-SHADED:CAPS"></a><span class="term"><code class="literal">META_FRAME_SHADED</code></span></p></td>
-<td>frame is shaded
+<td class="enum_member_name"><p><a name="META-FRAME-SHADED:CAPS"></a>META_FRAME_SHADED</p></td>
+<td class="enum_member_description">
+<p>frame is shaded</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-STUCK:CAPS"></a><span class="term"><code class="literal">META_FRAME_STUCK</code></span></p></td>
-<td>frame is stuck
+<td class="enum_member_name"><p><a name="META-FRAME-STUCK:CAPS"></a>META_FRAME_STUCK</p></td>
+<td class="enum_member_description">
+<p>frame is stuck</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-MAXIMIZED:CAPS"></a><span class="term"><code class="literal">META_FRAME_MAXIMIZED</code></span></p></td>
-<td>frame is maximized
+<td class="enum_member_name"><p><a name="META-FRAME-MAXIMIZED:CAPS"></a>META_FRAME_MAXIMIZED</p></td>
+<td class="enum_member_description">
+<p>frame is maximized</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-ALLOWS-SHADE:CAPS"></a><span class="term"><code class="literal">META_FRAME_ALLOWS_SHADE</code></span></p></td>
-<td>frame allows shade
+<td class="enum_member_name"><p><a name="META-FRAME-ALLOWS-SHADE:CAPS"></a>META_FRAME_ALLOWS_SHADE</p></td>
+<td class="enum_member_description">
+<p>frame allows shade</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-ALLOWS-MOVE:CAPS"></a><span class="term"><code class="literal">META_FRAME_ALLOWS_MOVE</code></span></p></td>
-<td>frame allows move
+<td class="enum_member_name"><p><a name="META-FRAME-ALLOWS-MOVE:CAPS"></a>META_FRAME_ALLOWS_MOVE</p></td>
+<td class="enum_member_description">
+<p>frame allows move</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-FULLSCREEN:CAPS"></a><span class="term"><code class="literal">META_FRAME_FULLSCREEN</code></span></p></td>
-<td>frame allows fullscreen
+<td class="enum_member_name"><p><a name="META-FRAME-FULLSCREEN:CAPS"></a>META_FRAME_FULLSCREEN</p></td>
+<td class="enum_member_description">
+<p>frame allows fullscreen</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-IS-FLASHING:CAPS"></a><span class="term"><code class="literal">META_FRAME_IS_FLASHING</code></span></p></td>
-<td>frame is flashing
+<td class="enum_member_name"><p><a name="META-FRAME-IS-FLASHING:CAPS"></a>META_FRAME_IS_FLASHING</p></td>
+<td class="enum_member_description">
+<p>frame is flashing</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-ABOVE:CAPS"></a><span class="term"><code class="literal">META_FRAME_ABOVE</code></span></p></td>
-<td>frame is above
+<td class="enum_member_name"><p><a name="META-FRAME-ABOVE:CAPS"></a>META_FRAME_ABOVE</p></td>
+<td class="enum_member_description">
+<p>frame is above</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-TILED-LEFT:CAPS"></a><span class="term"><code class="literal">META_FRAME_TILED_LEFT</code></span></p></td>
-<td>frame is tiled to the left
+<td class="enum_member_name"><p><a name="META-FRAME-TILED-LEFT:CAPS"></a>META_FRAME_TILED_LEFT</p></td>
+<td class="enum_member_description">
+<p>frame is tiled to the left</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-TILED-RIGHT:CAPS"></a><span class="term"><code class="literal">META_FRAME_TILED_RIGHT</code></span></p></td>
-<td>frame is tiled to the right
+<td class="enum_member_name"><p><a name="META-FRAME-TILED-RIGHT:CAPS"></a>META_FRAME_TILED_RIGHT</p></td>
+<td class="enum_member_description">
+<p>frame is tiled to the right</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaMenuOp"></a><h3>enum MetaMenuOp</h3>
-<pre class="programlisting">typedef enum {
-  META_MENU_OP_NONE        = 0,
-  META_MENU_OP_DELETE      = 1 &lt;&lt; 0,
-  META_MENU_OP_MINIMIZE    = 1 &lt;&lt; 1,
-  META_MENU_OP_UNMAXIMIZE  = 1 &lt;&lt; 2,
-  META_MENU_OP_MAXIMIZE    = 1 &lt;&lt; 3,
-  META_MENU_OP_UNSHADE     = 1 &lt;&lt; 4,
-  META_MENU_OP_SHADE       = 1 &lt;&lt; 5,
-  META_MENU_OP_UNSTICK     = 1 &lt;&lt; 6,
-  META_MENU_OP_STICK       = 1 &lt;&lt; 7,
-  META_MENU_OP_WORKSPACES  = 1 &lt;&lt; 8,
-  META_MENU_OP_MOVE        = 1 &lt;&lt; 9,
-  META_MENU_OP_RESIZE      = 1 &lt;&lt; 10,
-  META_MENU_OP_ABOVE       = 1 &lt;&lt; 11,
-  META_MENU_OP_UNABOVE     = 1 &lt;&lt; 12,
-  META_MENU_OP_MOVE_LEFT   = 1 &lt;&lt; 13,
-  META_MENU_OP_MOVE_RIGHT  = 1 &lt;&lt; 14,
-  META_MENU_OP_MOVE_UP     = 1 &lt;&lt; 15,
-  META_MENU_OP_MOVE_DOWN   = 1 &lt;&lt; 16,
-  META_MENU_OP_RECOVER     = 1 &lt;&lt; 17
-} MetaMenuOp;
-</pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.5.3"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-MENU-OP-NONE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_NONE</code></span></p></td>
-<td>No menu operation
+<td class="enum_member_name"><p><a name="META-MENU-OP-NONE:CAPS"></a>META_MENU_OP_NONE</p></td>
+<td class="enum_member_description">
+<p>No menu operation</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-DELETE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_DELETE</code></span></p></td>
-<td>Menu operation delete
+<td class="enum_member_name"><p><a name="META-MENU-OP-DELETE:CAPS"></a>META_MENU_OP_DELETE</p></td>
+<td class="enum_member_description">
+<p>Menu operation delete</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-MINIMIZE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_MINIMIZE</code></span></p></td>
-<td>Menu operation minimize
+<td class="enum_member_name"><p><a name="META-MENU-OP-MINIMIZE:CAPS"></a>META_MENU_OP_MINIMIZE</p></td>
+<td class="enum_member_description">
+<p>Menu operation minimize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-UNMAXIMIZE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_UNMAXIMIZE</code></span></p></td>
-<td>Menu operation unmaximize
+<td class="enum_member_name"><p><a name="META-MENU-OP-UNMAXIMIZE:CAPS"></a>META_MENU_OP_UNMAXIMIZE</p></td>
+<td class="enum_member_description">
+<p>Menu operation unmaximize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-MAXIMIZE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_MAXIMIZE</code></span></p></td>
-<td>Menu operation maximize
+<td class="enum_member_name"><p><a name="META-MENU-OP-MAXIMIZE:CAPS"></a>META_MENU_OP_MAXIMIZE</p></td>
+<td class="enum_member_description">
+<p>Menu operation maximize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-UNSHADE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_UNSHADE</code></span></p></td>
-<td>Menu operation unshade
+<td class="enum_member_name"><p><a name="META-MENU-OP-UNSHADE:CAPS"></a>META_MENU_OP_UNSHADE</p></td>
+<td class="enum_member_description">
+<p>Menu operation unshade</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-SHADE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_SHADE</code></span></p></td>
-<td>Menu operation shade
+<td class="enum_member_name"><p><a name="META-MENU-OP-SHADE:CAPS"></a>META_MENU_OP_SHADE</p></td>
+<td class="enum_member_description">
+<p>Menu operation shade</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-UNSTICK:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_UNSTICK</code></span></p></td>
-<td>Menu operation unstick
+<td class="enum_member_name"><p><a name="META-MENU-OP-UNSTICK:CAPS"></a>META_MENU_OP_UNSTICK</p></td>
+<td class="enum_member_description">
+<p>Menu operation unstick</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-STICK:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_STICK</code></span></p></td>
-<td>Menu operation stick
+<td class="enum_member_name"><p><a name="META-MENU-OP-STICK:CAPS"></a>META_MENU_OP_STICK</p></td>
+<td class="enum_member_description">
+<p>Menu operation stick</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-WORKSPACES:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_WORKSPACES</code></span></p></td>
-<td>Menu operation workspaces
+<td class="enum_member_name"><p><a name="META-MENU-OP-WORKSPACES:CAPS"></a>META_MENU_OP_WORKSPACES</p></td>
+<td class="enum_member_description">
+<p>Menu operation workspaces</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-MOVE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_MOVE</code></span></p></td>
-<td>Menu operation move
+<td class="enum_member_name"><p><a name="META-MENU-OP-MOVE:CAPS"></a>META_MENU_OP_MOVE</p></td>
+<td class="enum_member_description">
+<p>Menu operation move</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-RESIZE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_RESIZE</code></span></p></td>
-<td>Menu operation resize
+<td class="enum_member_name"><p><a name="META-MENU-OP-RESIZE:CAPS"></a>META_MENU_OP_RESIZE</p></td>
+<td class="enum_member_description">
+<p>Menu operation resize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-ABOVE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_ABOVE</code></span></p></td>
-<td>Menu operation above
+<td class="enum_member_name"><p><a name="META-MENU-OP-ABOVE:CAPS"></a>META_MENU_OP_ABOVE</p></td>
+<td class="enum_member_description">
+<p>Menu operation above</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-UNABOVE:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_UNABOVE</code></span></p></td>
-<td>Menu operation unabove
+<td class="enum_member_name"><p><a name="META-MENU-OP-UNABOVE:CAPS"></a>META_MENU_OP_UNABOVE</p></td>
+<td class="enum_member_description">
+<p>Menu operation unabove</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-MOVE-LEFT:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_MOVE_LEFT</code></span></p></td>
-<td>Menu operation left
+<td class="enum_member_name"><p><a name="META-MENU-OP-MOVE-LEFT:CAPS"></a>META_MENU_OP_MOVE_LEFT</p></td>
+<td class="enum_member_description">
+<p>Menu operation left</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-MOVE-RIGHT:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_MOVE_RIGHT</code></span></p></td>
-<td>Menu operation right
+<td class="enum_member_name"><p><a name="META-MENU-OP-MOVE-RIGHT:CAPS"></a>META_MENU_OP_MOVE_RIGHT</p></td>
+<td class="enum_member_description">
+<p>Menu operation right</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-MOVE-UP:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_MOVE_UP</code></span></p></td>
-<td>Menu operation up
+<td class="enum_member_name"><p><a name="META-MENU-OP-MOVE-UP:CAPS"></a>META_MENU_OP_MOVE_UP</p></td>
+<td class="enum_member_description">
+<p>Menu operation up</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-MOVE-DOWN:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_MOVE_DOWN</code></span></p></td>
-<td>Menu operation down
+<td class="enum_member_name"><p><a name="META-MENU-OP-MOVE-DOWN:CAPS"></a>META_MENU_OP_MOVE_DOWN</p></td>
+<td class="enum_member_description">
+<p>Menu operation down</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MENU-OP-RECOVER:CAPS"></a><span class="term"><code class="literal">META_MENU_OP_RECOVER</code></span></p></td>
-<td>Menu operation recover
+<td class="enum_member_name"><p><a name="META-MENU-OP-RECOVER:CAPS"></a>META_MENU_OP_RECOVER</p></td>
+<td class="enum_member_description">
+<p>Menu operation recover</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
-<hr>
-<div class="refsect2">
-<a name="MetaWindowMenuFunc"></a><h3>MetaWindowMenuFunc ()</h3>
-<pre class="programlisting"><span class="returnvalue">void</span>                (*MetaWindowMenuFunc)               (<em class="parameter"><code><a class="link" href="meta-Common.html#MetaWindowMenu" title="MetaWindowMenu"><span class="type">MetaWindowMenu</span></a> *menu</code></em>,
-                                                         <em class="parameter"><code><span class="type">Display</span> *xdisplay</code></em>,
-                                                         <em class="parameter"><code><span class="type">Window</span> client_xwindow</code></em>,
-                                                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="meta-Common.html#MetaMenuOp" title="enum MetaMenuOp"><span class="type">MetaMenuOp</span></a> op</code></em>,
-                                                         <em class="parameter"><code><span class="type">int</span> workspace</code></em>,
-                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaGrabOp"></a><h3>enum MetaGrabOp</h3>
-<pre class="programlisting">typedef enum {
-  META_GRAB_OP_NONE,
-
-  /* Mouse ops */
-  META_GRAB_OP_MOVING,
-  META_GRAB_OP_RESIZING_SE,
-  META_GRAB_OP_RESIZING_S,
-  META_GRAB_OP_RESIZING_SW,
-  META_GRAB_OP_RESIZING_N,
-  META_GRAB_OP_RESIZING_NE,
-  META_GRAB_OP_RESIZING_NW,
-  META_GRAB_OP_RESIZING_W,
-  META_GRAB_OP_RESIZING_E,
-
-  /* Keyboard ops */
-  META_GRAB_OP_KEYBOARD_MOVING,
-  META_GRAB_OP_KEYBOARD_RESIZING_UNKNOWN,
-  META_GRAB_OP_KEYBOARD_RESIZING_S,
-  META_GRAB_OP_KEYBOARD_RESIZING_N,
-  META_GRAB_OP_KEYBOARD_RESIZING_W,
-  META_GRAB_OP_KEYBOARD_RESIZING_E,
-  META_GRAB_OP_KEYBOARD_RESIZING_SE,
-  META_GRAB_OP_KEYBOARD_RESIZING_NE,
-  META_GRAB_OP_KEYBOARD_RESIZING_SW,
-  META_GRAB_OP_KEYBOARD_RESIZING_NW,
-
-  /* Alt+Tab */
-  META_GRAB_OP_KEYBOARD_TABBING_NORMAL,
-  META_GRAB_OP_KEYBOARD_TABBING_DOCK,
-
-  /* Alt+Esc */
-  META_GRAB_OP_KEYBOARD_ESCAPING_NORMAL,
-  META_GRAB_OP_KEYBOARD_ESCAPING_DOCK,
-
-  META_GRAB_OP_KEYBOARD_ESCAPING_GROUP,
-  
-  /* Alt+F6 */
-  META_GRAB_OP_KEYBOARD_TABBING_GROUP,
-  
-  META_GRAB_OP_KEYBOARD_WORKSPACE_SWITCHING,
-  
-  /* Frame button ops */
-  META_GRAB_OP_CLICKING_MINIMIZE,
-  META_GRAB_OP_CLICKING_MAXIMIZE,
-  META_GRAB_OP_CLICKING_UNMAXIMIZE,
-  META_GRAB_OP_CLICKING_DELETE,
-  META_GRAB_OP_CLICKING_MENU,
-  META_GRAB_OP_CLICKING_SHADE,
-  META_GRAB_OP_CLICKING_UNSHADE,
-  META_GRAB_OP_CLICKING_ABOVE,
-  META_GRAB_OP_CLICKING_UNABOVE,
-  META_GRAB_OP_CLICKING_STICK,
-  META_GRAB_OP_CLICKING_UNSTICK,
-
-  /* Special grab op when the compositor asked for a grab */
-  META_GRAB_OP_COMPOSITOR
-} MetaGrabOp;
-</pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.6.3"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-GRAB-OP-NONE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_NONE</code></span></p></td>
-<td>None
+<td class="enum_member_name"><p><a name="META-GRAB-OP-NONE:CAPS"></a>META_GRAB_OP_NONE</p></td>
+<td class="enum_member_description">
+<p>None</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-MOVING:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_MOVING</code></span></p></td>
-<td>Moving with pointer
+<td class="enum_member_name"><p><a name="META-GRAB-OP-MOVING:CAPS"></a>META_GRAB_OP_MOVING</p></td>
+<td class="enum_member_description">
+<p>Moving with pointer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-RESIZING-SE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_RESIZING_SE</code></span></p></td>
-<td>Resizing SE with pointer
+<td class="enum_member_name"><p><a name="META-GRAB-OP-RESIZING-SE:CAPS"></a>META_GRAB_OP_RESIZING_SE</p></td>
+<td class="enum_member_description">
+<p>Resizing SE with pointer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-RESIZING-S:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_RESIZING_S</code></span></p></td>
-<td>Resizing S with pointer
+<td class="enum_member_name"><p><a name="META-GRAB-OP-RESIZING-S:CAPS"></a>META_GRAB_OP_RESIZING_S</p></td>
+<td class="enum_member_description">
+<p>Resizing S with pointer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-RESIZING-SW:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_RESIZING_SW</code></span></p></td>
-<td>Resizing SW with pointer
+<td class="enum_member_name"><p><a name="META-GRAB-OP-RESIZING-SW:CAPS"></a>META_GRAB_OP_RESIZING_SW</p></td>
+<td class="enum_member_description">
+<p>Resizing SW with pointer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-RESIZING-N:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_RESIZING_N</code></span></p></td>
-<td>Resizing N with pointer
+<td class="enum_member_name"><p><a name="META-GRAB-OP-RESIZING-N:CAPS"></a>META_GRAB_OP_RESIZING_N</p></td>
+<td class="enum_member_description">
+<p>Resizing N with pointer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-RESIZING-NE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_RESIZING_NE</code></span></p></td>
-<td>Resizing NE with pointer
+<td class="enum_member_name"><p><a name="META-GRAB-OP-RESIZING-NE:CAPS"></a>META_GRAB_OP_RESIZING_NE</p></td>
+<td class="enum_member_description">
+<p>Resizing NE with pointer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-RESIZING-NW:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_RESIZING_NW</code></span></p></td>
-<td>Resizing NW with pointer
+<td class="enum_member_name"><p><a name="META-GRAB-OP-RESIZING-NW:CAPS"></a>META_GRAB_OP_RESIZING_NW</p></td>
+<td class="enum_member_description">
+<p>Resizing NW with pointer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-RESIZING-W:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_RESIZING_W</code></span></p></td>
-<td>Resizing W with pointer
+<td class="enum_member_name"><p><a name="META-GRAB-OP-RESIZING-W:CAPS"></a>META_GRAB_OP_RESIZING_W</p></td>
+<td class="enum_member_description">
+<p>Resizing W with pointer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-RESIZING-E:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_RESIZING_E</code></span></p></td>
-<td>Resizing E with pointer
+<td class="enum_member_name"><p><a name="META-GRAB-OP-RESIZING-E:CAPS"></a>META_GRAB_OP_RESIZING_E</p></td>
+<td class="enum_member_description">
+<p>Resizing E with pointer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-MOVING:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_MOVING</code></span></p></td>
-<td>Moving with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-MOVING:CAPS"></a>META_GRAB_OP_KEYBOARD_MOVING</p></td>
+<td class="enum_member_description">
+<p>Moving with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-UNKNOWN:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_RESIZING_UNKNOWN</code></span></p></td>
-<td>Resizing with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-UNKNOWN:CAPS"></a>META_GRAB_OP_KEYBOARD_RESIZING_UNKNOWN</p></td>
+<td class="enum_member_description">
+<p>Resizing with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-S:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_RESIZING_S</code></span></p></td>
-<td>Resizing S with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-S:CAPS"></a>META_GRAB_OP_KEYBOARD_RESIZING_S</p></td>
+<td class="enum_member_description">
+<p>Resizing S with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-N:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_RESIZING_N</code></span></p></td>
-<td>Resizing N with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-N:CAPS"></a>META_GRAB_OP_KEYBOARD_RESIZING_N</p></td>
+<td class="enum_member_description">
+<p>Resizing N with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-W:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_RESIZING_W</code></span></p></td>
-<td>Resizing W with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-W:CAPS"></a>META_GRAB_OP_KEYBOARD_RESIZING_W</p></td>
+<td class="enum_member_description">
+<p>Resizing W with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-E:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_RESIZING_E</code></span></p></td>
-<td>Resizing E with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-E:CAPS"></a>META_GRAB_OP_KEYBOARD_RESIZING_E</p></td>
+<td class="enum_member_description">
+<p>Resizing E with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-SE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_RESIZING_SE</code></span></p></td>
-<td>Resizing SE with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-SE:CAPS"></a>META_GRAB_OP_KEYBOARD_RESIZING_SE</p></td>
+<td class="enum_member_description">
+<p>Resizing SE with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-NE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_RESIZING_NE</code></span></p></td>
-<td>Resizing NE with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-NE:CAPS"></a>META_GRAB_OP_KEYBOARD_RESIZING_NE</p></td>
+<td class="enum_member_description">
+<p>Resizing NE with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-SW:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_RESIZING_SW</code></span></p></td>
-<td>Resizing SW with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-SW:CAPS"></a>META_GRAB_OP_KEYBOARD_RESIZING_SW</p></td>
+<td class="enum_member_description">
+<p>Resizing SW with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-NW:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_RESIZING_NW</code></span></p></td>
-<td>Resizing NS with keyboard
+<td class="enum_member_name"><p><a name="META-GRAB-OP-KEYBOARD-RESIZING-NW:CAPS"></a>META_GRAB_OP_KEYBOARD_RESIZING_NW</p></td>
+<td class="enum_member_description">
+<p>Resizing NS with keyboard</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-TABBING-NORMAL:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_TABBING_NORMAL</code></span></p></td>
-<td>Tabbing
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-MINIMIZE:CAPS"></a>META_GRAB_OP_CLICKING_MINIMIZE</p></td>
+<td class="enum_member_description">
+<p>Clicked minimize button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-TABBING-DOCK:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_TABBING_DOCK</code></span></p></td>
-<td>Tabbing through docks
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-MAXIMIZE:CAPS"></a>META_GRAB_OP_CLICKING_MAXIMIZE</p></td>
+<td class="enum_member_description">
+<p>Clicked maximize button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-ESCAPING-NORMAL:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_ESCAPING_NORMAL</code></span></p></td>
-<td>Escaping
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-UNMAXIMIZE:CAPS"></a>META_GRAB_OP_CLICKING_UNMAXIMIZE</p></td>
+<td class="enum_member_description">
+<p>Clicked unmaximize button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-ESCAPING-DOCK:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_ESCAPING_DOCK</code></span></p></td>
-<td>Escaping through docks
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-DELETE:CAPS"></a>META_GRAB_OP_CLICKING_DELETE</p></td>
+<td class="enum_member_description">
+<p>Clicked delete button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-ESCAPING-GROUP:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_ESCAPING_GROUP</code></span></p></td>
-<td>Escaping through groups
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-MENU:CAPS"></a>META_GRAB_OP_CLICKING_MENU</p></td>
+<td class="enum_member_description">
+<p>Clicked on menu</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-TABBING-GROUP:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_TABBING_GROUP</code></span></p></td>
-<td>Tabbing through groups
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-SHADE:CAPS"></a>META_GRAB_OP_CLICKING_SHADE</p></td>
+<td class="enum_member_description">
+<p>Clicked shade button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-KEYBOARD-WORKSPACE-SWITCHING:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_KEYBOARD_WORKSPACE_SWITCHING</code></span></p></td>
-<td>Switch to another workspace
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-UNSHADE:CAPS"></a>META_GRAB_OP_CLICKING_UNSHADE</p></td>
+<td class="enum_member_description">
+<p>Clicked unshade button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-CLICKING-MINIMIZE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_MINIMIZE</code></span></p></td>
-<td>Clicked minimize button
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-ABOVE:CAPS"></a>META_GRAB_OP_CLICKING_ABOVE</p></td>
+<td class="enum_member_description">
+<p>Clicked above button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-CLICKING-MAXIMIZE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_MAXIMIZE</code></span></p></td>
-<td>Clicked maximize button
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-UNABOVE:CAPS"></a>META_GRAB_OP_CLICKING_UNABOVE</p></td>
+<td class="enum_member_description">
+<p>Clicked unabove button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-CLICKING-UNMAXIMIZE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_UNMAXIMIZE</code></span></p></td>
-<td>Clicked unmaximize button
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-STICK:CAPS"></a>META_GRAB_OP_CLICKING_STICK</p></td>
+<td class="enum_member_description">
+<p>Clicked stick button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-CLICKING-DELETE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_DELETE</code></span></p></td>
-<td>Clicked delete button
+<td class="enum_member_name"><p><a name="META-GRAB-OP-CLICKING-UNSTICK:CAPS"></a>META_GRAB_OP_CLICKING_UNSTICK</p></td>
+<td class="enum_member_description">
+<p>Clicked unstick button</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-GRAB-OP-CLICKING-MENU:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_MENU</code></span></p></td>
-<td>Clicked on menu
+<td class="enum_member_name"><p><a name="META-GRAB-OP-COMPOSITOR:CAPS"></a>META_GRAB_OP_COMPOSITOR</p></td>
+<td class="enum_member_description">
+<p>Compositor asked for grab</p>
 </td>
-</tr>
-<tr>
-<td><p><a name="META-GRAB-OP-CLICKING-SHADE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_SHADE</code></span></p></td>
-<td>Clicked shade button
-</td>
-</tr>
-<tr>
-<td><p><a name="META-GRAB-OP-CLICKING-UNSHADE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_UNSHADE</code></span></p></td>
-<td>Clicked unshade button
-</td>
-</tr>
-<tr>
-<td><p><a name="META-GRAB-OP-CLICKING-ABOVE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_ABOVE</code></span></p></td>
-<td>Clicked above button
-</td>
-</tr>
-<tr>
-<td><p><a name="META-GRAB-OP-CLICKING-UNABOVE:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_UNABOVE</code></span></p></td>
-<td>Clicked unabove button
-</td>
-</tr>
-<tr>
-<td><p><a name="META-GRAB-OP-CLICKING-STICK:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_STICK</code></span></p></td>
-<td>Clicked stick button
-</td>
-</tr>
-<tr>
-<td><p><a name="META-GRAB-OP-CLICKING-UNSTICK:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_CLICKING_UNSTICK</code></span></p></td>
-<td>Clicked unstick button
-</td>
-</tr>
-<tr>
-<td><p><a name="META-GRAB-OP-COMPOSITOR:CAPS"></a><span class="term"><code class="literal">META_GRAB_OP_COMPOSITOR</code></span></p></td>
-<td>Compositor asked for grab
-</td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaCursor"></a><h3>enum MetaCursor</h3>
-<pre class="programlisting">typedef enum {
-  META_CURSOR_DEFAULT,
-  META_CURSOR_NORTH_RESIZE,
-  META_CURSOR_SOUTH_RESIZE,
-  META_CURSOR_WEST_RESIZE,
-  META_CURSOR_EAST_RESIZE,
-  META_CURSOR_SE_RESIZE,
-  META_CURSOR_SW_RESIZE,
-  META_CURSOR_NE_RESIZE,
-  META_CURSOR_NW_RESIZE,
-  META_CURSOR_MOVE_OR_RESIZE_WINDOW,
-  META_CURSOR_BUSY,
-  META_CURSOR_DND_IN_DRAG,
-  META_CURSOR_DND_MOVE,
-  META_CURSOR_DND_COPY,
-  META_CURSOR_DND_UNSUPPORTED_TARGET,
-  META_CURSOR_POINTING_HAND,
-  META_CURSOR_CROSSHAIR,
-  META_CURSOR_IBEAM,
-  META_CURSOR_LAST
-} MetaCursor;
-</pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.7.3"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-CURSOR-DEFAULT:CAPS"></a><span class="term"><code class="literal">META_CURSOR_DEFAULT</code></span></p></td>
-<td>Default cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-DEFAULT:CAPS"></a>META_CURSOR_DEFAULT</p></td>
+<td class="enum_member_description">
+<p>Default cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-NORTH-RESIZE:CAPS"></a><span class="term"><code class="literal">META_CURSOR_NORTH_RESIZE</code></span></p></td>
-<td>Resize northern edge cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-NORTH-RESIZE:CAPS"></a>META_CURSOR_NORTH_RESIZE</p></td>
+<td class="enum_member_description">
+<p>Resize northern edge cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-SOUTH-RESIZE:CAPS"></a><span class="term"><code class="literal">META_CURSOR_SOUTH_RESIZE</code></span></p></td>
-<td>Resize southern edge cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-SOUTH-RESIZE:CAPS"></a>META_CURSOR_SOUTH_RESIZE</p></td>
+<td class="enum_member_description">
+<p>Resize southern edge cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-WEST-RESIZE:CAPS"></a><span class="term"><code class="literal">META_CURSOR_WEST_RESIZE</code></span></p></td>
-<td>Resize western edge cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-WEST-RESIZE:CAPS"></a>META_CURSOR_WEST_RESIZE</p></td>
+<td class="enum_member_description">
+<p>Resize western edge cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-EAST-RESIZE:CAPS"></a><span class="term"><code class="literal">META_CURSOR_EAST_RESIZE</code></span></p></td>
-<td>Resize eastern edge cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-EAST-RESIZE:CAPS"></a>META_CURSOR_EAST_RESIZE</p></td>
+<td class="enum_member_description">
+<p>Resize eastern edge cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-SE-RESIZE:CAPS"></a><span class="term"><code class="literal">META_CURSOR_SE_RESIZE</code></span></p></td>
-<td>Resize south-eastern corner cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-SE-RESIZE:CAPS"></a>META_CURSOR_SE_RESIZE</p></td>
+<td class="enum_member_description">
+<p>Resize south-eastern corner cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-SW-RESIZE:CAPS"></a><span class="term"><code class="literal">META_CURSOR_SW_RESIZE</code></span></p></td>
-<td>Resize south-western corner cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-SW-RESIZE:CAPS"></a>META_CURSOR_SW_RESIZE</p></td>
+<td class="enum_member_description">
+<p>Resize south-western corner cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-NE-RESIZE:CAPS"></a><span class="term"><code class="literal">META_CURSOR_NE_RESIZE</code></span></p></td>
-<td>Resize north-eastern corner cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-NE-RESIZE:CAPS"></a>META_CURSOR_NE_RESIZE</p></td>
+<td class="enum_member_description">
+<p>Resize north-eastern corner cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-NW-RESIZE:CAPS"></a><span class="term"><code class="literal">META_CURSOR_NW_RESIZE</code></span></p></td>
-<td>Resize north-western corner cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-NW-RESIZE:CAPS"></a>META_CURSOR_NW_RESIZE</p></td>
+<td class="enum_member_description">
+<p>Resize north-western corner cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-MOVE-OR-RESIZE-WINDOW:CAPS"></a><span class="term"><code class="literal">META_CURSOR_MOVE_OR_RESIZE_WINDOW</code></span></p></td>
-<td>Move or resize cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-MOVE-OR-RESIZE-WINDOW:CAPS"></a>META_CURSOR_MOVE_OR_RESIZE_WINDOW</p></td>
+<td class="enum_member_description">
+<p>Move or resize cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-BUSY:CAPS"></a><span class="term"><code class="literal">META_CURSOR_BUSY</code></span></p></td>
-<td>Busy cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-BUSY:CAPS"></a>META_CURSOR_BUSY</p></td>
+<td class="enum_member_description">
+<p>Busy cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-DND-IN-DRAG:CAPS"></a><span class="term"><code class="literal">META_CURSOR_DND_IN_DRAG</code></span></p></td>
-<td>DND in drag cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-DND-IN-DRAG:CAPS"></a>META_CURSOR_DND_IN_DRAG</p></td>
+<td class="enum_member_description">
+<p>DND in drag cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-DND-MOVE:CAPS"></a><span class="term"><code class="literal">META_CURSOR_DND_MOVE</code></span></p></td>
-<td>DND move cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-DND-MOVE:CAPS"></a>META_CURSOR_DND_MOVE</p></td>
+<td class="enum_member_description">
+<p>DND move cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-DND-COPY:CAPS"></a><span class="term"><code class="literal">META_CURSOR_DND_COPY</code></span></p></td>
-<td>DND copy cursor
+<td class="enum_member_name"><p><a name="META-CURSOR-DND-COPY:CAPS"></a>META_CURSOR_DND_COPY</p></td>
+<td class="enum_member_description">
+<p>DND copy cursor</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-DND-UNSUPPORTED-TARGET:CAPS"></a><span class="term"><code class="literal">META_CURSOR_DND_UNSUPPORTED_TARGET</code></span></p></td>
-<td>DND unsupported target
+<td class="enum_member_name"><p><a name="META-CURSOR-DND-UNSUPPORTED-TARGET:CAPS"></a>META_CURSOR_DND_UNSUPPORTED_TARGET</p></td>
+<td class="enum_member_description">
+<p>DND unsupported target</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-POINTING-HAND:CAPS"></a><span class="term"><code class="literal">META_CURSOR_POINTING_HAND</code></span></p></td>
-<td>pointing hand
+<td class="enum_member_name"><p><a name="META-CURSOR-POINTING-HAND:CAPS"></a>META_CURSOR_POINTING_HAND</p></td>
+<td class="enum_member_description">
+<p>pointing hand</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-CROSSHAIR:CAPS"></a><span class="term"><code class="literal">META_CURSOR_CROSSHAIR</code></span></p></td>
-<td>crosshair (action forbidden)
+<td class="enum_member_name"><p><a name="META-CURSOR-CROSSHAIR:CAPS"></a>META_CURSOR_CROSSHAIR</p></td>
+<td class="enum_member_description">
+<p>crosshair (action forbidden)</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-IBEAM:CAPS"></a><span class="term"><code class="literal">META_CURSOR_IBEAM</code></span></p></td>
-<td>I-beam (text input)
+<td class="enum_member_name"><p><a name="META-CURSOR-IBEAM:CAPS"></a>META_CURSOR_IBEAM</p></td>
+<td class="enum_member_description">
+<p>I-beam (text input)</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-CURSOR-LAST:CAPS"></a><span class="term"><code class="literal">META_CURSOR_LAST</code></span></p></td>
-<td></td>
+<td class="enum_member_name"><p><a name="META-CURSOR-LAST:CAPS"></a>META_CURSOR_LAST</p></td>
+<td> </td>
+<td> </td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaFrameType"></a><h3>enum MetaFrameType</h3>
-<pre class="programlisting">typedef enum {
-  META_FRAME_TYPE_NORMAL,
-  META_FRAME_TYPE_DIALOG,
-  META_FRAME_TYPE_MODAL_DIALOG,
-  META_FRAME_TYPE_UTILITY,
-  META_FRAME_TYPE_MENU,
-  META_FRAME_TYPE_BORDER,
-  META_FRAME_TYPE_ATTACHED,
-  META_FRAME_TYPE_LAST
-} MetaFrameType;
-</pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.8.3"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-FRAME-TYPE-NORMAL:CAPS"></a><span class="term"><code class="literal">META_FRAME_TYPE_NORMAL</code></span></p></td>
-<td>Normal frame
+<td class="enum_member_name"><p><a name="META-FRAME-TYPE-NORMAL:CAPS"></a>META_FRAME_TYPE_NORMAL</p></td>
+<td class="enum_member_description">
+<p>Normal frame</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-TYPE-DIALOG:CAPS"></a><span class="term"><code class="literal">META_FRAME_TYPE_DIALOG</code></span></p></td>
-<td>Dialog frame
+<td class="enum_member_name"><p><a name="META-FRAME-TYPE-DIALOG:CAPS"></a>META_FRAME_TYPE_DIALOG</p></td>
+<td class="enum_member_description">
+<p>Dialog frame</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-TYPE-MODAL-DIALOG:CAPS"></a><span class="term"><code class="literal">META_FRAME_TYPE_MODAL_DIALOG</code></span></p></td>
-<td>Modal dialog frame
+<td class="enum_member_name"><p><a name="META-FRAME-TYPE-MODAL-DIALOG:CAPS"></a>META_FRAME_TYPE_MODAL_DIALOG</p></td>
+<td class="enum_member_description">
+<p>Modal dialog frame</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-TYPE-UTILITY:CAPS"></a><span class="term"><code class="literal">META_FRAME_TYPE_UTILITY</code></span></p></td>
-<td>Utility frame
+<td class="enum_member_name"><p><a name="META-FRAME-TYPE-UTILITY:CAPS"></a>META_FRAME_TYPE_UTILITY</p></td>
+<td class="enum_member_description">
+<p>Utility frame</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-TYPE-MENU:CAPS"></a><span class="term"><code class="literal">META_FRAME_TYPE_MENU</code></span></p></td>
-<td>Menu frame
+<td class="enum_member_name"><p><a name="META-FRAME-TYPE-MENU:CAPS"></a>META_FRAME_TYPE_MENU</p></td>
+<td class="enum_member_description">
+<p>Menu frame</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-TYPE-BORDER:CAPS"></a><span class="term"><code class="literal">META_FRAME_TYPE_BORDER</code></span></p></td>
-<td>Border frame
+<td class="enum_member_name"><p><a name="META-FRAME-TYPE-BORDER:CAPS"></a>META_FRAME_TYPE_BORDER</p></td>
+<td class="enum_member_description">
+<p>Border frame</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-TYPE-ATTACHED:CAPS"></a><span class="term"><code class="literal">META_FRAME_TYPE_ATTACHED</code></span></p></td>
-<td>Attached frame
+<td class="enum_member_name"><p><a name="META-FRAME-TYPE-ATTACHED:CAPS"></a>META_FRAME_TYPE_ATTACHED</p></td>
+<td class="enum_member_description">
+<p>Attached frame</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-FRAME-TYPE-LAST:CAPS"></a><span class="term"><code class="literal">META_FRAME_TYPE_LAST</code></span></p></td>
-<td>Marks the end of the <a class="link" href="meta-Common.html#MetaFrameType" title="enum MetaFrameType"><span class="type">MetaFrameType</span></a> enumeration
+<td class="enum_member_name"><p><a name="META-FRAME-TYPE-LAST:CAPS"></a>META_FRAME_TYPE_LAST</p></td>
+<td class="enum_member_description">
+<p>Marks the end of the <a class="link" href="meta-Common.html#MetaFrameType" title="enum MetaFrameType"><span class="type">MetaFrameType</span></a> enumeration</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaVirtualModifier"></a><h3>enum MetaVirtualModifier</h3>
-<pre class="programlisting">typedef enum {
-  /* Create gratuitous divergence from regular
-   * X mod bits, to be sure we find bugs
-   */
-  META_VIRTUAL_SHIFT_MASK    = 1 &lt;&lt; 5,
-  META_VIRTUAL_CONTROL_MASK  = 1 &lt;&lt; 6,
-  META_VIRTUAL_ALT_MASK      = 1 &lt;&lt; 7,  
-  META_VIRTUAL_META_MASK     = 1 &lt;&lt; 8,
-  META_VIRTUAL_SUPER_MASK    = 1 &lt;&lt; 9,
-  META_VIRTUAL_HYPER_MASK    = 1 &lt;&lt; 10,
-  META_VIRTUAL_MOD2_MASK     = 1 &lt;&lt; 11,
-  META_VIRTUAL_MOD3_MASK     = 1 &lt;&lt; 12,
-  META_VIRTUAL_MOD4_MASK     = 1 &lt;&lt; 13,
-  META_VIRTUAL_MOD5_MASK     = 1 &lt;&lt; 14
-} MetaVirtualModifier;
-</pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.9.3"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-VIRTUAL-SHIFT-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_SHIFT_MASK</code></span></p></td>
-<td>Shift mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-SHIFT-MASK:CAPS"></a>META_VIRTUAL_SHIFT_MASK</p></td>
+<td class="enum_member_description">
+<p>Shift mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-VIRTUAL-CONTROL-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_CONTROL_MASK</code></span></p></td>
-<td>Control mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-CONTROL-MASK:CAPS"></a>META_VIRTUAL_CONTROL_MASK</p></td>
+<td class="enum_member_description">
+<p>Control mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-VIRTUAL-ALT-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_ALT_MASK</code></span></p></td>
-<td>Alt mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-ALT-MASK:CAPS"></a>META_VIRTUAL_ALT_MASK</p></td>
+<td class="enum_member_description">
+<p>Alt mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-VIRTUAL-META-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_META_MASK</code></span></p></td>
-<td>Meta mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-META-MASK:CAPS"></a>META_VIRTUAL_META_MASK</p></td>
+<td class="enum_member_description">
+<p>Meta mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-VIRTUAL-SUPER-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_SUPER_MASK</code></span></p></td>
-<td>Super mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-SUPER-MASK:CAPS"></a>META_VIRTUAL_SUPER_MASK</p></td>
+<td class="enum_member_description">
+<p>Super mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-VIRTUAL-HYPER-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_HYPER_MASK</code></span></p></td>
-<td>Hyper mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-HYPER-MASK:CAPS"></a>META_VIRTUAL_HYPER_MASK</p></td>
+<td class="enum_member_description">
+<p>Hyper mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-VIRTUAL-MOD2-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_MOD2_MASK</code></span></p></td>
-<td>Mod2 mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-MOD2-MASK:CAPS"></a>META_VIRTUAL_MOD2_MASK</p></td>
+<td class="enum_member_description">
+<p>Mod2 mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-VIRTUAL-MOD3-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_MOD3_MASK</code></span></p></td>
-<td>Mod3 mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-MOD3-MASK:CAPS"></a>META_VIRTUAL_MOD3_MASK</p></td>
+<td class="enum_member_description">
+<p>Mod3 mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-VIRTUAL-MOD4-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_MOD4_MASK</code></span></p></td>
-<td>Mod4 mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-MOD4-MASK:CAPS"></a>META_VIRTUAL_MOD4_MASK</p></td>
+<td class="enum_member_description">
+<p>Mod4 mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-VIRTUAL-MOD5-MASK:CAPS"></a><span class="term"><code class="literal">META_VIRTUAL_MOD5_MASK</code></span></p></td>
-<td>Mod5 mask
+<td class="enum_member_name"><p><a name="META-VIRTUAL-MOD5-MASK:CAPS"></a>META_VIRTUAL_MOD5_MASK</p></td>
+<td class="enum_member_description">
+<p>Mod5 mask</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaDirection"></a><h3>enum MetaDirection</h3>
-<pre class="programlisting">typedef enum {
-  META_DIRECTION_LEFT       = 1 &lt;&lt; 0,
-  META_DIRECTION_RIGHT      = 1 &lt;&lt; 1,
-  META_DIRECTION_TOP        = 1 &lt;&lt; 2,
-  META_DIRECTION_BOTTOM     = 1 &lt;&lt; 3,
-
-  /* Some aliases for making code more readable for various circumstances. */
-  META_DIRECTION_UP         = META_DIRECTION_TOP,
-  META_DIRECTION_DOWN       = META_DIRECTION_BOTTOM,
-
-  /* A few more definitions using aliases */
-  META_DIRECTION_HORIZONTAL = META_DIRECTION_LEFT | META_DIRECTION_RIGHT,
-  META_DIRECTION_VERTICAL   = META_DIRECTION_UP   | META_DIRECTION_DOWN,
-} MetaDirection;
-</pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.10.3"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-DIRECTION-LEFT:CAPS"></a><span class="term"><code class="literal">META_DIRECTION_LEFT</code></span></p></td>
-<td>Left
+<td class="enum_member_name"><p><a name="META-DIRECTION-LEFT:CAPS"></a>META_DIRECTION_LEFT</p></td>
+<td class="enum_member_description">
+<p>Left</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-DIRECTION-RIGHT:CAPS"></a><span class="term"><code class="literal">META_DIRECTION_RIGHT</code></span></p></td>
-<td>Right
+<td class="enum_member_name"><p><a name="META-DIRECTION-RIGHT:CAPS"></a>META_DIRECTION_RIGHT</p></td>
+<td class="enum_member_description">
+<p>Right</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-DIRECTION-TOP:CAPS"></a><span class="term"><code class="literal">META_DIRECTION_TOP</code></span></p></td>
-<td>Top
+<td class="enum_member_name"><p><a name="META-DIRECTION-TOP:CAPS"></a>META_DIRECTION_TOP</p></td>
+<td class="enum_member_description">
+<p>Top</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-DIRECTION-BOTTOM:CAPS"></a><span class="term"><code class="literal">META_DIRECTION_BOTTOM</code></span></p></td>
-<td>Bottom
+<td class="enum_member_name"><p><a name="META-DIRECTION-BOTTOM:CAPS"></a>META_DIRECTION_BOTTOM</p></td>
+<td class="enum_member_description">
+<p>Bottom</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-DIRECTION-UP:CAPS"></a><span class="term"><code class="literal">META_DIRECTION_UP</code></span></p></td>
-<td>Up
+<td class="enum_member_name"><p><a name="META-DIRECTION-UP:CAPS"></a>META_DIRECTION_UP</p></td>
+<td class="enum_member_description">
+<p>Up</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-DIRECTION-DOWN:CAPS"></a><span class="term"><code class="literal">META_DIRECTION_DOWN</code></span></p></td>
-<td>Down
+<td class="enum_member_name"><p><a name="META-DIRECTION-DOWN:CAPS"></a>META_DIRECTION_DOWN</p></td>
+<td class="enum_member_description">
+<p>Down</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-DIRECTION-HORIZONTAL:CAPS"></a><span class="term"><code class="literal">META_DIRECTION_HORIZONTAL</code></span></p></td>
-<td>Horizontal
+<td class="enum_member_name"><p><a name="META-DIRECTION-HORIZONTAL:CAPS"></a>META_DIRECTION_HORIZONTAL</p></td>
+<td class="enum_member_description">
+<p>Horizontal</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-DIRECTION-VERTICAL:CAPS"></a><span class="term"><code class="literal">META_DIRECTION_VERTICAL</code></span></p></td>
-<td>Vertical
+<td class="enum_member_name"><p><a name="META-DIRECTION-VERTICAL:CAPS"></a>META_DIRECTION_VERTICAL</p></td>
+<td class="enum_member_description">
+<p>Vertical</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaMotionDirection"></a><h3>enum MetaMotionDirection</h3>
-<pre class="programlisting">typedef enum {
-  META_MOTION_UP = -1,
-  META_MOTION_DOWN = -2,
-  META_MOTION_LEFT = -3,
-  META_MOTION_RIGHT = -4,
-  /* These are only used for effects */
-  META_MOTION_UP_LEFT = -5,
-  META_MOTION_UP_RIGHT = -6,
-  META_MOTION_DOWN_LEFT = -7,
-  META_MOTION_DOWN_RIGHT = -8
-} MetaMotionDirection;
-</pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.11.3"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-MOTION-UP:CAPS"></a><span class="term"><code class="literal">META_MOTION_UP</code></span></p></td>
-<td>Upwards motion
+<td class="enum_member_name"><p><a name="META-MOTION-UP:CAPS"></a>META_MOTION_UP</p></td>
+<td class="enum_member_description">
+<p>Upwards motion</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MOTION-DOWN:CAPS"></a><span class="term"><code class="literal">META_MOTION_DOWN</code></span></p></td>
-<td>Downwards motion
+<td class="enum_member_name"><p><a name="META-MOTION-DOWN:CAPS"></a>META_MOTION_DOWN</p></td>
+<td class="enum_member_description">
+<p>Downwards motion</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MOTION-LEFT:CAPS"></a><span class="term"><code class="literal">META_MOTION_LEFT</code></span></p></td>
-<td>Motion to the left
+<td class="enum_member_name"><p><a name="META-MOTION-LEFT:CAPS"></a>META_MOTION_LEFT</p></td>
+<td class="enum_member_description">
+<p>Motion to the left</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MOTION-RIGHT:CAPS"></a><span class="term"><code class="literal">META_MOTION_RIGHT</code></span></p></td>
-<td>Motion to the right
+<td class="enum_member_name"><p><a name="META-MOTION-RIGHT:CAPS"></a>META_MOTION_RIGHT</p></td>
+<td class="enum_member_description">
+<p>Motion to the right</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MOTION-UP-LEFT:CAPS"></a><span class="term"><code class="literal">META_MOTION_UP_LEFT</code></span></p></td>
-<td>Motion up and to the left
+<td class="enum_member_name"><p><a name="META-MOTION-UP-LEFT:CAPS"></a>META_MOTION_UP_LEFT</p></td>
+<td class="enum_member_description">
+<p>Motion up and to the left</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MOTION-UP-RIGHT:CAPS"></a><span class="term"><code class="literal">META_MOTION_UP_RIGHT</code></span></p></td>
-<td>Motion up and to the right
+<td class="enum_member_name"><p><a name="META-MOTION-UP-RIGHT:CAPS"></a>META_MOTION_UP_RIGHT</p></td>
+<td class="enum_member_description">
+<p>Motion up and to the right</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MOTION-DOWN-LEFT:CAPS"></a><span class="term"><code class="literal">META_MOTION_DOWN_LEFT</code></span></p></td>
-<td>Motion down and to the left
+<td class="enum_member_name"><p><a name="META-MOTION-DOWN-LEFT:CAPS"></a>META_MOTION_DOWN_LEFT</p></td>
+<td class="enum_member_description">
+<p>Motion down and to the left</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-MOTION-DOWN-RIGHT:CAPS"></a><span class="term"><code class="literal">META_MOTION_DOWN_RIGHT</code></span></p></td>
-<td>Motion down and to the right
+<td class="enum_member_name"><p><a name="META-MOTION-DOWN-RIGHT:CAPS"></a>META_MOTION_DOWN_RIGHT</p></td>
+<td class="enum_member_description">
+<p>Motion down and to the right</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
 <a name="MetaSide"></a><h3>enum MetaSide</h3>
-<pre class="programlisting">typedef enum {
-  META_SIDE_LEFT            = META_DIRECTION_LEFT,
-  META_SIDE_RIGHT           = META_DIRECTION_RIGHT,
-  META_SIDE_TOP             = META_DIRECTION_TOP,
-  META_SIDE_BOTTOM          = META_DIRECTION_BOTTOM
-} MetaSide;
-</pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.12.3"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-SIDE-LEFT:CAPS"></a><span class="term"><code class="literal">META_SIDE_LEFT</code></span></p></td>
-<td>Left side
+<td class="enum_member_name"><p><a name="META-SIDE-LEFT:CAPS"></a>META_SIDE_LEFT</p></td>
+<td class="enum_member_description">
+<p>Left side</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-SIDE-RIGHT:CAPS"></a><span class="term"><code class="literal">META_SIDE_RIGHT</code></span></p></td>
-<td>Right side
+<td class="enum_member_name"><p><a name="META-SIDE-RIGHT:CAPS"></a>META_SIDE_RIGHT</p></td>
+<td class="enum_member_description">
+<p>Right side</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-SIDE-TOP:CAPS"></a><span class="term"><code class="literal">META_SIDE_TOP</code></span></p></td>
-<td>Top side
+<td class="enum_member_name"><p><a name="META-SIDE-TOP:CAPS"></a>META_SIDE_TOP</p></td>
+<td class="enum_member_description">
+<p>Top side</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-SIDE-BOTTOM:CAPS"></a><span class="term"><code class="literal">META_SIDE_BOTTOM</code></span></p></td>
-<td>Bottom side
+<td class="enum_member_name"><p><a name="META-SIDE-BOTTOM:CAPS"></a>META_SIDE_BOTTOM</p></td>
+<td class="enum_member_description">
+<p>Bottom side</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
+</div>
 <hr>
 <div class="refsect2">
 <a name="MetaButtonFunction"></a><h3>enum MetaButtonFunction</h3>
-<pre class="programlisting">typedef enum {
-  META_BUTTON_FUNCTION_MENU,
-  META_BUTTON_FUNCTION_MINIMIZE,
-  META_BUTTON_FUNCTION_MAXIMIZE,
-  META_BUTTON_FUNCTION_CLOSE,
-  META_BUTTON_FUNCTION_SHADE,
-  META_BUTTON_FUNCTION_ABOVE,
-  META_BUTTON_FUNCTION_STICK,
-  META_BUTTON_FUNCTION_UNSHADE,
-  META_BUTTON_FUNCTION_UNABOVE,
-  META_BUTTON_FUNCTION_UNSTICK,
-  META_BUTTON_FUNCTION_LAST
-} MetaButtonFunction;
-</pre>
-<p>
-Function a window button can have.  Note, you can't add stuff here
+<p>Function a window button can have.  Note, you can't add stuff here
 without extending the theme format to draw a new function and
-breaking all existing themes.
-</p>
-<div class="variablelist"><table border="0" class="variablelist">
+breaking all existing themes.</p>
+<div class="refsect3">
+<a name="id-1.4.3.7.13.4"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-MENU:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_MENU</code></span></p></td>
-<td>Menu
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-MENU:CAPS"></a>META_BUTTON_FUNCTION_MENU</p></td>
+<td class="enum_member_description">
+<p>Menu</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-MINIMIZE:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_MINIMIZE</code></span></p></td>
-<td>Minimize
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-MINIMIZE:CAPS"></a>META_BUTTON_FUNCTION_MINIMIZE</p></td>
+<td class="enum_member_description">
+<p>Minimize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-MAXIMIZE:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_MAXIMIZE</code></span></p></td>
-<td>Maximize
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-MAXIMIZE:CAPS"></a>META_BUTTON_FUNCTION_MAXIMIZE</p></td>
+<td class="enum_member_description">
+<p>Maximize</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-CLOSE:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_CLOSE</code></span></p></td>
-<td>Close
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-CLOSE:CAPS"></a>META_BUTTON_FUNCTION_CLOSE</p></td>
+<td class="enum_member_description">
+<p>Close</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-SHADE:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_SHADE</code></span></p></td>
-<td>Shade
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-SHADE:CAPS"></a>META_BUTTON_FUNCTION_SHADE</p></td>
+<td class="enum_member_description">
+<p>Shade</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-ABOVE:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_ABOVE</code></span></p></td>
-<td>Above
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-ABOVE:CAPS"></a>META_BUTTON_FUNCTION_ABOVE</p></td>
+<td class="enum_member_description">
+<p>Above</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-STICK:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_STICK</code></span></p></td>
-<td>Stick
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-STICK:CAPS"></a>META_BUTTON_FUNCTION_STICK</p></td>
+<td class="enum_member_description">
+<p>Stick</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-UNSHADE:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_UNSHADE</code></span></p></td>
-<td>Unshade
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-UNSHADE:CAPS"></a>META_BUTTON_FUNCTION_UNSHADE</p></td>
+<td class="enum_member_description">
+<p>Unshade</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-UNABOVE:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_UNABOVE</code></span></p></td>
-<td>Unabove
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-UNABOVE:CAPS"></a>META_BUTTON_FUNCTION_UNABOVE</p></td>
+<td class="enum_member_description">
+<p>Unabove</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-UNSTICK:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_UNSTICK</code></span></p></td>
-<td>Unstick
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-UNSTICK:CAPS"></a>META_BUTTON_FUNCTION_UNSTICK</p></td>
+<td class="enum_member_description">
+<p>Unstick</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-BUTTON-FUNCTION-LAST:CAPS"></a><span class="term"><code class="literal">META_BUTTON_FUNCTION_LAST</code></span></p></td>
-<td>Marks the end of the <a class="link" href="meta-Common.html#MetaButtonFunction" title="enum MetaButtonFunction"><span class="type">MetaButtonFunction</span></a> enumeration
+<td class="enum_member_name"><p><a name="META-BUTTON-FUNCTION-LAST:CAPS"></a>META_BUTTON_FUNCTION_LAST</p></td>
+<td class="enum_member_description">
+<p>Marks the end of the <a class="link" href="meta-Common.html#MetaButtonFunction" title="enum MetaButtonFunction"><span class="type">MetaButtonFunction</span></a> enumeration</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
@@ -1156,34 +1380,38 @@ breaking all existing themes.
   gboolean right_buttons_has_spacer[MAX_BUTTONS_PER_CORNER];
 };
 </pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.15.4"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="struct_members_name">
+<col class="struct_members_description">
+<col width="200px" class="struct_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><span class="term"><a class="link" href="meta-Common.html#MetaButtonFunction" title="enum MetaButtonFunction"><span class="type">MetaButtonFunction</span></a> <em class="structfield"><code><a name="MetaButtonLayout.left-buttons"></a>left_buttons</code></em>[MAX_BUTTONS_PER_CORNER];</span></p></td>
-<td>. <span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> fixed-size=10]</span>
-</td>
+<td class="struct_member_name"><p><a class="link" href="meta-Common.html#MetaButtonFunction" title="enum MetaButtonFunction"><span class="type">MetaButtonFunction</span></a> <em class="structfield"><code><a name="MetaButtonLayout.left-buttons"></a>left_buttons</code></em>[MAX_BUTTONS_PER_CORNER];</p></td>
+<td class="struct_member_description"><p>. </p></td>
+<td class="struct_member_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> fixed-size=10]</span></td>
 </tr>
 <tr>
-<td><p><span class="term"><span class="type">gboolean</span> <em class="structfield"><code><a name="MetaButtonLayout.left-buttons-has-spacer"></a>left_buttons_has_spacer</code></em>[MAX_BUTTONS_PER_CORNER];</span></p></td>
-<td>. <span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> fixed-size=10]</span>
-</td>
+<td class="struct_member_name"><p><span class="type">gboolean</span> <em class="structfield"><code><a name="MetaButtonLayout.left-buttons-has-spacer"></a>left_buttons_has_spacer</code></em>[MAX_BUTTONS_PER_CORNER];</p></td>
+<td class="struct_member_description"><p>. </p></td>
+<td class="struct_member_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> fixed-size=10]</span></td>
 </tr>
 <tr>
-<td><p><span class="term"><a class="link" href="meta-Common.html#MetaButtonFunction" title="enum MetaButtonFunction"><span class="type">MetaButtonFunction</span></a> <em class="structfield"><code><a name="MetaButtonLayout.right-buttons"></a>right_buttons</code></em>[MAX_BUTTONS_PER_CORNER];</span></p></td>
-<td>. <span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> fixed-size=10]</span>
-</td>
+<td class="struct_member_name"><p><a class="link" href="meta-Common.html#MetaButtonFunction" title="enum MetaButtonFunction"><span class="type">MetaButtonFunction</span></a> <em class="structfield"><code><a name="MetaButtonLayout.right-buttons"></a>right_buttons</code></em>[MAX_BUTTONS_PER_CORNER];</p></td>
+<td class="struct_member_description"><p>. </p></td>
+<td class="struct_member_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> fixed-size=10]</span></td>
 </tr>
 <tr>
-<td><p><span class="term"><span class="type">gboolean</span> <em class="structfield"><code><a name="MetaButtonLayout.right-buttons-has-spacer"></a>right_buttons_has_spacer</code></em>[MAX_BUTTONS_PER_CORNER];</span></p></td>
-<td>. <span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> fixed-size=10]</span>
-</td>
+<td class="struct_member_name"><p><span class="type">gboolean</span> <em class="structfield"><code><a name="MetaButtonLayout.right-buttons-has-spacer"></a>right_buttons_has_spacer</code></em>[MAX_BUTTONS_PER_CORNER];</p></td>
+<td class="struct_member_description"><p>. </p></td>
+<td class="struct_member_annotations"><span class="annotation">[<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> fixed-size=10]</span></td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
@@ -1200,31 +1428,33 @@ breaking all existing themes.
   GtkBorder total;
 };
 </pre>
-<div class="variablelist"><table border="0" class="variablelist">
+<div class="refsect3">
+<a name="id-1.4.3.7.16.4"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="struct_members_name">
+<col class="struct_members_description">
+<col width="200px" class="struct_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><span class="term"><span class="type">GtkBorder</span> <em class="structfield"><code><a name="MetaFrameBorders.visible"></a>visible</code></em>;</span></p></td>
-<td>inner visible portion of frame border</td>
+<td class="struct_member_name"><p><span class="type">GtkBorder</span> <em class="structfield"><code><a name="MetaFrameBorders.visible"></a>visible</code></em>;</p></td>
+<td class="struct_member_description"><p>inner visible portion of frame border</p></td>
+<td class="struct_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><span class="term"><span class="type">GtkBorder</span> <em class="structfield"><code><a name="MetaFrameBorders.invisible"></a>invisible</code></em>;</span></p></td>
-<td>outer invisible portion of frame border</td>
+<td class="struct_member_name"><p><span class="type">GtkBorder</span> <em class="structfield"><code><a name="MetaFrameBorders.invisible"></a>invisible</code></em>;</p></td>
+<td class="struct_member_description"><p>outer invisible portion of frame border</p></td>
+<td class="struct_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><span class="term"><span class="type">GtkBorder</span> <em class="structfield"><code><a name="MetaFrameBorders.total"></a>total</code></em>;</span></p></td>
-<td>sum of the two borders above</td>
+<td class="struct_member_name"><p><span class="type">GtkBorder</span> <em class="structfield"><code><a name="MetaFrameBorders.total"></a>total</code></em>;</p></td>
+<td class="struct_member_description"><p>sum of the two borders above</p></td>
+<td class="struct_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
 </div>
-<hr>
-<div class="refsect2">
-<a name="meta-frame-borders-clear"></a><h3>meta_frame_borders_clear ()</h3>
-<pre class="programlisting"><span class="returnvalue">void</span>                meta_frame_borders_clear            (<em class="parameter"><code><a class="link" href="meta-Common.html#MetaFrameBorders" title="struct MetaFrameBorders"><span class="type">MetaFrameBorders</span></a> *self</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -1258,105 +1488,84 @@ breaking all existing themes.
 </div>
 <hr>
 <div class="refsect2">
-<a name="META-PRIORITY-RESIZE:CAPS"></a><h3>META_PRIORITY_RESIZE</h3>
-<pre class="programlisting">#define META_PRIORITY_RESIZE    (G_PRIORITY_HIGH_IDLE + 15)
-</pre>
-</div>
-<hr>
-<div class="refsect2">
-<a name="META-PRIORITY-BEFORE-REDRAW:CAPS"></a><h3>META_PRIORITY_BEFORE_REDRAW</h3>
-<pre class="programlisting">#define META_PRIORITY_BEFORE_REDRAW  (G_PRIORITY_HIGH_IDLE + 40)
-</pre>
-</div>
-<hr>
-<div class="refsect2">
-<a name="META-PRIORITY-REDRAW:CAPS"></a><h3>META_PRIORITY_REDRAW</h3>
-<pre class="programlisting">#define META_PRIORITY_REDRAW    (G_PRIORITY_HIGH_IDLE + 50)
-</pre>
-</div>
-<hr>
-<div class="refsect2">
-<a name="META-PRIORITY-PREFS-NOTIFY:CAPS"></a><h3>META_PRIORITY_PREFS_NOTIFY</h3>
-<pre class="programlisting">#define META_PRIORITY_PREFS_NOTIFY   (G_PRIORITY_DEFAULT_IDLE + 10)
-</pre>
-</div>
-<hr>
-<div class="refsect2">
-<a name="POINT-IN-RECT:CAPS"></a><h3>POINT_IN_RECT()</h3>
-<pre class="programlisting">#define             POINT_IN_RECT(xcoord, ycoord, rect)</pre>
-</div>
-<hr>
-<div class="refsect2">
 <a name="MetaStackLayer"></a><h3>enum MetaStackLayer</h3>
-<pre class="programlisting">typedef enum {
-  META_LAYER_DESKTOP	       = 0,
-  META_LAYER_BOTTOM	       = 1,
-  META_LAYER_NORMAL	       = 2,
-  META_LAYER_TOP	       = 4, /* Same as DOCK; see EWMH and bug 330717 */
-  META_LAYER_DOCK	       = 4,
-  META_LAYER_FULLSCREEN	       = 5,
-  META_LAYER_FOCUSED_WINDOW    = 6,
-  META_LAYER_OVERRIDE_REDIRECT = 7,
-  META_LAYER_LAST	       = 8
-} MetaStackLayer;
-</pre>
-<p>
-Layers a window can be in.
-These MUST be in the order of stacking.
-</p>
-<div class="variablelist"><table border="0" class="variablelist">
+<p>Layers a window can be in.
+These MUST be in the order of stacking.</p>
+<div class="refsect3">
+<a name="id-1.4.3.7.22.4"></a><h4>Members</h4>
+<div class="informaltable"><table width="100%" border="0">
 <colgroup>
-<col align="left" valign="top">
-<col>
+<col width="300px" class="enum_members_name">
+<col class="enum_members_description">
+<col width="200px" class="enum_members_annotations">
 </colgroup>
 <tbody>
 <tr>
-<td><p><a name="META-LAYER-DESKTOP:CAPS"></a><span class="term"><code class="literal">META_LAYER_DESKTOP</code></span></p></td>
-<td>Desktop layer
+<td class="enum_member_name"><p><a name="META-LAYER-DESKTOP:CAPS"></a>META_LAYER_DESKTOP</p></td>
+<td class="enum_member_description">
+<p>Desktop layer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-LAYER-BOTTOM:CAPS"></a><span class="term"><code class="literal">META_LAYER_BOTTOM</code></span></p></td>
-<td>Bottom layer
+<td class="enum_member_name"><p><a name="META-LAYER-BOTTOM:CAPS"></a>META_LAYER_BOTTOM</p></td>
+<td class="enum_member_description">
+<p>Bottom layer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-LAYER-NORMAL:CAPS"></a><span class="term"><code class="literal">META_LAYER_NORMAL</code></span></p></td>
-<td>Normal layer
+<td class="enum_member_name"><p><a name="META-LAYER-NORMAL:CAPS"></a>META_LAYER_NORMAL</p></td>
+<td class="enum_member_description">
+<p>Normal layer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-LAYER-TOP:CAPS"></a><span class="term"><code class="literal">META_LAYER_TOP</code></span></p></td>
-<td>Top layer
+<td class="enum_member_name"><p><a name="META-LAYER-TOP:CAPS"></a>META_LAYER_TOP</p></td>
+<td class="enum_member_description">
+<p>Top layer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-LAYER-DOCK:CAPS"></a><span class="term"><code class="literal">META_LAYER_DOCK</code></span></p></td>
-<td>Dock layer
+<td class="enum_member_name"><p><a name="META-LAYER-DOCK:CAPS"></a>META_LAYER_DOCK</p></td>
+<td class="enum_member_description">
+<p>Dock layer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-LAYER-FULLSCREEN:CAPS"></a><span class="term"><code class="literal">META_LAYER_FULLSCREEN</code></span></p></td>
-<td>Fullscreen layer
+<td class="enum_member_name"><p><a name="META-LAYER-FULLSCREEN:CAPS"></a>META_LAYER_FULLSCREEN</p></td>
+<td class="enum_member_description">
+<p>Fullscreen layer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-LAYER-FOCUSED-WINDOW:CAPS"></a><span class="term"><code class="literal">META_LAYER_FOCUSED_WINDOW</code></span></p></td>
-<td>Focused window layer
+<td class="enum_member_name"><p><a name="META-LAYER-FOCUSED-WINDOW:CAPS"></a>META_LAYER_FOCUSED_WINDOW</p></td>
+<td class="enum_member_description">
+<p>Focused window layer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-LAYER-OVERRIDE-REDIRECT:CAPS"></a><span class="term"><code class="literal">META_LAYER_OVERRIDE_REDIRECT</code></span></p></td>
-<td>Override-redirect layer
+<td class="enum_member_name"><p><a name="META-LAYER-OVERRIDE-REDIRECT:CAPS"></a>META_LAYER_OVERRIDE_REDIRECT</p></td>
+<td class="enum_member_description">
+<p>Override-redirect layer</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td><p><a name="META-LAYER-LAST:CAPS"></a><span class="term"><code class="literal">META_LAYER_LAST</code></span></p></td>
-<td>Marks the end of the <a class="link" href="meta-Common.html#MetaStackLayer" title="enum MetaStackLayer"><span class="type">MetaStackLayer</span></a> enumeration
+<td class="enum_member_name"><p><a name="META-LAYER-LAST:CAPS"></a>META_LAYER_LAST</p></td>
+<td class="enum_member_description">
+<p>Marks the end of the <a class="link" href="meta-Common.html#MetaStackLayer" title="enum MetaStackLayer"><span class="type">MetaStackLayer</span></a> enumeration</p>
 </td>
+<td class="enum_member_annotations"> </td>
 </tr>
 </tbody>
 </table></div>
+</div>
 </div>
 <hr>
 <div class="refsect2">
@@ -1372,6 +1581,6 @@ These MUST be in the order of stacking.
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.19.1</div>
+          Generated by GTK-Doc V1.20.1</div>
 </body>
 </html>

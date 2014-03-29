@@ -3,6 +3,7 @@ meta_background_get_type
 meta_background_group_get_type
 meta_barrier_event_get_type
 meta_barrier_get_type
+meta_cullable_get_type
 meta_cursor_tracker_get_type
 meta_dbus_display_config_get_type
 meta_dbus_display_config_proxy_get_type

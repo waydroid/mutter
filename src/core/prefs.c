@@ -17,9 +17,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 /**
@@ -31,7 +29,7 @@
 #include <config.h>
 #include <meta/prefs.h>
 #include "ui.h"
-#include <meta/util.h>
+#include "util-private.h"
 #include "meta-plugin-manager.h"
 #include <glib.h>
 #include <gio/gio.h>
@@ -59,7 +57,6 @@
 
 #define KEY_OVERLAY_KEY "overlay-key"
 #define KEY_WORKSPACES_ONLY_ON_PRIMARY "workspaces-only-on-primary"
-#define KEY_NO_TAB_POPUP "no-tab-popup"
 
 /* These are the different schemas we are keeping
  * a GSettings instance for */
@@ -113,8 +110,6 @@ static MetaButtonLayout button_layout;
 static char **workspace_names = NULL;
 
 static gboolean workspaces_only_on_primary = FALSE;
-
-static gboolean no_tab_popup = FALSE;
 
 static char *iso_next_group_option = NULL;
 
@@ -366,13 +361,6 @@ static MetaBoolPreference preferences_bool[] =
         META_PREF_WORKSPACES_ONLY_ON_PRIMARY,
       },
       &workspaces_only_on_primary,
-    },
-    {
-      { KEY_NO_TAB_POPUP,
-        SCHEMA_MUTTER,
-        META_PREF_NO_TAB_POPUP,
-      },
-      &no_tab_popup,
     },
     {
       { "auto-maximize",
@@ -1815,9 +1803,6 @@ meta_preference_to_string (MetaPreference pref)
     case META_PREF_WORKSPACES_ONLY_ON_PRIMARY:
       return "WORKSPACES_ONLY_ON_PRIMARY";
 
-    case META_PREF_NO_TAB_POPUP:
-      return "NO_TAB_POPUP";
-
     case META_PREF_DRAGGABLE_BORDER_WIDTH:
       return "DRAGGABLE_BORDER_WIDTH";
 
@@ -1871,7 +1856,7 @@ init_bindings (void)
   pref = g_new0 (MetaKeyPref, 1);
   pref->name = g_strdup ("overlay-key");
   pref->action = META_KEYBINDING_ACTION_OVERLAY_KEY;
-  pref->bindings = g_slist_prepend (pref->bindings, &overlay_key_combo);
+  pref->combos = g_slist_prepend (pref->combos, &overlay_key_combo);
   pref->builtin = 1;
 
   g_hash_table_insert (key_bindings, g_strdup ("overlay-key"), pref);
@@ -1881,7 +1866,7 @@ static gboolean
 update_binding (MetaKeyPref *binding,
                 gchar      **strokes)
 {
-  GSList *old_bindings, *a, *b;
+  GSList *old_combos, *a, *b;
   gboolean changed;
   unsigned int keysym;
   unsigned int keycode;
@@ -1893,8 +1878,8 @@ update_binding (MetaKeyPref *binding,
               "Binding \"%s\" has new GSettings value\n",
               binding->name);
 
-  old_bindings = binding->bindings;
-  binding->bindings = NULL;
+  old_combos = binding->combos;
+  binding->combos = NULL;
 
   for (i = 0; strokes && strokes[i]; i++)
     {
@@ -1935,17 +1920,17 @@ update_binding (MetaKeyPref *binding,
       combo->keysym = keysym;
       combo->keycode = keycode;
       combo->modifiers = mods;
-      binding->bindings = g_slist_prepend (binding->bindings, combo);
+      binding->combos = g_slist_prepend (binding->combos, combo);
 
       meta_topic (META_DEBUG_KEYBINDINGS,
                       "New keybinding for \"%s\" is keysym = 0x%x keycode = 0x%x mods = 0x%x\n",
                       binding->name, keysym, keycode, mods);
     }
 
-  binding->bindings = g_slist_reverse (binding->bindings);
+  binding->combos = g_slist_reverse (binding->combos);
 
-  a = old_bindings;
-  b = binding->bindings;
+  a = old_combos;
+  b = binding->combos;
   while (TRUE)
     {
       if ((!a && b) || (a && !b))
@@ -1970,7 +1955,7 @@ update_binding (MetaKeyPref *binding,
         }
     }
 
-  g_slist_free_full (old_bindings, g_free);
+  g_slist_free_full (old_combos, g_free);
 
   return changed;
 }
@@ -2105,7 +2090,7 @@ meta_prefs_add_keybinding (const char           *name,
   pref->name = g_strdup (name);
   pref->settings = g_object_ref (settings);
   pref->action = action;
-  pref->bindings = NULL;
+  pref->combos = NULL;
   pref->add_shift = (flags & META_KEY_BINDING_REVERSES) != 0;
   pref->per_window = (flags & META_KEY_BINDING_PER_WINDOW) != 0;
   pref->builtin = (flags & META_KEY_BINDING_BUILTIN) != 0;
@@ -2169,11 +2154,6 @@ meta_prefs_remove_keybinding (const char *name)
   return TRUE;
 }
 
-/**
- * meta_prefs_get_keybindings:
- *
- * Returns: (element-type MetaKeyPref) (transfer container):
- */
 GList *
 meta_prefs_get_keybindings ()
 {
@@ -2274,7 +2254,7 @@ meta_prefs_get_window_binding (const char          *name,
 
   if (pref->per_window)
     {
-      GSList *s = pref->bindings;
+      GSList *s = pref->combos;
 
       while (s)
         {
@@ -2320,25 +2300,6 @@ gboolean
 meta_prefs_get_workspaces_only_on_primary (void)
 {
   return workspaces_only_on_primary;
-}
-
-
-gboolean
-meta_prefs_get_no_tab_popup (void)
-{
-  return no_tab_popup;
-}
-
-void
-meta_prefs_set_no_tab_popup (gboolean whether)
-{
-  MetaBasePreference *pref;
-
-  if (find_pref (preferences_bool, sizeof(MetaBoolPreference),
-                 KEY_NO_TAB_POPUP, &pref))
-    {
-      g_settings_set_boolean (SETTINGS (pref->schema), KEY_NO_TAB_POPUP, whether);
-    }
 }
 
 int

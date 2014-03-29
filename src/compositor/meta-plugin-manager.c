@@ -16,9 +16,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "config.h"
@@ -325,4 +323,45 @@ meta_plugin_manager_confirm_display_change (MetaPluginManager *plugin_mgr)
     return klass->confirm_display_change (plugin);
   else
     return meta_plugin_complete_display_change (plugin, TRUE);
+}
+
+gboolean
+meta_plugin_manager_show_tile_preview (MetaPluginManager *plugin_mgr,
+                                       MetaWindow        *window,
+                                       MetaRectangle     *tile_rect,
+                                       int                tile_monitor_number)
+{
+  MetaPlugin *plugin = plugin_mgr->plugin;
+  MetaPluginClass *klass = META_PLUGIN_GET_CLASS (plugin);
+  MetaDisplay *display  = meta_screen_get_display (plugin_mgr->screen);
+
+  if (display->display_opening)
+    return FALSE;
+
+  if (klass->show_tile_preview)
+    {
+      klass->show_tile_preview (plugin, window, tile_rect, tile_monitor_number);
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+gboolean
+meta_plugin_manager_hide_tile_preview (MetaPluginManager *plugin_mgr)
+{
+  MetaPlugin *plugin = plugin_mgr->plugin;
+  MetaPluginClass *klass = META_PLUGIN_GET_CLASS (plugin);
+  MetaDisplay *display  = meta_screen_get_display (plugin_mgr->screen);
+
+  if (display->display_opening)
+    return FALSE;
+
+  if (klass->hide_tile_preview)
+    {
+      klass->hide_tile_preview (plugin);
+      return TRUE;
+    }
+
+  return FALSE;
 }

@@ -25,9 +25,7 @@
  * General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef META_SCREEN_PRIVATE_H
@@ -66,8 +64,6 @@ struct _MetaScreen
   Visual *default_xvisual;
   MetaRectangle rect;  /* Size of screen; rect.x & rect.y are always 0 */
   MetaUI *ui;
-  MetaTabPopup *tab_popup, *ws_popup;
-  MetaTilePreview *tile_preview;
 
   guint tile_preview_timeout_id;
 
@@ -153,25 +149,9 @@ void          meta_screen_foreach_window      (MetaScreen                 *scree
 
 void          meta_screen_update_cursor       (MetaScreen                 *screen);
 
-void          meta_screen_tab_popup_create       (MetaScreen              *screen,
-                                                  MetaTabList              list_type,
-                                                  MetaTabShowType          show_type,
-                                                  MetaWindow              *initial_window);
-void          meta_screen_tab_popup_forward      (MetaScreen              *screen);
-void          meta_screen_tab_popup_backward     (MetaScreen              *screen);
-MetaWindow*   meta_screen_tab_popup_get_selected (MetaScreen              *screen);
-void          meta_screen_tab_popup_destroy      (MetaScreen              *screen);
-
-void          meta_screen_workspace_popup_create       (MetaScreen    *screen,
-                                                        MetaWorkspace *initial_selection);
-void          meta_screen_workspace_popup_select       (MetaScreen    *screen,
-                                                        MetaWorkspace *workspace);
-MetaWorkspace*meta_screen_workspace_popup_get_selected (MetaScreen    *screen);
-void          meta_screen_workspace_popup_destroy      (MetaScreen    *screen);
-
-void          meta_screen_tile_preview_update          (MetaScreen    *screen,
+void          meta_screen_update_tile_preview          (MetaScreen    *screen,
                                                         gboolean       delay);
-void          meta_screen_tile_preview_hide            (MetaScreen    *screen);
+void          meta_screen_hide_tile_preview            (MetaScreen    *screen);
 
 MetaWindow*   meta_screen_get_mouse_window     (MetaScreen                 *screen,
                                                 MetaWindow                 *not_this_one);

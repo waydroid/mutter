@@ -18,50 +18,13 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <config.h>
 
 #include <clutter/clutter.h>
 #include "meta-texture-rectangle.h"
-
-CoglTexture *
-meta_texture_rectangle_new (unsigned int width,
-                            unsigned int height,
-                            CoglPixelFormat format,
-                            CoglPixelFormat internal_format,
-                            unsigned int rowstride,
-                            const guint8 *data,
-                            GError **error)
-{
-  ClutterBackend *backend =
-    clutter_get_default_backend ();
-  CoglContext *context =
-    clutter_backend_get_cogl_context (backend);
-  CoglTextureRectangle *tex_rect;
-
-  tex_rect = cogl_texture_rectangle_new_with_size (context,
-                                                   width, height,
-                                                   internal_format,
-                                                   error);
-  if (tex_rect == NULL)
-    return NULL;
-
-  if (data)
-    cogl_texture_set_region (COGL_TEXTURE (tex_rect),
-                             0, 0, /* src_x/y */
-                             0, 0, /* dst_x/y */
-                             width, height, /* dst_width/height */
-                             width, height, /* width/height */
-                             format,
-                             rowstride,
-                             data);
-
-  return COGL_TEXTURE (tex_rect);
-}
 
 static void
 texture_rectangle_check_cb (CoglTexture *sub_texture,

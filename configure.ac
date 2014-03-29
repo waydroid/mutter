@@ -1,8 +1,9 @@
 AC_PREREQ(2.50)
+AC_CONFIG_MACRO_DIR([m4])
 
 m4_define([mutter_major_version], [3])
-m4_define([mutter_minor_version], [10])
-m4_define([mutter_micro_version], [1])
+m4_define([mutter_minor_version], [12])
+m4_define([mutter_micro_version], [0])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -75,8 +76,8 @@ MUTTER_PC_MODULES="
    gsettings-desktop-schemas >= 3.7.3
    xcomposite >= 0.2 xfixes xrender xdamage xi >= 1.6.0
    $CLUTTER_PACKAGE >= 1.15.90
-   cogl-1.0 >= 1.15.6
-   upower-glib > 0.9.11
+   cogl-1.0 >= 1.17.1
+   upower-glib >= 0.99.0
    gnome-desktop-3.0
 "
 
