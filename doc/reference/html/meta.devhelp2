@@ -180,8 +180,6 @@
     <keyword type="struct" name="struct MetaPluginInfo" link="MetaPlugin.html#MetaPluginInfo"/>
     <keyword type="struct" name="struct MetaPluginVersion" link="MetaPlugin.html#MetaPluginVersion"/>
     <keyword type="enum" name="enum MetaModalOptions" link="MetaPlugin.html#MetaModalOptions"/>
-    <keyword type="property" name="The “debug-mode” property" link="MetaPlugin.html#MetaPlugin--debug-mode"/>
-    <keyword type="property" name="The “screen” property" link="MetaPlugin.html#MetaPlugin--screen"/>
     <keyword type="function" name="meta_barrier_is_active ()" link="MetaBarrier.html#meta-barrier-is-active"/>
     <keyword type="function" name="meta_barrier_destroy ()" link="MetaBarrier.html#meta-barrier-destroy"/>
     <keyword type="function" name="meta_barrier_release ()" link="MetaBarrier.html#meta-barrier-release"/>
