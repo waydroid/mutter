@@ -363,7 +363,6 @@
     <keyword type="struct" name="MetaScreen" link="MetaScreen.html#MetaScreen-struct"/>
     <keyword type="struct" name="MetaScreenClass" link="MetaScreen.html#MetaScreenClass"/>
     <keyword type="enum" name="enum MetaScreenCorner" link="MetaScreen.html#MetaScreenCorner"/>
-    <keyword type="property" name="The “keyboard-grabbed” property" link="MetaScreen.html#MetaScreen--keyboard-grabbed"/>
     <keyword type="property" name="The “n-workspaces” property" link="MetaScreen.html#MetaScreen--n-workspaces"/>
     <keyword type="signal" name="The “in-fullscreen-changed” signal" link="MetaScreen.html#MetaScreen-in-fullscreen-changed"/>
     <keyword type="signal" name="The “monitors-changed” signal" link="MetaScreen.html#MetaScreen-monitors-changed"/>

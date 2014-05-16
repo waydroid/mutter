@@ -1,3 +1,14 @@
+mutter (3.12.2-1) experimental; urgency=medium
+
+  [ Sjoerd Simons ]
+  * debian/rules: Don't constrain the libmutter0 dependencies via shlibs
+    as we change the library names on ABI breaks now
+
+  [ Andreas Henriksson ]
+  * New upstream release.
+
+ -- Andreas Henriksson <andreas@fatal.se>  Fri, 16 May 2014 17:36:21 +0200
+
 mutter (3.12.1+therealdeal-1) experimental; urgency=medium
 
   * Tweak version to be bigger then the one in unstable
