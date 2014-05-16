@@ -77,6 +77,7 @@ struct _MetaMonitorConfig {
   GHashTable *configs;
   MetaConfiguration *current;
   gboolean current_is_stored;
+  gboolean current_is_for_laptop_lid;
   MetaConfiguration *previous;
 
   GFile *file;
@@ -876,7 +877,8 @@ apply_configuration (MetaMonitorConfig  *self,
 
   /* Stored (persistent) configurations override the previous one always.
      Also, we clear the previous configuration if the current one (which is
-     about to become previous) is stored.
+     about to become previous) is stored, or if the current one has
+     different outputs.
   */
   if (stored ||
       (self->current && self->current_is_stored))
@@ -887,11 +889,27 @@ apply_configuration (MetaMonitorConfig  *self,
     }
   else
     {
-      self->previous = self->current;
+      /* Despite the name, config_equal() only checks the set of outputs,
+         not their modes
+      */
+      if (self->current && config_equal (self->current, config))
+        {
+          self->previous = self->current;
+        }
+      else
+        {
+          if (self->current)
+            config_free (self->current);
+          self->previous = NULL;
+        }
     }
 
   self->current = config;
   self->current_is_stored = stored;
+  /* If true, we'll be overridden at the end of this call
+     inside turn_off_laptop_display()
+  */
+  self->current_is_for_laptop_lid = FALSE;
 
   if (self->current == self->previous)
     self->previous = NULL;
@@ -1008,8 +1026,16 @@ meta_monitor_config_apply_stored (MetaMonitorConfig  *self,
       if (self->lid_is_closed &&
           stored->n_outputs > 1 &&
           laptop_display_is_on (stored))
-        return apply_configuration (self, make_laptop_lid_config (stored),
-                                    manager, FALSE);
+        {
+          if (apply_configuration (self, make_laptop_lid_config (stored),
+                                   manager, FALSE))
+            {
+              self->current_is_for_laptop_lid = TRUE;
+              return TRUE;
+            }
+          else
+            return FALSE;
+        }
       else
         return apply_configuration (self, stored, manager, TRUE);
     }
@@ -1356,6 +1382,7 @@ turn_off_laptop_display (MetaMonitorConfig  *self,
 
   new = make_laptop_lid_config (self->current);
   apply_configuration (self, new, manager, FALSE);
+  self->current_is_for_laptop_lid = TRUE;
 }
 
 static void
@@ -1375,7 +1402,7 @@ power_client_changed_cb (UpClient   *client,
 
       if (is_closed)
         turn_off_laptop_display (self, manager);
-      else
+      else if (self->current_is_for_laptop_lid)
         meta_monitor_config_restore_previous (self, manager);
     }
 }
