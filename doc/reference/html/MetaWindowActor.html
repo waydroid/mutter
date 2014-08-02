@@ -181,7 +181,8 @@ meta_window_actor_get_meta_window (<em class="parameter"><code><a class="link" h
 <a name="meta-window-actor-get-texture"></a><h3>meta_window_actor_get_texture ()</h3>
 <pre class="programlisting"><span class="returnvalue">ClutterActor</span> *
 meta_window_actor_get_texture (<em class="parameter"><code><a class="link" href="MetaWindowActor.html" title="MetaWindowActor"><span class="type">MetaWindowActor</span></a> *self</code></em>);</pre>
-<p>Gets the ClutterActor that is used to display the contents of the window</p>
+<p>Gets the ClutterActor that is used to display the contents of the window,
+or NULL if no texture is shown yet, because the window is not mapped.</p>
 <div class="refsect3">
 <a name="id-1.4.18.9.4.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">

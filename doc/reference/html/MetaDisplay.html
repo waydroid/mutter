@@ -90,26 +90,10 @@
 </tr>
 <tr>
 <td class="function_type">
-<span class="returnvalue">GSList</span> *
-</td>
-<td class="function_name">
-<a class="link" href="MetaDisplay.html#meta-display-get-screens" title="meta_display_get_screens ()">meta_display_get_screens</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">
 <span class="returnvalue">gboolean</span>
 </td>
 <td class="function_name">
 <a class="link" href="MetaDisplay.html#meta-display-has-shape" title="meta_display_has_shape ()">meta_display_has_shape</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">
-<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="returnvalue">MetaScreen</span></a> *
-</td>
-<td class="function_name">
-<a class="link" href="MetaDisplay.html#meta-display-screen-for-root" title="meta_display_screen_for_root ()">meta_display_screen_for_root</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -174,13 +158,6 @@
 </td>
 <td class="function_name">
 <a class="link" href="MetaDisplay.html#meta-display-get-current-time-roundtrip" title="meta_display_get_current_time_roundtrip ()">meta_display_get_current_time_roundtrip</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">unsigned <span class="returnvalue">int</span>
-</td>
-<td class="function_name">
-<a class="link" href="MetaDisplay.html#meta-display-get-ignored-modifier-mask" title="meta_display_get_ignored_modifier_mask ()">meta_display_get_ignored_modifier_mask</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -277,14 +254,6 @@
 </td>
 <td class="function_name">
 <a class="link" href="MetaDisplay.html#meta-display-sort-windows-by-stacking" title="meta_display_sort_windows_by_stacking ()">meta_display_sort_windows_by_stacking</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">
-<span class="returnvalue">Window</span>
-</td>
-<td class="function_name">
-<a class="link" href="MetaDisplay.html#meta-display-get-leader-window" title="meta_display_get_leader_window ()">meta_display_get_leader_window</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -530,70 +499,9 @@ meta_display_get_compositor (<em class="parameter"><code><a class="link" href="M
 </div>
 <hr>
 <div class="refsect2">
-<a name="meta-display-get-screens"></a><h3>meta_display_get_screens ()</h3>
-<pre class="programlisting"><span class="returnvalue">GSList</span> *
-meta_display_get_screens (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
-<div class="refsect3">
-<a name="id-1.4.12.9.8.4"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>display</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.12.9.8.5"></a><h4>Returns</h4>
-<p> Screens for this display. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> Meta.Screen]</span></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
 <a name="meta-display-has-shape"></a><h3>meta_display_has_shape ()</h3>
 <pre class="programlisting"><span class="returnvalue">gboolean</span>
 meta_display_has_shape (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-display-screen-for-root"></a><h3>meta_display_screen_for_root ()</h3>
-<pre class="programlisting"><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="returnvalue">MetaScreen</span></a> *
-meta_display_screen_for_root (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
-                              <em class="parameter"><code><span class="type">Window</span> xroot</code></em>);</pre>
-<p>Return the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> corresponding to a specified X root window ID.</p>
-<div class="refsect3">
-<a name="id-1.4.12.9.10.5"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody>
-<tr>
-<td class="parameter_name"><p>display</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-<tr>
-<td class="parameter_name"><p>xroot</p></td>
-<td class="parameter_description"><p>a X window</p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-</tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.12.9.10.6"></a><h4>Returns</h4>
-<p> the screen for the specified root window ID, or <code class="literal">NULL</code>. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
-</div>
 </div>
 <hr>
 <div class="refsect2">
@@ -604,7 +512,7 @@ meta_display_get_focus_window (<em class="parameter"><code><a class="link" href=
 the window that we expect will be focused at the point when the X
 server processes our next request).</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.11.5"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.9.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -619,7 +527,7 @@ server processes our next request).</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.11.6"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.9.6"></a><h4>Returns</h4>
 <p> The current focus window. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -632,7 +540,7 @@ meta_display_xwindow_is_a_no_focus_window
                                (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                 <em class="parameter"><code><span class="type">Window</span> xwindow</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.12.9.12.4"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.10.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -654,7 +562,7 @@ meta_display_xwindow_is_a_no_focus_window
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.12.5"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.10.5"></a><h4>Returns</h4>
 <p> <code class="literal">TRUE</code> iff window is one of mutter's internal "no focus" windows
 (there is one per screen) which will have the focus when there is no
 actual client window focused.</p>
@@ -690,7 +598,7 @@ means "older than anything else".</p>
 you need then you'll need to swap the order of the arguments and negate
 the result.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.15.6"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.13.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -723,7 +631,7 @@ the result.</p>
 <pre class="programlisting"><span class="returnvalue">guint32</span>
 meta_display_get_last_user_time (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.12.9.16.4"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.14.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -738,7 +646,7 @@ meta_display_get_last_user_time (<em class="parameter"><code><a class="link" hre
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.16.5"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.14.5"></a><h4>Returns</h4>
 <p> Timestamp of the last user interaction event with a window</p>
 <p></p>
 </div>
@@ -758,34 +666,6 @@ meta_display_get_current_time_roundtrip
 </div>
 <hr>
 <div class="refsect2">
-<a name="meta-display-get-ignored-modifier-mask"></a><h3>meta_display_get_ignored_modifier_mask ()</h3>
-<pre class="programlisting">unsigned <span class="returnvalue">int</span>
-meta_display_get_ignored_modifier_mask
-                               (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
-<div class="refsect3">
-<a name="id-1.4.12.9.19.4"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>display</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.12.9.19.5"></a><h4>Returns</h4>
-<p> a mask of modifiers that should be ignored
-when matching keybindings to events</p>
-<p></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
 <a name="meta-display-get-tab-list"></a><h3>meta_display_get_tab_list ()</h3>
 <pre class="programlisting"><span class="returnvalue">GList</span> *
 meta_display_get_tab_list (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
@@ -801,7 +681,7 @@ If <em class="parameter"><code>workspace</code></em>
 all windows on <em class="parameter"><code>screen</code></em>
 .</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.20.5"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.17.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -833,7 +713,7 @@ all windows on <em class="parameter"><code>screen</code></em>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.20.6"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.17.6"></a><h4>Returns</h4>
 <p> List of windows. </p>
 <p><span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> Meta.Window]</span></p>
 </div>
@@ -844,14 +724,13 @@ all windows on <em class="parameter"><code>screen</code></em>
 <pre class="programlisting"><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *
 meta_display_get_tab_next (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                            <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
-                           <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                            <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                            <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                            <em class="parameter"><code><span class="type">gboolean</span> backward</code></em>);</pre>
 <p>Determine the next window that should be displayed for Alt-TAB
 functionality.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.21.5"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.18.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -867,11 +746,6 @@ functionality.</p>
 <tr>
 <td class="parameter_name"><p>type</p></td>
 <td class="parameter_description"><p>type of tab list</p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-<tr>
-<td class="parameter_name"><p>screen</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a></p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -893,7 +767,7 @@ functionality.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.21.6"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.18.6"></a><h4>Returns</h4>
 <p> Next window. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -904,11 +778,10 @@ functionality.</p>
 <pre class="programlisting"><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="returnvalue">MetaWindow</span></a> *
 meta_display_get_tab_current (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                               <em class="parameter"><code><a class="link" href="MetaDisplay.html#MetaTabList" title="enum MetaTabList"><span class="type">MetaTabList</span></a> type</code></em>,
-                              <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                               <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <p>Determine the active window that should be displayed for Alt-TAB.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.22.5"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.19.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -927,11 +800,6 @@ meta_display_get_tab_current (<em class="parameter"><code><a class="link" href="
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
-<td class="parameter_name"><p>screen</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-<tr>
 <td class="parameter_name"><p>workspace</p></td>
 <td class="parameter_description"><p>origin workspace</p></td>
 <td class="parameter_annotations"> </td>
@@ -940,7 +808,7 @@ meta_display_get_tab_current (<em class="parameter"><code><a class="link" href="
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.22.6"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.19.6"></a><h4>Returns</h4>
 <p> Current window. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -975,7 +843,7 @@ meta_display_end_grab_op (<em class="parameter"><code><a class="link" href="Meta
 meta_display_get_grab_op (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <p>Gets the current grab operation, if any.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.25.5"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.22.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -990,7 +858,7 @@ meta_display_get_grab_op (<em class="parameter"><code><a class="link" href="Meta
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.25.6"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.22.6"></a><h4>Returns</h4>
 <p> the current grab operation, or <a class="link" href="meta-Common.html#META-GRAB-OP-NONE:CAPS"><code class="literal">META_GRAB_OP_NONE</code></a> if
 Mutter doesn't currently have a grab. <a class="link" href="meta-Common.html#META-GRAB-OP-COMPOSITOR:CAPS"><code class="literal">META_GRAB_OP_COMPOSITOR</code></a> will
 be returned if a compositor-plugin modal operation is in effect
@@ -1026,7 +894,7 @@ cannot be one of the keys used. <em class="parameter"><code>handler</code></em>
 "shift" modifier in this case and reverse its action.</p>
 <p>Use <a class="link" href="MetaDisplay.html#meta-display-remove-keybinding" title="meta_display_remove_keybinding ()"><code class="function">meta_display_remove_keybinding()</code></a> to remove the binding.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.26.6"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.23.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1076,7 +944,7 @@ is stored</p></td>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.26.7"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.23.7"></a><h4>Returns</h4>
 <p> the corresponding keybinding action if the keybinding was
 added successfully, otherwise <a class="link" href="meta-Preferences.html#META-KEYBINDING-ACTION-NONE:CAPS"><code class="literal">META_KEYBINDING_ACTION_NONE</code></a></p>
 <p></p>
@@ -1093,7 +961,7 @@ meta_display_remove_keybinding (<em class="parameter"><code><a class="link" href
  is not a known
 keybinding or has not been added with <a class="link" href="MetaDisplay.html#meta-display-add-keybinding" title="meta_display_add_keybinding ()"><code class="function">meta_display_add_keybinding()</code></a>.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.27.5"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.24.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1115,7 +983,7 @@ keybinding or has not been added with <a class="link" href="MetaDisplay.html#met
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.27.6"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.24.6"></a><h4>Returns</h4>
 <p> <code class="literal">TRUE</code> if the binding has been removed sucessfully,
 otherwise <code class="literal">FALSE</code></p>
 <p></p>
@@ -1134,7 +1002,7 @@ have a fixed associated <a class="link" href="meta-Preferences.html#MetaKeyBindi
 dynamically the function will return the keybinding action
 <a class="link" href="MetaDisplay.html#meta-display-add-keybinding" title="meta_display_add_keybinding ()"><code class="function">meta_display_add_keybinding()</code></a> returns on registration.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.28.5"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.25.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1161,7 +1029,7 @@ dynamically the function will return the keybinding action
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.28.6"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.25.6"></a><h4>Returns</h4>
 <p> The action that should be taken for the given key, or
 <a class="link" href="meta-Preferences.html#META-KEYBINDING-ACTION-NONE:CAPS"><code class="literal">META_KEYBINDING_ACTION_NONE</code></a>.</p>
 <p></p>
@@ -1200,7 +1068,7 @@ correspond to the actual stacking order in the X server.</p>
 <p>An example of using this would be to sort the list of transient dialogs for a
 window into their current stacking order.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.31.6"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.28.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1222,38 +1090,9 @@ window into their current stacking order.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.31.7"></a><h4>Returns</h4>
+<a name="id-1.4.12.9.28.7"></a><h4>Returns</h4>
 <p> Input windows sorted by stacking order, from lowest to highest. </p>
 <p><span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> MetaWindow]</span></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-display-get-leader-window"></a><h3>meta_display_get_leader_window ()</h3>
-<pre class="programlisting"><span class="returnvalue">Window</span>
-meta_display_get_leader_window (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
-<p>Returns the window manager's leader window (as defined by the
-_NET_SUPPORTING_WM_CHECK mechanism of EWMH). For use by plugins that wish
-to attach additional custom properties to this window.</p>
-<div class="refsect3">
-<a name="id-1.4.12.9.32.5"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>display</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.12.9.32.6"></a><h4>Returns</h4>
-<p> xid of the leader window. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1269,7 +1108,7 @@ for certain changes to the window hierarchy that we don't want
 to change the focus window, even if they cause the pointer to
 end up in a new window.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.33.5"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.29.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1309,7 +1148,7 @@ no longer ignored in mouse or sloppy focus.
 This is an internal function. It should be used only for reimplementing
 keybindings, and only in a manner compatible with core code.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.35.5"></a><h4>Parameters</h4>
+<a name="id-1.4.12.9.31.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">

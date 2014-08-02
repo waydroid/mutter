@@ -36,6 +36,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "keybindings-private.h"
+#include "meta-accel-parse.h"
 
 /* If you add a key, it needs updating in init() and in the gsettings
  * notify listener and of course in the .schemas file.
@@ -79,6 +80,7 @@ static MetaKeyCombo overlay_key_combo = { 0, 0, 0 };
 static GDesktopFocusMode focus_mode = G_DESKTOP_FOCUS_MODE_CLICK;
 static GDesktopFocusNewWindows focus_new_windows = G_DESKTOP_FOCUS_NEW_WINDOWS_SMART;
 static gboolean raise_on_click = TRUE;
+static gboolean center_new_windows = FALSE;
 static gboolean attach_modal_dialogs = FALSE;
 static char* current_theme = NULL;
 static int num_workspaces = 4;
@@ -270,6 +272,13 @@ static MetaBoolPreference preferences_bool[] =
         META_PREF_ATTACH_MODAL_DIALOGS,
       },
       &attach_modal_dialogs,
+    },
+    {
+      { "center-new-windows",
+        SCHEMA_MUTTER,
+        META_PREF_CENTER_NEW_WINDOWS,
+      },
+      &center_new_windows,
     },
     {
       { "raise-on-click",
@@ -915,8 +924,11 @@ queue_changed (MetaPreference pref)
                 meta_preference_to_string (pref));
 
   if (changed_idle == 0)
-    changed_idle = g_idle_add_full (META_PRIORITY_PREFS_NOTIFY,
-                                    changed_idle_handler, NULL, NULL);
+    {
+      changed_idle = g_idle_add_full (META_PRIORITY_PREFS_NOTIFY,
+                                      changed_idle_handler, NULL, NULL);
+      g_source_set_name_by_id (changed_idle, "[mutter] changed_idle_handler");
+    }
 }
 
 
@@ -1187,8 +1199,8 @@ maybe_give_disable_workarounds_warning (void)
     {
       first_disable = FALSE;
 
-      meta_warning (_("Workarounds for broken applications disabled. "
-                      "Some applications may not behave properly.\n"));
+      meta_warning ("Workarounds for broken applications disabled. "
+                    "Some applications may not behave properly.\n");
     }
 }
 
@@ -1208,6 +1220,12 @@ GDesktopFocusNewWindows
 meta_prefs_get_focus_new_windows (void)
 {
   return focus_new_windows;
+}
+
+gboolean
+meta_prefs_get_center_new_windows (void)
+{
+  return center_new_windows;
 }
 
 gboolean
@@ -1262,8 +1280,8 @@ titlebar_handler (GVariant *value,
 
   if (desc == NULL)
     {
-      meta_warning (_("Could not parse font description "
-                      "\"%s\" from GSettings key %s\n"),
+      meta_warning ("Could not parse font description "
+                    "\"%s\" from GSettings key %s\n",
                     string_value ? string_value : "(null)",
                     KEY_TITLEBAR_FONT);
       return FALSE;
@@ -1323,13 +1341,13 @@ mouse_button_mods_handler (GVariant *value,
   *result = NULL; /* ignored */
   string_value = g_variant_get_string (value, NULL);
 
-  if (!string_value || !meta_ui_parse_modifier (string_value, &mods))
+  if (!string_value || !meta_parse_modifier (string_value, &mods))
     {
       meta_topic (META_DEBUG_KEYBINDINGS,
                   "Failed to parse new GSettings value\n");
           
-      meta_warning (_("\"%s\" found in configuration database is "
-                      "not a valid value for mouse button modifier\n"),
+      meta_warning ("\"%s\" found in configuration database is "
+                    "not a valid value for mouse button modifier\n",
                     string_value);
 
       return FALSE;
@@ -1627,9 +1645,9 @@ overlay_key_handler (GVariant *value,
   *result = NULL; /* ignored */
   string_value = g_variant_get_string (value, NULL);
 
-  if (string_value && meta_ui_parse_accelerator (string_value, &combo.keysym,
-                                                 &combo.keycode,
-                                                 &combo.modifiers))
+  if (string_value && meta_parse_accelerator (string_value, &combo.keysym,
+                                              &combo.keycode,
+                                              &combo.modifiers))
     ;
   else
     {
@@ -1724,6 +1742,9 @@ meta_preference_to_string (MetaPreference pref)
 
     case META_PREF_FOCUS_NEW_WINDOWS:
       return "FOCUS_NEW_WINDOWS";
+
+    case META_PREF_CENTER_NEW_WINDOWS:
+      return "CENTER_NEW_WINDOWS";
 
     case META_PREF_ATTACH_MODAL_DIALOGS:
       return "ATTACH_MODAL_DIALOGS";
@@ -1887,11 +1908,11 @@ update_binding (MetaKeyPref *binding,
       keycode = 0;
       mods = 0;
 
-      if (!meta_ui_parse_accelerator (strokes[i], &keysym, &keycode, &mods))
+      if (!meta_parse_accelerator (strokes[i], &keysym, &keycode, &mods))
         {
           meta_topic (META_DEBUG_KEYBINDINGS,
                       "Failed to parse new GSettings value\n");
-          meta_warning (_("\"%s\" found in configuration database is not a valid value for keybinding \"%s\"\n"),
+          meta_warning ("\"%s\" found in configuration database is not a valid value for keybinding \"%s\"\n",
                         strokes[i], binding->name);
 
           /* Value is kept and will thus be removed next time we save the key.

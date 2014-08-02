@@ -159,10 +159,7 @@
     <keyword type="enum" name="enum MetaLaterType" link="meta-Utility-functions.html#MetaLaterType"/>
     <keyword type="function" name="meta_error_trap_push ()" link="meta-Errors.html#meta-error-trap-push"/>
     <keyword type="function" name="meta_error_trap_pop ()" link="meta-Errors.html#meta-error-trap-pop"/>
-    <keyword type="function" name="meta_error_trap_push_with_return ()" link="meta-Errors.html#meta-error-trap-push-with-return"/>
     <keyword type="function" name="meta_error_trap_pop_with_return ()" link="meta-Errors.html#meta-error-trap-pop-with-return"/>
-    <keyword type="function" name="meta_plugin_running ()" link="MetaPlugin.html#meta-plugin-running"/>
-    <keyword type="function" name="meta_plugin_debug_mode ()" link="MetaPlugin.html#meta-plugin-debug-mode"/>
     <keyword type="function" name="meta_plugin_get_info ()" link="MetaPlugin.html#meta-plugin-get-info"/>
     <keyword type="macro" name="META_PLUGIN_DECLARE()" link="MetaPlugin.html#META-PLUGIN-DECLARE:CAPS"/>
     <keyword type="function" name="meta_plugin_switch_workspace_completed ()" link="MetaPlugin.html#meta-plugin-switch-workspace-completed"/>
@@ -214,8 +211,6 @@
     <keyword type="" name="Containers" link="meta-MetaCompositor.html#id-1.4.11.5.9"/>
     <keyword type="function" name="meta_compositor_new ()" link="meta-MetaCompositor.html#meta-compositor-new"/>
     <keyword type="function" name="meta_compositor_destroy ()" link="meta-MetaCompositor.html#meta-compositor-destroy"/>
-    <keyword type="function" name="meta_compositor_manage_screen ()" link="meta-MetaCompositor.html#meta-compositor-manage-screen"/>
-    <keyword type="function" name="meta_compositor_unmanage_screen ()" link="meta-MetaCompositor.html#meta-compositor-unmanage-screen"/>
     <keyword type="function" name="meta_compositor_window_shape_changed ()" link="meta-MetaCompositor.html#meta-compositor-window-shape-changed"/>
     <keyword type="function" name="meta_compositor_process_event ()" link="meta-MetaCompositor.html#meta-compositor-process-event"/>
     <keyword type="function" name="meta_compositor_filter_keybinding ()" link="meta-MetaCompositor.html#meta-compositor-filter-keybinding"/>
@@ -249,9 +244,7 @@
     <keyword type="function" name="meta_display_supports_extended_barriers ()" link="MetaDisplay.html#meta-display-supports-extended-barriers"/>
     <keyword type="function" name="meta_display_get_xdisplay ()" link="MetaDisplay.html#meta-display-get-xdisplay"/>
     <keyword type="function" name="meta_display_get_compositor ()" link="MetaDisplay.html#meta-display-get-compositor"/>
-    <keyword type="function" name="meta_display_get_screens ()" link="MetaDisplay.html#meta-display-get-screens"/>
     <keyword type="function" name="meta_display_has_shape ()" link="MetaDisplay.html#meta-display-has-shape"/>
-    <keyword type="function" name="meta_display_screen_for_root ()" link="MetaDisplay.html#meta-display-screen-for-root"/>
     <keyword type="function" name="meta_display_get_focus_window ()" link="MetaDisplay.html#meta-display-get-focus-window"/>
     <keyword type="function" name="meta_display_xwindow_is_a_no_focus_window ()" link="MetaDisplay.html#meta-display-xwindow-is-a-no-focus-window"/>
     <keyword type="function" name="meta_display_get_damage_event_base ()" link="MetaDisplay.html#meta-display-get-damage-event-base"/>
@@ -260,7 +253,6 @@
     <keyword type="function" name="meta_display_get_last_user_time ()" link="MetaDisplay.html#meta-display-get-last-user-time"/>
     <keyword type="function" name="meta_display_get_current_time ()" link="MetaDisplay.html#meta-display-get-current-time"/>
     <keyword type="function" name="meta_display_get_current_time_roundtrip ()" link="MetaDisplay.html#meta-display-get-current-time-roundtrip"/>
-    <keyword type="function" name="meta_display_get_ignored_modifier_mask ()" link="MetaDisplay.html#meta-display-get-ignored-modifier-mask"/>
     <keyword type="function" name="meta_display_get_tab_list ()" link="MetaDisplay.html#meta-display-get-tab-list"/>
     <keyword type="function" name="meta_display_get_tab_next ()" link="MetaDisplay.html#meta-display-get-tab-next"/>
     <keyword type="function" name="meta_display_get_tab_current ()" link="MetaDisplay.html#meta-display-get-tab-current"/>
@@ -273,7 +265,6 @@
     <keyword type="function" name="meta_display_set_input_focus_window ()" link="MetaDisplay.html#meta-display-set-input-focus-window"/>
     <keyword type="function" name="meta_display_focus_the_no_focus_window ()" link="MetaDisplay.html#meta-display-focus-the-no-focus-window"/>
     <keyword type="function" name="meta_display_sort_windows_by_stacking ()" link="MetaDisplay.html#meta-display-sort-windows-by-stacking"/>
-    <keyword type="function" name="meta_display_get_leader_window ()" link="MetaDisplay.html#meta-display-get-leader-window"/>
     <keyword type="function" name="meta_display_add_ignored_crossing_serial ()" link="MetaDisplay.html#meta-display-add-ignored-crossing-serial"/>
     <keyword type="function" name="meta_display_unmanage_screen ()" link="MetaDisplay.html#meta-display-unmanage-screen"/>
     <keyword type="function" name="meta_display_clear_mouse_mode ()" link="MetaDisplay.html#meta-display-clear-mouse-mode"/>
@@ -307,8 +298,6 @@
     <keyword type="function" name="meta_key_binding_get_mask ()" link="meta-MetaKeybinding.html#meta-key-binding-get-mask"/>
     <keyword type="function" name="meta_key_binding_is_builtin ()" link="meta-MetaKeybinding.html#meta-key-binding-is-builtin"/>
     <keyword type="function" name="meta_keybindings_set_custom_handler ()" link="meta-MetaKeybinding.html#meta-keybindings-set-custom-handler"/>
-    <keyword type="function" name="meta_screen_ungrab_all_keys ()" link="meta-MetaKeybinding.html#meta-screen-ungrab-all-keys"/>
-    <keyword type="function" name="meta_screen_grab_all_keys ()" link="meta-MetaKeybinding.html#meta-screen-grab-all-keys"/>
     <keyword type="struct" name="MetaKeyBinding" link="meta-MetaKeybinding.html#MetaKeyBinding-struct"/>
     <keyword type="struct" name="struct MetaBackgroundActor" link="MetaBackgroundActor.html#MetaBackgroundActor-struct"/>
     <keyword type="struct" name="struct MetaBackgroundActorClass" link="MetaBackgroundActor.html#MetaBackgroundActorClass"/>
@@ -340,9 +329,6 @@
     <keyword type="function" name="meta_screen_get_display ()" link="MetaScreen.html#meta-screen-get-display"/>
     <keyword type="function" name="meta_screen_get_xroot ()" link="MetaScreen.html#meta-screen-get-xroot"/>
     <keyword type="function" name="meta_screen_get_size ()" link="MetaScreen.html#meta-screen-get-size"/>
-    <keyword type="function" name="meta_screen_get_compositor_data ()" link="MetaScreen.html#meta-screen-get-compositor-data"/>
-    <keyword type="function" name="meta_screen_set_compositor_data ()" link="MetaScreen.html#meta-screen-set-compositor-data"/>
-    <keyword type="function" name="meta_screen_for_x_screen ()" link="MetaScreen.html#meta-screen-for-x-screen"/>
     <keyword type="function" name="meta_screen_set_cm_selection ()" link="MetaScreen.html#meta-screen-set-cm-selection"/>
     <keyword type="function" name="meta_screen_unset_cm_selection ()" link="MetaScreen.html#meta-screen-unset-cm-selection"/>
     <keyword type="function" name="meta_screen_get_startup_sequences ()" link="MetaScreen.html#meta-screen-get-startup-sequences"/>
@@ -391,7 +377,6 @@
     <keyword type="function" name="meta_window_get_display ()" link="MetaWindow.html#meta-window-get-display"/>
     <keyword type="function" name="meta_window_get_xwindow ()" link="MetaWindow.html#meta-window-get-xwindow"/>
     <keyword type="function" name="meta_window_get_window_type ()" link="MetaWindow.html#meta-window-get-window-type"/>
-    <keyword type="function" name="meta_window_get_window_type_atom ()" link="MetaWindow.html#meta-window-get-window-type-atom"/>
     <keyword type="function" name="meta_window_get_workspace ()" link="MetaWindow.html#meta-window-get-workspace"/>
     <keyword type="function" name="meta_window_get_monitor ()" link="MetaWindow.html#meta-window-get-monitor"/>
     <keyword type="function" name="meta_window_is_on_all_workspaces ()" link="MetaWindow.html#meta-window-is-on-all-workspaces"/>
@@ -421,7 +406,6 @@
     <keyword type="function" name="meta_window_change_workspace ()" link="MetaWindow.html#meta-window-change-workspace"/>
     <keyword type="function" name="meta_window_get_compositor_private ()" link="MetaWindow.html#meta-window-get-compositor-private"/>
     <keyword type="function" name="meta_window_set_compositor_private ()" link="MetaWindow.html#meta-window-set-compositor-private"/>
-    <keyword type="function" name="meta_window_configure_notify ()" link="MetaWindow.html#meta-window-configure-notify"/>
     <keyword type="function" name="meta_window_get_role ()" link="MetaWindow.html#meta-window-get-role"/>
     <keyword type="function" name="meta_window_get_layer ()" link="MetaWindow.html#meta-window-get-layer"/>
     <keyword type="function" name="meta_window_find_root_ancestor ()" link="MetaWindow.html#meta-window-find-root-ancestor"/>
@@ -444,14 +428,12 @@
     <keyword type="function" name="meta_window_lower ()" link="MetaWindow.html#meta-window-lower"/>
     <keyword type="function" name="meta_window_get_title ()" link="MetaWindow.html#meta-window-get-title"/>
     <keyword type="function" name="meta_window_get_transient_for ()" link="MetaWindow.html#meta-window-get-transient-for"/>
-    <keyword type="function" name="meta_window_get_transient_for_as_xid ()" link="MetaWindow.html#meta-window-get-transient-for-as-xid"/>
     <keyword type="function" name="meta_window_delete ()" link="MetaWindow.html#meta-window-delete"/>
     <keyword type="function" name="meta_window_get_stable_sequence ()" link="MetaWindow.html#meta-window-get-stable-sequence"/>
     <keyword type="function" name="meta_window_get_user_time ()" link="MetaWindow.html#meta-window-get-user-time"/>
     <keyword type="function" name="meta_window_get_pid ()" link="MetaWindow.html#meta-window-get-pid"/>
     <keyword type="function" name="meta_window_get_client_machine ()" link="MetaWindow.html#meta-window-get-client-machine"/>
     <keyword type="function" name="meta_window_is_remote ()" link="MetaWindow.html#meta-window-is-remote"/>
-    <keyword type="function" name="meta_window_is_modal ()" link="MetaWindow.html#meta-window-is-modal"/>
     <keyword type="function" name="meta_window_is_attached_dialog ()" link="MetaWindow.html#meta-window-is-attached-dialog"/>
     <keyword type="function" name="meta_window_get_mutter_hints ()" link="MetaWindow.html#meta-window-get-mutter-hints"/>
     <keyword type="function" name="meta_window_get_frame_type ()" link="MetaWindow.html#meta-window-get-frame-type"/>

@@ -318,6 +318,19 @@ window_overlaps_focus_window (MetaWindow *window)
                                    &overlap);
 }
 
+static gboolean
+window_place_centered (MetaWindow *window)
+{
+  MetaWindowType type;
+
+  type = window->type;
+
+  return (type == META_WINDOW_DIALOG ||
+    type == META_WINDOW_MODAL_DIALOG ||
+    type == META_WINDOW_SPLASHSCREEN ||
+    (type == META_WINDOW_NORMAL && meta_prefs_get_center_new_windows ()));
+}
+
 static void
 avoid_being_obscured_as_second_modal_dialog (MetaWindow *window,
                                              int        *x,
@@ -344,7 +357,7 @@ avoid_being_obscured_as_second_modal_dialog (MetaWindow *window,
   /* denied_focus_and_not_transient is only set when focus_window != NULL */
 
   if (window->denied_focus_and_not_transient &&
-      window->wm_state_modal && /* FIXME: Maybe do this for all transients? */
+      window->type == META_WINDOW_MODAL_DIALOG &&
       meta_window_same_application (window, focus_window) &&
       window_overlaps_focus_window (window))
     {
@@ -610,7 +623,7 @@ meta_window_place (MetaWindow        *window,
   meta_topic (META_DEBUG_PLACEMENT, "Placing window %s\n", window->desc);
 
   windows = NULL;
-  
+
   switch (window->type)
     {
       /* Run placement algorithm on these. */
@@ -638,7 +651,7 @@ meta_window_place (MetaWindow        *window,
     case META_WINDOW_OVERRIDE_OTHER:
       goto done_no_constraints;
     }
-  
+
   if (meta_prefs_get_disable_workarounds ())
     {
       switch (window->type)
@@ -699,18 +712,11 @@ meta_window_place (MetaWindow        *window,
           goto done_no_constraints;
         }
     }
-  
-  if ((window->type == META_WINDOW_DIALOG ||
-       window->type == META_WINDOW_MODAL_DIALOG) &&
-      window->xtransient_for != None)
-    {
-      /* Center horizontally, at top of parent vertically */
 
-      MetaWindow *parent;
-          
-      parent =
-        meta_display_lookup_x_window (window->display,
-                                      window->xtransient_for);
+  if (window->type == META_WINDOW_DIALOG ||
+      window->type == META_WINDOW_MODAL_DIALOG)
+    {
+      MetaWindow *parent = meta_window_get_transient_for (window);
 
       if (parent)
         {
@@ -744,9 +750,7 @@ meta_window_place (MetaWindow        *window,
    * on the sides of the parent window or something.
    */
   
-  if (window->type == META_WINDOW_DIALOG ||
-      window->type == META_WINDOW_MODAL_DIALOG ||
-      window->type == META_WINDOW_SPLASHSCREEN)
+  if (window_place_centered (window))
     {
       /* Center on current monitor */
       int w, h;

@@ -64,6 +64,7 @@
  * @META_PREF_WORKSPACES_ONLY_ON_PRIMARY: workspaces only on primary
  * @META_PREF_DRAGGABLE_BORDER_WIDTH: draggable border width
  * @META_PREF_AUTO_MAXIMIZE: auto-maximize
+ * @META_PREF_CENTER_NEW_WINDOWS: center new windows
  */
 
 /* Keep in sync with GSettings schemas! */
@@ -100,7 +101,8 @@ typedef enum
   META_PREF_FORCE_FULLSCREEN,
   META_PREF_WORKSPACES_ONLY_ON_PRIMARY,
   META_PREF_DRAGGABLE_BORDER_WIDTH,
-  META_PREF_AUTO_MAXIMIZE
+  META_PREF_AUTO_MAXIMIZE,
+  META_PREF_CENTER_NEW_WINDOWS
 } MetaPreference;
 
 typedef void (* MetaPrefsChangedFunc) (MetaPreference pref,
@@ -138,6 +140,7 @@ gboolean                    meta_prefs_get_gnome_accessibility (void);
 gboolean                    meta_prefs_get_gnome_animations   (void);
 gboolean                    meta_prefs_get_edge_tiling        (void);
 gboolean                    meta_prefs_get_auto_maximize      (void);
+gboolean                    meta_prefs_get_center_new_windows (void);
 
 void                        meta_prefs_get_button_layout (MetaButtonLayout *button_layout);
 
@@ -185,6 +188,7 @@ void     meta_prefs_set_ignore_request_hide_titlebar (gboolean whether);
  * @META_KEYBINDING_ACTION_WORKSPACE_RIGHT: FILLME 
  * @META_KEYBINDING_ACTION_WORKSPACE_UP: FILLME 
  * @META_KEYBINDING_ACTION_WORKSPACE_DOWN: FILLME 
+ * @META_KEYBINDING_ACTION_WORKSPACE_LAST: FILLME 
  * @META_KEYBINDING_ACTION_SWITCH_APPLICATIONS: FILLME 
  * @META_KEYBINDING_ACTION_SWITCH_APPLICATIONS_BACKWARD: FILLME 
  * @META_KEYBINDING_ACTION_SWITCH_GROUP: FILLME 
@@ -234,6 +238,7 @@ void     meta_prefs_set_ignore_request_hide_titlebar (gboolean whether);
  * @META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_RIGHT: FILLME 
  * @META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_UP: FILLME 
  * @META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_DOWN: FILLME 
+ * @META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_LAST: FILLME 
  * @META_KEYBINDING_ACTION_MOVE_TO_MONITOR_LEFT: FILLME
  * @META_KEYBINDING_ACTION_MOVE_TO_MONITOR_RIGHT: FILLME
  * @META_KEYBINDING_ACTION_MOVE_TO_MONITOR_UP: FILLME
@@ -280,6 +285,7 @@ typedef enum _MetaKeyBindingAction
   META_KEYBINDING_ACTION_WORKSPACE_RIGHT,
   META_KEYBINDING_ACTION_WORKSPACE_UP,
   META_KEYBINDING_ACTION_WORKSPACE_DOWN,
+  META_KEYBINDING_ACTION_WORKSPACE_LAST,
   META_KEYBINDING_ACTION_SWITCH_APPLICATIONS,
   META_KEYBINDING_ACTION_SWITCH_APPLICATIONS_BACKWARD,
   META_KEYBINDING_ACTION_SWITCH_GROUP,
@@ -329,6 +335,7 @@ typedef enum _MetaKeyBindingAction
   META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_RIGHT,
   META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_UP,
   META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_DOWN,
+  META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_LAST,
   META_KEYBINDING_ACTION_MOVE_TO_MONITOR_LEFT,
   META_KEYBINDING_ACTION_MOVE_TO_MONITOR_RIGHT,
   META_KEYBINDING_ACTION_MOVE_TO_MONITOR_UP,
@@ -376,17 +383,17 @@ typedef enum
  * @display: a #MetaDisplay
  * @screen: a #MetaScreen
  * @window: a #MetaWindow
- * @event: (type gpointer): a #XIDeviceEvent
+ * @event: (type gpointer): a #ClutterKeyEvent
  * @binding: a #MetaKeyBinding
  * @user_data: data passed to the function
  *
  */
-typedef void (* MetaKeyHandlerFunc) (MetaDisplay    *display,
-                                     MetaScreen     *screen,
-                                     MetaWindow     *window,
-                                     XIDeviceEvent  *event,
-                                     MetaKeyBinding *binding,
-                                     gpointer        user_data);
+typedef void (* MetaKeyHandlerFunc) (MetaDisplay     *display,
+                                     MetaScreen      *screen,
+                                     MetaWindow      *window,
+                                     ClutterKeyEvent *event,
+                                     MetaKeyBinding  *binding,
+                                     gpointer         user_data);
 
 GType meta_key_binding_get_type    (void);
 

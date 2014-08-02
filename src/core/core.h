@@ -114,10 +114,6 @@ void meta_core_user_focus   (Display *xdisplay,
                              Window   frame_xwindow,
                              guint32  timestamp);
 
-void meta_core_lower_beneath_grab_window (Display *xdisplay,
-                                          Window   xwindow,
-                                          guint32  timestamp);
-
 void meta_core_minimize         (Display *xdisplay,
                                  Window   frame_xwindow);
 void meta_core_toggle_maximize  (Display *xdisplay,
@@ -182,8 +178,6 @@ gboolean   meta_core_begin_grab_op (Display    *xdisplay,
 void       meta_core_end_grab_op   (Display    *xdisplay,
                                     guint32     timestamp);
 MetaGrabOp meta_core_get_grab_op     (Display    *xdisplay);
-Window     meta_core_get_grab_frame  (Display   *xdisplay);
-int        meta_core_get_grab_button (Display  *xdisplay);
 
 
 void       meta_core_grab_buttons  (Display *xdisplay,
@@ -192,12 +186,6 @@ void       meta_core_grab_buttons  (Display *xdisplay,
 void       meta_core_set_screen_cursor (Display *xdisplay,
                                         Window   frame_on_screen,
                                         MetaCursor cursor);
-
-/* Used because we ignore EnterNotify when a window is unmapped that
- * really shouldn't cause focus changes, by comparing the event serial
- * of the EnterNotify and the UnmapNotify.
- */
-void meta_core_increment_event_serial (Display *display);
 
 void meta_invalidate_default_icons (void);
 
