@@ -42,9 +42,6 @@
 /* Have the Xrandr extension library */
 #undef HAVE_RANDR
 
-/* Have the shape extension library */
-#undef HAVE_SHAPE
-
 /* Building with SM support */
 #undef HAVE_SM
 
@@ -75,17 +72,11 @@
 /* Define to 1 if you have the <X11/SM/SMlib.h> header file. */
 #undef HAVE_X11_SM_SMLIB_H
 
-/* Building with Xcursor support */
-#undef HAVE_XCURSOR
-
 /* Define if you have support for XInput 2.3 or greater */
 #undef HAVE_XI23
 
 /* Have keyboard extension library */
 #undef HAVE_XKB
-
-/* Have the Xsync extension library */
-#undef HAVE_XSYNC
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */

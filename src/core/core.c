@@ -153,7 +153,7 @@ meta_core_get (Display *xdisplay,
         break;
 
       default:
-        meta_warning(_("Unknown window information request: %d"), request);
+        meta_warning("Unknown window information request: %d\n", request);
     }
 
     request = va_arg (args, MetaCoreGetType);
@@ -259,39 +259,6 @@ meta_core_user_lower_and_unfocus (Display *xdisplay,
   meta_workspace_focus_default_window (window->screen->active_workspace,
                                        NULL,
                                        timestamp);
-}
-
-void
-meta_core_lower_beneath_grab_window (Display *xdisplay,
-                                     Window   xwindow,
-                                     guint32  timestamp)
-{
-  XWindowChanges changes;
-  MetaDisplay *display;
-  MetaScreen *screen;
-  MetaWindow *grab_window;
-
-  display = meta_display_for_x_display (xdisplay);
-  screen = meta_display_screen_for_xwindow (display, xwindow);
-  grab_window = display->grab_window;
-
-  if (grab_window == NULL)
-    return;
-
-  changes.stack_mode = Below;
-  changes.sibling = meta_window_get_toplevel_xwindow (grab_window);
-
-  meta_stack_tracker_record_lower_below (screen->stack_tracker,
-                                         xwindow,
-                                         changes.sibling,
-                                         XNextRequest (screen->display->xdisplay));
-
-  meta_error_trap_push (display);
-  XConfigureWindow (xdisplay,
-                    xwindow,
-                    CWSibling | CWStackMode,
-                    &changes);
-  meta_error_trap_pop (display);
 }
 
 void
@@ -597,13 +564,10 @@ meta_core_get_workspace_name_with_index (Display *xdisplay,
                                          int      index)
 {
   MetaDisplay *display;
-  MetaScreen *screen;
   MetaWorkspace *workspace;
 
   display = meta_display_for_x_display (xdisplay);
-  screen = meta_display_screen_for_root (display, xroot);
-  g_assert (screen != NULL);
-  workspace = meta_screen_get_workspace_by_index (screen, index);
+  workspace = meta_screen_get_workspace_by_index (display->screen, index);
   return workspace ? meta_workspace_get_name (workspace) : NULL;
 }
 
@@ -624,7 +588,7 @@ meta_core_begin_grab_op (Display    *xdisplay,
   MetaScreen *screen;
   
   display = meta_display_for_x_display (xdisplay);
-  screen = meta_display_screen_for_xwindow (display, frame_xwindow);
+  screen = display->screen;
 
   g_assert (screen != NULL);
   
@@ -656,40 +620,6 @@ meta_core_get_grab_op (Display *xdisplay)
   return display->grab_op;
 }
 
-Window
-meta_core_get_grab_frame (Display *xdisplay)
-{
-  MetaDisplay *display;
-  
-  display = meta_display_for_x_display (xdisplay);
-
-  g_assert (display != NULL);
-  g_assert (display->grab_op == META_GRAB_OP_NONE || 
-            display->grab_screen != NULL);
-  g_assert (display->grab_op == META_GRAB_OP_NONE ||
-            display->grab_screen->display->xdisplay == xdisplay);
-  
-  if (display->grab_op != META_GRAB_OP_NONE &&
-      display->grab_window &&
-      display->grab_window->frame)
-    return display->grab_window->frame->xwindow;
-  else
-    return None;
-}
-
-int
-meta_core_get_grab_button (Display  *xdisplay)
-{
-  MetaDisplay *display;
-  
-  display = meta_display_for_x_display (xdisplay);
-
-  if (display->grab_op == META_GRAB_OP_NONE)
-    return -1;
-  
-  return display->grab_button;
-}
-
 void
 meta_core_grab_buttons  (Display *xdisplay,
                          Window   frame_xwindow)
@@ -710,16 +640,6 @@ meta_core_set_screen_cursor (Display *xdisplay,
   MetaWindow *window = get_window (xdisplay, frame_on_screen);
 
   meta_frame_set_screen_cursor (window->frame, cursor);
-}
-
-void
-meta_core_increment_event_serial (Display *xdisplay)
-{
-  MetaDisplay *display;
-  
-  display = meta_display_for_x_display (xdisplay);
-
-  meta_display_increment_event_serial (display);
 }
 
 void

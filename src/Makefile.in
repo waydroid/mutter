@@ -81,13 +81,13 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = mutter$(EXEEXT)
+bin_PROGRAMS = mutter$(EXEEXT) mutter-launch$(EXEEXT)
 noinst_PROGRAMS = testboxes$(EXEEXT) testgradient$(EXEEXT) \
 	testasyncgetprop$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(srcdir)/libmutter.pc.in $(srcdir)/mutter-plugins.pc.in \
-	$(top_srcdir)/depcomp $(libmutterinclude_HEADERS)
+	$(srcdir)/libmutter.pc.in $(top_srcdir)/depcomp \
+	$(libmutterinclude_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gtk-doc.m4 \
 	$(top_srcdir)/m4/intltool.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -98,7 +98,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = libmutter.pc mutter-plugins.pc
+CONFIG_CLEAN_FILES = libmutter.pc
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -130,31 +130,65 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(convertdir)" "$(DESTDIR)$(desktopfilesdir)" \
 	"$(DESTDIR)$(girdir)" "$(DESTDIR)$(pkgconfigdir)" \
-	"$(DESTDIR)$(typelibdir)" "$(DESTDIR)$(wmpropertiesdir)" \
-	"$(DESTDIR)$(xmldir)" "$(DESTDIR)$(libmutterincludedir)"
+	"$(DESTDIR)$(typelibdir)" "$(DESTDIR)$(xmldir)" \
+	"$(DESTDIR)$(libmutterincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libmutter_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_libmutter_la_OBJECTS = async-getprop.lo barrier.lo bell.lo boxes.lo \
-	clutter-utils.lo cogl-utils.lo compositor.lo \
-	meta-background.lo meta-background-actor.lo \
-	meta-background-group.lo meta-cullable.lo meta-module.lo \
-	meta-plugin.lo meta-plugin-manager.lo meta-shadow-factory.lo \
-	meta-shaped-texture.lo meta-texture-rectangle.lo \
-	meta-texture-tower.lo meta-window-actor.lo \
-	meta-window-group.lo meta-window-shape.lo region-utils.lo \
-	above-tab-keycode.lo constraints.lo core.lo delete.lo \
-	display.lo edge-resistance.lo edid-parse.lo errors.lo frame.lo \
-	gradient.lo group-props.lo group.lo iconcache.lo \
-	keybindings.lo main.lo meta-cursor-tracker.lo \
-	meta-idle-monitor.lo monitor.lo monitor-config.lo \
-	monitor-xrandr.lo place.lo prefs.lo screen.lo session.lo \
-	stack.lo stack-tracker.lo util.lo window-props.lo window.lo \
-	workspace.lo xprops.lo frames.lo menu.lo metaaccellabel.lo \
-	resizepopup.lo theme-parser.lo theme.lo ui.lo
+am__dirstamp = $(am__leading_dot)dirstamp
+am_libmutter_la_OBJECTS = backends/meta-backend.lo \
+	backends/meta-cursor.lo backends/meta-cursor-tracker.lo \
+	backends/meta-cursor-renderer.lo backends/meta-idle-monitor.lo \
+	backends/meta-idle-monitor-dbus.lo \
+	backends/meta-monitor-config.lo \
+	backends/meta-monitor-manager.lo \
+	backends/meta-monitor-manager-dummy.lo backends/edid-parse.lo \
+	backends/native/meta-backend-native.lo \
+	backends/native/meta-cursor-renderer-native.lo \
+	backends/native/meta-idle-monitor-native.lo \
+	backends/native/meta-monitor-manager-kms.lo \
+	backends/native/meta-launcher.lo \
+	backends/x11/meta-backend-x11.lo \
+	backends/x11/meta-idle-monitor-xsync.lo \
+	backends/x11/meta-monitor-manager-xrandr.lo \
+	core/meta-accel-parse.lo core/barrier.lo core/bell.lo \
+	core/boxes.lo compositor/clutter-utils.lo \
+	compositor/cogl-utils.lo compositor/compositor.lo \
+	compositor/meta-background.lo \
+	compositor/meta-background-actor.lo \
+	compositor/meta-background-group.lo \
+	compositor/meta-cullable.lo compositor/meta-module.lo \
+	compositor/meta-plugin.lo compositor/meta-plugin-manager.lo \
+	compositor/meta-shadow-factory.lo \
+	compositor/meta-shaped-texture.lo \
+	compositor/meta-surface-actor.lo \
+	compositor/meta-surface-actor-x11.lo \
+	compositor/meta-surface-actor-wayland.lo \
+	compositor/meta-stage.lo compositor/meta-texture-rectangle.lo \
+	compositor/meta-texture-tower.lo \
+	compositor/meta-window-actor.lo \
+	compositor/meta-window-group.lo \
+	compositor/meta-window-shape.lo compositor/region-utils.lo \
+	core/constraints.lo core/core.lo core/delete.lo \
+	core/display.lo core/edge-resistance.lo core/events.lo \
+	core/errors.lo core/frame.lo ui/gradient.lo \
+	core/keybindings.lo core/main.lo core/place.lo core/prefs.lo \
+	core/screen.lo core/stack.lo core/stack-tracker.lo \
+	core/util.lo core/window.lo core/workspace.lo ui/frames.lo \
+	ui/menu.lo ui/metaaccellabel.lo ui/resizepopup.lo \
+	ui/theme-parser.lo ui/theme.lo ui/ui.lo x11/iconcache.lo \
+	x11/async-getprop.lo x11/group-props.lo x11/group.lo \
+	x11/session.lo x11/window-props.lo x11/window-x11.lo \
+	x11/xprops.lo wayland/meta-wayland.lo wayland/meta-xwayland.lo \
+	wayland/meta-wayland-data-device.lo \
+	wayland/meta-wayland-keyboard.lo \
+	wayland/meta-wayland-pointer.lo wayland/meta-wayland-seat.lo \
+	wayland/meta-wayland-surface.lo \
+	wayland/meta-wayland-outputs.lo wayland/window-wayland.lo
 am__objects_1 = meta-dbus-idle-monitor.lo
-am__objects_2 = meta-dbus-xrandr.lo
-am__objects_3 = $(am__objects_1) $(am__objects_2) mutter-enum-types.lo
+am__objects_2 = meta-dbus-display-config.lo
+am__objects_3 = $(am__objects_1) $(am__objects_2) mutter-enum-types.lo \
+	gtk-shell-protocol.lo xdg-shell-protocol.lo
 nodist_libmutter_la_OBJECTS = $(am__objects_3)
 libmutter_la_OBJECTS = $(am_libmutter_la_OBJECTS) \
 	$(nodist_libmutter_la_OBJECTS)
@@ -166,16 +200,23 @@ libmutter_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libmutter_la_LDFLAGS) $(LDFLAGS) -o $@
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
-am_mutter_OBJECTS = mutter.$(OBJEXT)
+am_mutter_OBJECTS = core/mutter.$(OBJEXT)
 mutter_OBJECTS = $(am_mutter_OBJECTS)
 mutter_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
-am_testasyncgetprop_OBJECTS = testasyncgetprop.$(OBJEXT)
+am_mutter_launch_OBJECTS =  \
+	backends/native/mutter_launch-weston-launch.$(OBJEXT)
+mutter_launch_OBJECTS = $(am_mutter_launch_OBJECTS)
+mutter_launch_LDADD = $(LDADD)
+mutter_launch_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(mutter_launch_CFLAGS) \
+	$(CFLAGS) $(mutter_launch_LDFLAGS) $(LDFLAGS) -o $@
+am_testasyncgetprop_OBJECTS = x11/testasyncgetprop.$(OBJEXT)
 testasyncgetprop_OBJECTS = $(am_testasyncgetprop_OBJECTS)
 testasyncgetprop_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
-am_testboxes_OBJECTS = testboxes.$(OBJEXT)
+am_testboxes_OBJECTS = core/testboxes.$(OBJEXT)
 testboxes_OBJECTS = $(am_testboxes_OBJECTS)
 testboxes_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
-am_testgradient_OBJECTS = testgradient.$(OBJEXT)
+am_testgradient_OBJECTS = ui/testgradient.$(OBJEXT)
 testgradient_OBJECTS = $(am_testgradient_OBJECTS)
 testgradient_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
 AM_V_P = $(am__v_P_@AM_V@)
@@ -213,11 +254,12 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libmutter_la_SOURCES) $(nodist_libmutter_la_SOURCES) \
-	$(mutter_SOURCES) $(testasyncgetprop_SOURCES) \
-	$(testboxes_SOURCES) $(testgradient_SOURCES)
-DIST_SOURCES = $(libmutter_la_SOURCES) $(mutter_SOURCES) \
+	$(mutter_SOURCES) $(mutter_launch_SOURCES) \
 	$(testasyncgetprop_SOURCES) $(testboxes_SOURCES) \
 	$(testgradient_SOURCES)
+DIST_SOURCES = $(libmutter_la_SOURCES) $(mutter_SOURCES) \
+	$(mutter_launch_SOURCES) $(testasyncgetprop_SOURCES) \
+	$(testboxes_SOURCES) $(testgradient_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -232,8 +274,7 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 DATA = $(convert_DATA) $(desktopfiles_DATA) $(gir_DATA) \
-	$(pkgconfig_DATA) $(typelib_DATA) $(wmproperties_DATA) \
-	$(xml_DATA)
+	$(pkgconfig_DATA) $(typelib_DATA) $(xml_DATA)
 HEADERS = $(libmutterinclude_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
@@ -388,6 +429,8 @@ MSGFMT = @MSGFMT@
 MSGFMT_OPTS = @MSGFMT_OPTS@
 MSGMERGE = @MSGMERGE@
 MUTTER_CFLAGS = @MUTTER_CFLAGS@
+MUTTER_LAUNCH_CFLAGS = @MUTTER_LAUNCH_CFLAGS@
+MUTTER_LAUNCH_LIBS = @MUTTER_LAUNCH_LIBS@
 MUTTER_LIBS = @MUTTER_LIBS@
 MUTTER_MAJOR_VERSION = @MUTTER_MAJOR_VERSION@
 MUTTER_MICRO_VERSION = @MUTTER_MICRO_VERSION@
@@ -422,8 +465,10 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 USE_NLS = @USE_NLS@
 VERSION = @VERSION@
+WAYLAND_SCANNER = @WAYLAND_SCANNER@
 XGETTEXT = @XGETTEXT@
 XMKMF = @XMKMF@
+XWAYLAND_PATH = @XWAYLAND_PATH@
 X_CFLAGS = @X_CFLAGS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_LIBS = @X_LIBS@
@@ -487,11 +532,13 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libmutter.la
 SUBDIRS = compositor/plugins
 INCLUDES = \
+	-DCLUTTER_ENABLE_COMPOSITOR_API					\
 	-DCLUTTER_ENABLE_EXPERIMENTAL_API				\
 	-DCOGL_ENABLE_EXPERIMENTAL_API					\
 	-DCOGL_ENABLE_EXPERIMENTAL_2_0_API                              \
 	$(MUTTER_CFLAGS)						\
 	-I$(srcdir)							\
+	-I$(srcdir)/backends						\
 	-I$(srcdir)/core						\
 	-I$(srcdir)/ui							\
 	-I$(srcdir)/compositor						\
@@ -508,17 +555,65 @@ INCLUDES = \
 	-DMUTTER_PLUGIN_API_VERSION=$(MUTTER_PLUGIN_API_VERSION)	\
 	-DMUTTER_PKGLIBDIR=\"$(pkglibdir)\"				\
 	-DMUTTER_PLUGIN_DIR=\"@MUTTER_PLUGIN_DIR@\"			\
-	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\"
+	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\"			\
+	-DXWAYLAND_PATH='"@XWAYLAND_PATH@"'
 
 mutter_built_sources = \
-	$(dbus_idle_built_sources)	\
-	$(dbus_xrandr_built_sources)	\
-	mutter-enum-types.h		\
-	mutter-enum-types.c
+	$(dbus_idle_built_sources)		\
+	$(dbus_display_config_built_sources)	\
+	mutter-enum-types.h 			\
+	mutter-enum-types.c			\
+	gtk-shell-protocol.c			\
+	gtk-shell-server-protocol.h		\
+	xdg-shell-protocol.c			\
+	xdg-shell-server-protocol.h
+
+wayland_protocols = \
+	wayland/protocol/gtk-shell.xml		\
+	wayland/protocol/xdg-shell.xml
 
 libmutter_la_SOURCES = \
-	core/async-getprop.c			\
-	core/async-getprop.h			\
+	backends/meta-backend.c			\
+	backends/meta-backend.h			\
+	backends/meta-backend-private.h		\
+	backends/meta-cursor.c			\
+	backends/meta-cursor.h			\
+	backends/meta-cursor-private.h		\
+	backends/meta-cursor-tracker.c		\
+	backends/meta-cursor-tracker-private.h	\
+	backends/meta-cursor-renderer.c		\
+	backends/meta-cursor-renderer.h		\
+	backends/meta-display-config-shared.h	\
+	backends/meta-idle-monitor.c		\
+	backends/meta-idle-monitor-private.h	\
+	backends/meta-idle-monitor-dbus.c	\
+	backends/meta-idle-monitor-dbus.h	\
+	backends/meta-monitor-config.c		\
+	backends/meta-monitor-config.h		\
+	backends/meta-monitor-manager.c		\
+	backends/meta-monitor-manager.h		\
+	backends/meta-monitor-manager-dummy.c	\
+	backends/meta-monitor-manager-dummy.h	\
+	backends/edid-parse.c			\
+	backends/edid.h				\
+	backends/native/meta-backend-native.c		\
+	backends/native/meta-backend-native.h		\
+	backends/native/meta-cursor-renderer-native.c	\
+	backends/native/meta-cursor-renderer-native.h	\
+	backends/native/meta-idle-monitor-native.c	\
+	backends/native/meta-idle-monitor-native.h	\
+	backends/native/meta-monitor-manager-kms.c	\
+	backends/native/meta-monitor-manager-kms.h	\
+	backends/native/meta-launcher.c			\
+	backends/native/meta-launcher.h			\
+	backends/x11/meta-backend-x11.c			\
+	backends/x11/meta-backend-x11.h			\
+	backends/x11/meta-idle-monitor-xsync.c		\
+	backends/x11/meta-idle-monitor-xsync.h		\
+	backends/x11/meta-monitor-manager-xrandr.c	\
+	backends/x11/meta-monitor-manager-xrandr.h	\
+	core/meta-accel-parse.c			\
+	core/meta-accel-parse.h			\
 	core/barrier.c				\
 	meta/barrier.h				\
 	core/bell.c				\
@@ -546,7 +641,15 @@ libmutter_la_SOURCES = \
 	compositor/meta-shadow-factory.c	\
 	compositor/meta-shadow-factory-private.h	\
 	compositor/meta-shaped-texture.c	\
-	compositor/meta-shaped-texture-private.h	\
+	compositor/meta-shaped-texture-private.h 	\
+	compositor/meta-surface-actor.c		\
+	compositor/meta-surface-actor.h		\
+	compositor/meta-surface-actor-x11.c	\
+	compositor/meta-surface-actor-x11.h	\
+	compositor/meta-surface-actor-wayland.c	\
+	compositor/meta-surface-actor-wayland.h	\
+	compositor/meta-stage.h			\
+	compositor/meta-stage.c			\
 	compositor/meta-texture-rectangle.c	\
 	compositor/meta-texture-rectangle.h	\
 	compositor/meta-texture-tower.c		\
@@ -567,7 +670,6 @@ libmutter_la_SOURCES = \
 	meta/meta-shadow-factory.h		\
 	meta/meta-window-actor.h		\
 	meta/compositor-mutter.h 		\
-	core/above-tab-keycode.c		\
 	core/constraints.c			\
 	core/constraints.h			\
 	core/core.c				\
@@ -577,34 +679,17 @@ libmutter_la_SOURCES = \
 	meta/display.h				\
 	core/edge-resistance.c			\
 	core/edge-resistance.h			\
-	core/edid-parse.c			\
-	core/edid.h				\
+	core/events.c				\
+	core/events.h				\
 	core/errors.c				\
 	meta/errors.h				\
 	core/frame.c				\
 	core/frame.h				\
 	ui/gradient.c				\
 	meta/gradient.h				\
-	core/group-private.h			\
-	core/group-props.c			\
-	core/group-props.h			\
-	core/group.c				\
-	meta/group.h				\
-	core/iconcache.c			\
-	core/iconcache.h			\
 	core/keybindings.c			\
 	core/keybindings-private.h		\
 	core/main.c				\
-	core/meta-cursor-tracker.c		\
-	core/meta-cursor-tracker-private.h	\
-	core/meta-idle-monitor.c		\
-	core/meta-idle-monitor-private.h	\
-	core/meta-xrandr-shared.h		\
-	core/monitor.c				\
-	core/monitor-config.c			\
-	core/monitor-private.h			\
-	core/monitor-xrandr.c			\
-	core/mutter-Xatomtype.h			\
 	core/place.c				\
 	core/place.h				\
 	core/prefs.c				\
@@ -613,8 +698,6 @@ libmutter_la_SOURCES = \
 	core/screen-private.h			\
 	meta/screen.h				\
 	meta/types.h				\
-	core/session.c				\
-	core/session.h				\
 	core/stack.c				\
 	core/stack.h				\
 	core/stack-tracker.c			\
@@ -622,15 +705,11 @@ libmutter_la_SOURCES = \
 	core/util.c				\
 	meta/util.h				\
 	core/util-private.h			\
-	core/window-props.c			\
-	core/window-props.h			\
 	core/window.c				\
 	core/window-private.h			\
 	meta/window.h				\
 	core/workspace.c			\
 	core/workspace-private.h		\
-	core/xprops.c				\
-	core/xprops.h				\
 	meta/common.h				\
 	core/core.h				\
 	ui/ui.h					\
@@ -646,7 +725,48 @@ libmutter_la_SOURCES = \
 	ui/theme.c				\
 	meta/theme.h				\
 	ui/theme-private.h			\
-	ui/ui.c
+	ui/ui.c					\
+	x11/iconcache.c				\
+	x11/iconcache.h				\
+	x11/async-getprop.c			\
+	x11/async-getprop.h			\
+	x11/group-private.h			\
+	x11/group-props.c			\
+	x11/group-props.h			\
+	x11/group.c				\
+	meta/group.h				\
+	x11/session.c				\
+	x11/session.h				\
+	x11/window-props.c			\
+	x11/window-props.h			\
+	x11/window-x11.c			\
+	x11/window-x11.h			\
+	x11/window-x11-private.h		\
+	x11/xprops.c				\
+	x11/xprops.h				\
+	x11/mutter-Xatomtype.h			\
+	wayland/meta-wayland.c			\
+	wayland/meta-wayland.h			\
+	wayland/meta-wayland-private.h		\
+	wayland/meta-xwayland.c			\
+	wayland/meta-xwayland.h			\
+	wayland/meta-xwayland-private.h		\
+	wayland/meta-wayland-data-device.c      \
+	wayland/meta-wayland-data-device.h      \
+	wayland/meta-wayland-keyboard.c		\
+	wayland/meta-wayland-keyboard.h		\
+	wayland/meta-wayland-pointer.c		\
+	wayland/meta-wayland-pointer.h		\
+	wayland/meta-wayland-seat.c		\
+	wayland/meta-wayland-seat.h		\
+	wayland/meta-wayland-surface.c		\
+	wayland/meta-wayland-surface.h		\
+	wayland/meta-wayland-types.h		\
+	wayland/meta-wayland-versions.h		\
+	wayland/meta-wayland-outputs.c		\
+	wayland/meta-wayland-outputs.h		\
+	wayland/window-wayland.c		\
+	wayland/window-wayland.h
 
 nodist_libmutter_la_SOURCES = \
 	$(mutter_built_sources)
@@ -698,6 +818,12 @@ libmutterinclude_HEADERS = \
 
 mutter_SOURCES = core/mutter.c
 mutter_LDADD = $(MUTTER_LIBS) libmutter.la
+mutter_launch_SOURCES = \
+	backends/native/weston-launch.c 	\
+	backends/native/weston-launch.h
+
+mutter_launch_CFLAGS = $(MUTTER_LAUNCH_CFLAGS) -DLIBDIR=\"$(libdir)\"
+mutter_launch_LDFLAGS = $(MUTTER_LAUNCH_LIBS) -lpam
 
 # Since we don't make any guarantees about stability and we don't support
 # parallel install, there's no real reason to change directories, filenames,
@@ -725,7 +851,7 @@ mutter_LDADD = $(MUTTER_LIBS) libmutter.la
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_SCANNERFLAGS = --warn-all --warn-error
 testboxes_SOURCES = core/testboxes.c
 testgradient_SOURCES = ui/testgradient.c
-testasyncgetprop_SOURCES = core/testasyncgetprop.c
+testasyncgetprop_SOURCES = x11/testasyncgetprop.c
 testboxes_LDADD = $(MUTTER_LIBS) libmutter.la
 testgradient_LDADD = $(MUTTER_LIBS) libmutter.la
 testasyncgetprop_LDADD = $(MUTTER_LIBS) libmutter.la
@@ -733,10 +859,6 @@ desktopfilesdir = $(datadir)/applications
 desktopfiles_in_files = mutter.desktop.in
 desktopfiles_files = $(desktopfiles_in_files:.desktop.in=.desktop)
 desktopfiles_DATA = $(desktopfiles_files)
-wmpropertiesdir = $(datadir)/gnome/wm-properties
-wmproperties_in_files = mutter-wm.desktop.in
-wmproperties_files = $(wmproperties_in_files:.desktop.in=.desktop)
-wmproperties_DATA = $(wmproperties_files)
 xmldir = @GNOME_KEYBINDINGS_KEYSDIR@
 xml_in_files = \
         50-mutter-navigation.xml.in	\
@@ -744,34 +866,36 @@ xml_in_files = \
         50-mutter-windows.xml.in
 
 xml_DATA = $(xml_in_files:.xml.in=.xml)
-gsettings_SCHEMAS = org.gnome.mutter.gschema.xml
+dbus_idle_built_sources = meta-dbus-idle-monitor.c meta-dbus-idle-monitor.h
+gsettings_SCHEMAS = org.gnome.mutter.gschema.xml org.gnome.mutter.wayland.gschema.xml
 convertdir = $(datadir)/GConf/gsettings
 convert_DATA = mutter-schemas.convert
 CLEANFILES = mutter.desktop mutter-wm.desktop \
-	org.gnome.mutter.gschema.xml $(xml_DATA) \
+	org.gnome.mutter.gschema.xml \
+	org.gnome.mutter.wayland.gschema.xml $(xml_DATA) \
 	$(mutter_built_sources) $(typelib_DATA) $(gir_DATA) \
 	$(MUTTER_STAMP_FILES)
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libmutter.pc mutter-plugins.pc
+pkgconfig_DATA = libmutter.pc
 EXTRA_DIST = $(desktopfiles_files) 	\
 	$(wmproperties_files)		\
 	$(IMAGES) 			\
 	$(desktopfiles_in_files)	\
 	$(wmproperties_in_files)	\
 	$(xml_in_files)			\
+	$(wayland_protocols)		\
 	org.gnome.mutter.gschema.xml.in \
-	idle-monitor.xml \
-	xrandr.xml \
+	org.gnome.mutter.wayland.gschema.xml.in \
 	mutter-schemas.convert \
 	libmutter.pc.in \
-	mutter-plugins.pc.in  \
 	mutter-enum-types.h.in \
-	mutter-enum-types.c.in
+	mutter-enum-types.c.in \
+	org.gnome.Mutter.DisplayConfig.xml	\
+	org.gnome.Mutter.IdleMonitor.xml
 
 BUILT_SOURCES = $(mutter_built_sources)
 MUTTER_STAMP_FILES = stamp-mutter-enum-types.h
-dbus_xrandr_built_sources = meta-dbus-xrandr.c meta-dbus-xrandr.h
-dbus_idle_built_sources = meta-dbus-idle-monitor.c meta-dbus-idle-monitor.h
+dbus_display_config_built_sources = meta-dbus-display-config.c meta-dbus-display-config.h
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -809,8 +933,6 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 $(am__aclocal_m4_deps):
 libmutter.pc: $(top_builddir)/config.status $(srcdir)/libmutter.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-mutter-plugins.pc: $(top_builddir)/config.status $(srcdir)/mutter-plugins.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
@@ -846,6 +968,201 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+backends/$(am__dirstamp):
+	@$(MKDIR_P) backends
+	@: > backends/$(am__dirstamp)
+backends/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) backends/$(DEPDIR)
+	@: > backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-backend.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-cursor.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-cursor-tracker.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-cursor-renderer.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-idle-monitor.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-idle-monitor-dbus.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-monitor-config.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-monitor-manager.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-monitor-manager-dummy.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/edid-parse.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/native/$(am__dirstamp):
+	@$(MKDIR_P) backends/native
+	@: > backends/native/$(am__dirstamp)
+backends/native/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) backends/native/$(DEPDIR)
+	@: > backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-backend-native.lo:  \
+	backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-cursor-renderer-native.lo:  \
+	backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-idle-monitor-native.lo:  \
+	backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-monitor-manager-kms.lo:  \
+	backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-launcher.lo: backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/x11/$(am__dirstamp):
+	@$(MKDIR_P) backends/x11
+	@: > backends/x11/$(am__dirstamp)
+backends/x11/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) backends/x11/$(DEPDIR)
+	@: > backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/meta-backend-x11.lo: backends/x11/$(am__dirstamp) \
+	backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/meta-idle-monitor-xsync.lo: backends/x11/$(am__dirstamp) \
+	backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/meta-monitor-manager-xrandr.lo:  \
+	backends/x11/$(am__dirstamp) \
+	backends/x11/$(DEPDIR)/$(am__dirstamp)
+core/$(am__dirstamp):
+	@$(MKDIR_P) core
+	@: > core/$(am__dirstamp)
+core/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) core/$(DEPDIR)
+	@: > core/$(DEPDIR)/$(am__dirstamp)
+core/meta-accel-parse.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
+core/barrier.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/bell.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/boxes.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+compositor/$(am__dirstamp):
+	@$(MKDIR_P) compositor
+	@: > compositor/$(am__dirstamp)
+compositor/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) compositor/$(DEPDIR)
+	@: > compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/clutter-utils.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/cogl-utils.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/compositor.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-background.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-background-actor.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-background-group.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-cullable.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-module.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-plugin.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-plugin-manager.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-shadow-factory.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-shaped-texture.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-surface-actor.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-surface-actor-x11.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-surface-actor-wayland.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-stage.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-texture-rectangle.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-texture-tower.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-window-actor.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-window-group.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-window-shape.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/region-utils.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+core/constraints.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
+core/core.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/delete.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/display.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/edge-resistance.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
+core/events.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/errors.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/frame.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+ui/$(am__dirstamp):
+	@$(MKDIR_P) ui
+	@: > ui/$(am__dirstamp)
+ui/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ui/$(DEPDIR)
+	@: > ui/$(DEPDIR)/$(am__dirstamp)
+ui/gradient.lo: ui/$(am__dirstamp) ui/$(DEPDIR)/$(am__dirstamp)
+core/keybindings.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
+core/main.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/place.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/prefs.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/screen.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/stack.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/stack-tracker.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
+core/util.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/window.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+core/workspace.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
+ui/frames.lo: ui/$(am__dirstamp) ui/$(DEPDIR)/$(am__dirstamp)
+ui/menu.lo: ui/$(am__dirstamp) ui/$(DEPDIR)/$(am__dirstamp)
+ui/metaaccellabel.lo: ui/$(am__dirstamp) ui/$(DEPDIR)/$(am__dirstamp)
+ui/resizepopup.lo: ui/$(am__dirstamp) ui/$(DEPDIR)/$(am__dirstamp)
+ui/theme-parser.lo: ui/$(am__dirstamp) ui/$(DEPDIR)/$(am__dirstamp)
+ui/theme.lo: ui/$(am__dirstamp) ui/$(DEPDIR)/$(am__dirstamp)
+ui/ui.lo: ui/$(am__dirstamp) ui/$(DEPDIR)/$(am__dirstamp)
+x11/$(am__dirstamp):
+	@$(MKDIR_P) x11
+	@: > x11/$(am__dirstamp)
+x11/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) x11/$(DEPDIR)
+	@: > x11/$(DEPDIR)/$(am__dirstamp)
+x11/iconcache.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
+x11/async-getprop.lo: x11/$(am__dirstamp) \
+	x11/$(DEPDIR)/$(am__dirstamp)
+x11/group-props.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
+x11/group.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
+x11/session.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
+x11/window-props.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
+x11/window-x11.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
+x11/xprops.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
+wayland/$(am__dirstamp):
+	@$(MKDIR_P) wayland
+	@: > wayland/$(am__dirstamp)
+wayland/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) wayland/$(DEPDIR)
+	@: > wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-xwayland.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-data-device.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-keyboard.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-pointer.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-seat.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-surface.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-outputs.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/window-wayland.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
 
 libmutter.la: $(libmutter_la_OBJECTS) $(libmutter_la_DEPENDENCIES) $(EXTRA_libmutter_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libmutter_la_LINK) -rpath $(libdir) $(libmutter_la_OBJECTS) $(libmutter_la_LIBADD) $(LIBS)
@@ -907,18 +1224,33 @@ clean-noinstPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+core/mutter.$(OBJEXT): core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
 
 mutter$(EXEEXT): $(mutter_OBJECTS) $(mutter_DEPENDENCIES) $(EXTRA_mutter_DEPENDENCIES) 
 	@rm -f mutter$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mutter_OBJECTS) $(mutter_LDADD) $(LIBS)
+backends/native/mutter_launch-weston-launch.$(OBJEXT):  \
+	backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+
+mutter-launch$(EXEEXT): $(mutter_launch_OBJECTS) $(mutter_launch_DEPENDENCIES) $(EXTRA_mutter_launch_DEPENDENCIES) 
+	@rm -f mutter-launch$(EXEEXT)
+	$(AM_V_CCLD)$(mutter_launch_LINK) $(mutter_launch_OBJECTS) $(mutter_launch_LDADD) $(LIBS)
+x11/testasyncgetprop.$(OBJEXT): x11/$(am__dirstamp) \
+	x11/$(DEPDIR)/$(am__dirstamp)
 
 testasyncgetprop$(EXEEXT): $(testasyncgetprop_OBJECTS) $(testasyncgetprop_DEPENDENCIES) $(EXTRA_testasyncgetprop_DEPENDENCIES) 
 	@rm -f testasyncgetprop$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testasyncgetprop_OBJECTS) $(testasyncgetprop_LDADD) $(LIBS)
+core/testboxes.$(OBJEXT): core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
 
 testboxes$(EXEEXT): $(testboxes_OBJECTS) $(testboxes_DEPENDENCIES) $(EXTRA_testboxes_DEPENDENCIES) 
 	@rm -f testboxes$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testboxes_OBJECTS) $(testboxes_LDADD) $(LIBS)
+ui/testgradient.$(OBJEXT): ui/$(am__dirstamp) \
+	ui/$(DEPDIR)/$(am__dirstamp)
 
 testgradient$(EXEEXT): $(testgradient_OBJECTS) $(testgradient_DEPENDENCIES) $(EXTRA_testgradient_DEPENDENCIES) 
 	@rm -f testgradient$(EXEEXT)
@@ -926,580 +1258,175 @@ testgradient$(EXEEXT): $(testgradient_OBJECTS) $(testgradient_DEPENDENCIES) $(EX
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f backends/*.$(OBJEXT)
+	-rm -f backends/*.lo
+	-rm -f backends/native/*.$(OBJEXT)
+	-rm -f backends/native/*.lo
+	-rm -f backends/x11/*.$(OBJEXT)
+	-rm -f backends/x11/*.lo
+	-rm -f compositor/*.$(OBJEXT)
+	-rm -f compositor/*.lo
+	-rm -f core/*.$(OBJEXT)
+	-rm -f core/*.lo
+	-rm -f ui/*.$(OBJEXT)
+	-rm -f ui/*.lo
+	-rm -f wayland/*.$(OBJEXT)
+	-rm -f wayland/*.lo
+	-rm -f x11/*.$(OBJEXT)
+	-rm -f x11/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/above-tab-keycode.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/async-getprop.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/barrier.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bell.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/boxes.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clutter-utils.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cogl-utils.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compositor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/constraints.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/core.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/delete.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/display.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/edge-resistance.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/edid-parse.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/errors.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frame.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frames.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gradient.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/group-props.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/group.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iconcache.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keybindings.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/menu.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-background-actor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-background-group.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-background.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-cullable.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-cursor-tracker.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtk-shell-protocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-display-config.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-idle-monitor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-xrandr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-idle-monitor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-plugin-manager.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-plugin.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-shadow-factory.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-shaped-texture.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-texture-rectangle.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-texture-tower.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-window-actor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-window-group.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-window-shape.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/metaaccellabel.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/monitor-config.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/monitor-xrandr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/monitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter-enum-types.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/place.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/prefs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/region-utils.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resizepopup.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/screen.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/session.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stack-tracker.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stack.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testasyncgetprop.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testboxes.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testgradient.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/theme-parser.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/theme.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ui.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window-props.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/window.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/workspace.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xprops.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-shell-protocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/edid-parse.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-backend.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-cursor-renderer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-cursor-tracker.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-cursor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-idle-monitor-dbus.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-idle-monitor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-config.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-manager-dummy.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-manager.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-backend-native.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-cursor-renderer-native.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-idle-monitor-native.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-launcher.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-monitor-manager-kms.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/mutter_launch-weston-launch.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-backend-x11.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-idle-monitor-xsync.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-monitor-manager-xrandr.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/clutter-utils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/cogl-utils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/compositor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-background-actor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-background-group.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-background.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-cullable.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-module.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-plugin-manager.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-plugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-shadow-factory.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-shaped-texture.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-stage.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-surface-actor-wayland.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-surface-actor-x11.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-surface-actor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-texture-rectangle.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-texture-tower.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-window-actor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-window-group.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-window-shape.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/region-utils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/barrier.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/bell.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/boxes.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/constraints.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/core.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/delete.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/display.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/edge-resistance.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/errors.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/events.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/frame.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/keybindings.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/main.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/meta-accel-parse.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/mutter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/place.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/prefs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/screen.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/stack-tracker.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/stack.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/testboxes.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/util.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/window.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/workspace.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/frames.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/gradient.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/menu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/metaaccellabel.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/resizepopup.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/testgradient.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/theme-parser.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/theme.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/ui.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-data-device.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-keyboard.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-outputs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-pointer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-seat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-surface.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-xwayland.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/window-wayland.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/async-getprop.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/group-props.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/group.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/iconcache.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/session.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/testasyncgetprop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/window-props.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/window-x11.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/xprops.Plo@am__quote@
 
 .c.o:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
 
 .c.obj:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .c.lo:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-async-getprop.lo: core/async-getprop.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT async-getprop.lo -MD -MP -MF $(DEPDIR)/async-getprop.Tpo -c -o async-getprop.lo `test -f 'core/async-getprop.c' || echo '$(srcdir)/'`core/async-getprop.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/async-getprop.Tpo $(DEPDIR)/async-getprop.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/async-getprop.c' object='async-getprop.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o async-getprop.lo `test -f 'core/async-getprop.c' || echo '$(srcdir)/'`core/async-getprop.c
-
-barrier.lo: core/barrier.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT barrier.lo -MD -MP -MF $(DEPDIR)/barrier.Tpo -c -o barrier.lo `test -f 'core/barrier.c' || echo '$(srcdir)/'`core/barrier.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/barrier.Tpo $(DEPDIR)/barrier.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/barrier.c' object='barrier.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o barrier.lo `test -f 'core/barrier.c' || echo '$(srcdir)/'`core/barrier.c
-
-bell.lo: core/bell.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bell.lo -MD -MP -MF $(DEPDIR)/bell.Tpo -c -o bell.lo `test -f 'core/bell.c' || echo '$(srcdir)/'`core/bell.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bell.Tpo $(DEPDIR)/bell.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/bell.c' object='bell.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bell.lo `test -f 'core/bell.c' || echo '$(srcdir)/'`core/bell.c
-
-boxes.lo: core/boxes.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT boxes.lo -MD -MP -MF $(DEPDIR)/boxes.Tpo -c -o boxes.lo `test -f 'core/boxes.c' || echo '$(srcdir)/'`core/boxes.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/boxes.Tpo $(DEPDIR)/boxes.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/boxes.c' object='boxes.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o boxes.lo `test -f 'core/boxes.c' || echo '$(srcdir)/'`core/boxes.c
-
-clutter-utils.lo: compositor/clutter-utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT clutter-utils.lo -MD -MP -MF $(DEPDIR)/clutter-utils.Tpo -c -o clutter-utils.lo `test -f 'compositor/clutter-utils.c' || echo '$(srcdir)/'`compositor/clutter-utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/clutter-utils.Tpo $(DEPDIR)/clutter-utils.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/clutter-utils.c' object='clutter-utils.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o clutter-utils.lo `test -f 'compositor/clutter-utils.c' || echo '$(srcdir)/'`compositor/clutter-utils.c
-
-cogl-utils.lo: compositor/cogl-utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cogl-utils.lo -MD -MP -MF $(DEPDIR)/cogl-utils.Tpo -c -o cogl-utils.lo `test -f 'compositor/cogl-utils.c' || echo '$(srcdir)/'`compositor/cogl-utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cogl-utils.Tpo $(DEPDIR)/cogl-utils.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/cogl-utils.c' object='cogl-utils.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cogl-utils.lo `test -f 'compositor/cogl-utils.c' || echo '$(srcdir)/'`compositor/cogl-utils.c
-
-compositor.lo: compositor/compositor.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT compositor.lo -MD -MP -MF $(DEPDIR)/compositor.Tpo -c -o compositor.lo `test -f 'compositor/compositor.c' || echo '$(srcdir)/'`compositor/compositor.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/compositor.Tpo $(DEPDIR)/compositor.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/compositor.c' object='compositor.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o compositor.lo `test -f 'compositor/compositor.c' || echo '$(srcdir)/'`compositor/compositor.c
-
-meta-background.lo: compositor/meta-background.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-background.lo -MD -MP -MF $(DEPDIR)/meta-background.Tpo -c -o meta-background.lo `test -f 'compositor/meta-background.c' || echo '$(srcdir)/'`compositor/meta-background.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-background.Tpo $(DEPDIR)/meta-background.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-background.c' object='meta-background.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-background.lo `test -f 'compositor/meta-background.c' || echo '$(srcdir)/'`compositor/meta-background.c
-
-meta-background-actor.lo: compositor/meta-background-actor.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-background-actor.lo -MD -MP -MF $(DEPDIR)/meta-background-actor.Tpo -c -o meta-background-actor.lo `test -f 'compositor/meta-background-actor.c' || echo '$(srcdir)/'`compositor/meta-background-actor.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-background-actor.Tpo $(DEPDIR)/meta-background-actor.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-background-actor.c' object='meta-background-actor.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-background-actor.lo `test -f 'compositor/meta-background-actor.c' || echo '$(srcdir)/'`compositor/meta-background-actor.c
-
-meta-background-group.lo: compositor/meta-background-group.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-background-group.lo -MD -MP -MF $(DEPDIR)/meta-background-group.Tpo -c -o meta-background-group.lo `test -f 'compositor/meta-background-group.c' || echo '$(srcdir)/'`compositor/meta-background-group.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-background-group.Tpo $(DEPDIR)/meta-background-group.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-background-group.c' object='meta-background-group.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-background-group.lo `test -f 'compositor/meta-background-group.c' || echo '$(srcdir)/'`compositor/meta-background-group.c
-
-meta-cullable.lo: compositor/meta-cullable.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-cullable.lo -MD -MP -MF $(DEPDIR)/meta-cullable.Tpo -c -o meta-cullable.lo `test -f 'compositor/meta-cullable.c' || echo '$(srcdir)/'`compositor/meta-cullable.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-cullable.Tpo $(DEPDIR)/meta-cullable.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-cullable.c' object='meta-cullable.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-cullable.lo `test -f 'compositor/meta-cullable.c' || echo '$(srcdir)/'`compositor/meta-cullable.c
-
-meta-module.lo: compositor/meta-module.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-module.lo -MD -MP -MF $(DEPDIR)/meta-module.Tpo -c -o meta-module.lo `test -f 'compositor/meta-module.c' || echo '$(srcdir)/'`compositor/meta-module.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-module.Tpo $(DEPDIR)/meta-module.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-module.c' object='meta-module.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-module.lo `test -f 'compositor/meta-module.c' || echo '$(srcdir)/'`compositor/meta-module.c
-
-meta-plugin.lo: compositor/meta-plugin.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-plugin.lo -MD -MP -MF $(DEPDIR)/meta-plugin.Tpo -c -o meta-plugin.lo `test -f 'compositor/meta-plugin.c' || echo '$(srcdir)/'`compositor/meta-plugin.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-plugin.Tpo $(DEPDIR)/meta-plugin.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-plugin.c' object='meta-plugin.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-plugin.lo `test -f 'compositor/meta-plugin.c' || echo '$(srcdir)/'`compositor/meta-plugin.c
-
-meta-plugin-manager.lo: compositor/meta-plugin-manager.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-plugin-manager.lo -MD -MP -MF $(DEPDIR)/meta-plugin-manager.Tpo -c -o meta-plugin-manager.lo `test -f 'compositor/meta-plugin-manager.c' || echo '$(srcdir)/'`compositor/meta-plugin-manager.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-plugin-manager.Tpo $(DEPDIR)/meta-plugin-manager.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-plugin-manager.c' object='meta-plugin-manager.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-plugin-manager.lo `test -f 'compositor/meta-plugin-manager.c' || echo '$(srcdir)/'`compositor/meta-plugin-manager.c
-
-meta-shadow-factory.lo: compositor/meta-shadow-factory.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-shadow-factory.lo -MD -MP -MF $(DEPDIR)/meta-shadow-factory.Tpo -c -o meta-shadow-factory.lo `test -f 'compositor/meta-shadow-factory.c' || echo '$(srcdir)/'`compositor/meta-shadow-factory.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-shadow-factory.Tpo $(DEPDIR)/meta-shadow-factory.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-shadow-factory.c' object='meta-shadow-factory.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-shadow-factory.lo `test -f 'compositor/meta-shadow-factory.c' || echo '$(srcdir)/'`compositor/meta-shadow-factory.c
-
-meta-shaped-texture.lo: compositor/meta-shaped-texture.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-shaped-texture.lo -MD -MP -MF $(DEPDIR)/meta-shaped-texture.Tpo -c -o meta-shaped-texture.lo `test -f 'compositor/meta-shaped-texture.c' || echo '$(srcdir)/'`compositor/meta-shaped-texture.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-shaped-texture.Tpo $(DEPDIR)/meta-shaped-texture.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-shaped-texture.c' object='meta-shaped-texture.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-shaped-texture.lo `test -f 'compositor/meta-shaped-texture.c' || echo '$(srcdir)/'`compositor/meta-shaped-texture.c
-
-meta-texture-rectangle.lo: compositor/meta-texture-rectangle.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-texture-rectangle.lo -MD -MP -MF $(DEPDIR)/meta-texture-rectangle.Tpo -c -o meta-texture-rectangle.lo `test -f 'compositor/meta-texture-rectangle.c' || echo '$(srcdir)/'`compositor/meta-texture-rectangle.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-texture-rectangle.Tpo $(DEPDIR)/meta-texture-rectangle.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-texture-rectangle.c' object='meta-texture-rectangle.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-texture-rectangle.lo `test -f 'compositor/meta-texture-rectangle.c' || echo '$(srcdir)/'`compositor/meta-texture-rectangle.c
-
-meta-texture-tower.lo: compositor/meta-texture-tower.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-texture-tower.lo -MD -MP -MF $(DEPDIR)/meta-texture-tower.Tpo -c -o meta-texture-tower.lo `test -f 'compositor/meta-texture-tower.c' || echo '$(srcdir)/'`compositor/meta-texture-tower.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-texture-tower.Tpo $(DEPDIR)/meta-texture-tower.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-texture-tower.c' object='meta-texture-tower.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-texture-tower.lo `test -f 'compositor/meta-texture-tower.c' || echo '$(srcdir)/'`compositor/meta-texture-tower.c
-
-meta-window-actor.lo: compositor/meta-window-actor.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-window-actor.lo -MD -MP -MF $(DEPDIR)/meta-window-actor.Tpo -c -o meta-window-actor.lo `test -f 'compositor/meta-window-actor.c' || echo '$(srcdir)/'`compositor/meta-window-actor.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-window-actor.Tpo $(DEPDIR)/meta-window-actor.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-window-actor.c' object='meta-window-actor.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-window-actor.lo `test -f 'compositor/meta-window-actor.c' || echo '$(srcdir)/'`compositor/meta-window-actor.c
-
-meta-window-group.lo: compositor/meta-window-group.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-window-group.lo -MD -MP -MF $(DEPDIR)/meta-window-group.Tpo -c -o meta-window-group.lo `test -f 'compositor/meta-window-group.c' || echo '$(srcdir)/'`compositor/meta-window-group.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-window-group.Tpo $(DEPDIR)/meta-window-group.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-window-group.c' object='meta-window-group.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-window-group.lo `test -f 'compositor/meta-window-group.c' || echo '$(srcdir)/'`compositor/meta-window-group.c
-
-meta-window-shape.lo: compositor/meta-window-shape.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-window-shape.lo -MD -MP -MF $(DEPDIR)/meta-window-shape.Tpo -c -o meta-window-shape.lo `test -f 'compositor/meta-window-shape.c' || echo '$(srcdir)/'`compositor/meta-window-shape.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-window-shape.Tpo $(DEPDIR)/meta-window-shape.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/meta-window-shape.c' object='meta-window-shape.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-window-shape.lo `test -f 'compositor/meta-window-shape.c' || echo '$(srcdir)/'`compositor/meta-window-shape.c
-
-region-utils.lo: compositor/region-utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT region-utils.lo -MD -MP -MF $(DEPDIR)/region-utils.Tpo -c -o region-utils.lo `test -f 'compositor/region-utils.c' || echo '$(srcdir)/'`compositor/region-utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/region-utils.Tpo $(DEPDIR)/region-utils.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compositor/region-utils.c' object='region-utils.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o region-utils.lo `test -f 'compositor/region-utils.c' || echo '$(srcdir)/'`compositor/region-utils.c
-
-above-tab-keycode.lo: core/above-tab-keycode.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT above-tab-keycode.lo -MD -MP -MF $(DEPDIR)/above-tab-keycode.Tpo -c -o above-tab-keycode.lo `test -f 'core/above-tab-keycode.c' || echo '$(srcdir)/'`core/above-tab-keycode.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/above-tab-keycode.Tpo $(DEPDIR)/above-tab-keycode.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/above-tab-keycode.c' object='above-tab-keycode.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o above-tab-keycode.lo `test -f 'core/above-tab-keycode.c' || echo '$(srcdir)/'`core/above-tab-keycode.c
-
-constraints.lo: core/constraints.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT constraints.lo -MD -MP -MF $(DEPDIR)/constraints.Tpo -c -o constraints.lo `test -f 'core/constraints.c' || echo '$(srcdir)/'`core/constraints.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/constraints.Tpo $(DEPDIR)/constraints.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/constraints.c' object='constraints.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o constraints.lo `test -f 'core/constraints.c' || echo '$(srcdir)/'`core/constraints.c
-
-core.lo: core/core.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT core.lo -MD -MP -MF $(DEPDIR)/core.Tpo -c -o core.lo `test -f 'core/core.c' || echo '$(srcdir)/'`core/core.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/core.Tpo $(DEPDIR)/core.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/core.c' object='core.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o core.lo `test -f 'core/core.c' || echo '$(srcdir)/'`core/core.c
-
-delete.lo: core/delete.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT delete.lo -MD -MP -MF $(DEPDIR)/delete.Tpo -c -o delete.lo `test -f 'core/delete.c' || echo '$(srcdir)/'`core/delete.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/delete.Tpo $(DEPDIR)/delete.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/delete.c' object='delete.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o delete.lo `test -f 'core/delete.c' || echo '$(srcdir)/'`core/delete.c
-
-display.lo: core/display.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT display.lo -MD -MP -MF $(DEPDIR)/display.Tpo -c -o display.lo `test -f 'core/display.c' || echo '$(srcdir)/'`core/display.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/display.Tpo $(DEPDIR)/display.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/display.c' object='display.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o display.lo `test -f 'core/display.c' || echo '$(srcdir)/'`core/display.c
-
-edge-resistance.lo: core/edge-resistance.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT edge-resistance.lo -MD -MP -MF $(DEPDIR)/edge-resistance.Tpo -c -o edge-resistance.lo `test -f 'core/edge-resistance.c' || echo '$(srcdir)/'`core/edge-resistance.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/edge-resistance.Tpo $(DEPDIR)/edge-resistance.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/edge-resistance.c' object='edge-resistance.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o edge-resistance.lo `test -f 'core/edge-resistance.c' || echo '$(srcdir)/'`core/edge-resistance.c
-
-edid-parse.lo: core/edid-parse.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT edid-parse.lo -MD -MP -MF $(DEPDIR)/edid-parse.Tpo -c -o edid-parse.lo `test -f 'core/edid-parse.c' || echo '$(srcdir)/'`core/edid-parse.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/edid-parse.Tpo $(DEPDIR)/edid-parse.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/edid-parse.c' object='edid-parse.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o edid-parse.lo `test -f 'core/edid-parse.c' || echo '$(srcdir)/'`core/edid-parse.c
-
-errors.lo: core/errors.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT errors.lo -MD -MP -MF $(DEPDIR)/errors.Tpo -c -o errors.lo `test -f 'core/errors.c' || echo '$(srcdir)/'`core/errors.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/errors.Tpo $(DEPDIR)/errors.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/errors.c' object='errors.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o errors.lo `test -f 'core/errors.c' || echo '$(srcdir)/'`core/errors.c
-
-frame.lo: core/frame.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT frame.lo -MD -MP -MF $(DEPDIR)/frame.Tpo -c -o frame.lo `test -f 'core/frame.c' || echo '$(srcdir)/'`core/frame.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/frame.Tpo $(DEPDIR)/frame.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/frame.c' object='frame.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o frame.lo `test -f 'core/frame.c' || echo '$(srcdir)/'`core/frame.c
-
-gradient.lo: ui/gradient.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT gradient.lo -MD -MP -MF $(DEPDIR)/gradient.Tpo -c -o gradient.lo `test -f 'ui/gradient.c' || echo '$(srcdir)/'`ui/gradient.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gradient.Tpo $(DEPDIR)/gradient.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/gradient.c' object='gradient.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o gradient.lo `test -f 'ui/gradient.c' || echo '$(srcdir)/'`ui/gradient.c
-
-group-props.lo: core/group-props.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT group-props.lo -MD -MP -MF $(DEPDIR)/group-props.Tpo -c -o group-props.lo `test -f 'core/group-props.c' || echo '$(srcdir)/'`core/group-props.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/group-props.Tpo $(DEPDIR)/group-props.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/group-props.c' object='group-props.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o group-props.lo `test -f 'core/group-props.c' || echo '$(srcdir)/'`core/group-props.c
-
-group.lo: core/group.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT group.lo -MD -MP -MF $(DEPDIR)/group.Tpo -c -o group.lo `test -f 'core/group.c' || echo '$(srcdir)/'`core/group.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/group.Tpo $(DEPDIR)/group.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/group.c' object='group.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o group.lo `test -f 'core/group.c' || echo '$(srcdir)/'`core/group.c
-
-iconcache.lo: core/iconcache.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT iconcache.lo -MD -MP -MF $(DEPDIR)/iconcache.Tpo -c -o iconcache.lo `test -f 'core/iconcache.c' || echo '$(srcdir)/'`core/iconcache.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/iconcache.Tpo $(DEPDIR)/iconcache.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/iconcache.c' object='iconcache.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o iconcache.lo `test -f 'core/iconcache.c' || echo '$(srcdir)/'`core/iconcache.c
-
-keybindings.lo: core/keybindings.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT keybindings.lo -MD -MP -MF $(DEPDIR)/keybindings.Tpo -c -o keybindings.lo `test -f 'core/keybindings.c' || echo '$(srcdir)/'`core/keybindings.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/keybindings.Tpo $(DEPDIR)/keybindings.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/keybindings.c' object='keybindings.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o keybindings.lo `test -f 'core/keybindings.c' || echo '$(srcdir)/'`core/keybindings.c
-
-main.lo: core/main.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT main.lo -MD -MP -MF $(DEPDIR)/main.Tpo -c -o main.lo `test -f 'core/main.c' || echo '$(srcdir)/'`core/main.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/main.Tpo $(DEPDIR)/main.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/main.c' object='main.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o main.lo `test -f 'core/main.c' || echo '$(srcdir)/'`core/main.c
-
-meta-cursor-tracker.lo: core/meta-cursor-tracker.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-cursor-tracker.lo -MD -MP -MF $(DEPDIR)/meta-cursor-tracker.Tpo -c -o meta-cursor-tracker.lo `test -f 'core/meta-cursor-tracker.c' || echo '$(srcdir)/'`core/meta-cursor-tracker.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-cursor-tracker.Tpo $(DEPDIR)/meta-cursor-tracker.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/meta-cursor-tracker.c' object='meta-cursor-tracker.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-cursor-tracker.lo `test -f 'core/meta-cursor-tracker.c' || echo '$(srcdir)/'`core/meta-cursor-tracker.c
-
-meta-idle-monitor.lo: core/meta-idle-monitor.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta-idle-monitor.lo -MD -MP -MF $(DEPDIR)/meta-idle-monitor.Tpo -c -o meta-idle-monitor.lo `test -f 'core/meta-idle-monitor.c' || echo '$(srcdir)/'`core/meta-idle-monitor.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta-idle-monitor.Tpo $(DEPDIR)/meta-idle-monitor.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/meta-idle-monitor.c' object='meta-idle-monitor.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta-idle-monitor.lo `test -f 'core/meta-idle-monitor.c' || echo '$(srcdir)/'`core/meta-idle-monitor.c
-
-monitor.lo: core/monitor.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT monitor.lo -MD -MP -MF $(DEPDIR)/monitor.Tpo -c -o monitor.lo `test -f 'core/monitor.c' || echo '$(srcdir)/'`core/monitor.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/monitor.Tpo $(DEPDIR)/monitor.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/monitor.c' object='monitor.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o monitor.lo `test -f 'core/monitor.c' || echo '$(srcdir)/'`core/monitor.c
-
-monitor-config.lo: core/monitor-config.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT monitor-config.lo -MD -MP -MF $(DEPDIR)/monitor-config.Tpo -c -o monitor-config.lo `test -f 'core/monitor-config.c' || echo '$(srcdir)/'`core/monitor-config.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/monitor-config.Tpo $(DEPDIR)/monitor-config.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/monitor-config.c' object='monitor-config.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o monitor-config.lo `test -f 'core/monitor-config.c' || echo '$(srcdir)/'`core/monitor-config.c
-
-monitor-xrandr.lo: core/monitor-xrandr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT monitor-xrandr.lo -MD -MP -MF $(DEPDIR)/monitor-xrandr.Tpo -c -o monitor-xrandr.lo `test -f 'core/monitor-xrandr.c' || echo '$(srcdir)/'`core/monitor-xrandr.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/monitor-xrandr.Tpo $(DEPDIR)/monitor-xrandr.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/monitor-xrandr.c' object='monitor-xrandr.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o monitor-xrandr.lo `test -f 'core/monitor-xrandr.c' || echo '$(srcdir)/'`core/monitor-xrandr.c
-
-place.lo: core/place.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT place.lo -MD -MP -MF $(DEPDIR)/place.Tpo -c -o place.lo `test -f 'core/place.c' || echo '$(srcdir)/'`core/place.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/place.Tpo $(DEPDIR)/place.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/place.c' object='place.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o place.lo `test -f 'core/place.c' || echo '$(srcdir)/'`core/place.c
-
-prefs.lo: core/prefs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT prefs.lo -MD -MP -MF $(DEPDIR)/prefs.Tpo -c -o prefs.lo `test -f 'core/prefs.c' || echo '$(srcdir)/'`core/prefs.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/prefs.Tpo $(DEPDIR)/prefs.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/prefs.c' object='prefs.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o prefs.lo `test -f 'core/prefs.c' || echo '$(srcdir)/'`core/prefs.c
-
-screen.lo: core/screen.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT screen.lo -MD -MP -MF $(DEPDIR)/screen.Tpo -c -o screen.lo `test -f 'core/screen.c' || echo '$(srcdir)/'`core/screen.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/screen.Tpo $(DEPDIR)/screen.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/screen.c' object='screen.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o screen.lo `test -f 'core/screen.c' || echo '$(srcdir)/'`core/screen.c
-
-session.lo: core/session.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT session.lo -MD -MP -MF $(DEPDIR)/session.Tpo -c -o session.lo `test -f 'core/session.c' || echo '$(srcdir)/'`core/session.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/session.Tpo $(DEPDIR)/session.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/session.c' object='session.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o session.lo `test -f 'core/session.c' || echo '$(srcdir)/'`core/session.c
-
-stack.lo: core/stack.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT stack.lo -MD -MP -MF $(DEPDIR)/stack.Tpo -c -o stack.lo `test -f 'core/stack.c' || echo '$(srcdir)/'`core/stack.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/stack.Tpo $(DEPDIR)/stack.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/stack.c' object='stack.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o stack.lo `test -f 'core/stack.c' || echo '$(srcdir)/'`core/stack.c
-
-stack-tracker.lo: core/stack-tracker.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT stack-tracker.lo -MD -MP -MF $(DEPDIR)/stack-tracker.Tpo -c -o stack-tracker.lo `test -f 'core/stack-tracker.c' || echo '$(srcdir)/'`core/stack-tracker.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/stack-tracker.Tpo $(DEPDIR)/stack-tracker.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/stack-tracker.c' object='stack-tracker.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o stack-tracker.lo `test -f 'core/stack-tracker.c' || echo '$(srcdir)/'`core/stack-tracker.c
-
-util.lo: core/util.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT util.lo -MD -MP -MF $(DEPDIR)/util.Tpo -c -o util.lo `test -f 'core/util.c' || echo '$(srcdir)/'`core/util.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/util.Tpo $(DEPDIR)/util.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/util.c' object='util.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o util.lo `test -f 'core/util.c' || echo '$(srcdir)/'`core/util.c
-
-window-props.lo: core/window-props.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT window-props.lo -MD -MP -MF $(DEPDIR)/window-props.Tpo -c -o window-props.lo `test -f 'core/window-props.c' || echo '$(srcdir)/'`core/window-props.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/window-props.Tpo $(DEPDIR)/window-props.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/window-props.c' object='window-props.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o window-props.lo `test -f 'core/window-props.c' || echo '$(srcdir)/'`core/window-props.c
-
-window.lo: core/window.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT window.lo -MD -MP -MF $(DEPDIR)/window.Tpo -c -o window.lo `test -f 'core/window.c' || echo '$(srcdir)/'`core/window.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/window.Tpo $(DEPDIR)/window.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/window.c' object='window.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o window.lo `test -f 'core/window.c' || echo '$(srcdir)/'`core/window.c
-
-workspace.lo: core/workspace.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT workspace.lo -MD -MP -MF $(DEPDIR)/workspace.Tpo -c -o workspace.lo `test -f 'core/workspace.c' || echo '$(srcdir)/'`core/workspace.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/workspace.Tpo $(DEPDIR)/workspace.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/workspace.c' object='workspace.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o workspace.lo `test -f 'core/workspace.c' || echo '$(srcdir)/'`core/workspace.c
-
-xprops.lo: core/xprops.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xprops.lo -MD -MP -MF $(DEPDIR)/xprops.Tpo -c -o xprops.lo `test -f 'core/xprops.c' || echo '$(srcdir)/'`core/xprops.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/xprops.Tpo $(DEPDIR)/xprops.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/xprops.c' object='xprops.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xprops.lo `test -f 'core/xprops.c' || echo '$(srcdir)/'`core/xprops.c
-
-frames.lo: ui/frames.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT frames.lo -MD -MP -MF $(DEPDIR)/frames.Tpo -c -o frames.lo `test -f 'ui/frames.c' || echo '$(srcdir)/'`ui/frames.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/frames.Tpo $(DEPDIR)/frames.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/frames.c' object='frames.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o frames.lo `test -f 'ui/frames.c' || echo '$(srcdir)/'`ui/frames.c
-
-menu.lo: ui/menu.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT menu.lo -MD -MP -MF $(DEPDIR)/menu.Tpo -c -o menu.lo `test -f 'ui/menu.c' || echo '$(srcdir)/'`ui/menu.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/menu.Tpo $(DEPDIR)/menu.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/menu.c' object='menu.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o menu.lo `test -f 'ui/menu.c' || echo '$(srcdir)/'`ui/menu.c
-
-metaaccellabel.lo: ui/metaaccellabel.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT metaaccellabel.lo -MD -MP -MF $(DEPDIR)/metaaccellabel.Tpo -c -o metaaccellabel.lo `test -f 'ui/metaaccellabel.c' || echo '$(srcdir)/'`ui/metaaccellabel.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/metaaccellabel.Tpo $(DEPDIR)/metaaccellabel.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/metaaccellabel.c' object='metaaccellabel.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o metaaccellabel.lo `test -f 'ui/metaaccellabel.c' || echo '$(srcdir)/'`ui/metaaccellabel.c
-
-resizepopup.lo: ui/resizepopup.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT resizepopup.lo -MD -MP -MF $(DEPDIR)/resizepopup.Tpo -c -o resizepopup.lo `test -f 'ui/resizepopup.c' || echo '$(srcdir)/'`ui/resizepopup.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/resizepopup.Tpo $(DEPDIR)/resizepopup.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/resizepopup.c' object='resizepopup.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o resizepopup.lo `test -f 'ui/resizepopup.c' || echo '$(srcdir)/'`ui/resizepopup.c
-
-theme-parser.lo: ui/theme-parser.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT theme-parser.lo -MD -MP -MF $(DEPDIR)/theme-parser.Tpo -c -o theme-parser.lo `test -f 'ui/theme-parser.c' || echo '$(srcdir)/'`ui/theme-parser.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/theme-parser.Tpo $(DEPDIR)/theme-parser.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/theme-parser.c' object='theme-parser.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o theme-parser.lo `test -f 'ui/theme-parser.c' || echo '$(srcdir)/'`ui/theme-parser.c
-
-theme.lo: ui/theme.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT theme.lo -MD -MP -MF $(DEPDIR)/theme.Tpo -c -o theme.lo `test -f 'ui/theme.c' || echo '$(srcdir)/'`ui/theme.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/theme.Tpo $(DEPDIR)/theme.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/theme.c' object='theme.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o theme.lo `test -f 'ui/theme.c' || echo '$(srcdir)/'`ui/theme.c
-
-ui.lo: ui/ui.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ui.lo -MD -MP -MF $(DEPDIR)/ui.Tpo -c -o ui.lo `test -f 'ui/ui.c' || echo '$(srcdir)/'`ui/ui.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ui.Tpo $(DEPDIR)/ui.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/ui.c' object='ui.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ui.lo `test -f 'ui/ui.c' || echo '$(srcdir)/'`ui/ui.c
-
-mutter.o: core/mutter.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mutter.o -MD -MP -MF $(DEPDIR)/mutter.Tpo -c -o mutter.o `test -f 'core/mutter.c' || echo '$(srcdir)/'`core/mutter.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mutter.Tpo $(DEPDIR)/mutter.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/mutter.c' object='mutter.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mutter.o `test -f 'core/mutter.c' || echo '$(srcdir)/'`core/mutter.c
-
-mutter.obj: core/mutter.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mutter.obj -MD -MP -MF $(DEPDIR)/mutter.Tpo -c -o mutter.obj `if test -f 'core/mutter.c'; then $(CYGPATH_W) 'core/mutter.c'; else $(CYGPATH_W) '$(srcdir)/core/mutter.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mutter.Tpo $(DEPDIR)/mutter.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/mutter.c' object='mutter.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mutter.obj `if test -f 'core/mutter.c'; then $(CYGPATH_W) 'core/mutter.c'; else $(CYGPATH_W) '$(srcdir)/core/mutter.c'; fi`
-
-testasyncgetprop.o: core/testasyncgetprop.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT testasyncgetprop.o -MD -MP -MF $(DEPDIR)/testasyncgetprop.Tpo -c -o testasyncgetprop.o `test -f 'core/testasyncgetprop.c' || echo '$(srcdir)/'`core/testasyncgetprop.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/testasyncgetprop.Tpo $(DEPDIR)/testasyncgetprop.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/testasyncgetprop.c' object='testasyncgetprop.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o testasyncgetprop.o `test -f 'core/testasyncgetprop.c' || echo '$(srcdir)/'`core/testasyncgetprop.c
-
-testasyncgetprop.obj: core/testasyncgetprop.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT testasyncgetprop.obj -MD -MP -MF $(DEPDIR)/testasyncgetprop.Tpo -c -o testasyncgetprop.obj `if test -f 'core/testasyncgetprop.c'; then $(CYGPATH_W) 'core/testasyncgetprop.c'; else $(CYGPATH_W) '$(srcdir)/core/testasyncgetprop.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/testasyncgetprop.Tpo $(DEPDIR)/testasyncgetprop.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/testasyncgetprop.c' object='testasyncgetprop.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o testasyncgetprop.obj `if test -f 'core/testasyncgetprop.c'; then $(CYGPATH_W) 'core/testasyncgetprop.c'; else $(CYGPATH_W) '$(srcdir)/core/testasyncgetprop.c'; fi`
-
-testboxes.o: core/testboxes.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT testboxes.o -MD -MP -MF $(DEPDIR)/testboxes.Tpo -c -o testboxes.o `test -f 'core/testboxes.c' || echo '$(srcdir)/'`core/testboxes.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/testboxes.Tpo $(DEPDIR)/testboxes.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/testboxes.c' object='testboxes.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o testboxes.o `test -f 'core/testboxes.c' || echo '$(srcdir)/'`core/testboxes.c
-
-testboxes.obj: core/testboxes.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT testboxes.obj -MD -MP -MF $(DEPDIR)/testboxes.Tpo -c -o testboxes.obj `if test -f 'core/testboxes.c'; then $(CYGPATH_W) 'core/testboxes.c'; else $(CYGPATH_W) '$(srcdir)/core/testboxes.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/testboxes.Tpo $(DEPDIR)/testboxes.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='core/testboxes.c' object='testboxes.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o testboxes.obj `if test -f 'core/testboxes.c'; then $(CYGPATH_W) 'core/testboxes.c'; else $(CYGPATH_W) '$(srcdir)/core/testboxes.c'; fi`
-
-testgradient.o: ui/testgradient.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT testgradient.o -MD -MP -MF $(DEPDIR)/testgradient.Tpo -c -o testgradient.o `test -f 'ui/testgradient.c' || echo '$(srcdir)/'`ui/testgradient.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/testgradient.Tpo $(DEPDIR)/testgradient.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/testgradient.c' object='testgradient.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o testgradient.o `test -f 'ui/testgradient.c' || echo '$(srcdir)/'`ui/testgradient.c
-
-testgradient.obj: ui/testgradient.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT testgradient.obj -MD -MP -MF $(DEPDIR)/testgradient.Tpo -c -o testgradient.obj `if test -f 'ui/testgradient.c'; then $(CYGPATH_W) 'ui/testgradient.c'; else $(CYGPATH_W) '$(srcdir)/ui/testgradient.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/testgradient.Tpo $(DEPDIR)/testgradient.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui/testgradient.c' object='testgradient.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o testgradient.obj `if test -f 'ui/testgradient.c'; then $(CYGPATH_W) 'ui/testgradient.c'; else $(CYGPATH_W) '$(srcdir)/ui/testgradient.c'; fi`
+backends/native/mutter_launch-weston-launch.o: backends/native/weston-launch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mutter_launch_CFLAGS) $(CFLAGS) -MT backends/native/mutter_launch-weston-launch.o -MD -MP -MF backends/native/$(DEPDIR)/mutter_launch-weston-launch.Tpo -c -o backends/native/mutter_launch-weston-launch.o `test -f 'backends/native/weston-launch.c' || echo '$(srcdir)/'`backends/native/weston-launch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) backends/native/$(DEPDIR)/mutter_launch-weston-launch.Tpo backends/native/$(DEPDIR)/mutter_launch-weston-launch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='backends/native/weston-launch.c' object='backends/native/mutter_launch-weston-launch.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mutter_launch_CFLAGS) $(CFLAGS) -c -o backends/native/mutter_launch-weston-launch.o `test -f 'backends/native/weston-launch.c' || echo '$(srcdir)/'`backends/native/weston-launch.c
+
+backends/native/mutter_launch-weston-launch.obj: backends/native/weston-launch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mutter_launch_CFLAGS) $(CFLAGS) -MT backends/native/mutter_launch-weston-launch.obj -MD -MP -MF backends/native/$(DEPDIR)/mutter_launch-weston-launch.Tpo -c -o backends/native/mutter_launch-weston-launch.obj `if test -f 'backends/native/weston-launch.c'; then $(CYGPATH_W) 'backends/native/weston-launch.c'; else $(CYGPATH_W) '$(srcdir)/backends/native/weston-launch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) backends/native/$(DEPDIR)/mutter_launch-weston-launch.Tpo backends/native/$(DEPDIR)/mutter_launch-weston-launch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='backends/native/weston-launch.c' object='backends/native/mutter_launch-weston-launch.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mutter_launch_CFLAGS) $(CFLAGS) -c -o backends/native/mutter_launch-weston-launch.obj `if test -f 'backends/native/weston-launch.c'; then $(CYGPATH_W) 'backends/native/weston-launch.c'; else $(CYGPATH_W) '$(srcdir)/backends/native/weston-launch.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
+	-rm -rf backends/.libs backends/_libs
+	-rm -rf backends/native/.libs backends/native/_libs
+	-rm -rf backends/x11/.libs backends/x11/_libs
+	-rm -rf compositor/.libs compositor/_libs
+	-rm -rf core/.libs core/_libs
+	-rm -rf ui/.libs ui/_libs
+	-rm -rf wayland/.libs wayland/_libs
+	-rm -rf x11/.libs x11/_libs
 install-convertDATA: $(convert_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(convert_DATA)'; test -n "$(convertdir)" || list=; \
@@ -1605,27 +1532,6 @@ uninstall-typelibDATA:
 	@list='$(typelib_DATA)'; test -n "$(typelibdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(typelibdir)'; $(am__uninstall_files_from_dir)
-install-wmpropertiesDATA: $(wmproperties_DATA)
-	@$(NORMAL_INSTALL)
-	@list='$(wmproperties_DATA)'; test -n "$(wmpropertiesdir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(wmpropertiesdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(wmpropertiesdir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(wmpropertiesdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(wmpropertiesdir)" || exit $$?; \
-	done
-
-uninstall-wmpropertiesDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(wmproperties_DATA)'; test -n "$(wmpropertiesdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(wmpropertiesdir)'; $(am__uninstall_files_from_dir)
 install-xmlDATA: $(xml_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(xml_DATA)'; test -n "$(xmldir)" || list=; \
@@ -1831,7 +1737,7 @@ install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(convertdir)" "$(DESTDIR)$(desktopfilesdir)" "$(DESTDIR)$(girdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(typelibdir)" "$(DESTDIR)$(wmpropertiesdir)" "$(DESTDIR)$(xmldir)" "$(DESTDIR)$(libmutterincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(convertdir)" "$(DESTDIR)$(desktopfilesdir)" "$(DESTDIR)$(girdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(typelibdir)" "$(DESTDIR)$(xmldir)" "$(DESTDIR)$(libmutterincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -1862,6 +1768,22 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f backends/$(DEPDIR)/$(am__dirstamp)
+	-rm -f backends/$(am__dirstamp)
+	-rm -f backends/native/$(DEPDIR)/$(am__dirstamp)
+	-rm -f backends/native/$(am__dirstamp)
+	-rm -f backends/x11/$(DEPDIR)/$(am__dirstamp)
+	-rm -f backends/x11/$(am__dirstamp)
+	-rm -f compositor/$(DEPDIR)/$(am__dirstamp)
+	-rm -f compositor/$(am__dirstamp)
+	-rm -f core/$(DEPDIR)/$(am__dirstamp)
+	-rm -f core/$(am__dirstamp)
+	-rm -f ui/$(DEPDIR)/$(am__dirstamp)
+	-rm -f ui/$(am__dirstamp)
+	-rm -f wayland/$(DEPDIR)/$(am__dirstamp)
+	-rm -f wayland/$(am__dirstamp)
+	-rm -f x11/$(DEPDIR)/$(am__dirstamp)
+	-rm -f x11/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1873,7 +1795,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
 	clean-libtool clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1892,15 +1814,15 @@ info-am:
 
 install-data-am: install-convertDATA install-desktopfilesDATA \
 	install-girDATA install-libmutterincludeHEADERS \
-	install-pkgconfigDATA install-typelibDATA \
-	install-wmpropertiesDATA install-xmlDATA
+	install-pkgconfigDATA install-typelibDATA install-xmlDATA
 
 install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
 install-exec-am: install-binPROGRAMS install-libLTLIBRARIES
-
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-recursive
 
 install-html-am:
@@ -1922,7 +1844,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1943,10 +1865,10 @@ uninstall-am: uninstall-binPROGRAMS uninstall-convertDATA \
 	uninstall-desktopfilesDATA uninstall-girDATA \
 	uninstall-libLTLIBRARIES uninstall-libmutterincludeHEADERS \
 	uninstall-pkgconfigDATA uninstall-typelibDATA \
-	uninstall-wmpropertiesDATA uninstall-xmlDATA
+	uninstall-xmlDATA
 
 .MAKE: $(am__recursive_targets) all check install install-am \
-	install-strip
+	install-exec-am install-strip
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am check \
 	check-am clean clean-binPROGRAMS clean-generic \
@@ -1956,12 +1878,12 @@ uninstall-am: uninstall-binPROGRAMS uninstall-convertDATA \
 	dvi-am html html-am info info-am install install-am \
 	install-binPROGRAMS install-convertDATA install-data \
 	install-data-am install-desktopfilesDATA install-dvi \
-	install-dvi-am install-exec install-exec-am install-girDATA \
-	install-html install-html-am install-info install-info-am \
-	install-libLTLIBRARIES install-libmutterincludeHEADERS \
-	install-man install-pdf install-pdf-am install-pkgconfigDATA \
-	install-ps install-ps-am install-strip install-typelibDATA \
-	install-wmpropertiesDATA install-xmlDATA installcheck \
+	install-dvi-am install-exec install-exec-am install-exec-hook \
+	install-girDATA install-html install-html-am install-info \
+	install-info-am install-libLTLIBRARIES \
+	install-libmutterincludeHEADERS install-man install-pdf \
+	install-pdf-am install-pkgconfigDATA install-ps install-ps-am \
+	install-strip install-typelibDATA install-xmlDATA installcheck \
 	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
@@ -1969,12 +1891,15 @@ uninstall-am: uninstall-binPROGRAMS uninstall-convertDATA \
 	uninstall-convertDATA uninstall-desktopfilesDATA \
 	uninstall-girDATA uninstall-libLTLIBRARIES \
 	uninstall-libmutterincludeHEADERS uninstall-pkgconfigDATA \
-	uninstall-typelibDATA uninstall-wmpropertiesDATA \
-	uninstall-xmlDATA
+	uninstall-typelibDATA uninstall-xmlDATA
 
 
 # Flag build for parallelism; see https://savannah.gnu.org/patch/?6905
 .AUTOPARALLEL:
+
+install-exec-hook:
+	-chown root $(DESTDIR)$(bindir)/mutter-launch
+	-chmod u+s $(DESTDIR)$(bindir)/mutter-launch
 
 @HAVE_INTROSPECTION_TRUE@include $(INTROSPECTION_MAKEFILE)
 
@@ -2003,20 +1928,25 @@ mutter-enum-types.c: stamp-mutter-enum-types.h mutter-enum-types.c.in
 	cp xgen-tetc mutter-enum-types.c && \
 	rm -f xgen-tetc
 
-$(dbus_xrandr_built_sources) : Makefile.am xrandr.xml
+$(dbus_display_config_built_sources) : Makefile.am org.gnome.Mutter.DisplayConfig.xml
 	$(AM_V_GEN)gdbus-codegen							\
 		--interface-prefix org.gnome.Mutter					\
 		--c-namespace MetaDBus							\
-		--generate-c-code meta-dbus-xrandr					\
-		$(srcdir)/xrandr.xml
+		--generate-c-code meta-dbus-display-config				\
+		$(srcdir)/org.gnome.Mutter.DisplayConfig.xml
 
-$(dbus_idle_built_sources) : Makefile.am idle-monitor.xml
+$(dbus_idle_built_sources) : Makefile.am org.gnome.Mutter.IdleMonitor.xml
 	$(AM_V_GEN)gdbus-codegen							\
 		--interface-prefix org.gnome.Mutter					\
 		--c-namespace MetaDBus							\
 		--generate-c-code meta-dbus-idle-monitor				\
 		--c-generate-object-manager						\
-		$(srcdir)/idle-monitor.xml
+		$(srcdir)/org.gnome.Mutter.IdleMonitor.xml
+
+%-protocol.c : $(srcdir)/wayland/protocol/%.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+%-server-protocol.h : $(srcdir)/wayland/protocol/%.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

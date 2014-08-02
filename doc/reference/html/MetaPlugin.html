@@ -41,22 +41,6 @@
 </colgroup>
 <tbody>
 <tr>
-<td class="function_type">
-<span class="returnvalue">gboolean</span>
-</td>
-<td class="function_name">
-<a class="link" href="MetaPlugin.html#meta-plugin-running" title="meta_plugin_running ()">meta_plugin_running</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">
-<span class="returnvalue">gboolean</span>
-</td>
-<td class="function_name">
-<a class="link" href="MetaPlugin.html#meta-plugin-debug-mode" title="meta_plugin_debug_mode ()">meta_plugin_debug_mode</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
 <td class="function_type">const <a class="link" href="MetaPlugin.html#MetaPluginInfo" title="struct MetaPluginInfo"><span class="returnvalue">MetaPluginInfo</span></a> *
 </td>
 <td class="function_name">
@@ -195,18 +179,6 @@
 <div class="refsect1">
 <a name="MetaPlugin.functions_details"></a><h2>Functions</h2>
 <div class="refsect2">
-<a name="meta-plugin-running"></a><h3>meta_plugin_running ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>
-meta_plugin_running (<em class="parameter"><code><a class="link" href="MetaPlugin.html" title="MetaPlugin"><span class="type">MetaPlugin</span></a> *plugin</code></em>);</pre>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-plugin-debug-mode"></a><h3>meta_plugin_debug_mode ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>
-meta_plugin_debug_mode (<em class="parameter"><code><a class="link" href="MetaPlugin.html" title="MetaPlugin"><span class="type">MetaPlugin</span></a> *plugin</code></em>);</pre>
-</div>
-<hr>
-<div class="refsect2">
 <a name="meta-plugin-get-info"></a><h3>meta_plugin_get_info ()</h3>
 <pre class="programlisting">const <a class="link" href="MetaPlugin.html#MetaPluginInfo" title="struct MetaPluginInfo"><span class="returnvalue">MetaPluginInfo</span></a> *
 meta_plugin_get_info (<em class="parameter"><code><a class="link" href="MetaPlugin.html" title="MetaPlugin"><span class="type">MetaPlugin</span></a> *plugin</code></em>);</pre>
@@ -277,7 +249,7 @@ this function to establish modality after a passive grab, and second to
 allow using obscure features of <code class="function">XGrabPointer()</code> and <code class="function">XGrabKeyboard()</code> without
 having to add them to this API.</p>
 <div class="refsect3">
-<a name="id-1.4.8.7.12.5"></a><h4>Parameters</h4>
+<a name="id-1.4.8.7.10.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -304,7 +276,7 @@ having to add them to this API.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.8.7.12.6"></a><h4>Returns</h4>
+<a name="id-1.4.8.7.10.6"></a><h4>Returns</h4>
 <p> whether we successfully grabbed the keyboard and
 mouse and made the plugin modal.</p>
 <p></p>
@@ -322,7 +294,7 @@ ungrabs both the mouse and keyboard even when
 <a class="link" href="MetaPlugin.html#META-MODAL-KEYBOARD-ALREADY-GRABBED:CAPS"><code class="literal">META_MODAL_KEYBOARD_ALREADY_GRABBED</code></a> were provided as options
 when beginnning the modal operation.</p>
 <div class="refsect3">
-<a name="id-1.4.8.7.13.5"></a><h4>Parameters</h4>
+<a name="id-1.4.8.7.11.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -349,11 +321,9 @@ when beginnning the modal operation.</p>
 <a name="meta-plugin-get-screen"></a><h3>meta_plugin_get_screen ()</h3>
 <pre class="programlisting"><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="returnvalue">MetaScreen</span></a> *
 meta_plugin_get_screen (<em class="parameter"><code><a class="link" href="MetaPlugin.html" title="MetaPlugin"><span class="type">MetaPlugin</span></a> *plugin</code></em>);</pre>
-<p>Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> corresponding to a plugin. Each plugin instance
-is associated with exactly one screen; if Metacity is managing
-multiple screens, multiple plugin instances will be created.</p>
+<p>Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> corresponding to a plugin.</p>
 <div class="refsect3">
-<a name="id-1.4.8.7.14.5"></a><h4>Parameters</h4>
+<a name="id-1.4.8.7.12.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -368,7 +338,7 @@ multiple screens, multiple plugin instances will be created.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.8.7.14.6"></a><h4>Returns</h4>
+<a name="id-1.4.8.7.12.6"></a><h4>Returns</h4>
 <p> the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> for the plugin. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>

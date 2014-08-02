@@ -793,7 +793,7 @@ meta_prefs_set_ignore_request_hide_titlebar
 <span class="c_punctuation">(</span>*MetaKeyHandlerFunc<span class="c_punctuation">)</span> (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                        <em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>,
                        <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                       <em class="parameter"><code><span class="type">XIDeviceEvent</span> *event</code></em>,
+                       <em class="parameter"><code><span class="type">ClutterKeyEvent</span> *event</code></em>,
                        <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>,
                        <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);</pre>
 <div class="refsect3">
@@ -822,7 +822,7 @@ meta_prefs_set_ignore_request_hide_titlebar
 </tr>
 <tr>
 <td class="parameter_name"><p>event</p></td>
-<td class="parameter_description"><p> a <span class="type">XIDeviceEvent</span>. </p></td>
+<td class="parameter_description"><p> a <span class="type">ClutterKeyEvent</span>. </p></td>
 <td class="parameter_annotations"><span class="annotation">[<acronym title="Override the parsed C type with given type."><span class="acronym">type</span></acronym> gpointer]</span></td>
 </tr>
 <tr>
@@ -1109,6 +1109,13 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
+<tr>
+<td class="enum_member_name"><p><a name="META-PREF-CENTER-NEW-WINDOWS:CAPS"></a>META_PREF_CENTER_NEW_WINDOWS</p></td>
+<td class="enum_member_description">
+<p>center new windows</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
 </tbody>
 </table></div>
 </div>
@@ -1239,6 +1246,13 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-DOWN:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_DOWN</p></td>
+<td class="enum_member_description">
+<p>FILLME </p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-LAST:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_LAST</p></td>
 <td class="enum_member_description">
 <p>FILLME </p>
 </td>
@@ -1582,6 +1596,13 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-DOWN:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_DOWN</p></td>
+<td class="enum_member_description">
+<p>FILLME </p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-LAST:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_LAST</p></td>
 <td class="enum_member_description">
 <p>FILLME </p>
 </td>

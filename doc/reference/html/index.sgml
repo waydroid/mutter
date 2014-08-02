@@ -160,7 +160,6 @@
 <ANCHOR id="meta-Errors.functions_details" href="meta/meta-Errors.html#meta-Errors.functions_details">
 <ANCHOR id="meta-error-trap-push" href="meta/meta-Errors.html#meta-error-trap-push">
 <ANCHOR id="meta-error-trap-pop" href="meta/meta-Errors.html#meta-error-trap-pop">
-<ANCHOR id="meta-error-trap-push-with-return" href="meta/meta-Errors.html#meta-error-trap-push-with-return">
 <ANCHOR id="meta-error-trap-pop-with-return" href="meta/meta-Errors.html#meta-error-trap-pop-with-return">
 <ANCHOR id="meta-Errors.other_details" href="meta/meta-Errors.html#meta-Errors.other_details">
 <ANCHOR id="MetaPlugin" href="meta/MetaPlugin.html">
@@ -169,8 +168,6 @@
 <ANCHOR id="MetaPlugin.object-hierarchy" href="meta/MetaPlugin.html#MetaPlugin.object-hierarchy">
 <ANCHOR id="MetaPlugin.description" href="meta/MetaPlugin.html#MetaPlugin.description">
 <ANCHOR id="MetaPlugin.functions_details" href="meta/MetaPlugin.html#MetaPlugin.functions_details">
-<ANCHOR id="meta-plugin-running" href="meta/MetaPlugin.html#meta-plugin-running">
-<ANCHOR id="meta-plugin-debug-mode" href="meta/MetaPlugin.html#meta-plugin-debug-mode">
 <ANCHOR id="meta-plugin-get-info" href="meta/MetaPlugin.html#meta-plugin-get-info">
 <ANCHOR id="META-PLUGIN-DECLARE:CAPS" href="meta/MetaPlugin.html#META-PLUGIN-DECLARE:CAPS">
 <ANCHOR id="meta-plugin-switch-workspace-completed" href="meta/MetaPlugin.html#meta-plugin-switch-workspace-completed">
@@ -246,8 +243,6 @@
 <ANCHOR id="meta-MetaCompositor.functions_details" href="meta/meta-MetaCompositor.html#meta-MetaCompositor.functions_details">
 <ANCHOR id="meta-compositor-new" href="meta/meta-MetaCompositor.html#meta-compositor-new">
 <ANCHOR id="meta-compositor-destroy" href="meta/meta-MetaCompositor.html#meta-compositor-destroy">
-<ANCHOR id="meta-compositor-manage-screen" href="meta/meta-MetaCompositor.html#meta-compositor-manage-screen">
-<ANCHOR id="meta-compositor-unmanage-screen" href="meta/meta-MetaCompositor.html#meta-compositor-unmanage-screen">
 <ANCHOR id="meta-compositor-window-shape-changed" href="meta/meta-MetaCompositor.html#meta-compositor-window-shape-changed">
 <ANCHOR id="meta-compositor-process-event" href="meta/meta-MetaCompositor.html#meta-compositor-process-event">
 <ANCHOR id="meta-compositor-filter-keybinding" href="meta/meta-MetaCompositor.html#meta-compositor-filter-keybinding">
@@ -290,9 +285,7 @@
 <ANCHOR id="meta-display-supports-extended-barriers" href="meta/MetaDisplay.html#meta-display-supports-extended-barriers">
 <ANCHOR id="meta-display-get-xdisplay" href="meta/MetaDisplay.html#meta-display-get-xdisplay">
 <ANCHOR id="meta-display-get-compositor" href="meta/MetaDisplay.html#meta-display-get-compositor">
-<ANCHOR id="meta-display-get-screens" href="meta/MetaDisplay.html#meta-display-get-screens">
 <ANCHOR id="meta-display-has-shape" href="meta/MetaDisplay.html#meta-display-has-shape">
-<ANCHOR id="meta-display-screen-for-root" href="meta/MetaDisplay.html#meta-display-screen-for-root">
 <ANCHOR id="meta-display-get-focus-window" href="meta/MetaDisplay.html#meta-display-get-focus-window">
 <ANCHOR id="meta-display-xwindow-is-a-no-focus-window" href="meta/MetaDisplay.html#meta-display-xwindow-is-a-no-focus-window">
 <ANCHOR id="meta-display-get-damage-event-base" href="meta/MetaDisplay.html#meta-display-get-damage-event-base">
@@ -301,7 +294,6 @@
 <ANCHOR id="meta-display-get-last-user-time" href="meta/MetaDisplay.html#meta-display-get-last-user-time">
 <ANCHOR id="meta-display-get-current-time" href="meta/MetaDisplay.html#meta-display-get-current-time">
 <ANCHOR id="meta-display-get-current-time-roundtrip" href="meta/MetaDisplay.html#meta-display-get-current-time-roundtrip">
-<ANCHOR id="meta-display-get-ignored-modifier-mask" href="meta/MetaDisplay.html#meta-display-get-ignored-modifier-mask">
 <ANCHOR id="meta-display-get-tab-list" href="meta/MetaDisplay.html#meta-display-get-tab-list">
 <ANCHOR id="meta-display-get-tab-next" href="meta/MetaDisplay.html#meta-display-get-tab-next">
 <ANCHOR id="meta-display-get-tab-current" href="meta/MetaDisplay.html#meta-display-get-tab-current">
@@ -314,7 +306,6 @@
 <ANCHOR id="meta-display-set-input-focus-window" href="meta/MetaDisplay.html#meta-display-set-input-focus-window">
 <ANCHOR id="meta-display-focus-the-no-focus-window" href="meta/MetaDisplay.html#meta-display-focus-the-no-focus-window">
 <ANCHOR id="meta-display-sort-windows-by-stacking" href="meta/MetaDisplay.html#meta-display-sort-windows-by-stacking">
-<ANCHOR id="meta-display-get-leader-window" href="meta/MetaDisplay.html#meta-display-get-leader-window">
 <ANCHOR id="meta-display-add-ignored-crossing-serial" href="meta/MetaDisplay.html#meta-display-add-ignored-crossing-serial">
 <ANCHOR id="meta-display-unmanage-screen" href="meta/MetaDisplay.html#meta-display-unmanage-screen">
 <ANCHOR id="meta-display-clear-mouse-mode" href="meta/MetaDisplay.html#meta-display-clear-mouse-mode">
@@ -364,8 +355,6 @@
 <ANCHOR id="meta-key-binding-get-mask" href="meta/meta-MetaKeybinding.html#meta-key-binding-get-mask">
 <ANCHOR id="meta-key-binding-is-builtin" href="meta/meta-MetaKeybinding.html#meta-key-binding-is-builtin">
 <ANCHOR id="meta-keybindings-set-custom-handler" href="meta/meta-MetaKeybinding.html#meta-keybindings-set-custom-handler">
-<ANCHOR id="meta-screen-ungrab-all-keys" href="meta/meta-MetaKeybinding.html#meta-screen-ungrab-all-keys">
-<ANCHOR id="meta-screen-grab-all-keys" href="meta/meta-MetaKeybinding.html#meta-screen-grab-all-keys">
 <ANCHOR id="meta-MetaKeybinding.other_details" href="meta/meta-MetaKeybinding.html#meta-MetaKeybinding.other_details">
 <ANCHOR id="MetaKeyBinding-struct" href="meta/meta-MetaKeybinding.html#MetaKeyBinding-struct">
 <ANCHOR id="MetaBackgroundActor" href="meta/MetaBackgroundActor.html">
@@ -440,9 +429,6 @@
 <ANCHOR id="meta-screen-get-display" href="meta/MetaScreen.html#meta-screen-get-display">
 <ANCHOR id="meta-screen-get-xroot" href="meta/MetaScreen.html#meta-screen-get-xroot">
 <ANCHOR id="meta-screen-get-size" href="meta/MetaScreen.html#meta-screen-get-size">
-<ANCHOR id="meta-screen-get-compositor-data" href="meta/MetaScreen.html#meta-screen-get-compositor-data">
-<ANCHOR id="meta-screen-set-compositor-data" href="meta/MetaScreen.html#meta-screen-set-compositor-data">
-<ANCHOR id="meta-screen-for-x-screen" href="meta/MetaScreen.html#meta-screen-for-x-screen">
 <ANCHOR id="meta-screen-set-cm-selection" href="meta/MetaScreen.html#meta-screen-set-cm-selection">
 <ANCHOR id="meta-screen-unset-cm-selection" href="meta/MetaScreen.html#meta-screen-unset-cm-selection">
 <ANCHOR id="meta-screen-get-startup-sequences" href="meta/MetaScreen.html#meta-screen-get-startup-sequences">
@@ -502,7 +488,6 @@
 <ANCHOR id="meta-window-get-display" href="meta/MetaWindow.html#meta-window-get-display">
 <ANCHOR id="meta-window-get-xwindow" href="meta/MetaWindow.html#meta-window-get-xwindow">
 <ANCHOR id="meta-window-get-window-type" href="meta/MetaWindow.html#meta-window-get-window-type">
-<ANCHOR id="meta-window-get-window-type-atom" href="meta/MetaWindow.html#meta-window-get-window-type-atom">
 <ANCHOR id="meta-window-get-workspace" href="meta/MetaWindow.html#meta-window-get-workspace">
 <ANCHOR id="meta-window-get-monitor" href="meta/MetaWindow.html#meta-window-get-monitor">
 <ANCHOR id="meta-window-is-on-all-workspaces" href="meta/MetaWindow.html#meta-window-is-on-all-workspaces">
@@ -532,7 +517,6 @@
 <ANCHOR id="meta-window-change-workspace" href="meta/MetaWindow.html#meta-window-change-workspace">
 <ANCHOR id="meta-window-get-compositor-private" href="meta/MetaWindow.html#meta-window-get-compositor-private">
 <ANCHOR id="meta-window-set-compositor-private" href="meta/MetaWindow.html#meta-window-set-compositor-private">
-<ANCHOR id="meta-window-configure-notify" href="meta/MetaWindow.html#meta-window-configure-notify">
 <ANCHOR id="meta-window-get-role" href="meta/MetaWindow.html#meta-window-get-role">
 <ANCHOR id="meta-window-get-layer" href="meta/MetaWindow.html#meta-window-get-layer">
 <ANCHOR id="meta-window-find-root-ancestor" href="meta/MetaWindow.html#meta-window-find-root-ancestor">
@@ -555,14 +539,12 @@
 <ANCHOR id="meta-window-lower" href="meta/MetaWindow.html#meta-window-lower">
 <ANCHOR id="meta-window-get-title" href="meta/MetaWindow.html#meta-window-get-title">
 <ANCHOR id="meta-window-get-transient-for" href="meta/MetaWindow.html#meta-window-get-transient-for">
-<ANCHOR id="meta-window-get-transient-for-as-xid" href="meta/MetaWindow.html#meta-window-get-transient-for-as-xid">
 <ANCHOR id="meta-window-delete" href="meta/MetaWindow.html#meta-window-delete">
 <ANCHOR id="meta-window-get-stable-sequence" href="meta/MetaWindow.html#meta-window-get-stable-sequence">
 <ANCHOR id="meta-window-get-user-time" href="meta/MetaWindow.html#meta-window-get-user-time">
 <ANCHOR id="meta-window-get-pid" href="meta/MetaWindow.html#meta-window-get-pid">
 <ANCHOR id="meta-window-get-client-machine" href="meta/MetaWindow.html#meta-window-get-client-machine">
 <ANCHOR id="meta-window-is-remote" href="meta/MetaWindow.html#meta-window-is-remote">
-<ANCHOR id="meta-window-is-modal" href="meta/MetaWindow.html#meta-window-is-modal">
 <ANCHOR id="meta-window-is-attached-dialog" href="meta/MetaWindow.html#meta-window-is-attached-dialog">
 <ANCHOR id="meta-window-get-mutter-hints" href="meta/MetaWindow.html#meta-window-get-mutter-hints">
 <ANCHOR id="meta-window-get-frame-type" href="meta/MetaWindow.html#meta-window-get-frame-type">

@@ -2,8 +2,8 @@ AC_PREREQ(2.50)
 AC_CONFIG_MACRO_DIR([m4])
 
 m4_define([mutter_major_version], [3])
-m4_define([mutter_minor_version], [12])
-m4_define([mutter_micro_version], [2])
+m4_define([mutter_minor_version], [13])
+m4_define([mutter_micro_version], [1])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -17,7 +17,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR(src/core/display.c)
 AC_CONFIG_HEADERS(config.h)
 
-AM_INIT_AUTOMAKE([1.11 no-dist-gzip dist-xz tar-ustar])
+AM_INIT_AUTOMAKE([1.11 foreign no-dist-gzip dist-xz tar-ustar subdir-objects])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
 AM_MAINTAINER_MODE([enable])
 
@@ -74,8 +74,8 @@ MUTTER_PC_MODULES="
    pango >= 1.2.0
    cairo >= 1.10.0
    gsettings-desktop-schemas >= 3.7.3
-   xcomposite >= 0.2 xfixes xrender xdamage xi >= 1.6.0
-   $CLUTTER_PACKAGE >= 1.15.90
+   xcomposite >= 0.2 xfixes xext xdamage xi >= 1.6.0
+   $CLUTTER_PACKAGE >= 1.17.5
    cogl-1.0 >= 1.17.1
    upower-glib >= 0.99.0
    gnome-desktop-3.0
@@ -117,11 +117,27 @@ AC_ARG_ENABLE(shape,
                  [disable mutter's use of the shaped window extension]),,
   enable_shape=auto)
 
+## Wayland support requires the xserver.xml protocol extension found in the weston
+## repository but since there aren't currently established conventions for
+## installing and discovering these we simply require a location to be given
+## explicitly...
+AC_ARG_WITH([wayland-protocols],
+            [AS_HELP_STRING([--with-wayland-protocols], [Location for wayland extension protocol specs])],
+            [
+            ],
+            [])
+
+AC_ARG_WITH([xwayland-path],
+            [AS_HELP_STRING([--with-xwayland-path], [Absolute path for an X Wayland server])],
+            [XWAYLAND_PATH="$withval"],
+            [XWAYLAND_PATH="$bindir/Xwayland"])
+
 AM_GLIB_GNU_GETTEXT
 
 ## here we get the flags we'll actually use
 # GRegex requires Glib-2.14.0
 PKG_CHECK_MODULES(ALL, glib-2.0 >= 2.14.0)
+PKG_CHECK_MODULES(MUTTER_LAUNCH, libdrm libsystemd-login)
 
 # Unconditionally use this dir to avoid a circular dep with gnomecc
 GNOME_KEYBINDINGS_KEYSDIR="${datadir}/gnome-control-center/keybindings"
@@ -186,20 +202,15 @@ if test x$found_introspection != xno; then
   AC_SUBST(META_GIR)
 fi
 
-AC_MSG_CHECKING([Xcursor])
-if $PKG_CONFIG xcursor; then
-     have_xcursor=yes
-  else
-     have_xcursor=no
-  fi
-  AC_MSG_RESULT($have_xcursor)
+MUTTER_PC_MODULES="$MUTTER_PC_MODULES xcursor"
 
-if test x$have_xcursor = xyes; then
-  echo "Building with Xcursor"
-  MUTTER_PC_MODULES="$MUTTER_PC_MODULES xcursor"
-  AC_DEFINE(HAVE_XCURSOR, , [Building with Xcursor support])
-fi
+AC_PATH_PROG([WAYLAND_SCANNER],[wayland-scanner],[no])
+AS_IF([test "x$WAYLAND_SCANNER" = "xno"],
+  AC_MSG_ERROR([Could not find wayland-scanner in your PATH, required for parsing wayland extension protocols]))
+AC_SUBST([WAYLAND_SCANNER])
+AC_SUBST(XWAYLAND_PATH)
 
+MUTTER_PC_MODULES="$MUTTER_PC_MODULES clutter-wayland-1.0 clutter-wayland-compositor-1.0 clutter-egl-1.0 wayland-server libdrm"
 PKG_CHECK_MODULES(MUTTER, $MUTTER_PC_MODULES)
 
 PKG_CHECK_EXISTS([xi >= 1.6.99.1],
@@ -238,28 +249,6 @@ if test x$have_xinerama = xno; then
    AC_MSG_ERROR([Xinerama extension was not found])
 fi
 
-SHAPE_LIBS=
-found_shape=no
-AC_CHECK_LIB(Xext, XShapeQueryExtension,
-               [AC_CHECK_HEADER(X11/extensions/shape.h,
-                                SHAPE_LIBS=-lXext found_shape=yes)],
-               , $ALL_X_LIBS)
-
-if test x$enable_shape = xno; then
-   found_shape=no
-fi
-
-if test x$enable_shape = xyes; then
-   if test "$found_shape" = "no"; then
-      AC_MSG_ERROR([--enable-shape forced and Shape not found])
-      exit 1
-   fi
-fi
-
-if test "x$found_shape" = "xyes"; then
-   AC_DEFINE(HAVE_SHAPE, , [Have the shape extension library])
-fi
-
 found_xkb=no
 AC_CHECK_LIB(X11, XkbQueryExtension,
                [AC_CHECK_HEADER(X11/XKBlib.h,
@@ -277,37 +266,13 @@ AC_CHECK_LIB(Xrandr, XRRUpdateConfiguration,
                [AC_CHECK_HEADER(X11/extensions/Xrandr.h,
                                 RANDR_LIBS=-lXrandr found_randr=yes,,
 				[#include <X11/Xlib.h>])],
-               , -lXrender -lXext $ALL_X_LIBS)
+               , -lXext $ALL_X_LIBS)
 
 if test "x$found_randr" = "xyes"; then
    AC_DEFINE(HAVE_RANDR, , [Have the Xrandr extension library])
 fi
 
-XSYNC_LIBS=
-found_xsync=no
-AC_CHECK_LIB(Xext, XSyncQueryExtension,
-               [AC_CHECK_HEADER(X11/extensions/sync.h,
-                                found_xsync=yes,,
-				[#include <X11/Xlib.h>])],
-               , $ALL_X_LIBS)
-
-if test x$enable_xsync = xno; then
-   found_xsync=no
-fi
-
-if test x$enable_xsync = xyes; then
-   if test "$found_xsync" = "no"; then
-      AC_MSG_ERROR([--enable-xsync forced and XSync not found])
-      exit 1
-   fi
-fi
-
-if test "x$found_xsync" = "xyes"; then
-   XSYNC_LIBS=-lXext
-   AC_DEFINE(HAVE_XSYNC, , [Have the Xsync extension library])
-fi
-
-MUTTER_LIBS="$MUTTER_LIBS $XSYNC_LIBS $RANDR_LIBS $SHAPE_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lm"
+MUTTER_LIBS="$MUTTER_LIBS $RANDR_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lm"
 
 found_sm=no
 case "$MUTTER_LIBS" in
@@ -433,7 +398,6 @@ doc/reference/Makefile
 doc/reference/meta-docs.sgml
 src/Makefile
 src/libmutter.pc
-src/mutter-plugins.pc
 src/compositor/plugins/Makefile
 po/Makefile.in
 ])
@@ -460,9 +424,6 @@ mutter-$VERSION
 	libcanberra:              ${have_libcanberra}
 	Introspection:            ${found_introspection}
 	Session management:       ${found_sm}
-	Shape extension:          ${found_shape}
-	Xsync:                    ${found_xsync}
-	Xcursor:                  ${have_xcursor}
 "
 
 
