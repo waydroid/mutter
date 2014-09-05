@@ -20,9 +20,8 @@
 #include "config.h"
 
 #include "meta-launcher.h"
-#include "weston-launch.h"
 
-#include <gio/gunixfdmessage.h>
+#include <gio/gunixfdlist.h>
 
 #include <clutter/clutter.h>
 #include <clutter/egl/clutter-egl.h>
@@ -30,167 +29,59 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <malloc.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-#include "wayland/meta-wayland-private.h"
-#include "backends/meta-backend.h"
+#include <systemd/sd-login.h>
+
+#include "dbus-utils.h"
+#include "meta-dbus-login1.h"
+
+#include "backends/meta-backend-private.h"
 #include "meta-cursor-renderer-native.h"
 
 struct _MetaLauncher
 {
-  GSocket *weston_launch;
+  Login1Session *session_proxy;
+  Login1Seat *seat_proxy;
 
-  gboolean vt_switched;
-
-  GMainContext *nested_context;
-  GMainLoop *nested_loop;
-
-  GSource *inner_source;
-  GSource *outer_source;
+  gboolean session_active;
 };
 
-static void handle_request_vt_switch (MetaLauncher *self);
-
-static gboolean
-request_vt_switch_idle (gpointer user_data)
+static Login1Session *
+get_session_proxy (GCancellable *cancellable)
 {
-  handle_request_vt_switch (user_data);
+  char *proxy_path;
+  char *session_id;
+  Login1Session *session_proxy;
 
-  return FALSE;
+  if (sd_pid_get_session (getpid (), &session_id) < 0)
+    return NULL;
+
+  proxy_path = get_escaped_dbus_path ("/org/freedesktop/login1/session", session_id);
+
+  session_proxy = login1_session_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+                                                         G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                                                         "org.freedesktop.login1",
+                                                         proxy_path,
+                                                         cancellable, NULL);
+  free (proxy_path);
+
+  return session_proxy;
 }
 
-static gboolean
-send_message_to_wl (MetaLauncher           *self,
-                    void                   *message,
-                    gsize                   size,
-                    GSocketControlMessage  *out_cmsg,
-                    GSocketControlMessage **in_cmsg,
-                    GError                **error)
+static Login1Seat *
+get_seat_proxy (GCancellable *cancellable)
 {
-  struct weston_launcher_reply reply;
-  GInputVector in_iov = { &reply, sizeof (reply) };
-  GOutputVector out_iov = { message, size };
-  GSocketControlMessage *out_all_cmsg[2];
-  GSocketControlMessage **in_all_cmsg;
-  int flags = 0;
-  int i;
-
-  out_all_cmsg[0] = out_cmsg;
-  out_all_cmsg[1] = NULL;
-  if (g_socket_send_message (self->weston_launch, NULL,
-                             &out_iov, 1,
-                             out_all_cmsg, -1,
-                             flags, NULL, error) != (gssize)size)
-    return FALSE;
-
-  if (g_socket_receive_message (self->weston_launch, NULL,
-                                &in_iov, 1,
-                                &in_all_cmsg, NULL,
-                                &flags, NULL, error) != sizeof (reply))
-    return FALSE;
-
-  while (reply.header.opcode != ((struct weston_launcher_message*)message)->opcode)
-    {
-      guint id;
-
-      /* There were events queued */
-      g_assert ((reply.header.opcode & WESTON_LAUNCHER_EVENT) == WESTON_LAUNCHER_EVENT);
-
-      /* This can never happen, because the only time mutter-launch can queue
-         this event is after confirming a VT switch, and we don't make requests
-         during that time.
-
-         Note that getting this event would be really bad, because we would be
-         in the wrong loop/context.
-      */
-      g_assert (reply.header.opcode != WESTON_LAUNCHER_SERVER_VT_ENTER);
-
-      switch (reply.header.opcode)
-        {
-        case WESTON_LAUNCHER_SERVER_REQUEST_VT_SWITCH:
-          id = g_idle_add (request_vt_switch_idle, self);
-          g_source_set_name_by_id (id, "[mutter] request_vt_switch_idle");
-          break;
-
-        default:
-          g_assert_not_reached ();
-        }
-
-      if (g_socket_receive_message (self->weston_launch, NULL,
-                                    &in_iov, 1,
-                                    NULL, NULL,
-                                    &flags, NULL, error) != sizeof (reply))
-        return FALSE;
-    }
-
-  if (reply.ret != 0)
-    {
-      if (reply.ret == -1)
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                     "Got failure from weston-launch");
-      else
-        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (-reply.ret),
-                     "Got failure from weston-launch: %s", strerror (-reply.ret));
-
-      for (i = 0; in_all_cmsg && in_all_cmsg[i]; i++)
-        g_object_unref (in_all_cmsg[i]);
-      g_free (in_all_cmsg);
-
-      return FALSE;
-    }
-
-  if (in_all_cmsg && in_all_cmsg[0])
-    {
-      for (i = 1; in_all_cmsg[i]; i++)
-        g_object_unref (in_all_cmsg[i]);
-      *in_cmsg = in_all_cmsg[0];
-    }
-
-  g_free (in_all_cmsg);
-  return TRUE;
-}
-
-static int
-meta_launcher_open_device (MetaLauncher  *self,
-                           const char    *name,
-                           int            flags,
-                           GError       **error)
-{
-  struct weston_launcher_open *message;
-  GSocketControlMessage *cmsg;
-  gboolean ok;
-  gsize size;
-  int *fds, n_fd;
-  int ret;
-
-  size = sizeof (struct weston_launcher_open) + strlen (name) + 1;
-  message = g_malloc (size);
-  message->header.opcode = WESTON_LAUNCHER_OPEN;
-  message->flags = flags;
-  strcpy (message->path, name);
-  message->path[strlen(name)] = 0;
-
-  ok = send_message_to_wl (self, message, size, NULL, &cmsg, error);
-
-  if (ok)
-    {
-      g_assert (G_IS_UNIX_FD_MESSAGE (cmsg));
-
-      fds = g_unix_fd_message_steal_fds (G_UNIX_FD_MESSAGE (cmsg), &n_fd);
-      g_assert (n_fd == 1);
-
-      ret = fds[0];
-      g_free (fds);
-      g_object_unref (cmsg);
-    }
-  else
-    ret = -1;
-
-  g_free (message);
-  return ret;
+  return login1_seat_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+                                             G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                                             "org.freedesktop.login1",
+                                             "/org/freedesktop/login1/seat/self",
+                                             cancellable, NULL);
 }
 
 static void
@@ -206,17 +97,18 @@ session_unpause (void)
   cogl_kms_display_queue_modes_reset (cogl_display);
 
   clutter_evdev_reclaim_devices ();
+  clutter_egl_thaw_master_clock ();
 
   {
-    MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
     MetaBackend *backend = meta_get_backend ();
     MetaCursorRenderer *renderer = meta_backend_get_cursor_renderer (backend);
+    ClutterActor *stage = meta_backend_get_stage (backend);
 
     /* When we mode-switch back, we need to immediately queue a redraw
      * in case nothing else queued one for us, and force the cursor to
      * update. */
 
-    clutter_actor_queue_redraw (compositor->stage);
+    clutter_actor_queue_redraw (stage);
     meta_cursor_renderer_native_force_update (META_CURSOR_RENDERER_NATIVE (renderer));
   }
 }
@@ -225,6 +117,92 @@ static void
 session_pause (void)
 {
   clutter_evdev_release_devices ();
+  clutter_egl_freeze_master_clock ();
+}
+
+static gboolean
+take_device (Login1Session *session_proxy,
+             int            dev_major,
+             int            dev_minor,
+             int           *out_fd,
+             GCancellable  *cancellable,
+             GError       **error)
+{
+  gboolean ret = FALSE;
+  GVariant *fd_variant = NULL;
+  int fd = -1;
+  GUnixFDList *fd_list;
+
+  if (!login1_session_call_take_device_sync (session_proxy,
+                                             dev_major,
+                                             dev_minor,
+                                             NULL,
+                                             &fd_variant,
+                                             NULL, /* paused */
+                                             &fd_list,
+                                             cancellable,
+                                             error))
+    goto out;
+
+  fd = g_unix_fd_list_get (fd_list, g_variant_get_handle (fd_variant), error);
+  if (fd == -1)
+    goto out;
+
+  *out_fd = fd;
+  ret = TRUE;
+
+ out:
+  if (fd_variant)
+    g_variant_unref (fd_variant);
+  if (fd_list)
+    g_object_unref (fd_list);
+  return ret;
+}
+
+static gboolean
+get_device_info_from_path (const char *path,
+                           int        *out_major,
+                           int        *out_minor)
+{
+  gboolean ret = FALSE;
+  int r;
+  struct stat st;
+
+  r = stat (path, &st);
+  if (r < 0)
+    goto out;
+  if (!S_ISCHR (st.st_mode))
+    goto out;
+
+  *out_major = major (st.st_rdev);
+  *out_minor = minor (st.st_rdev);
+  ret = TRUE;
+
+ out:
+  return ret;
+}
+
+static gboolean
+get_device_info_from_fd (int  fd,
+                         int *out_major,
+                         int *out_minor)
+{
+  gboolean ret = FALSE;
+  int r;
+  struct stat st;
+
+  r = fstat (fd, &st);
+  if (r < 0)
+    goto out;
+  if (!S_ISCHR (st.st_mode))
+    goto out;
+
+  *out_major = major (st.st_rdev);
+  *out_minor = minor (st.st_rdev);
+  ret = TRUE;
+
+ out:
+  return ret;
 }
 
 static int
@@ -233,169 +211,151 @@ on_evdev_device_open (const char  *path,
                       gpointer     user_data,
                       GError     **error)
 {
-  MetaLauncher *launcher = user_data;
+  MetaLauncher *self = user_data;
+  int fd;
+  int major, minor;
 
-  return meta_launcher_open_device (launcher, path, flags, error);
+  if (!get_device_info_from_path (path, &major, &minor))
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   G_IO_ERROR_NOT_FOUND,
+                   "Could not get device info for path %s: %m", path);
+      return -1;
+    }
+
+  if (!take_device (self->session_proxy, major, minor, &fd, NULL, error))
+    return -1;
+
+  return fd;
 }
 
 static void
 on_evdev_device_close (int      fd,
                        gpointer user_data)
 {
-  close (fd);
+  MetaLauncher *self = user_data;
+  int major, minor;
+  GError *error = NULL;
+
+  if (!get_device_info_from_fd (fd, &major, &minor))
+    {
+      g_warning ("Could not get device info for fd %d: %m", fd);
+      return;
+    }
+
+  if (!login1_session_call_release_device_sync (self->session_proxy,
+                                                major, minor,
+                                                NULL, &error))
+    {
+      g_warning ("Could not release device %d,%d: %s", major, minor, error->message);
+    }
 }
 
 static void
-handle_vt_enter (MetaLauncher *launcher)
+sync_active (MetaLauncher *self)
 {
-  g_assert (launcher->vt_switched);
+  gboolean active = login1_session_get_active (LOGIN1_SESSION (self->session_proxy));
 
-  g_main_loop_quit (launcher->nested_loop);
-
-  session_unpause ();
-}
-
-static void
-handle_request_vt_switch (MetaLauncher *launcher)
-{
-  struct weston_launcher_message message;
-  GError *error;
-  gboolean ok;
-
-  session_pause ();
-
-  message.opcode = WESTON_LAUNCHER_CONFIRM_VT_SWITCH;
-
-  error = NULL;
-  ok = send_message_to_wl (launcher, &message, sizeof (message), NULL, NULL, &error);
-  if (!ok) {
-    g_warning ("Failed to acknowledge VT switch: %s", error->message);
-    g_error_free (error);
-
+  if (active == self->session_active)
     return;
-  }
 
-  g_assert (!launcher->vt_switched);
-  launcher->vt_switched = TRUE;
+  self->session_active = active;
 
-  /* We can't do anything at this point, because we don't
-     have input devices and we don't have the DRM master,
-     so let's run a nested busy loop until the VT is reentered */
-  g_main_loop_run (launcher->nested_loop);
+  if (active)
+    session_unpause ();
+  else
+    session_pause ();
+}
 
-  g_assert (launcher->vt_switched);
-  launcher->vt_switched = FALSE;
-
-  session_unpause ();
+static void
+on_active_changed (Login1Session *session,
+                   GParamSpec    *pspec,
+                   gpointer       user_data)
+{
+  MetaLauncher *self = user_data;
+  sync_active (self);
 }
 
 static gboolean
-on_socket_readable (GSocket      *socket,
-                    GIOCondition  condition,
-                    gpointer      user_data)
+get_kms_fd (Login1Session *session_proxy,
+            int *fd_out)
 {
-  MetaLauncher *launcher = user_data;
-  struct weston_launcher_event event;
-  gssize read;
-  GError *error;
+  int major, minor;
+  int fd;
+  GError *error = NULL;
 
-  if ((condition & G_IO_IN) == 0)
-    return TRUE;
-
-  error = NULL;
-  read = g_socket_receive (socket, (char*)&event, sizeof(event), NULL, &error);
-  if (read < (gssize)sizeof(event))
+  /* XXX -- use udev to find the DRM master device */
+  if (!get_device_info_from_path ("/dev/dri/card0", &major, &minor))
     {
-      g_warning ("Error reading from weston-launcher socket: %s", error->message);
+      g_warning ("Could not stat /dev/dri/card0: %m");
+      return FALSE;
+    }
+
+  if (!take_device (session_proxy, major, minor, &fd, NULL, &error))
+    {
+      g_warning ("Could not open DRM device: %s\n", error->message);
       g_error_free (error);
-      return TRUE;
+      return FALSE;
     }
 
-  switch (event.header.opcode)
-    {
-    case WESTON_LAUNCHER_SERVER_REQUEST_VT_SWITCH:
-      handle_request_vt_switch (launcher);
-      break;
-
-    case WESTON_LAUNCHER_SERVER_VT_ENTER:
-      handle_vt_enter (launcher);
-      break;
-    }
+  *fd_out = fd;
 
   return TRUE;
-}
-
-static int
-env_get_fd (const char *env)
-{
-  const char *value;
-
-  value = g_getenv (env);
-
-  if (value == NULL)
-    return -1;
-  else
-    return g_ascii_strtoll (value, NULL, 10);
 }
 
 MetaLauncher *
 meta_launcher_new (void)
 {
-  MetaLauncher *self = g_slice_new0 (MetaLauncher);
+  MetaLauncher *self;
+  Login1Session *session_proxy;
   GError *error = NULL;
-  int launch_fd;
   int kms_fd;
 
-  launch_fd = env_get_fd ("WESTON_LAUNCHER_SOCK");
-  if (launch_fd < 0)
-    g_error ("Invalid mutter-launch socket");
+  session_proxy = get_session_proxy (NULL);
+  if (!login1_session_call_take_control_sync (session_proxy, FALSE, NULL, &error))
+    {
+      g_warning ("Could not take control: %s", error->message);
+      g_error_free (error);
+      return NULL;
+    }
 
-  self->weston_launch = g_socket_new_from_fd (launch_fd, NULL);
+  if (!get_kms_fd (session_proxy, &kms_fd))
+    return NULL;
 
-  self->nested_context = g_main_context_new ();
-  self->nested_loop = g_main_loop_new (self->nested_context, FALSE);
+  self = g_slice_new0 (MetaLauncher);
+  self->session_proxy = session_proxy;
+  self->seat_proxy = get_seat_proxy (NULL);
 
-  self->outer_source = g_socket_create_source (self->weston_launch, G_IO_IN, NULL);
-  g_source_set_callback (self->outer_source, (GSourceFunc)on_socket_readable, self, NULL);
-  g_source_attach (self->outer_source, NULL);
-  g_source_unref (self->outer_source);
-
-  self->inner_source = g_socket_create_source (self->weston_launch, G_IO_IN, NULL);
-  g_source_set_callback (self->inner_source, (GSourceFunc)on_socket_readable, self, NULL);
-  g_source_attach (self->inner_source, self->nested_context);
-  g_source_unref (self->inner_source);
-
-  kms_fd = meta_launcher_open_device (self, "/dev/dri/card0", O_RDWR, &error);
-  if (error)
-    g_error ("Failed to open /dev/dri/card0: %s", error->message);
+  self->session_active = TRUE;
 
   clutter_egl_set_kms_fd (kms_fd);
   clutter_evdev_set_device_callbacks (on_evdev_device_open,
                                       on_evdev_device_close,
                                       self);
 
+  g_signal_connect (self->session_proxy, "notify::active", G_CALLBACK (on_active_changed), self);
+
   return self;
 }
 
 void
-meta_launcher_free (MetaLauncher *launcher)
+meta_launcher_free (MetaLauncher *self)
 {
-  g_source_destroy (launcher->outer_source);
-  g_source_destroy (launcher->inner_source);
-
-  g_main_loop_unref (launcher->nested_loop);
-  g_main_context_unref (launcher->nested_context);
-
-  g_object_unref (launcher->weston_launch);
-
-  g_slice_free (MetaLauncher, launcher);
+  g_object_unref (self->seat_proxy);
+  g_object_unref (self->session_proxy);
+  g_slice_free (MetaLauncher, self);
 }
 
 gboolean
 meta_launcher_activate_session (MetaLauncher  *launcher,
                                 GError       **error)
 {
-  return meta_launcher_activate_vt (launcher, -1, error);
+  if (!login1_session_call_activate_sync (launcher->session_proxy, NULL, error))
+    return FALSE;
+
+  sync_active (launcher);
+  return TRUE;
 }
 
 gboolean
@@ -403,10 +363,5 @@ meta_launcher_activate_vt (MetaLauncher  *launcher,
                            signed char    vt,
                            GError       **error)
 {
-  struct weston_launcher_activate_vt message;
-
-  message.header.opcode = WESTON_LAUNCHER_ACTIVATE_VT;
-  message.vt = vt;
-
-  return send_message_to_wl (launcher, &message, sizeof (message), NULL, NULL, error);
+  return login1_seat_call_switch_to_sync (launcher->seat_proxy, vt, NULL, error);
 }

@@ -27,9 +27,7 @@
 
 #include <glib-object.h>
 
-#include <meta/meta-idle-monitor.h>
-#include "meta-monitor-manager.h"
-#include "meta-cursor-renderer.h"
+#include <clutter/clutter.h>
 
 typedef struct _MetaBackend        MetaBackend;
 typedef struct _MetaBackendClass   MetaBackendClass;
@@ -38,17 +36,15 @@ GType meta_backend_get_type (void);
 
 MetaBackend * meta_get_backend (void);
 
-MetaIdleMonitor * meta_backend_get_idle_monitor (MetaBackend *backend,
-                                                 int          device_id);
-MetaMonitorManager * meta_backend_get_monitor_manager (MetaBackend *backend);
-MetaCursorRenderer * meta_backend_get_cursor_renderer (MetaBackend *backend);
+void meta_backend_set_keymap (MetaBackend *backend,
+                              const char  *layouts,
+                              const char  *variants,
+                              const char  *options);
 
-gboolean meta_backend_grab_device (MetaBackend *backend,
-                                   int          device_id,
-                                   uint32_t     timestamp);
-gboolean meta_backend_ungrab_device (MetaBackend *backend,
-                                     int          device_id,
-                                     uint32_t     timestamp);
+void meta_backend_lock_layout_group (MetaBackend *backend,
+                                     guint        idx);
+
+ClutterActor *meta_backend_get_stage (MetaBackend *backend);
 
 void meta_clutter_init (void);
 

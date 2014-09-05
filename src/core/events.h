@@ -29,4 +29,3 @@ void meta_display_init_events (MetaDisplay *display);
 void meta_display_free_events (MetaDisplay *display);
 
 #endif
-

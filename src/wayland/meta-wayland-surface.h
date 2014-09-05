@@ -31,6 +31,11 @@
 #include "meta-wayland-types.h"
 #include "meta-surface-actor.h"
 
+struct _MetaWaylandSerial {
+  gboolean set;
+  uint32_t value;
+};
+
 struct _MetaWaylandBuffer
 {
   struct wl_resource *resource;
@@ -50,6 +55,8 @@ typedef struct
   int32_t dx;
   int32_t dy;
 
+  int scale;
+
   /* wl_surface.damage */
   cairo_region_t *damage;
 
@@ -59,8 +66,8 @@ typedef struct
   /* wl_surface.frame */
   struct wl_list frame_callback_list;
 
-  gboolean frame_extents_changed;
-  GtkBorder frame_extents;
+  MetaRectangle new_geometry;
+  gboolean has_new_geometry;
 } MetaWaylandPendingState;
 
 typedef struct
@@ -74,11 +81,13 @@ struct _MetaWaylandSurface
   MetaWaylandCompositor *compositor;
   MetaSurfaceActor *surface_actor;
   MetaWindow *window;
+  struct wl_resource *xdg_shell_resource;
   MetaWaylandSurfaceExtension xdg_surface;
   MetaWaylandSurfaceExtension xdg_popup;
   MetaWaylandSurfaceExtension wl_shell_surface;
   MetaWaylandSurfaceExtension gtk_surface;
   MetaWaylandSurfaceExtension subsurface;
+  int scale;
 
   MetaWaylandBuffer *buffer;
   struct wl_listener buffer_destroy_listener;
@@ -106,10 +115,12 @@ struct _MetaWaylandSurface
     GSList *pending_placement_ops;
   } sub;
 
-  uint32_t state_changed_serial;
+  gboolean has_set_geometry;
 
   /* All the pending state that wl_surface.commit will apply. */
   MetaWaylandPendingState pending;
+
+  MetaWaylandSerial acked_configure_serial;
 };
 
 void                meta_wayland_shell_init     (MetaWaylandCompositor *compositor);
@@ -123,15 +134,9 @@ void                meta_wayland_surface_set_window (MetaWaylandSurface *surface
                                                      MetaWindow         *window);
 
 void                meta_wayland_surface_configure_notify (MetaWaylandSurface *surface,
-							   int                 width,
-							   int                 height);
-void                meta_wayland_surface_send_maximized (MetaWaylandSurface *surface);
-void                meta_wayland_surface_send_unmaximized (MetaWaylandSurface *surface);
-void                meta_wayland_surface_send_fullscreened (MetaWaylandSurface *surface);
-void                meta_wayland_surface_send_unfullscreened (MetaWaylandSurface *surface);
-
-void                meta_wayland_surface_activated (MetaWaylandSurface *surface);
-void                meta_wayland_surface_deactivated (MetaWaylandSurface *surface);
+                                                           int                 width,
+                                                           int                 height,
+                                                           MetaWaylandSerial  *sent_serial);
 
 void                meta_wayland_surface_ping (MetaWaylandSurface *surface,
                                                guint32             serial);

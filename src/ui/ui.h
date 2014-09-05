@@ -2,9 +2,9 @@
 
 /* Mutter interface for talking to GTK+ UI module */
 
-/* 
+/*
  * Copyright (C) 2001 Havoc Pennington
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -14,7 +14,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
@@ -33,12 +33,6 @@
 typedef struct _MetaUI MetaUI;
 
 typedef gboolean (* MetaEventFunc) (XEvent *xevent, gpointer data);
-
-typedef enum
-{
-  META_UI_DIRECTION_LTR,
-  META_UI_DIRECTION_RTL
-} MetaUIDirection;
 
 void meta_ui_init (void);
 
@@ -88,13 +82,6 @@ void meta_ui_map_frame   (MetaUI *ui,
 void meta_ui_unmap_frame (MetaUI *ui,
                           Window  xwindow);
 
-void meta_ui_unflicker_frame_bg (MetaUI *ui,
-                                 Window  xwindow,
-                                 int     target_width,
-                                 int     target_height);
-void meta_ui_reset_frame_bg     (MetaUI *ui,
-                                 Window  xwindow);
-
 cairo_region_t *meta_ui_get_frame_bounds (MetaUI  *ui,
                                           Window   xwindow,
                                           int      window_width,
@@ -113,21 +100,6 @@ void meta_ui_update_frame_style (MetaUI  *ui,
 void meta_ui_repaint_frame (MetaUI *ui,
                             Window xwindow);
 
-MetaWindowMenu* meta_ui_window_menu_new   (MetaUI             *ui,
-                                           Window              client_xwindow,
-                                           MetaMenuOp          ops,
-                                           MetaMenuOp          insensitive,
-                                           unsigned long       active_workspace,
-                                           int                 n_workspaces,
-                                           MetaWindowMenuFunc  func,
-                                           gpointer            data);
-void            meta_ui_window_menu_popup (MetaWindowMenu     *menu,
-                                           int                 root_x,
-                                           int                 root_y,
-                                           int                 button,
-                                           guint32             timestamp);
-void            meta_ui_window_menu_free  (MetaWindowMenu     *menu);
-
 
 /* FIXME these lack a display arg */
 GdkPixbuf* meta_gdk_pixbuf_get_from_pixmap (Pixmap       xpixmap,
@@ -135,9 +107,6 @@ GdkPixbuf* meta_gdk_pixbuf_get_from_pixmap (Pixmap       xpixmap,
                                             int          src_y,
                                             int          width,
                                             int          height);
-
-GdkPixbuf* meta_ui_get_default_window_icon (MetaUI *ui);
-GdkPixbuf* meta_ui_get_default_mini_icon (MetaUI *ui);
 
 gboolean  meta_ui_window_should_not_cause_focus (Display *xdisplay,
                                                  Window   xwindow);
@@ -147,9 +116,5 @@ gboolean meta_ui_have_a_theme      (void);
 
 gboolean meta_ui_window_is_widget (MetaUI *ui,
                                    Window  xwindow);
-
-int      meta_ui_get_drag_threshold       (MetaUI *ui);
-
-MetaUIDirection meta_ui_get_direction (void);
 
 #endif

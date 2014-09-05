@@ -8,7 +8,7 @@
 <link rel="up" href="index.html" title="Mutter Reference Manual">
 <link rel="prev" href="object-tree.html" title="Object Hierarchy">
 <link rel="next" href="deprecated-api-index.html" title="Index of deprecated API">
-<meta name="generator" content="GTK-Doc V1.20.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.21.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -280,19 +280,11 @@ meta_background_new, function in MetaBackground
 </dt>
 <dd></dd>
 <dt>
-<a class="link" href="meta-MetaCompositor.html#meta-compositor-set-updates-frozen" title="meta_compositor_set_updates_frozen ()">meta_compositor_set_updates_frozen</a>, function in <a class="link" href="meta-MetaCompositor.html" title="MetaCompositor">MetaCompositor</a>
-</dt>
-<dd></dd>
-<dt>
 <a class="link" href="meta-MetaCompositor.html#meta-compositor-show-window" title="meta_compositor_show_window ()">meta_compositor_show_window</a>, function in <a class="link" href="meta-MetaCompositor.html" title="MetaCompositor">MetaCompositor</a>
 </dt>
 <dd></dd>
 <dt>
 <a class="link" href="meta-MetaCompositor.html#meta-compositor-switch-workspace" title="meta_compositor_switch_workspace ()">meta_compositor_switch_workspace</a>, function in <a class="link" href="meta-MetaCompositor.html" title="MetaCompositor">MetaCompositor</a>
-</dt>
-<dd></dd>
-<dt>
-<a class="link" href="meta-MetaCompositor.html#meta-compositor-sync-screen-size" title="meta_compositor_sync_screen_size ()">meta_compositor_sync_screen_size</a>, function in <a class="link" href="meta-MetaCompositor.html" title="MetaCompositor">MetaCompositor</a>
 </dt>
 <dd></dd>
 <dt>
@@ -389,6 +381,14 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
+<a class="link" href="MetaDisplay.html#MetaDisplay-restart" title="The “restart” signal">MetaDisplay::restart</a>, object signal in <a class="link" href="MetaDisplay.html" title="MetaDisplay">MetaDisplay</a>
+</dt>
+<dd></dd>
+<dt>
+<a class="link" href="MetaDisplay.html#MetaDisplay-show-restart-message" title="The “show-restart-message” signal">MetaDisplay::show-restart-message</a>, object signal in <a class="link" href="MetaDisplay.html" title="MetaDisplay">MetaDisplay</a>
+</dt>
+<dd></dd>
+<dt>
 <a class="link" href="MetaDisplay.html#MetaDisplay-window-created" title="The “window-created” signal">MetaDisplay::window-created</a>, object signal in <a class="link" href="MetaDisplay.html" title="MetaDisplay">MetaDisplay</a>
 </dt>
 <dd></dd>
@@ -434,10 +434,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 <dd></dd>
 <dt>
 <a class="link" href="MetaDisplay.html#meta-display-get-compositor" title="meta_display_get_compositor ()">meta_display_get_compositor</a>, function in <a class="link" href="MetaDisplay.html" title="MetaDisplay">MetaDisplay</a>
-</dt>
-<dd></dd>
-<dt>
-<a class="link" href="MetaDisplay.html#meta-display-get-compositor-version" title="meta_display_get_compositor_version ()">meta_display_get_compositor_version</a>, function in <a class="link" href="MetaDisplay.html" title="MetaDisplay">MetaDisplay</a>
 </dt>
 <dd></dd>
 <dt>
@@ -764,10 +760,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
-<a class="link" href="meta-Common.html#MetaMenuOp" title="enum MetaMenuOp">MetaMenuOp</a>, enum in <a class="link" href="meta-Common.html" title="Common">Common</a>
-</dt>
-<dd></dd>
-<dt>
 <a class="link" href="meta-Common.html#META-MINI-ICON-HEIGHT:CAPS" title="META_MINI_ICON_HEIGHT">META_MINI_ICON_HEIGHT</a>, macro in <a class="link" href="meta-Common.html" title="Common">Common</a>
 </dt>
 <dd></dd>
@@ -846,6 +838,10 @@ meta_cullable_reset_culling_children, function in MetaCullable
 <dd></dd>
 <dt>
 <a class="link" href="MetaPlugin.html#meta-plugin-unmaximize-completed" title="meta_plugin_unmaximize_completed ()">meta_plugin_unmaximize_completed</a>, function in <a class="link" href="MetaPlugin.html" title="MetaPlugin">MetaPlugin</a>
+</dt>
+<dd></dd>
+<dt>
+<a class="link" href="MetaPlugin.html#meta-plugin-unminimize-completed" title="meta_plugin_unminimize_completed ()">meta_plugin_unminimize_completed</a>, function in <a class="link" href="MetaPlugin.html" title="MetaPlugin">MetaPlugin</a>
 </dt>
 <dd></dd>
 <dt>
@@ -1009,10 +1005,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
-<a class="link" href="meta-Preferences.html#meta-prefs-get-window-binding" title="meta_prefs_get_window_binding ()">meta_prefs_get_window_binding</a>, function in <a class="link" href="meta-Preferences.html" title="Preferences">Preferences</a>
-</dt>
-<dd></dd>
-<dt>
 <a class="link" href="meta-Preferences.html#meta-prefs-get-workspaces-only-on-primary" title="meta_prefs_get_workspaces_only_on_primary ()">meta_prefs_get_workspaces_only_on_primary</a>, function in <a class="link" href="meta-Preferences.html" title="Preferences">Preferences</a>
 </dt>
 <dd></dd>
@@ -1124,10 +1116,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 <dd></dd>
 <dt>
 <a class="link" href="meta-Utility-functions.html#meta-remove-verbose-topic" title="meta_remove_verbose_topic ()">meta_remove_verbose_topic</a>, function in <a class="link" href="meta-Utility-functions.html" title="Utility functions">Utility functions</a>
-</dt>
-<dd></dd>
-<dt>
-<a class="link" href="meta-Common.html#MetaResizePopup" title="MetaResizePopup">MetaResizePopup</a>, struct in <a class="link" href="meta-Common.html" title="Common">Common</a>
 </dt>
 <dd></dd>
 <dt>
@@ -1336,6 +1324,10 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
+<a class="link" href="MetaShapedTexture.html#MetaShapedTexture-size-changed" title="The “size-changed” signal">MetaShapedTexture::size-changed</a>, object signal in <a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture">MetaShapedTexture</a>
+</dt>
+<dd></dd>
+<dt>
 <a class="link" href="MetaShapedTexture.html#MetaShapedTextureClass" title="struct MetaShapedTextureClass">MetaShapedTextureClass</a>, struct in <a class="link" href="MetaShapedTexture.html" title="MetaShapedTexture">MetaShapedTexture</a>
 </dt>
 <dd></dd>
@@ -1532,6 +1524,10 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
+<a class="link" href="MetaWindow.html#MetaWindow--on-all-workspaces" title="The “on-all-workspaces” property">MetaWindow:on-all-workspaces</a>, object property in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
+</dt>
+<dd></dd>
+<dt>
 <a class="link" href="MetaWindow.html#MetaWindow--resizeable" title="The “resizeable” property">MetaWindow:resizeable</a>, object property in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
 </dt>
 <dd></dd>
@@ -1564,6 +1560,10 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
+<a class="link" href="MetaWindowActor.html#MetaWindowActor-first-frame" title="The “first-frame” signal">MetaWindowActor::first-frame</a>, object signal in <a class="link" href="MetaWindowActor.html" title="MetaWindowActor">MetaWindowActor</a>
+</dt>
+<dd></dd>
+<dt>
 <a class="link" href="MetaWindowActor.html#MetaWindowActor--meta-window" title="The “meta-window” property">MetaWindowActor:meta-window</a>, object property in <a class="link" href="MetaWindowActor.html" title="MetaWindowActor">MetaWindowActor</a>
 </dt>
 <dd></dd>
@@ -1585,14 +1585,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 <dd></dd>
 <dt>
 <a class="link" href="MetaWindow.html#MetaWindowForeachFunc" title="MetaWindowForeachFunc ()">MetaWindowForeachFunc</a>, user_function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
-</dt>
-<dd></dd>
-<dt>
-<a class="link" href="meta-Common.html#MetaWindowMenu" title="MetaWindowMenu">MetaWindowMenu</a>, struct in <a class="link" href="meta-Common.html" title="Common">Common</a>
-</dt>
-<dd></dd>
-<dt>
-<a class="link" href="meta-Common.html#MetaWindowMenuFunc" title="MetaWindowMenuFunc ()">MetaWindowMenuFunc</a>, user_function in <a class="link" href="meta-Common.html" title="Common">Common</a>
 </dt>
 <dd></dd>
 <dt>
@@ -1676,6 +1668,10 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
+<a class="link" href="MetaWindow.html#meta-window-get-buffer-rect" title="meta_window_get_buffer_rect ()">meta_window_get_buffer_rect</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
+</dt>
+<dd></dd>
+<dt>
 <a class="link" href="MetaWindow.html#meta-window-get-client-machine" title="meta_window_get_client_machine ()">meta_window_get_client_machine</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
 </dt>
 <dd></dd>
@@ -1740,10 +1736,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
-<a class="link" href="MetaWindow.html#meta-window-get-input-rect" title="meta_window_get_input_rect ()">meta_window_get_input_rect</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
-</dt>
-<dd></dd>
-<dt>
 <a class="link" href="MetaWindow.html#meta-window-get-layer" title="meta_window_get_layer ()">meta_window_get_layer</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
 </dt>
 <dd></dd>
@@ -1765,10 +1757,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 <dd></dd>
 <dt>
 <a class="link" href="MetaWindow.html#meta-window-get-pid" title="meta_window_get_pid ()">meta_window_get_pid</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
-</dt>
-<dd></dd>
-<dt>
-<a class="link" href="MetaWindow.html#meta-window-get-rect" title="meta_window_get_rect ()">meta_window_get_rect</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
 </dt>
 <dd></dd>
 <dt>
@@ -1916,10 +1904,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
-<a class="link" href="MetaWindow.html#meta-window-move" title="meta_window_move ()">meta_window_move</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
-</dt>
-<dd></dd>
-<dt>
 <a class="link" href="MetaWindow.html#meta-window-move-frame" title="meta_window_move_frame ()">meta_window_move_frame</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
 </dt>
 <dd></dd>
@@ -1941,10 +1925,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 <dd></dd>
 <dt>
 <a class="link" href="MetaWindow.html#meta-window-requested-dont-bypass-compositor" title="meta_window_requested_dont_bypass_compositor ()">meta_window_requested_dont_bypass_compositor</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
-</dt>
-<dd></dd>
-<dt>
-<a class="link" href="MetaWindow.html#meta-window-resize" title="meta_window_resize ()">meta_window_resize</a>, function in <a class="link" href="MetaWindow.html" title="MetaWindow">MetaWindow</a>
 </dt>
 <dd></dd>
 <dt>
@@ -2020,6 +2000,10 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </dt>
 <dd></dd>
 <dt>
+<a class="link" href="MetaWorkspace.html#MetaWorkspace--workspace-index" title="The “workspace-index” property">MetaWorkspace:workspace-index</a>, object property in <a class="link" href="MetaWorkspace.html" title="MetaWorkspace">MetaWorkspace</a>
+</dt>
+<dd></dd>
+<dt>
 <a class="link" href="MetaWorkspace.html#MetaWorkspaceClass" title="MetaWorkspaceClass">MetaWorkspaceClass</a>, struct in <a class="link" href="MetaWorkspace.html" title="MetaWorkspace">MetaWorkspace</a>
 </dt>
 <dd></dd>
@@ -2059,10 +2043,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 <a class="link" href="MetaWorkspace.html#meta-workspace-set-builtin-struts" title="meta_workspace_set_builtin_struts ()">meta_workspace_set_builtin_struts</a>, function in <a class="link" href="MetaWorkspace.html" title="MetaWorkspace">MetaWorkspace</a>
 </dt>
 <dd></dd>
-<dt>
-<a class="link" href="MetaWorkspace.html#meta-workspace-update-window-hints" title="meta_workspace_update_window_hints ()">meta_workspace_update_window_hints</a>, function in <a class="link" href="MetaWorkspace.html" title="MetaWorkspace">MetaWorkspace</a>
-</dt>
-<dd></dd>
 <a name="idxX"></a><h3 class="title">X</h3>
 <dt>
 <a class="link" href="MetaDisplay.html#meta-XFree" title="meta_XFree()">meta_XFree</a>, macro in <a class="link" href="MetaDisplay.html" title="MetaDisplay">MetaDisplay</a>
@@ -2071,6 +2051,6 @@ meta_cullable_reset_culling_children, function in MetaCullable
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.20.1</div>
+          Generated by GTK-Doc V1.21.1</div>
 </body>
 </html>

@@ -67,40 +67,29 @@
 #include <meta/compositor-mutter.h>
 #include <meta/prefs.h>
 #include <meta/main.h>
+#include <meta/meta-backend.h>
 #include <meta/meta-background-actor.h>
 #include <meta/meta-background-group.h>
 #include <meta/meta-shadow-factory.h>
 #include "meta-window-actor-private.h"
 #include "meta-window-group.h"
-#include "meta-stage.h"
 #include "window-private.h" /* to check window->hidden */
-#include "display-private.h" /* for meta_display_lookup_x_window() */
+#include "display-private.h" /* for meta_display_lookup_x_window() and meta_display_cancel_touch() */
 #include "util-private.h"
 #include "frame.h"
 #include <X11/extensions/shape.h>
 #include <X11/extensions/Xcomposite.h>
 
-#include "backends/meta-backend.h"
 #include "backends/x11/meta-backend-x11.h"
 
+#ifdef HAVE_WAYLAND
 #include "wayland/meta-wayland-private.h"
+#endif
 
 static gboolean
 is_modal (MetaDisplay *display)
 {
-  return display->grab_op == META_GRAB_OP_COMPOSITOR;
-}
-
-static inline gboolean
-composite_at_least_version (MetaDisplay *display, int maj, int min)
-{
-  static int major = -1;
-  static int minor = -1;
-
-  if (major == -1)
-    meta_display_get_compositor_version (display, &major, &minor);
-
-  return (major > maj || (major == maj && minor >= min));
+  return display->event_route == META_EVENT_ROUTE_COMPOSITOR_GRAB;
 }
 
 static void sync_actor_stacking (MetaCompositor *compositor);
@@ -146,33 +135,8 @@ process_damage (MetaCompositor     *compositor,
 {
   MetaWindowActor *window_actor = META_WINDOW_ACTOR (meta_window_get_compositor_private (window));
   meta_window_actor_process_x11_damage (window_actor, event);
-}
 
-static Window
-get_output_window (MetaCompositor *compositor)
-{
-  MetaBackendX11 *backend = META_BACKEND_X11 (meta_get_backend ());
-  Display *xdisplay = meta_backend_x11_get_xdisplay (backend);
-  Window output;
-  unsigned char mask_bits[XIMaskLen (XI_LASTEVENT)] = { 0 };
-  XIEventMask mask = { XIAllMasterDevices, sizeof (mask_bits), mask_bits };
-
-  output = XCompositeGetOverlayWindow (xdisplay, DefaultRootWindow (xdisplay));
-
-  meta_core_add_old_event_mask (xdisplay, output, &mask);
-
-  XISetMask (mask.mask, XI_KeyPress);
-  XISetMask (mask.mask, XI_KeyRelease);
-  XISetMask (mask.mask, XI_ButtonPress);
-  XISetMask (mask.mask, XI_ButtonRelease);
-  XISetMask (mask.mask, XI_Enter);
-  XISetMask (mask.mask, XI_Leave);
-  XISetMask (mask.mask, XI_FocusIn);
-  XISetMask (mask.mask, XI_FocusOut);
-  XISetMask (mask.mask, XI_Motion);
-  XISelectEvents (xdisplay, output, &mask, 1);
-
-  return output;
+  compositor->frame_has_updated_xsurfaces = TRUE;
 }
 
 /* compat helper */
@@ -381,12 +345,20 @@ meta_begin_modal_for_plugin (MetaCompositor   *compositor,
     return FALSE;
 
   display->grab_op = META_GRAB_OP_COMPOSITOR;
+  display->event_route = META_EVENT_ROUTE_COMPOSITOR_GRAB;
   display->grab_window = NULL;
   display->grab_have_pointer = TRUE;
   display->grab_have_keyboard = TRUE;
 
+  g_signal_emit_by_name (display, "grab-op-begin",
+                         meta_plugin_get_screen (plugin),
+                         display->grab_window, display->grab_op);
+
   if (meta_is_wayland_compositor ())
-    meta_display_sync_wayland_input_focus (display);
+    {
+      meta_display_sync_wayland_input_focus (display);
+      meta_display_cancel_touch (display);
+    }
 
   return TRUE;
 }
@@ -401,7 +373,12 @@ meta_end_modal_for_plugin (MetaCompositor *compositor,
 
   g_return_if_fail (is_modal (display));
 
+  g_signal_emit_by_name (display, "grab-op-end",
+                         meta_plugin_get_screen (plugin),
+                         display->grab_window, display->grab_op);
+
   display->grab_op = META_GRAB_OP_NONE;
+  display->event_route = META_EVENT_ROUTE_NORMAL;
   display->grab_window = NULL;
   display->grab_have_pointer = FALSE;
   display->grab_have_keyboard = FALSE;
@@ -423,8 +400,10 @@ after_stage_paint (ClutterStage *stage,
   for (l = compositor->windows; l; l = l->next)
     meta_window_actor_post_paint (l->data);
 
+#ifdef HAVE_WAYLAND
   if (meta_is_wayland_compositor ())
     meta_wayland_compositor_paint_finished (meta_wayland_compositor_get_default ());
+#endif
 }
 
 static void
@@ -476,62 +455,24 @@ meta_compositor_manage (MetaCompositor *compositor)
   MetaDisplay *display = compositor->display;
   Display *xdisplay = display->xdisplay;
   MetaScreen *screen = display->screen;
-  Window xwin = 0;
-  gint width, height;
 
   meta_screen_set_cm_selection (display->screen);
 
-  if (meta_is_wayland_compositor ())
-    {
-      MetaWaylandCompositor *wayland_compositor = meta_wayland_compositor_get_default ();
+  {
+    MetaBackend *backend = meta_get_backend ();
+    compositor->stage = meta_backend_get_stage (backend);
+  }
 
-      compositor->stage = meta_stage_new ();
-      clutter_actor_show (compositor->stage);
-
-      wayland_compositor->stage = compositor->stage;
-
-      meta_screen_get_size (screen, &width, &height);
-      clutter_actor_set_size (compositor->stage, width, height);
-    }
-  else
-    {
-      compositor->stage = clutter_stage_new ();
-
-      meta_screen_get_size (screen, &width, &height);
-      clutter_actor_realize (compositor->stage);
-
-      xwin = clutter_x11_get_stage_window (CLUTTER_STAGE (compositor->stage));
-
-      XResizeWindow (xdisplay, xwin, width, height);
-
-        {
-          MetaBackendX11 *backend = META_BACKEND_X11 (meta_get_backend ());
-          Display *backend_xdisplay = meta_backend_x11_get_xdisplay (backend);
-          unsigned char mask_bits[XIMaskLen (XI_LASTEVENT)] = { 0 };
-          XIEventMask mask = { XIAllMasterDevices, sizeof (mask_bits), mask_bits };
-
-          meta_core_add_old_event_mask (backend_xdisplay, xwin, &mask);
-
-          XISetMask (mask.mask, XI_KeyPress);
-          XISetMask (mask.mask, XI_KeyRelease);
-          XISetMask (mask.mask, XI_ButtonPress);
-          XISetMask (mask.mask, XI_ButtonRelease);
-          XISetMask (mask.mask, XI_Enter);
-          XISetMask (mask.mask, XI_Leave);
-          XISetMask (mask.mask, XI_FocusIn);
-          XISetMask (mask.mask, XI_FocusOut);
-          XISetMask (mask.mask, XI_Motion);
-          XIClearMask (mask.mask, XI_TouchBegin);
-          XIClearMask (mask.mask, XI_TouchEnd);
-          XIClearMask (mask.mask, XI_TouchUpdate);
-          XISelectEvents (backend_xdisplay, xwin, &mask, 1);
-        }
-    }
-
-  clutter_stage_set_paint_callback (CLUTTER_STAGE (compositor->stage),
-                                    after_stage_paint,
-                                    compositor,
-                                    NULL);
+  /* We use connect_after() here to accomodate code in GNOME Shell that,
+   * when benchmarking drawing performance, connects to ::after-paint
+   * and calls glFinish(). The timing information from that will be
+   * more accurate if we hold off until that completes before we signal
+   * apps to begin drawing the next frame. If there are no other
+   * connections to ::after-paint, connect() vs. connect_after() doesn't
+   * matter.
+   */
+  g_signal_connect_after (CLUTTER_STAGE (compositor->stage), "after-paint",
+                          G_CALLBACK (after_stage_paint), compositor);
 
   clutter_stage_set_sync_delay (CLUTTER_STAGE (compositor->stage), META_SYNC_DELAY);
 
@@ -550,15 +491,20 @@ meta_compositor_manage (MetaCompositor *compositor)
     }
   else
     {
-      compositor->output = get_output_window (compositor);
+      Window xwin;
+
+      compositor->output = screen->composite_overlay_window;
+
+      xwin = meta_backend_x11_get_xwindow (META_BACKEND_X11 (meta_get_backend ()));
+
       XReparentWindow (xdisplay, xwin, compositor->output, 0, 0);
 
       meta_empty_stage_input_region (screen);
 
-      /* Make sure there isn't any left-over output shape on the 
+      /* Make sure there isn't any left-over output shape on the
        * overlay window by setting the whole screen to be an
        * output region.
-       * 
+       *
        * Note: there doesn't seem to be any real chance of that
        *  because the X server will destroy the overlay window
        *  when the last client using it exits.
@@ -595,7 +541,7 @@ meta_compositor_unmanage (MetaCompositor *compositor)
 /**
  * meta_shape_cow_for_window:
  * @compositor: A #MetaCompositor
- * @window: (allow-none): A #MetaWindow to shape the COW for
+ * @window: (nullable): A #MetaWindow to shape the COW for
  *
  * Sets an bounding shape on the COW so that the given window
  * is exposed. If @window is %NULL it clears the shape again.
@@ -691,12 +637,11 @@ meta_compositor_remove_window (MetaCompositor *compositor,
 }
 
 void
-meta_compositor_set_updates_frozen (MetaCompositor *compositor,
-                                    MetaWindow     *window,
-                                    gboolean        updates_frozen)
+meta_compositor_sync_updates_frozen (MetaCompositor *compositor,
+                                     MetaWindow     *window)
 {
   MetaWindowActor *window_actor = META_WINDOW_ACTOR (meta_window_get_compositor_private (window));
-  meta_window_actor_set_updates_frozen (window_actor, updates_frozen);
+  meta_window_actor_sync_updates_frozen (window_actor);
 }
 
 void
@@ -746,9 +691,9 @@ meta_compositor_window_surface_changed (MetaCompositor *compositor,
 
 /**
  * meta_compositor_process_event: (skip)
- * @compositor: 
- * @event: 
- * @window: 
+ * @compositor:
+ * @event:
+ * @window:
  *
  */
 gboolean
@@ -756,9 +701,6 @@ meta_compositor_process_event (MetaCompositor *compositor,
                                XEvent         *event,
                                MetaWindow     *window)
 {
-  if (meta_plugin_manager_xevent_filter (compositor->plugin_mgr, event))
-    return TRUE;
-
   if (!meta_is_wayland_compositor () &&
       event->type == meta_display_get_damage_event_base (compositor->display) + XDamageNotify)
     {
@@ -1046,43 +988,6 @@ meta_compositor_sync_window_geometry (MetaCompositor *compositor,
   meta_window_actor_sync_actor_geometry (window_actor, did_placement);
 }
 
-void
-meta_compositor_sync_screen_size (MetaCompositor  *compositor,
-				  guint		   width,
-				  guint		   height)
-{
-  MetaDisplay *display = compositor->display;
-
-  if (meta_is_wayland_compositor ())
-    {
-      /* FIXME: when we support a sliced stage, this is the place to do it
-         But! This is not the place to apply KMS config, here we only
-         notify Clutter/Cogl/GL that the framebuffer sizes changed.
-
-         And because for now clutter does not do sliced, we use one
-         framebuffer the size of the whole screen, and when running on
-         bare metal MetaMonitorManager will do the necessary tricks to
-         show the right portions on the right screens.
-      */
-
-      clutter_actor_set_size (compositor->stage, width, height);
-    }
-  else
-    {
-      Display        *xdisplay;
-      Window          xwin;
-
-      xdisplay = meta_display_get_xdisplay (display);
-      xwin = clutter_x11_get_stage_window (CLUTTER_STAGE (compositor->stage));
-
-      XResizeWindow (xdisplay, xwin, width, height);
-    }
-
-  meta_verbose ("Changed size for stage on screen %d to %dx%d\n",
-                meta_screen_get_screen_number (display->screen),
-                width, height);
-}
-
 static void
 frame_callback (CoglOnscreen  *onscreen,
                 CoglFrameEvent event,
@@ -1153,6 +1058,33 @@ pre_paint_windows (MetaCompositor *compositor)
 
   for (l = compositor->windows; l; l = l->next)
     meta_window_actor_pre_paint (l->data);
+
+  if (compositor->frame_has_updated_xsurfaces)
+    {
+      /* We need to make sure that any X drawing that happens before
+       * the XDamageSubtract() for each window above is visible to
+       * subsequent GL rendering; the only standardized way to do this
+       * is EXT_x11_sync_object, which isn't yet widely available. For
+       * now, we count on details of Xorg and the open source drivers,
+       * and hope for the best otherwise.
+       *
+       * Xorg and open source driver specifics:
+       *
+       * The X server makes sure to flush drawing to the kernel before
+       * sending out damage events, but since we use
+       * DamageReportBoundingBox there may be drawing between the last
+       * damage event and the XDamageSubtract() that needs to be
+       * flushed as well.
+       *
+       * Xorg always makes sure that drawing is flushed to the kernel
+       * before writing events or responses to the client, so any
+       * round trip request at this point is sufficient to flush the
+       * GLX buffers.
+       */
+      XSync (compositor->display->xdisplay, False);
+
+      compositor->frame_has_updated_xsurfaces = FALSE;
+    }
 }
 
 static gboolean
@@ -1183,11 +1115,7 @@ meta_compositor_new (MetaDisplay *display)
 {
   MetaCompositor        *compositor;
 
-  if (!composite_at_least_version (display, 0, 3))
-    return NULL;
-
   compositor = g_new0 (MetaCompositor, 1);
-
   compositor->display = display;
 
   if (g_getenv("META_DISABLE_MIPMAPS"))
@@ -1355,4 +1283,23 @@ void
 meta_compositor_hide_tile_preview (MetaCompositor *compositor)
 {
   meta_plugin_manager_hide_tile_preview (compositor->plugin_mgr);
+}
+
+void
+meta_compositor_show_window_menu (MetaCompositor     *compositor,
+                                  MetaWindow         *window,
+                                  MetaWindowMenuType  menu,
+                                  int                 x,
+                                  int                 y)
+{
+  meta_plugin_manager_show_window_menu (compositor->plugin_mgr, window, menu, x, y);
+}
+
+void
+meta_compositor_show_window_menu_for_rect (MetaCompositor     *compositor,
+                                           MetaWindow         *window,
+                                           MetaWindowMenuType  menu,
+					   MetaRectangle      *rect)
+{
+  meta_plugin_manager_show_window_menu_for_rect (compositor->plugin_mgr, window, menu, rect);
 }

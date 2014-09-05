@@ -36,19 +36,12 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (MetaSurfaceActor, meta_surface_actor, CLUTTER_
 
 enum {
   REPAINT_SCHEDULED,
+  SIZE_CHANGED,
 
   LAST_SIGNAL,
 };
 
 static guint signals[LAST_SIGNAL];
-
-gboolean
-meta_surface_actor_get_unobscured_bounds (MetaSurfaceActor      *self,
-                                          cairo_rectangle_int_t *unobscured_bounds)
-{
-  MetaSurfaceActorPrivate *priv = self->priv;
-  return meta_shaped_texture_get_unobscured_bounds (priv->texture, unobscured_bounds);
-}
 
 static void
 meta_surface_actor_pick (ClutterActor       *actor,
@@ -128,6 +121,13 @@ meta_surface_actor_class_init (MetaSurfaceActorClass *klass)
                                              NULL, NULL, NULL,
                                              G_TYPE_NONE, 0);
 
+  signals[SIZE_CHANGED] = g_signal_new ("size-changed",
+                                        G_TYPE_FROM_CLASS (object_class),
+                                        G_SIGNAL_RUN_LAST,
+                                        0,
+                                        NULL, NULL, NULL,
+                                        G_TYPE_NONE, 0);
+
   g_type_class_add_private (klass, sizeof (MetaSurfaceActorPrivate));
 }
 
@@ -153,6 +153,14 @@ cullable_iface_init (MetaCullableInterface *iface)
 }
 
 static void
+texture_size_changed (MetaShapedTexture *texture,
+                      gpointer           user_data)
+{
+  MetaSurfaceActor *actor = META_SURFACE_ACTOR (user_data);
+  g_signal_emit (actor, signals[SIZE_CHANGED], 0);
+}
+
+static void
 meta_surface_actor_init (MetaSurfaceActor *self)
 {
   MetaSurfaceActorPrivate *priv;
@@ -162,6 +170,8 @@ meta_surface_actor_init (MetaSurfaceActor *self)
                                                    MetaSurfaceActorPrivate);
 
   priv->texture = META_SHAPED_TEXTURE (meta_shaped_texture_new ());
+  g_signal_connect_object (priv->texture, "size-changed",
+                           G_CALLBACK (texture_size_changed), self, 0);
   clutter_actor_add_child (CLUTTER_ACTOR (self), CLUTTER_ACTOR (priv->texture));
 }
 
@@ -178,7 +188,7 @@ meta_surface_actor_get_texture (MetaSurfaceActor *self)
   return self->priv->texture;
 }
 
-void
+static void
 meta_surface_actor_update_area (MetaSurfaceActor *self,
                                 int x, int y, int width, int height)
 {
@@ -252,6 +262,9 @@ meta_surface_actor_process_damage (MetaSurfaceActor *self,
     }
 
   META_SURFACE_ACTOR_GET_CLASS (self)->process_damage (self, x, y, width, height);
+
+  if (meta_surface_actor_is_visible (self))
+    meta_surface_actor_update_area (self, x, y, width, height);
 }
 
 void
@@ -267,9 +280,15 @@ meta_surface_actor_is_argb32 (MetaSurfaceActor *self)
   CoglTexture *texture = meta_shaped_texture_get_texture (stex);
 
   /* If we don't have a texture, like during initialization, assume
-   * that we're ARGB32. */
+   * that we're ARGB32.
+   *
+   * If we are unredirected and we have no texture assume that we are
+   * not ARGB32 otherwise we wouldn't be unredirected in the first
+   * place. This prevents us from continually redirecting and
+   * unredirecting on every paint.
+   */
   if (!texture)
-    return TRUE;
+    return !meta_surface_actor_is_unredirected (self);
 
   switch (cogl_texture_get_components (texture))
     {

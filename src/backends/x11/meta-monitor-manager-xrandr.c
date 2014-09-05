@@ -1,6 +1,6 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* 
+/*
  * Copyright (C) 2001, 2002 Havoc Pennington
  * Copyright (C) 2002, 2003 Red Hat Inc.
  * Some ICCCM manager selection code derived from fvwm2,
@@ -8,7 +8,7 @@
  * Copyright (C) 2003 Rob Adams
  * Copyright (C) 2004-2006 Elijah Newren
  * Copyright (C) 2013 Red Hat Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -18,7 +18,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
@@ -35,6 +35,8 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/dpms.h>
+#include <X11/Xlib-xcb.h>
+#include <xcb/randr.h>
 
 #include "meta-backend-x11.h"
 #include <meta/main.h>
@@ -42,7 +44,7 @@
 #include "edid.h"
 #include "meta-monitor-config.h"
 
-#define ALL_WL_TRANSFORMS ((1 << (WL_OUTPUT_TRANSFORM_FLIPPED_270 + 1)) - 1)
+#define ALL_TRANSFORMS ((1 << (META_MONITOR_TRANSFORM_FLIPPED_270 + 1)) - 1)
 
 /* Look for DPI_FALLBACK in:
  * http://git.gnome.org/browse/gnome-settings-daemon/tree/plugins/xsettings/gsd-xsettings-manager.c
@@ -67,31 +69,31 @@ struct _MetaMonitorManagerXrandrClass
 
 G_DEFINE_TYPE (MetaMonitorManagerXrandr, meta_monitor_manager_xrandr, META_TYPE_MONITOR_MANAGER);
 
-static enum wl_output_transform
-wl_transform_from_xrandr (Rotation rotation)
+static MetaMonitorTransform
+meta_monitor_transform_from_xrandr (Rotation rotation)
 {
-  static const enum wl_output_transform y_reflected_map[4] = {
-    WL_OUTPUT_TRANSFORM_FLIPPED_180,
-    WL_OUTPUT_TRANSFORM_FLIPPED_90,
-    WL_OUTPUT_TRANSFORM_FLIPPED,
-    WL_OUTPUT_TRANSFORM_FLIPPED_270
+  static const MetaMonitorTransform y_reflected_map[4] = {
+    META_MONITOR_TRANSFORM_FLIPPED_180,
+    META_MONITOR_TRANSFORM_FLIPPED_90,
+    META_MONITOR_TRANSFORM_FLIPPED,
+    META_MONITOR_TRANSFORM_FLIPPED_270
   };
-  enum wl_output_transform ret;
+  MetaMonitorTransform ret;
 
   switch (rotation & 0x7F)
     {
     default:
     case RR_Rotate_0:
-      ret = WL_OUTPUT_TRANSFORM_NORMAL;
+      ret = META_MONITOR_TRANSFORM_NORMAL;
       break;
     case RR_Rotate_90:
-      ret = WL_OUTPUT_TRANSFORM_90;
+      ret = META_MONITOR_TRANSFORM_90;
       break;
     case RR_Rotate_180:
-      ret = WL_OUTPUT_TRANSFORM_180;
+      ret = META_MONITOR_TRANSFORM_180;
       break;
     case RR_Rotate_270:
-      ret = WL_OUTPUT_TRANSFORM_270;
+      ret = META_MONITOR_TRANSFORM_270;
       break;
     }
 
@@ -105,42 +107,42 @@ wl_transform_from_xrandr (Rotation rotation)
 
 #define ALL_ROTATIONS (RR_Rotate_0 | RR_Rotate_90 | RR_Rotate_180 | RR_Rotate_270)
 
-static unsigned int
-wl_transform_from_xrandr_all (Rotation rotation)
+static MetaMonitorTransform
+meta_monitor_transform_from_xrandr_all (Rotation rotation)
 {
   unsigned ret;
 
   /* Handle the common cases first (none or all) */
   if (rotation == 0 || rotation == RR_Rotate_0)
-    return (1 << WL_OUTPUT_TRANSFORM_NORMAL);
+    return (1 << META_MONITOR_TRANSFORM_NORMAL);
 
   /* All rotations and one reflection -> all of them by composition */
   if ((rotation & ALL_ROTATIONS) &&
       ((rotation & RR_Reflect_X) || (rotation & RR_Reflect_Y)))
-    return ALL_WL_TRANSFORMS;
+    return ALL_TRANSFORMS;
 
-  ret = 1 << WL_OUTPUT_TRANSFORM_NORMAL;
+  ret = 1 << META_MONITOR_TRANSFORM_NORMAL;
   if (rotation & RR_Rotate_90)
-    ret |= 1 << WL_OUTPUT_TRANSFORM_90;
+    ret |= 1 << META_MONITOR_TRANSFORM_90;
   if (rotation & RR_Rotate_180)
-    ret |= 1 << WL_OUTPUT_TRANSFORM_180;
+    ret |= 1 << META_MONITOR_TRANSFORM_180;
   if (rotation & RR_Rotate_270)
-    ret |= 1 << WL_OUTPUT_TRANSFORM_270;
+    ret |= 1 << META_MONITOR_TRANSFORM_270;
   if (rotation & (RR_Rotate_0 | RR_Reflect_X))
-    ret |= 1 << WL_OUTPUT_TRANSFORM_FLIPPED;
+    ret |= 1 << META_MONITOR_TRANSFORM_FLIPPED;
   if (rotation & (RR_Rotate_90 | RR_Reflect_X))
-    ret |= 1 << WL_OUTPUT_TRANSFORM_FLIPPED_90;
+    ret |= 1 << META_MONITOR_TRANSFORM_FLIPPED_90;
   if (rotation & (RR_Rotate_180 | RR_Reflect_X))
-    ret |= 1 << WL_OUTPUT_TRANSFORM_FLIPPED_180;
+    ret |= 1 << META_MONITOR_TRANSFORM_FLIPPED_180;
   if (rotation & (RR_Rotate_270 | RR_Reflect_X))
-    ret |= 1 << WL_OUTPUT_TRANSFORM_FLIPPED_270;
+    ret |= 1 << META_MONITOR_TRANSFORM_FLIPPED_270;
 
   return ret;
 }
 
 static gboolean
-output_get_presentation_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
-                                MetaOutput               *output)
+output_get_boolean_property (MetaMonitorManagerXrandr *manager_xrandr,
+                             MetaOutput *output, const char *propname)
 {
   gboolean value;
   Atom atom, actual_type;
@@ -148,9 +150,9 @@ output_get_presentation_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
   unsigned long nitems, bytes_after;
   unsigned char *buffer;
 
-  atom = XInternAtom (manager_xrandr->xdisplay, "_MUTTER_PRESENTATION_OUTPUT", False);
+  atom = XInternAtom (manager_xrandr->xdisplay, propname, False);
   XRRGetOutputProperty (manager_xrandr->xdisplay,
-                        (XID)output->output_id,
+                        (XID)output->winsys_id,
                         atom,
                         0, G_MAXLONG, False, False, XA_CARDINAL,
                         &actual_type, &actual_format,
@@ -164,6 +166,13 @@ output_get_presentation_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
 
   XFree (buffer);
   return value;
+}
+
+static gboolean
+output_get_presentation_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
+                                MetaOutput *output)
+{
+  return output_get_boolean_property (manager_xrandr, output, "_MUTTER_PRESENTATION_OUTPUT");
 }
 
 static int
@@ -186,7 +195,7 @@ output_get_backlight_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
 
   atom = XInternAtom (manager_xrandr->xdisplay, "Backlight", False);
   XRRGetOutputProperty (manager_xrandr->xdisplay,
-                        (XID)output->output_id,
+                        (XID)output->winsys_id,
                         atom,
                         0, G_MAXLONG, False, False, XA_INTEGER,
                         &actual_type, &actual_format,
@@ -207,30 +216,34 @@ output_get_backlight_limits_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
                                     MetaOutput               *output)
 {
   Atom atom;
-  XRRPropertyInfo *info;
+  xcb_connection_t *xcb_conn;
+  xcb_randr_query_output_property_reply_t *reply;
 
   atom = XInternAtom (manager_xrandr->xdisplay, "Backlight", False);
-  info = XRRQueryOutputProperty (manager_xrandr->xdisplay,
-                                 (XID)output->output_id,
-                                 atom);
 
-  if (info == NULL)
-    {
-      meta_verbose ("could not get output property for %s\n", output->name);
-      return;
-    }
+  xcb_conn = XGetXCBConnection (manager_xrandr->xdisplay);
+  reply = xcb_randr_query_output_property_reply (xcb_conn,
+                                                 xcb_randr_query_output_property (xcb_conn,
+                                                                                  (xcb_randr_output_t) output->winsys_id,
+                                                                                  (xcb_atom_t) atom),
+                                                 NULL);
 
-  if (!info->range || info->num_values != 2)
+  /* This can happen on systems without backlights. */
+  if (reply == NULL)
+    return;
+
+  if (!reply->range || reply->length != 2)
     {
       meta_verbose ("backlight %s was not range\n", output->name);
       goto out;
     }
 
-  output->backlight_min = info->values[0];
-  output->backlight_max = info->values[1];
+  int32_t *values = xcb_randr_query_output_property_valid_values (reply);
+  output->backlight_min = values[0];
+  output->backlight_max = values[1];
 
 out:
-  XFree (info);
+  free (reply);
 }
 
 static int
@@ -272,31 +285,31 @@ get_edid_property (Display  *dpy,
     }
 
   XFree (prop);
-    
+
   return result;
 }
 
 static GBytes *
 read_output_edid (MetaMonitorManagerXrandr *manager_xrandr,
-                  XID                       output_id)
+                  XID                       winsys_id)
 {
   Atom edid_atom;
   guint8 *result;
   gsize len;
 
   edid_atom = XInternAtom (manager_xrandr->xdisplay, "EDID", FALSE);
-  result = get_edid_property (manager_xrandr->xdisplay, output_id, edid_atom, &len);
+  result = get_edid_property (manager_xrandr->xdisplay, winsys_id, edid_atom, &len);
 
   if (!result)
     {
       edid_atom = XInternAtom (manager_xrandr->xdisplay, "EDID_DATA", FALSE);
-      result = get_edid_property (manager_xrandr->xdisplay, output_id, edid_atom, &len);
+      result = get_edid_property (manager_xrandr->xdisplay, winsys_id, edid_atom, &len);
     }
 
   if (!result)
     {
       edid_atom = XInternAtom (manager_xrandr->xdisplay, "XFree86_DDC_EDID1_RAWDATA", FALSE);
-      result = get_edid_property (manager_xrandr->xdisplay, output_id, edid_atom, &len);
+      result = get_edid_property (manager_xrandr->xdisplay, winsys_id, edid_atom, &len);
     }
 
   if (result)
@@ -312,25 +325,25 @@ read_output_edid (MetaMonitorManagerXrandr *manager_xrandr,
 
 static gboolean
 output_get_hotplug_mode_update (MetaMonitorManagerXrandr *manager_xrandr,
-                                XID                       output_id)
+                                MetaOutput               *output)
 {
-  Atom atom;
-  XRRPropertyInfo *info;
-  gboolean result = FALSE;
-
-  atom = XInternAtom (manager_xrandr->xdisplay, "hotplug_mode_update", False);
-  info = XRRQueryOutputProperty (manager_xrandr->xdisplay, output_id,
-                                 atom);
-
-  if (info)
-    {
-      result = TRUE;
-      XFree (info);
-    }
-
-  return result;
+  return output_get_boolean_property (manager_xrandr, output, "hotplug_mode_update");
 }
 
+static char *
+get_xmode_name (XRRModeInfo *xmode)
+{
+  int width = xmode->width;
+  int height = xmode->height;
+
+  if (xmode->hSkew != 0)
+    {
+      width += 2 * (xmode->hSkew >> 8);
+      height += 2 * (xmode->hSkew & 0xff);
+    }
+
+  return g_strdup_printf ("%dx%d", width, height);
+}
 
 static void
 meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
@@ -417,6 +430,7 @@ meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
       mode->height = xmode->height;
       mode->refresh_rate = (xmode->dotClock /
 			    ((float)xmode->hTotal * xmode->vTotal));
+      mode->name = get_xmode_name (xmode);
     }
 
   for (i = 0; i < (unsigned)resources->ncrtc; i++)
@@ -434,8 +448,8 @@ meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
       meta_crtc->rect.width = crtc->width;
       meta_crtc->rect.height = crtc->height;
       meta_crtc->is_dirty = FALSE;
-      meta_crtc->transform = wl_transform_from_xrandr (crtc->rotation);
-      meta_crtc->all_transforms = wl_transform_from_xrandr_all (crtc->rotations);
+      meta_crtc->transform = meta_monitor_transform_from_xrandr (crtc->rotation);
+      meta_crtc->all_transforms = meta_monitor_transform_from_xrandr_all (crtc->rotations);
 
       for (j = 0; j < (unsigned)resources->nmode; j++)
 	{
@@ -467,10 +481,10 @@ meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
           GBytes *edid;
           MonitorInfo *parsed_edid;
 
-	  meta_output->output_id = resources->outputs[i];
+	  meta_output->winsys_id = resources->outputs[i];
 	  meta_output->name = g_strdup (output->name);
 
-          edid = read_output_edid (manager_xrandr, meta_output->output_id);
+          edid = read_output_edid (manager_xrandr, meta_output->winsys_id);
           if (edid)
             {
               gsize len;
@@ -503,8 +517,7 @@ meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
 	  meta_output->width_mm = output->mm_width;
 	  meta_output->height_mm = output->mm_height;
 	  meta_output->subpixel_order = COGL_SUBPIXEL_ORDER_UNKNOWN;
-          meta_output->hotplug_mode_update =
-              output_get_hotplug_mode_update (manager_xrandr, meta_output->output_id);
+          meta_output->hotplug_mode_update = output_get_hotplug_mode_update (manager_xrandr, meta_output);
 
 	  meta_output->n_modes = output->nmode;
 	  meta_output->modes = g_new0 (MetaMonitorMode *, meta_output->n_modes);
@@ -556,7 +569,7 @@ meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
 	      meta_output->possible_clones[j] = GINT_TO_POINTER (output->clones[j]);
 	    }
 
-	  meta_output->is_primary = ((XID)meta_output->output_id == primary_output);
+	  meta_output->is_primary = ((XID)meta_output->winsys_id == primary_output);
 	  meta_output->is_presentation = output_get_presentation_xrandr (manager_xrandr, meta_output);
 	  output_get_backlight_limits_xrandr (manager_xrandr, meta_output);
 
@@ -589,7 +602,7 @@ meta_monitor_manager_xrandr_read_current (MetaMonitorManager *manager)
 
 	  for (k = 0; k < manager->n_outputs; k++)
 	    {
-	      if (clone == (XID)manager->outputs[k].output_id)
+	      if (clone == (XID)manager->outputs[k].winsys_id)
 		{
 		  meta_output->possible_clones[j] = &manager->outputs[k];
 		  break;
@@ -605,7 +618,7 @@ meta_monitor_manager_xrandr_read_edid (MetaMonitorManager *manager,
 {
   MetaMonitorManagerXrandr *manager_xrandr = META_MONITOR_MANAGER_XRANDR (manager);
 
-  return read_output_edid (manager_xrandr, output->output_id);
+  return read_output_edid (manager_xrandr, output->winsys_id);
 }
 
 static void
@@ -637,25 +650,25 @@ meta_monitor_manager_xrandr_set_power_save_mode (MetaMonitorManager *manager,
 }
 
 static Rotation
-wl_transform_to_xrandr (enum wl_output_transform transform)
+meta_monitor_transform_to_xrandr (MetaMonitorTransform transform)
 {
   switch (transform)
     {
-    case WL_OUTPUT_TRANSFORM_NORMAL:
+    case META_MONITOR_TRANSFORM_NORMAL:
       return RR_Rotate_0;
-    case WL_OUTPUT_TRANSFORM_90:
+    case META_MONITOR_TRANSFORM_90:
       return RR_Rotate_90;
-    case WL_OUTPUT_TRANSFORM_180:
+    case META_MONITOR_TRANSFORM_180:
       return RR_Rotate_180;
-    case WL_OUTPUT_TRANSFORM_270:
+    case META_MONITOR_TRANSFORM_270:
       return RR_Rotate_270;
-    case WL_OUTPUT_TRANSFORM_FLIPPED:
+    case META_MONITOR_TRANSFORM_FLIPPED:
       return RR_Reflect_X | RR_Rotate_0;
-    case WL_OUTPUT_TRANSFORM_FLIPPED_90:
+    case META_MONITOR_TRANSFORM_FLIPPED_90:
       return RR_Reflect_X | RR_Rotate_90;
-    case WL_OUTPUT_TRANSFORM_FLIPPED_180:
+    case META_MONITOR_TRANSFORM_FLIPPED_180:
       return RR_Reflect_X | RR_Rotate_180;
-    case WL_OUTPUT_TRANSFORM_FLIPPED_270:
+    case META_MONITOR_TRANSFORM_FLIPPED_270:
       return RR_Reflect_X | RR_Rotate_270;
     }
 
@@ -672,7 +685,7 @@ output_set_presentation_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
 
   atom = XInternAtom (manager_xrandr->xdisplay, "_MUTTER_PRESENTATION_OUTPUT", False);
   XRRChangeOutputProperty (manager_xrandr->xdisplay,
-                           (XID)output->output_id,
+                           (XID)output->winsys_id,
                            atom,
                            XA_CARDINAL, 32, PropModeReplace,
                            (unsigned char*) &value, 1);
@@ -828,7 +841,7 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
               output->crtc = crtc;
               new_controlled_mask |= 1UL << j;
 
-              outputs[j] = output->output_id;
+              outputs[j] = output->winsys_id;
             }
 
           if (crtc->current_mode == mode &&
@@ -847,7 +860,7 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
                                  manager_xrandr->time,
                                  crtc_info->x, crtc_info->y,
                                  (XID)mode->mode_id,
-                                 wl_transform_to_xrandr (crtc_info->transform),
+                                 meta_monitor_transform_to_xrandr (crtc_info->transform),
                                  outputs, n_outputs);
 
           if (ok != Success)
@@ -891,7 +904,7 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
         {
           XRRSetOutputPrimary (manager_xrandr->xdisplay,
                                DefaultRootWindow (manager_xrandr->xdisplay),
-                               (XID)output_info->output->output_id);
+                               (XID)output_info->output->winsys_id);
         }
 
       output_set_presentation_xrandr (manager_xrandr,
@@ -918,6 +931,7 @@ meta_monitor_manager_xrandr_apply_configuration (MetaMonitorManager *manager,
     }
 
   XUngrabServer (manager_xrandr->xdisplay);
+  XFlush (manager_xrandr->xdisplay);
 }
 
 static void
@@ -933,7 +947,7 @@ meta_monitor_manager_xrandr_change_backlight (MetaMonitorManager *manager,
 
   atom = XInternAtom (manager_xrandr->xdisplay, "Backlight", False);
   XRRChangeOutputProperty (manager_xrandr->xdisplay,
-                           (XID)output->output_id,
+                           (XID)output->winsys_id,
                            atom,
                            XA_INTEGER, 32, PropModeReplace,
                            (unsigned char *) &hw_value, 1);

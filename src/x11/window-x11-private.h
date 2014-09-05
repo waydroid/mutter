@@ -20,10 +20,12 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "window-private.h"
-
 #ifndef META_WINDOW_X11_PRIVATE_H
 #define META_WINDOW_X11_PRIVATE_H
+
+#include "window-private.h"
+#include "x11/iconcache.h"
+#include "ui/resizepopup.h"
 
 G_BEGIN_DECLS
 
@@ -51,7 +53,18 @@ struct _MetaWindowX11Private
 
   Atom type_atom;
 
+  /* Requested geometry */
+  int border_width;
+
   MetaResizePopup *grab_resize_popup;
+
+  /* These are in server coordinates. If we have a frame, it's
+   * relative to the frame. */
+  MetaRectangle client_rect;
+
+  MetaIconCache icon_cache;
+  Pixmap wm_hints_pixmap;
+  Pixmap wm_hints_mask;
 };
 
 G_END_DECLS

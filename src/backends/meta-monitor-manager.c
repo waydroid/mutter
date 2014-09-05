@@ -1,6 +1,6 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* 
+/*
  * Copyright (C) 2001, 2002 Havoc Pennington
  * Copyright (C) 2002, 2003 Red Hat Inc.
  * Some ICCCM manager selection code derived from fvwm2,
@@ -8,7 +8,7 @@
  * Copyright (C) 2003 Rob Adams
  * Copyright (C) 2004-2006 Elijah Newren
  * Copyright (C) 2013 Red Hat Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -18,7 +18,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
@@ -37,7 +37,7 @@
 #include <meta/errors.h>
 #include "meta-monitor-config.h"
 #include "backends/x11/meta-monitor-manager-xrandr.h"
-#include "meta-backend.h"
+#include "meta-backend-private.h"
 
 enum {
   CONFIRM_DISPLAY_CHANGE,
@@ -125,7 +125,7 @@ make_logical_config (MetaMonitorManager *manager)
           */
           info.is_presentation = TRUE;
           info.in_fullscreen = -1;
-          info.output_id = 0;
+          info.winsys_id = 0;
 
           g_array_append_val (monitor_infos, info);
 
@@ -156,8 +156,8 @@ make_logical_config (MetaMonitorManager *manager)
       info->is_primary = info->is_primary || output->is_primary;
       info->is_presentation = info->is_presentation && output->is_presentation;
 
-      if (output->is_primary || info->output_id == 0)
-        info->output_id = output->output_id;
+      if (output->is_primary || info->winsys_id == 0)
+        info->winsys_id = output->winsys_id;
 
       if (info->is_primary)
         manager->primary_monitor_index = info->number;
@@ -477,7 +477,7 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
       GVariantBuilder transforms;
 
       g_variant_builder_init (&transforms, G_VARIANT_TYPE ("au"));
-      for (j = 0; j <= WL_OUTPUT_TRANSFORM_FLIPPED_270; j++)
+      for (j = 0; j <= META_MONITOR_TRANSFORM_FLIPPED_270; j++)
         if (crtc->all_transforms & (1 << j))
           g_variant_builder_add (&transforms, "u", j);
 
@@ -560,7 +560,7 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
 
       g_variant_builder_add (&output_builder, "(uxiausauaua{sv})",
                              i, /* ID */
-                             (gint64)output->output_id,
+                             (gint64)output->winsys_id,
                              (int)(output->crtc ? output->crtc - manager->crtcs : -1),
                              &crtcs,
                              output->name,
@@ -667,7 +667,7 @@ meta_monitor_manager_handle_apply_configuration  (MetaDBusDisplayConfig *skeleto
   int new_mode, x, y;
   int new_screen_width, new_screen_height;
   guint transform;
-  guint output_id;
+  guint output_index;
   GPtrArray *crtc_infos, *output_infos;
 
   if (serial != manager->serial)
@@ -694,7 +694,6 @@ meta_monitor_manager_handle_apply_configuration  (MetaDBusDisplayConfig *skeleto
       MetaOutput *first_output;
       MetaCRTC *crtc;
       MetaMonitorMode *mode;
-      guint output_id;
 
       crtc_info = g_slice_new (MetaCRTCInfo);
       crtc_info->outputs = g_ptr_array_new ();
@@ -756,8 +755,8 @@ meta_monitor_manager_handle_apply_configuration  (MetaDBusDisplayConfig *skeleto
           crtc_info->y = 0;
         }
 
-      if (transform < WL_OUTPUT_TRANSFORM_NORMAL ||
-          transform > WL_OUTPUT_TRANSFORM_FLIPPED_270 ||
+      if (transform < META_MONITOR_TRANSFORM_NORMAL ||
+          transform > META_MONITOR_TRANSFORM_FLIPPED_270 ||
           ((crtc->all_transforms & (1 << transform)) == 0))
         {
           g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
@@ -768,18 +767,18 @@ meta_monitor_manager_handle_apply_configuration  (MetaDBusDisplayConfig *skeleto
       crtc_info->transform = transform;
 
       first_output = NULL;
-      while (g_variant_iter_loop (nested_outputs, "u", &output_id))
+      while (g_variant_iter_loop (nested_outputs, "u", &output_index))
         {
           MetaOutput *output;
 
-          if (output_id >= manager->n_outputs)
+          if (output_index >= manager->n_outputs)
             {
               g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
                                                      G_DBUS_ERROR_INVALID_ARGS,
                                                      "Invalid output id");
               return TRUE;
             }
-          output = &manager->outputs[output_id];
+          output = &manager->outputs[output_index];
 
           if (!output_can_config (output, crtc, mode))
             {
@@ -824,12 +823,12 @@ meta_monitor_manager_handle_apply_configuration  (MetaDBusDisplayConfig *skeleto
     }
 
   g_variant_iter_init (&output_iter, outputs);
-  while (g_variant_iter_loop (&output_iter, "(u@a{sv})", &output_id, &properties))
+  while (g_variant_iter_loop (&output_iter, "(u@a{sv})", &output_index, &properties))
     {
       MetaOutputInfo *output_info;
       gboolean primary, presentation;
 
-      if (output_id >= manager->n_outputs)
+      if (output_index >= manager->n_outputs)
         {
           g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
                                                  G_DBUS_ERROR_INVALID_ARGS,
@@ -838,7 +837,7 @@ meta_monitor_manager_handle_apply_configuration  (MetaDBusDisplayConfig *skeleto
         }
 
       output_info = g_slice_new0 (MetaOutputInfo);
-      output_info->output = &manager->outputs[output_id];
+      output_info->output = &manager->outputs[output_index];
 
       if (g_variant_lookup (properties, "primary", "b", &primary))
         output_info->is_primary = primary;
@@ -852,7 +851,7 @@ meta_monitor_manager_handle_apply_configuration  (MetaDBusDisplayConfig *skeleto
   /* If we were in progress of making a persistent change and we see a
      new request, it's likely that the old one failed in some way, so
      don't save it, but also don't queue for restoring it.
-  */ 
+  */
   if (manager->persistent_timeout_id && persistent)
     {
       g_source_remove (manager->persistent_timeout_id);
@@ -909,7 +908,7 @@ static gboolean
 meta_monitor_manager_handle_change_backlight  (MetaDBusDisplayConfig *skeleton,
                                                GDBusMethodInvocation *invocation,
                                                guint                  serial,
-                                               guint                  output_id,
+                                               guint                  output_index,
                                                gint                   value)
 {
   MetaMonitorManager *manager = META_MONITOR_MANAGER (skeleton);
@@ -923,14 +922,14 @@ meta_monitor_manager_handle_change_backlight  (MetaDBusDisplayConfig *skeleton,
       return TRUE;
     }
 
-  if (output_id >= manager->n_outputs)
+  if (output_index >= manager->n_outputs)
     {
       g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
                                              G_DBUS_ERROR_INVALID_ARGS,
                                              "Invalid output id");
       return TRUE;
     }
-  output = &manager->outputs[output_id];
+  output = &manager->outputs[output_index];
 
   if (value < 0 || value > 100)
     {

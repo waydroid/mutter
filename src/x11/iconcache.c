@@ -28,22 +28,6 @@
 
 /* The icon-reading code is also in libwnck, please sync bugfixes */
 
-static void
-get_fallback_icons (MetaScreen     *screen,
-                    GdkPixbuf     **iconp,
-                    int             ideal_width,
-                    int             ideal_height,
-                    GdkPixbuf     **mini_iconp,
-                    int             ideal_mini_width,
-                    int             ideal_mini_height)
-{
-  /* we don't scale, should be fixed if we ever un-hardcode the icon
-   * size
-   */
-  *iconp = meta_ui_get_default_window_icon (screen->ui);
-  *mini_iconp = meta_ui_get_default_mini_icon (screen->ui);
-}
-
 static gboolean
 find_largest_sizes (gulong *data,
                     gulong  nitems,
@@ -471,7 +455,7 @@ try_pixmap_and_mask (MetaDisplay *display,
                                  GDK_INTERP_BILINEAR);
 
       g_object_unref (G_OBJECT (unscaled));
-      
+
       if (*iconp && *mini_iconp)
         return TRUE;
       else
@@ -542,48 +526,9 @@ meta_icon_cache_init (MetaIconCache *icon_cache)
   icon_cache->origin = USING_NO_ICON;
   icon_cache->prev_pixmap = None;
   icon_cache->prev_mask = None;
-#if 0
-  icon_cache->icon = NULL;
-  icon_cache->mini_icon = NULL;
-  icon_cache->ideal_width = -1; /* won't be a legit width */
-  icon_cache->ideal_height = -1;
-  icon_cache->ideal_mini_width = -1;
-  icon_cache->ideal_mini_height = -1;
-#endif
-  icon_cache->want_fallback = TRUE;
   icon_cache->wm_hints_dirty = TRUE;
   icon_cache->kwm_win_icon_dirty = TRUE;
   icon_cache->net_wm_icon_dirty = TRUE;
-}
-
-static void
-clear_icon_cache (MetaIconCache *icon_cache,
-                  gboolean       dirty_all)
-{
-#if 0
-  if (icon_cache->icon)
-    g_object_unref (G_OBJECT (icon_cache->icon));
-  icon_cache->icon = NULL;
-
-  if (icon_cache->mini_icon)
-    g_object_unref (G_OBJECT (icon_cache->mini_icon));
-  icon_cache->mini_icon = NULL;
-#endif
-  
-  icon_cache->origin = USING_NO_ICON;
-
-  if (dirty_all)
-    {
-      icon_cache->wm_hints_dirty = TRUE;
-      icon_cache->kwm_win_icon_dirty = TRUE;
-      icon_cache->net_wm_icon_dirty = TRUE;
-    }
-}
-
-void
-meta_icon_cache_free (MetaIconCache *icon_cache)
-{
-  clear_icon_cache (icon_cache, FALSE);
 }
 
 void
@@ -611,39 +556,10 @@ meta_icon_cache_get_icon_invalidated (MetaIconCache *icon_cache)
   else if (icon_cache->origin <= USING_NET_WM_ICON &&
            icon_cache->net_wm_icon_dirty)
     return TRUE;
-  else if (icon_cache->origin < USING_FALLBACK_ICON &&
-           icon_cache->want_fallback)
-    return TRUE;
-  else if (icon_cache->origin == USING_NO_ICON)
-    return TRUE;
-  else if (icon_cache->origin == USING_FALLBACK_ICON &&
-           !icon_cache->want_fallback)
+  else if (icon_cache->origin < USING_FALLBACK_ICON)
     return TRUE;
   else
     return FALSE;
-}
-
-static void
-replace_cache (MetaIconCache *icon_cache,
-               IconOrigin     origin,
-               GdkPixbuf     *new_icon,
-               GdkPixbuf     *new_mini_icon)
-{
-  clear_icon_cache (icon_cache, FALSE);
-
-  icon_cache->origin = origin;
-
-#if 0
-  if (new_icon)
-    g_object_ref (G_OBJECT (new_icon));
-
-  icon_cache->icon = new_icon;
-
-  if (new_mini_icon)
-    g_object_ref (G_OBJECT (new_mini_icon));
-
-  icon_cache->mini_icon = new_mini_icon;
-#endif
 }
 
 static GdkPixbuf*
@@ -655,13 +571,13 @@ scaled_from_pixdata (guchar *pixdata,
 {
   GdkPixbuf *src;
   GdkPixbuf *dest;
-  
+
   src = gdk_pixbuf_new_from_data (pixdata,
                                   GDK_COLORSPACE_RGB,
                                   TRUE,
                                   8,
                                   w, h, w * 4,
-                                  free_pixels, 
+                                  free_pixels,
                                   NULL);
 
   if (src == NULL)
@@ -673,7 +589,7 @@ scaled_from_pixdata (guchar *pixdata,
       int size;
 
       size = MAX (w, h);
-      
+
       tmp = gdk_pixbuf_new (GDK_COLORSPACE_RGB, TRUE, 8, size, size);
 
       if (tmp)
@@ -682,16 +598,16 @@ scaled_from_pixdata (guchar *pixdata,
 	  gdk_pixbuf_copy_area (src, 0, 0, w, h,
 				tmp,
 				(size - w) / 2, (size - h) / 2);
-	  
+
 	  g_object_unref (src);
 	  src = tmp;
 	}
     }
-  
+
   if (w != new_w || h != new_h)
     {
       dest = gdk_pixbuf_scale_simple (src, new_w, new_h, GDK_INTERP_BILINEAR);
-      
+
       g_object_unref (G_OBJECT (src));
     }
   else
@@ -715,13 +631,6 @@ meta_read_icons (MetaScreen     *screen,
                  int             ideal_mini_width,
                  int             ideal_mini_height)
 {
-  guchar *pixdata;
-  int w, h;
-  guchar *mini_pixdata;
-  int mini_w, mini_h;
-  Pixmap pixmap;
-  Pixmap mask;
-
   /* Return value is whether the icon changed */
 
   g_return_val_if_fail (icon_cache != NULL, FALSE);
@@ -729,23 +638,8 @@ meta_read_icons (MetaScreen     *screen,
   *iconp = NULL;
   *mini_iconp = NULL;
 
-#if 0
-  if (ideal_width != icon_cache->ideal_width ||
-      ideal_height != icon_cache->ideal_height ||
-      ideal_mini_width != icon_cache->ideal_mini_width ||
-      ideal_mini_height != icon_cache->ideal_mini_height)
-    clear_icon_cache (icon_cache, TRUE);
-
-  icon_cache->ideal_width = ideal_width;
-  icon_cache->ideal_height = ideal_height;
-  icon_cache->ideal_mini_width = ideal_mini_width;
-  icon_cache->ideal_mini_height = ideal_mini_height;
-#endif
-  
   if (!meta_icon_cache_get_icon_invalidated (icon_cache))
     return FALSE; /* we have no new info to use */
-
-  pixdata = NULL;
 
   /* Our algorithm here assumes that we can't have for example origin
    * < USING_NET_WM_ICON and icon_cache->net_wm_icon_dirty == FALSE
@@ -758,8 +652,12 @@ meta_read_icons (MetaScreen     *screen,
 
   if (icon_cache->origin <= USING_NET_WM_ICON &&
       icon_cache->net_wm_icon_dirty)
-
     {
+      guchar *pixdata;
+      int w, h;
+      guchar *mini_pixdata;
+      int mini_w, mini_h;
+
       icon_cache->net_wm_icon_dirty = FALSE;
 
       if (read_rgb_icon (screen->display, xwindow,
@@ -776,9 +674,7 @@ meta_read_icons (MetaScreen     *screen,
 
           if (*iconp && *mini_iconp)
             {
-              replace_cache (icon_cache, USING_NET_WM_ICON,
-                             *iconp, *mini_iconp);
-              
+              icon_cache->origin = USING_NET_WM_ICON;
               return TRUE;
             }
           else
@@ -794,6 +690,9 @@ meta_read_icons (MetaScreen     *screen,
   if (icon_cache->origin <= USING_WM_HINTS &&
       icon_cache->wm_hints_dirty)
     {
+      Pixmap pixmap;
+      Pixmap mask;
+
       icon_cache->wm_hints_dirty = FALSE;
 
       pixmap = wm_hints_pixmap;
@@ -814,10 +713,7 @@ meta_read_icons (MetaScreen     *screen,
             {
               icon_cache->prev_pixmap = pixmap;
               icon_cache->prev_mask = mask;
-
-              replace_cache (icon_cache, USING_WM_HINTS,
-                             *iconp, *mini_iconp);
-
+              icon_cache->origin = USING_WM_HINTS;
               return TRUE;
             }
         }
@@ -826,6 +722,9 @@ meta_read_icons (MetaScreen     *screen,
   if (icon_cache->origin <= USING_KWM_WIN_ICON &&
       icon_cache->kwm_win_icon_dirty)
     {
+      Pixmap pixmap;
+      Pixmap mask;
+
       icon_cache->kwm_win_icon_dirty = FALSE;
 
       get_kwm_win_icon (screen->display, xwindow, &pixmap, &mask);
@@ -840,38 +739,17 @@ meta_read_icons (MetaScreen     *screen,
             {
               icon_cache->prev_pixmap = pixmap;
               icon_cache->prev_mask = mask;
-
-              replace_cache (icon_cache, USING_KWM_WIN_ICON,
-                             *iconp, *mini_iconp);
-
+              icon_cache->origin = USING_KWM_WIN_ICON;
               return TRUE;
             }
         }
     }
 
-  if (icon_cache->want_fallback &&
-      icon_cache->origin < USING_FALLBACK_ICON)
+  if (icon_cache->origin < USING_FALLBACK_ICON)
     {
-      get_fallback_icons (screen,
-                          iconp,
-                          ideal_width,
-                          ideal_height,
-                          mini_iconp,
-                          ideal_mini_width,
-                          ideal_mini_height);
-
-      replace_cache (icon_cache, USING_FALLBACK_ICON,
-                     *iconp, *mini_iconp);
-      
-      return TRUE;
-    }
-
-  if (!icon_cache->want_fallback &&
-      icon_cache->origin == USING_FALLBACK_ICON)
-    {
-      /* Get rid of current icon */
-      clear_icon_cache (icon_cache, FALSE);
-
+      icon_cache->origin = USING_FALLBACK_ICON;
+      *iconp = NULL;
+      *mini_iconp = NULL;
       return TRUE;
     }
 

@@ -35,6 +35,25 @@
 #include "meta-wayland-pointer.h"
 #include "meta-wayland-private.h"
 
+typedef struct
+{
+  struct wl_resource *resource;
+  MetaWaylandDataSource *source;
+  struct wl_listener source_destroy_listener;
+} MetaWaylandDataOffer;
+
+struct _MetaWaylandDataSource
+{
+  struct wl_resource *resource;
+  struct wl_array mime_types;
+};
+
+static void
+unbind_resource (struct wl_resource *resource)
+{
+  wl_list_remove (wl_resource_get_link (resource));
+}
+
 static void
 data_offer_accept (struct wl_client *client,
                    struct wl_resource *resource,
@@ -106,14 +125,9 @@ meta_wayland_data_source_send_offer (MetaWaylandDataSource *source,
   offer->source = source;
   offer->source_destroy_listener.notify = destroy_offer_data_source;
 
-  offer->resource = wl_resource_create (wl_resource_get_client (target),
-					&wl_data_offer_interface,
-					MIN (META_WL_DATA_OFFER_VERSION,
-					     wl_resource_get_version (target)), 0);
-  wl_resource_set_implementation (offer->resource, &data_offer_interface,
-				  offer, destroy_data_offer);
-  wl_resource_add_destroy_listener (source->resource,
-                                    &offer->source_destroy_listener);
+  offer->resource = wl_resource_create (wl_resource_get_client (target), &wl_data_offer_interface, wl_resource_get_version (target), 0);
+  wl_resource_set_implementation (offer->resource, &data_offer_interface, offer, destroy_data_offer);
+  wl_resource_add_destroy_listener (source->resource, &offer->source_destroy_listener);
 
   wl_data_device_send_data_offer (target, offer->resource);
 
@@ -179,7 +193,8 @@ drag_grab_focus (MetaWaylandPointerGrab *grab,
 {
   MetaWaylandDragGrab *drag_grab = (MetaWaylandDragGrab*) grab;
   MetaWaylandSeat *seat = drag_grab->seat;
-  struct wl_resource *resource, *offer = NULL;
+  struct wl_client *client;
+  struct wl_resource *data_device_resource, *offer = NULL;
   struct wl_display *display;
   guint32 serial;
   wl_fixed_t sx, sy;
@@ -202,28 +217,28 @@ drag_grab_focus (MetaWaylandPointerGrab *grab,
       wl_resource_get_client (surface->resource) != drag_grab->drag_client)
     return;
 
-  resource =
-    wl_resource_find_for_client (&seat->data_device_resource_list,
-                                 wl_resource_get_client (surface->resource));
-  if (!resource)
+  client = wl_resource_get_client (surface->resource);
+
+  data_device_resource = wl_resource_find_for_client (&seat->data_device.resource_list, client);
+  if (!data_device_resource)
     return;
 
-  display = wl_client_get_display (wl_resource_get_client (resource));
+  display = wl_client_get_display (client);
   serial = wl_display_next_serial (display);
 
   if (drag_grab->drag_data_source)
     offer = meta_wayland_data_source_send_offer (drag_grab->drag_data_source,
-                                                 resource);
+                                                 data_device_resource);
 
   meta_wayland_pointer_get_relative_coordinates (grab->pointer, surface, &sx, &sy);
-  wl_data_device_send_enter (resource, serial, surface->resource,
+  wl_data_device_send_enter (data_device_resource, serial, surface->resource,
                              sx, sy, offer);
 
   drag_grab->drag_focus = surface;
 
-  drag_grab->drag_focus_data_device = resource;
+  drag_grab->drag_focus_data_device = data_device_resource;
   drag_grab->drag_focus_listener.notify = destroy_drag_focus;
-  wl_resource_add_destroy_listener (resource, &drag_grab->drag_focus_listener);
+  wl_resource_add_destroy_listener (data_device_resource, &drag_grab->drag_focus_listener);
 }
 
 static void
@@ -312,7 +327,8 @@ data_device_start_drag (struct wl_client *client,
                         struct wl_resource *origin_resource,
                         struct wl_resource *icon_resource, guint32 serial)
 {
-  MetaWaylandSeat *seat = wl_resource_get_user_data (resource);
+  MetaWaylandDataDevice *data_device = wl_resource_get_user_data (resource);
+  MetaWaylandSeat *seat = wl_container_of (data_device, seat, data_device);
   MetaWaylandDragGrab *drag_grab;
 
   if ((seat->pointer.button_count == 0 ||
@@ -357,68 +373,67 @@ data_device_start_drag (struct wl_client *client,
 static void
 destroy_selection_data_source (struct wl_listener *listener, void *data)
 {
-  MetaWaylandSeat *seat =
-    wl_container_of (listener, seat, selection_data_source_listener);
-  struct wl_resource *data_device;
+  MetaWaylandDataDevice *data_device = wl_container_of (listener, data_device, selection_data_source_listener);
+  MetaWaylandSeat *seat = wl_container_of (data_device, seat, data_device);
+  struct wl_resource *data_device_resource;
   struct wl_client *focus_client = NULL;
 
-  seat->selection_data_source = NULL;
+  data_device->selection_data_source = NULL;
 
   focus_client = meta_wayland_keyboard_get_focus_client (&seat->keyboard);
   if (focus_client)
     {
-      data_device = wl_resource_find_for_client (&seat->data_device_resource_list, focus_client);
-      if (data_device)
-        wl_data_device_send_selection (data_device, NULL);
+      data_device_resource = wl_resource_find_for_client (&data_device->resource_list, focus_client);
+      if (data_device_resource)
+        wl_data_device_send_selection (data_device_resource, NULL);
     }
 }
 
 static void
-meta_wayland_seat_set_selection (MetaWaylandSeat *seat,
-                                 MetaWaylandDataSource *source,
-                                 guint32 serial)
+meta_wayland_data_device_set_selection (MetaWaylandDataDevice *data_device,
+                                        MetaWaylandDataSource *source,
+                                        guint32 serial)
 {
-  struct wl_resource *data_device, *offer;
+  MetaWaylandSeat *seat = wl_container_of (data_device, seat, data_device);
+  struct wl_resource *data_device_resource, *offer;
   struct wl_client *focus_client;
 
-  if (seat->selection_data_source &&
-      seat->selection_serial - serial < UINT32_MAX / 2)
+  if (data_device->selection_data_source &&
+      data_device->selection_serial - serial < UINT32_MAX / 2)
     return;
 
-  if (seat->selection_data_source)
+  if (data_device->selection_data_source)
     {
-      wl_data_source_send_cancelled (seat->selection_data_source->resource);
-      wl_list_remove (&seat->selection_data_source_listener.link);
-      seat->selection_data_source = NULL;
+      wl_data_source_send_cancelled (data_device->selection_data_source->resource);
+      wl_list_remove (&data_device->selection_data_source_listener.link);
+      data_device->selection_data_source = NULL;
     }
 
-  seat->selection_data_source = source;
-  seat->selection_serial = serial;
+  data_device->selection_data_source = source;
+  data_device->selection_serial = serial;
 
   focus_client = meta_wayland_keyboard_get_focus_client (&seat->keyboard);
   if (focus_client)
     {
-      data_device = wl_resource_find_for_client (&seat->data_device_resource_list, focus_client);
-      if (data_device)
+      data_device_resource = wl_resource_find_for_client (&data_device->resource_list, focus_client);
+      if (data_device_resource)
         {
-          if (seat->selection_data_source)
+          if (data_device->selection_data_source)
             {
-              offer = meta_wayland_data_source_send_offer (seat->selection_data_source, data_device);
-              wl_data_device_send_selection (data_device, offer);
+              offer = meta_wayland_data_source_send_offer (data_device->selection_data_source, data_device_resource);
+              wl_data_device_send_selection (data_device_resource, offer);
             }
           else
             {
-              wl_data_device_send_selection (data_device, NULL);
+              wl_data_device_send_selection (data_device_resource, NULL);
             }
         }
     }
 
   if (source)
     {
-      seat->selection_data_source_listener.notify =
-        destroy_selection_data_source;
-      wl_resource_add_destroy_listener (source->resource,
-                                        &seat->selection_data_source_listener);
+      data_device->selection_data_source_listener.notify = destroy_selection_data_source;
+      wl_resource_add_destroy_listener (source->resource, &data_device->selection_data_source_listener);
     }
 }
 
@@ -428,13 +443,16 @@ data_device_set_selection (struct wl_client *client,
                            struct wl_resource *source_resource,
                            guint32 serial)
 {
+  MetaWaylandDataDevice *data_device = wl_resource_get_user_data (resource);
+  MetaWaylandDataSource *source;
+
   if (!source_resource)
     return;
 
+  source = wl_resource_get_user_data (source_resource);
+
   /* FIXME: Store serial and check against incoming serial here. */
-  meta_wayland_seat_set_selection (wl_resource_get_user_data (resource),
-                                   wl_resource_get_user_data (source_resource),
-                                   serial);
+  meta_wayland_data_device_set_selection (data_device, source, serial);
 }
 
 static const struct wl_data_device_interface data_device_interface = {
@@ -461,19 +479,10 @@ create_data_source (struct wl_client *client,
 {
   MetaWaylandDataSource *source = g_slice_new0 (MetaWaylandDataSource);
 
-  source->resource = wl_resource_create (client, &wl_data_source_interface,
-					 MIN (META_WL_DATA_SOURCE_VERSION,
-					      wl_resource_get_version (resource)), id);
-  wl_resource_set_implementation (source->resource, &data_source_interface,
-				  source, destroy_data_source);
+  source->resource = wl_resource_create (client, &wl_data_source_interface, wl_resource_get_version (resource), id);
+  wl_resource_set_implementation (source->resource, &data_source_interface, source, destroy_data_source);
 
   wl_array_init (&source->mime_types);
-}
-
-static void
-unbind_data_device (struct wl_resource *resource)
-{
-  wl_list_remove (wl_resource_get_link (resource));
 }
 
 static void
@@ -482,13 +491,11 @@ get_data_device (struct wl_client *client,
                  guint32 id, struct wl_resource *seat_resource)
 {
   MetaWaylandSeat *seat = wl_resource_get_user_data (seat_resource);
-  struct wl_resource *resource;
+  struct wl_resource *cr;
 
-  resource = wl_resource_create (client, &wl_data_device_interface,
-				 MIN (META_WL_DATA_DEVICE_VERSION,
-				      wl_resource_get_version (manager_resource)), id);
-  wl_resource_set_implementation (resource, &data_device_interface, seat, unbind_data_device);
-  wl_list_insert (&seat->data_device_resource_list, wl_resource_get_link (resource));
+  cr = wl_resource_create (client, &wl_data_device_interface, wl_resource_get_version (manager_resource), id);
+  wl_resource_set_implementation (cr, &data_device_interface, &seat->data_device, unbind_resource);
+  wl_list_insert (&seat->data_device.resource_list, wl_resource_get_link (cr));
 }
 
 static const struct wl_data_device_manager_interface manager_interface = {
@@ -501,9 +508,7 @@ bind_manager (struct wl_client *client,
               void *data, guint32 version, guint32 id)
 {
   struct wl_resource *resource;
-
-  resource = wl_resource_create (client, &wl_data_device_manager_interface,
-				 MIN (version, META_WL_DATA_DEVICE_MANAGER_VERSION), id);
+  resource = wl_resource_create (client, &wl_data_device_manager_interface, version, id);
   wl_resource_set_implementation (resource, &manager_interface, NULL, NULL);
 }
 
@@ -518,24 +523,31 @@ meta_wayland_data_device_manager_init (MetaWaylandCompositor *compositor)
 }
 
 void
-meta_wayland_data_device_set_keyboard_focus (MetaWaylandSeat *seat)
+meta_wayland_data_device_init (MetaWaylandDataDevice *data_device)
 {
+  wl_list_init (&data_device->resource_list);
+}
+
+void
+meta_wayland_data_device_set_keyboard_focus (MetaWaylandDataDevice *data_device)
+{
+  MetaWaylandSeat *seat = wl_container_of (data_device, seat, data_device);
   struct wl_client *focus_client;
-  struct wl_resource *data_device, *offer;
+  struct wl_resource *data_device_resource, *offer;
   MetaWaylandDataSource *source;
 
   focus_client = meta_wayland_keyboard_get_focus_client (&seat->keyboard);
   if (!focus_client)
     return;
 
-  data_device = wl_resource_find_for_client (&seat->data_device_resource_list, focus_client);
-  if (!data_device)
+  data_device_resource = wl_resource_find_for_client (&data_device->resource_list, focus_client);
+  if (!data_device_resource)
     return;
 
-  source = seat->selection_data_source;
+  source = data_device->selection_data_source;
   if (source)
     {
-      offer = meta_wayland_data_source_send_offer (source, data_device);
-      wl_data_device_send_selection (data_device, offer);
+      offer = meta_wayland_data_source_send_offer (source, data_device_resource);
+      wl_data_device_send_selection (data_device_resource, offer);
     }
 }

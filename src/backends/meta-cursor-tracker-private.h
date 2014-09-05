@@ -23,8 +23,6 @@
 #define META_CURSOR_TRACKER_PRIVATE_H
 
 #include <meta/meta-cursor-tracker.h>
-#include <wayland-server.h>
-#include <gbm.h>
 
 #include "meta-cursor.h"
 #include "meta-cursor-renderer.h"
@@ -32,28 +30,13 @@
 struct _MetaCursorTracker {
   GObject parent_instance;
 
-  MetaScreen *screen;
   MetaCursorRenderer *renderer;
 
   gboolean is_showing;
 
-  /* The cursor tracker stores the cursor for the current grab
-   * operation, the cursor for the window with pointer focus, and
-   * the cursor for the root window, which contains either the
-   * default arrow cursor or the 'busy' hourglass if we're launching
-   * an app.
-   *
-   * We choose the first one available -- if there's a grab cursor,
-   * we choose that cursor, if there's window cursor, we choose that,
-   * otherwise we choose the root cursor.
-   *
-   * The displayed_cursor contains the chosen cursor.
-   */
   MetaCursorReference *displayed_cursor;
 
-  MetaCursorReference *grab_cursor;
-
-  /* Wayland clients can set a NULL buffer as their cursor 
+  /* Wayland clients can set a NULL buffer as their cursor
    * explicitly, which means that we shouldn't display anything.
    * So, we can't simply store a NULL in window_cursor to
    * determine an unset window cursor; we need an extra boolean.
@@ -62,6 +45,9 @@ struct _MetaCursorTracker {
   MetaCursorReference *window_cursor;
 
   MetaCursorReference *root_cursor;
+
+  /* The cursor from the X11 server. */
+  MetaCursorReference *xfixes_cursor;
 };
 
 struct _MetaCursorTrackerClass {
@@ -71,8 +57,6 @@ struct _MetaCursorTrackerClass {
 gboolean meta_cursor_tracker_handle_xevent (MetaCursorTracker *tracker,
 					    XEvent            *xevent);
 
-void     meta_cursor_tracker_set_grab_cursor     (MetaCursorTracker   *tracker,
-                                                  MetaCursorReference *cursor);
 void     meta_cursor_tracker_set_window_cursor   (MetaCursorTracker   *tracker,
                                                   MetaCursorReference *cursor);
 void     meta_cursor_tracker_unset_window_cursor (MetaCursorTracker   *tracker);

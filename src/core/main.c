@@ -2,10 +2,10 @@
 
 /* Mutter main() */
 
-/* 
+/*
  * Copyright (C) 2001 Havoc Pennington
  * Copyright (C) 2006 Elijah Newren
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -15,7 +15,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
@@ -52,6 +52,7 @@
 #include "ui.h"
 #include <meta/prefs.h>
 #include <meta/compositor.h>
+#include <meta/meta-backend.h>
 
 #include <glib-object.h>
 #include <glib-unix.h>
@@ -77,8 +78,9 @@
 
 #include "x11/session.h"
 
+#ifdef HAVE_WAYLAND
 #include "wayland/meta-wayland.h"
-#include "backends/meta-backend.h"
+#endif
 
 /*
  * The exit code we'll return to our parent process when we eventually die.
@@ -93,26 +95,6 @@ static GMainLoop *meta_main_loop = NULL;
 
 static void prefs_changed_callback (MetaPreference pref,
                                     gpointer       data);
-
-/**
- * log_handler:
- * @log_domain: the domain the error occurred in (we ignore this)
- * @log_level: the log level so that we can filter out less
- *             important messages
- * @message: the message to log
- * @user_data: arbitrary data (we ignore this)
- *
- * Prints log messages. If Mutter was compiled with backtrace support,
- * also prints a backtrace (see meta_print_backtrace()).
- */
-static void
-log_handler (const gchar   *log_domain,
-             GLogLevelFlags log_level,
-             const gchar   *message,
-             gpointer       user_data)
-{
-  meta_warning ("Log level %d: %s\n", log_level, message);
-}
 
 /**
  * meta_print_compilation_info:
@@ -160,7 +142,7 @@ meta_print_self_identity (void)
   g_date_strftime (buf, sizeof (buf), "%x", &d);
   meta_verbose ("Mutter version %s running on %s\n",
     VERSION, buf);
-  
+
   /* Locale and encoding. */
   g_get_charset (&charset);
   meta_verbose ("Running in locale \"%s\" with encoding \"%s\"\n",
@@ -180,8 +162,12 @@ static gchar    *opt_client_id;
 static gboolean  opt_replace_wm;
 static gboolean  opt_disable_sm;
 static gboolean  opt_sync;
+#ifdef HAVE_WAYLAND
 static gboolean  opt_wayland;
+#endif
+#ifdef HAVE_NATIVE_BACKEND
 static gboolean  opt_display_server;
+#endif
 
 static GOptionEntry meta_options[] = {
   {
@@ -219,17 +205,21 @@ static GOptionEntry meta_options[] = {
     N_("Make X calls synchronous"),
     NULL
   },
+#ifdef HAVE_WAYLAND
   {
     "wayland", 0, 0, G_OPTION_ARG_NONE,
     &opt_wayland,
     N_("Run as a wayland compositor"),
     NULL
   },
+#endif
+#ifdef HAVE_NATIVE_BACKEND
   {
     "display-server", 0, 0, G_OPTION_ARG_NONE,
     &opt_display_server,
     N_("Run as a full display server, rather than nested")
   },
+#endif
   {NULL}
 };
 
@@ -287,8 +277,10 @@ meta_finalize (void)
     meta_display_close (display,
                         CurrentTime); /* I doubt correct timestamps matter here */
 
+#ifdef HAVE_WAYLAND
   if (meta_is_wayland_compositor ())
     meta_wayland_finalize ();
+#endif
 }
 
 static gboolean
@@ -332,10 +324,16 @@ meta_init (void)
   if (g_getenv ("MUTTER_DEBUG"))
     meta_set_debugging (TRUE);
 
+#if defined(CLUTTER_WINDOWING_EGL) && defined(HAVE_NATIVE_BACKEND)
   if (opt_display_server)
     clutter_set_windowing_backend (CLUTTER_WINDOWING_EGL);
+  else
+#endif
+    clutter_set_windowing_backend (CLUTTER_WINDOWING_X11);
 
+#ifdef HAVE_WAYLAND
   meta_set_is_wayland_compositor (opt_wayland);
+#endif
 
   if (g_get_home_dir ())
     if (chdir (g_get_home_dir ()) < 0)
@@ -343,43 +341,42 @@ meta_init (void)
                     g_get_home_dir ());
 
   meta_print_self_identity ();
-  
+
 #ifdef HAVE_INTROSPECTION
   g_irepository_prepend_search_path (MUTTER_PKGLIBDIR);
 #endif
 
+#ifdef HAVE_WAYLAND
   if (meta_is_wayland_compositor ())
-    {
-      /* NB: When running as a hybrid wayland compositor we run our own headless X
-       * server so the user can't control the X display to connect too. */
-      meta_wayland_init ();
-    }
-  else
+    meta_wayland_pre_clutter_init ();
+#endif
+
+  /* NB: When running as a hybrid wayland compositor we run our own headless X
+   * server so the user can't control the X display to connect too. */
+  if (!meta_is_wayland_compositor ())
     meta_select_display (opt_display_name);
 
+  meta_clutter_init ();
+
+#ifdef HAVE_WAYLAND
+  /* Bring up Wayland. This also launches Xwayland and sets DISPLAY as well... */
+  if (meta_is_wayland_compositor ())
+    meta_wayland_init ();
+#endif
+
   meta_set_syncing (opt_sync || (g_getenv ("MUTTER_SYNC") != NULL));
-  
+
   if (opt_replace_wm)
     meta_set_replace_current_wm (TRUE);
 
   if (opt_save_file && opt_client_id)
     meta_fatal ("Can't specify both SM save file and SM client id\n");
-  
+
   meta_main_loop = g_main_loop_new (NULL, FALSE);
 
   meta_ui_init ();
 
-  /* If we are running with wayland then we don't wait until we have
-   * an X connection before initializing clutter we instead initialize
-   * it earlier since we need to initialize the GL driver so the driver
-   * can register any needed wayland extensions. */
-  if (!meta_is_wayland_compositor ())
-    {
-      /*
-       * Clutter can only be initialized after the UI.
-       */
-      meta_clutter_init ();
-    }
+  meta_restart_init ();
 
   /*
    * XXX: We cannot handle high dpi scaling yet, so fix the scale to 1
@@ -438,24 +435,10 @@ meta_register_with_session (void)
 int
 meta_run (void)
 {
-  const gchar *log_domains[] = {
-    NULL, G_LOG_DOMAIN, "Gtk", "Gdk", "GLib",
-    "Pango", "GLib-GObject", "GThread"
-  };
-  guint i;
-
   /* Load prefs */
   meta_prefs_init ();
   meta_prefs_add_listener (prefs_changed_callback, NULL);
 
-  for (i=0; i<G_N_ELEMENTS(log_domains); i++)
-    g_log_set_handler (log_domains[i],
-                       G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION,
-                       log_handler, NULL);
-
-  if (g_getenv ("MUTTER_G_FATAL_WARNINGS") != NULL)
-    g_log_set_always_fatal (G_LOG_LEVEL_MASK);
-  
   meta_ui_set_current_theme (meta_prefs_get_theme ());
 
   /* Try to find some theme that'll work if the theme preference
@@ -464,37 +447,37 @@ meta_run (void)
    */
   if (!meta_ui_have_a_theme ())
     meta_ui_set_current_theme ("Simple");
-  
+
   if (!meta_ui_have_a_theme ())
     {
       const char *dir_entry = NULL;
       GError *err = NULL;
       GDir   *themes_dir = NULL;
-      
+
       if (!(themes_dir = g_dir_open (MUTTER_DATADIR"/themes", 0, &err)))
         {
           meta_fatal (_("Failed to scan themes directory: %s\n"), err->message);
           g_error_free (err);
-        } 
-      else 
+        }
+      else
         {
-          while (((dir_entry = g_dir_read_name (themes_dir)) != NULL) && 
+          while (((dir_entry = g_dir_read_name (themes_dir)) != NULL) &&
                  (!meta_ui_have_a_theme ()))
             {
               meta_ui_set_current_theme (dir_entry);
             }
-          
+
           g_dir_close (themes_dir);
         }
     }
-  
+
   if (!meta_ui_have_a_theme ())
     meta_fatal (_("Could not find a theme! Be sure %s exists and contains the usual themes.\n"),
                 MUTTER_DATADIR"/themes");
 
   if (!meta_display_open ())
     meta_exit (META_EXIT_ERROR);
-  
+
   g_main_loop_run (meta_main_loop);
 
   meta_finalize ();

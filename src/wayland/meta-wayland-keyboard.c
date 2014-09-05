@@ -56,9 +56,15 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <clutter/evdev/clutter-evdev.h>
+
+#include "backends/meta-backend-private.h"
 
 #include "meta-wayland-private.h"
+
+static void meta_wayland_keyboard_update_xkb_state (MetaWaylandKeyboard *keyboard);
+static void notify_modifiers (MetaWaylandKeyboard *keyboard, uint32_t serial,
+                              uint32_t mods_depressed, uint32_t mods_latched,
+                              uint32_t mods_locked, uint32_t group);
 
 static void
 unbind_resource (struct wl_resource *resource)
@@ -105,33 +111,29 @@ create_anonymous_file (off_t size,
 }
 
 static void
-inform_clients_of_new_keymap (MetaWaylandKeyboard *keyboard,
-			      int                  flags)
+inform_clients_of_new_keymap (MetaWaylandKeyboard *keyboard)
 {
-  MetaWaylandCompositor *compositor;
-  struct wl_client *xclient;
   struct wl_resource *keyboard_resource;
-
-  compositor = meta_wayland_compositor_get_default ();
-  xclient = compositor->xwayland_manager.client;
 
   wl_resource_for_each (keyboard_resource, &keyboard->resource_list)
     {
-      if ((flags & META_WAYLAND_KEYBOARD_SKIP_XCLIENTS) &&
-	  wl_resource_get_client (keyboard_resource) == xclient)
-	continue;
-
       wl_keyboard_send_keymap (keyboard_resource,
 			       WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
 			       keyboard->xkb_info.keymap_fd,
 			       keyboard->xkb_info.keymap_size);
     }
+  wl_resource_for_each (keyboard_resource, &keyboard->focus_resource_list)
+    {
+      wl_keyboard_send_keymap (keyboard_resource,
+                               WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
+                               keyboard->xkb_info.keymap_fd,
+                               keyboard->xkb_info.keymap_size);
+    }
 }
 
 static void
 meta_wayland_keyboard_take_keymap (MetaWaylandKeyboard *keyboard,
-				   struct xkb_keymap   *keymap,
-				   int                  flags)
+				   struct xkb_keymap   *keymap)
 {
   MetaWaylandXkbInfo  *xkb_info = &keyboard->xkb_info;
   GError *error = NULL;
@@ -145,10 +147,9 @@ meta_wayland_keyboard_take_keymap (MetaWaylandKeyboard *keyboard,
     }
 
   xkb_keymap_unref (xkb_info->keymap);
-  xkb_info->keymap = keymap;
+  xkb_info->keymap = xkb_keymap_ref (keymap);
 
-  xkb_state_unref (xkb_info->state);
-  xkb_info->state = xkb_state_new (keymap);
+  meta_wayland_keyboard_update_xkb_state (keyboard);
 
   keymap_str = xkb_map_get_as_string (xkb_info->keymap);
   if (keymap_str == NULL)
@@ -187,20 +188,14 @@ meta_wayland_keyboard_take_keymap (MetaWaylandKeyboard *keyboard,
   strcpy (xkb_info->keymap_area, keymap_str);
   free (keymap_str);
 
-#if defined(CLUTTER_WINDOWING_EGL)
-  /* XXX -- the evdev backend can be used regardless of the
-   * windowing backend. To do this properly we need a Clutter
-   * API to check the input backend. */
-  if (clutter_check_windowing_backend (CLUTTER_WINDOWING_EGL))
-    {
-      ClutterDeviceManager *manager;
-      manager = clutter_device_manager_get_default ();
-      clutter_evdev_set_keyboard_map (manager, xkb_info->keymap);
-    }
-#endif
+  inform_clients_of_new_keymap (keyboard);
 
-  inform_clients_of_new_keymap (keyboard, flags);
-
+  notify_modifiers (keyboard,
+                    wl_display_next_serial (keyboard->display),
+                    xkb_state_serialize_mods (xkb_info->state, XKB_STATE_MODS_DEPRESSED),
+                    xkb_state_serialize_mods (xkb_info->state, XKB_STATE_MODS_LATCHED),
+                    xkb_state_serialize_mods (xkb_info->state, XKB_STATE_MODS_LOCKED),
+                    xkb_state_serialize_layout (xkb_info->state, XKB_STATE_LAYOUT_EFFECTIVE));
   return;
 
 err_dev_zero:
@@ -259,6 +254,85 @@ notify_modifiers (MetaWaylandKeyboard *keyboard, uint32_t serial,
     }
 }
 
+static void
+meta_wayland_keyboard_update_xkb_state (MetaWaylandKeyboard *keyboard)
+{
+  MetaWaylandXkbInfo *xkb_info = &keyboard->xkb_info;
+  xkb_mod_mask_t latched, locked, group;
+
+  /* Preserve latched/locked modifiers state */
+  if (xkb_info->state)
+    {
+      latched = xkb_state_serialize_mods (xkb_info->state, XKB_STATE_MODS_LATCHED);
+      locked = xkb_state_serialize_mods (xkb_info->state, XKB_STATE_MODS_LOCKED);
+      group = xkb_state_serialize_layout (xkb_info->state, XKB_STATE_LAYOUT_EFFECTIVE);
+      xkb_state_unref (xkb_info->state);
+    }
+  else
+    latched = locked = group = 0;
+
+  xkb_info->state = xkb_state_new (xkb_info->keymap);
+
+  if (latched || locked || group)
+    xkb_state_update_mask (xkb_info->state, 0, latched, locked, 0, 0, group);
+}
+
+static void
+notify_key_repeat_for_resource (MetaWaylandKeyboard *keyboard,
+                                struct wl_resource  *keyboard_resource)
+{
+  if (wl_resource_get_version (keyboard_resource) >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
+    {
+      gboolean repeat;
+      unsigned int delay, rate;
+
+      repeat = g_settings_get_boolean (keyboard->settings, "repeat");
+
+      if (repeat)
+        {
+          unsigned int interval;
+          interval = g_settings_get_uint (keyboard->settings, "repeat-interval");
+          /* Our setting is in the milliseconds between keys. "rate" is the number
+           * of keys per second. */
+          rate = (1000 / interval);
+          delay = g_settings_get_uint (keyboard->settings, "delay");
+        }
+      else
+        {
+          rate = 0;
+          delay = 0;
+        }
+
+      wl_keyboard_send_repeat_info (keyboard_resource, rate, delay);
+    }
+}
+
+static void
+notify_key_repeat (MetaWaylandKeyboard *keyboard)
+{
+  struct wl_resource *keyboard_resource;
+
+  wl_resource_for_each (keyboard_resource, &keyboard->resource_list)
+    {
+      notify_key_repeat_for_resource (keyboard, keyboard_resource);
+    }
+
+  wl_resource_for_each (keyboard_resource, &keyboard->focus_resource_list)
+    {
+      notify_key_repeat_for_resource (keyboard, keyboard_resource);
+    }
+}
+
+static void
+settings_changed (GSettings           *settings,
+                  const char          *key,
+                  gpointer             data)
+{
+  MetaWaylandKeyboard *keyboard = data;
+
+  notify_key_repeat (keyboard);
+}
+
 void
 meta_wayland_keyboard_init (MetaWaylandKeyboard *keyboard,
                             struct wl_display   *display)
@@ -272,18 +346,16 @@ meta_wayland_keyboard_init (MetaWaylandKeyboard *keyboard,
 
   keyboard->focus_surface_listener.notify = keyboard_handle_focus_surface_destroy;
 
-  wl_array_init (&keyboard->keys);
+  wl_array_init (&keyboard->pressed_keys);
 
-  keyboard->xkb_context = xkb_context_new (0 /* flags */);
   keyboard->xkb_info.keymap_fd = -1;
 
-  /* Compute a default until gnome-settings-daemon starts and sets
-     the appropriate values
-  */
-  meta_wayland_keyboard_set_keymap_names (keyboard,
-					  "evdev",
-					  "pc105",
-					  "us", "", "", 0);
+  keyboard->settings = g_settings_new ("org.gnome.settings-daemon.peripherals.keyboard");
+  g_signal_connect (keyboard->settings, "changed",
+                    G_CALLBACK (settings_changed), keyboard);
+
+  meta_wayland_keyboard_take_keymap (keyboard,
+                                     meta_backend_get_keymap (meta_get_backend ()));
 }
 
 static void
@@ -301,45 +373,42 @@ meta_wayland_xkb_info_destroy (MetaWaylandXkbInfo *xkb_info)
 void
 meta_wayland_keyboard_release (MetaWaylandKeyboard *keyboard)
 {
+  meta_wayland_keyboard_set_focus (keyboard, NULL);
   meta_wayland_xkb_info_destroy (&keyboard->xkb_info);
-  xkb_context_unref (keyboard->xkb_context);
 
   /* XXX: What about keyboard->resource_list? */
-  wl_array_release (&keyboard->keys);
+  wl_array_release (&keyboard->pressed_keys);
+
+  g_object_unref (keyboard->settings);
 }
 
 static void
-update_pressed_keys (MetaWaylandKeyboard   *keyboard,
-		     uint32_t               evdev_code,
-		     gboolean               is_press)
+update_pressed_keys (struct wl_array *keys,
+                     uint32_t         evdev_code,
+                     gboolean         is_press)
 {
+  uint32_t *end = (void *) ((char *) keys->data + keys->size);
+  uint32_t *k;
+
   if (is_press)
     {
-      uint32_t *end = (void *) ((char *) keyboard->keys.data +
-                                keyboard->keys.size);
-      uint32_t *k;
-
       /* Make sure we don't already have this key. */
-      for (k = keyboard->keys.data; k < end; k++)
+      for (k = keys->data; k < end; k++)
         if (*k == evdev_code)
           return;
 
       /* Otherwise add the key to the list of pressed keys */
-      k = wl_array_add (&keyboard->keys, sizeof (*k));
+      k = wl_array_add (keys, sizeof (*k));
       *k = evdev_code;
     }
   else
     {
-      uint32_t *end = (void *) ((char *) keyboard->keys.data +
-                                keyboard->keys.size);
-      uint32_t *k;
-
       /* Remove the key from the array */
-      for (k = keyboard->keys.data; k < end; k++)
+      for (k = keys->data; k < end; k++)
         if (*k == evdev_code)
           {
             *k = *(end - 1);
-            keyboard->keys.size -= sizeof (*k);
+            keys->size -= sizeof (*k);
             return;
           }
 
@@ -363,7 +432,7 @@ meta_wayland_keyboard_update (MetaWaylandKeyboard *keyboard,
   struct xkb_state *state = keyboard->xkb_info.state;
   enum xkb_state_component changed_state;
 
-  update_pressed_keys (keyboard, evdev_code (event), is_press);
+  update_pressed_keys (&keyboard->pressed_keys, evdev_code (event), is_press);
 
   changed_state = xkb_state_update_key (state,
                                         event->hardware_keycode,
@@ -487,36 +556,12 @@ meta_wayland_keyboard_set_focus (MetaWaylandKeyboard *keyboard,
                                           xkb_state_serialize_mods (state, XKB_STATE_MODS_LOCKED),
                                           xkb_state_serialize_layout (state, XKB_STATE_LAYOUT_EFFECTIVE));
               wl_keyboard_send_enter (resource, serial, keyboard->focus_surface->resource,
-                                      &keyboard->keys);
+                                      &keyboard->pressed_keys);
             }
 
           keyboard->focus_serial = serial;
         }
     }
-}
-
-void
-meta_wayland_keyboard_set_keymap_names (MetaWaylandKeyboard *keyboard,
-					const char          *rules,
-					const char          *model,
-					const char          *layout,
-					const char          *variant,
-					const char          *options,
-					int                  flags)
-{
-  struct xkb_rule_names xkb_names;
-
-  xkb_names.rules = rules;
-  xkb_names.model = model;
-  xkb_names.layout = layout;
-  xkb_names.variant = variant;
-  xkb_names.options = options;
-
-  meta_wayland_keyboard_take_keymap (keyboard,
-				     xkb_keymap_new_from_names (keyboard->xkb_context,
-								&xkb_names,
-								0 /* flags */),
-				     flags);
 }
 
 struct wl_client *
@@ -547,15 +592,16 @@ meta_wayland_keyboard_create_new_resource (MetaWaylandKeyboard *keyboard,
 {
   struct wl_resource *cr;
 
-  cr = wl_resource_create (client, &wl_keyboard_interface,
-			   MIN (META_WL_KEYBOARD_VERSION, wl_resource_get_version (seat_resource)), id);
-  wl_resource_set_implementation (cr, NULL, keyboard, unbind_resource);
+  cr = wl_resource_create (client, &wl_keyboard_interface, wl_resource_get_version (seat_resource), id);
+  wl_resource_set_implementation (cr, &keyboard_interface, keyboard, unbind_resource);
   wl_list_insert (&keyboard->resource_list, wl_resource_get_link (cr));
 
   wl_keyboard_send_keymap (cr,
                            WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
                            keyboard->xkb_info.keymap_fd,
                            keyboard->xkb_info.keymap_size);
+
+  notify_key_repeat_for_resource (keyboard, cr);
 
   if (keyboard->focus_surface && wl_resource_get_client (keyboard->focus_surface->resource) == client)
     meta_wayland_keyboard_set_focus (keyboard, keyboard->focus_surface);

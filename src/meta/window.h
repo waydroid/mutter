@@ -108,8 +108,7 @@ gboolean meta_window_appears_focused (MetaWindow *window);
 gboolean meta_window_is_shaded (MetaWindow *window);
 gboolean meta_window_is_override_redirect (MetaWindow *window);
 gboolean meta_window_is_skip_taskbar (MetaWindow *window);
-MetaRectangle *meta_window_get_rect (MetaWindow *window);
-void meta_window_get_input_rect (const MetaWindow *window, MetaRectangle *rect);
+void meta_window_get_buffer_rect (const MetaWindow *window, MetaRectangle *rect);
 
 void meta_window_get_frame_rect (const MetaWindow *window, MetaRectangle *rect);
 void meta_window_get_outer_rect (const MetaWindow *window, MetaRectangle *rect) G_GNUC_DEPRECATED;
@@ -140,6 +139,7 @@ const char * meta_window_get_wm_class (MetaWindow *window);
 const char * meta_window_get_wm_class_instance (MetaWindow *window);
 gboolean    meta_window_showing_on_its_workspace (MetaWindow *window);
 
+const char * meta_window_get_gtk_theme_variant (MetaWindow *window);
 const char * meta_window_get_gtk_application_id (MetaWindow *window);
 const char * meta_window_get_gtk_unique_bus_name (MetaWindow *window);
 const char * meta_window_get_gtk_application_object_path (MetaWindow *window);
@@ -147,11 +147,9 @@ const char * meta_window_get_gtk_window_object_path (MetaWindow *window);
 const char * meta_window_get_gtk_app_menu_object_path (MetaWindow *window);
 const char * meta_window_get_gtk_menubar_object_path (MetaWindow *window);
 
-void meta_window_move(MetaWindow *window, gboolean user_op, int root_x_nw, int root_y_nw);
 void meta_window_move_frame(MetaWindow *window, gboolean user_op, int root_x_nw, int root_y_nw);
 void meta_window_move_resize_frame (MetaWindow *window, gboolean user_op, int root_x_nw, int root_y_nw, int w, int h);
 void meta_window_move_to_monitor (MetaWindow *window, int monitor);
-void meta_window_resize(MetaWindow *window, gboolean user_op, int w, int h);
 
 void meta_window_set_demands_attention (MetaWindow *window);
 void meta_window_unset_demands_attention (MetaWindow *window);
@@ -258,6 +256,7 @@ gboolean meta_window_is_always_on_all_workspaces (MetaWindow *window);
 gboolean meta_window_is_above (MetaWindow *window);
 gboolean meta_window_allows_move (MetaWindow *window);
 gboolean meta_window_allows_resize (MetaWindow *window);
+gboolean meta_window_is_client_decorated (MetaWindow *window);
 
 gboolean meta_window_titlebar_is_onscreen    (MetaWindow *window);
 void     meta_window_shove_titlebar_onscreen (MetaWindow *window);

@@ -12,12 +12,12 @@
  * at MetaScreen instead.
  */
 
-/* 
+/*
  * Copyright (C) 2001 Havoc Pennington
  * Copyright (C) 2003 Rob Adams
  * Copyright (C) 2004-2006 Elijah Newren
  * Copyright (C) 2013 Red Hat Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -27,7 +27,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
@@ -41,8 +41,6 @@
 #include "display-private.h"
 #include <meta/screen.h>
 #include "stack-tracker.h"
-#include "ui.h"
-#include <wayland-server.h>
 
 #include "meta-display-config-shared.h"
 #include "meta-dbus-display-config.h"
@@ -60,12 +58,23 @@ typedef struct _MetaMonitorInfo MetaMonitorInfo;
 typedef struct _MetaCRTCInfo MetaCRTCInfo;
 typedef struct _MetaOutputInfo MetaOutputInfo;
 
+typedef enum {
+  META_MONITOR_TRANSFORM_NORMAL,
+  META_MONITOR_TRANSFORM_90,
+  META_MONITOR_TRANSFORM_180,
+  META_MONITOR_TRANSFORM_270,
+  META_MONITOR_TRANSFORM_FLIPPED,
+  META_MONITOR_TRANSFORM_FLIPPED_90,
+  META_MONITOR_TRANSFORM_FLIPPED_180,
+  META_MONITOR_TRANSFORM_FLIPPED_270,
+} MetaMonitorTransform;
+
 struct _MetaOutput
 {
   /* The CRTC driving this output, NULL if the output is not enabled */
   MetaCRTC *crtc;
   /* The low-level ID of this output, used to apply back configuration */
-  glong output_id;
+  glong winsys_id;
   char *name;
   char *vendor;
   char *product;
@@ -73,6 +82,7 @@ struct _MetaOutput
   int width_mm;
   int height_mm;
   CoglSubpixelOrder subpixel_order;
+  int scale;
 
   MetaMonitorMode *preferred_mode;
   MetaMonitorMode **modes;
@@ -113,7 +123,7 @@ struct _MetaCRTC
   glong crtc_id;
   MetaRectangle rect;
   MetaMonitorMode *current_mode;
-  enum wl_output_transform transform;
+  MetaMonitorTransform transform;
   unsigned int all_transforms;
 
   /* Only used to build the logical configuration
@@ -161,14 +171,14 @@ struct _MetaMonitorInfo
   gboolean in_fullscreen;
 
   /* The primary or first output for this monitor, 0 if we can't figure out.
-     It can be matched to an output_id of a MetaOutput.
+     It can be matched to a winsys_id of a MetaOutput.
 
      This is used as an opaque token on reconfiguration when switching from
      clone to extened, to decide on what output the windows should go next
      (it's an attempt to keep windows on the same monitor, and preferably on
      the primary one).
   */
-  glong output_id;
+  glong winsys_id;
 };
 
 /*
@@ -184,7 +194,7 @@ struct _MetaCRTCInfo {
   MetaMonitorMode          *mode;
   int                       x;
   int                       y;
-  enum wl_output_transform  transform;
+  MetaMonitorTransform      transform;
   GPtrArray                *outputs;
 };
 
@@ -338,7 +348,7 @@ gboolean           meta_monitor_manager_has_hotplug_mode_update (MetaMonitorMana
 /* Returns true if transform causes width and height to be inverted
    This is true for the odd transforms in the enum */
 static inline gboolean
-meta_monitor_transform_is_rotated (enum wl_output_transform transform)
+meta_monitor_transform_is_rotated (MetaMonitorTransform transform)
 {
   return (transform % 2);
 }

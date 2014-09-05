@@ -288,6 +288,26 @@ get_wrap_mode (MetaBackground *self)
     }
 }
 
+static gboolean
+texture_has_alpha (CoglTexture *texture)
+{
+  if (!texture)
+    return FALSE;
+
+  switch (cogl_texture_get_components (texture))
+    {
+    case COGL_TEXTURE_COMPONENTS_A:
+    case COGL_TEXTURE_COMPONENTS_RGBA:
+      return TRUE;
+    case COGL_TEXTURE_COMPONENTS_RG:
+    case COGL_TEXTURE_COMPONENTS_RGB:
+    case COGL_TEXTURE_COMPONENTS_DEPTH:
+      return FALSE;
+    default:
+      g_assert_not_reached ();
+    }
+}
+
 static ClutterPaintNode *
 meta_background_paint_node_new (MetaBackground *self,
                                 ClutterActor   *actor)
@@ -296,6 +316,7 @@ meta_background_paint_node_new (MetaBackground *self,
   ClutterPaintNode *node;
   guint8 opacity;
   guint8 color_component;
+  gboolean needs_blending;
 
   opacity = clutter_actor_get_paint_opacity (actor);
   color_component = (guint8) (0.5 + opacity * priv->brightness);
@@ -307,6 +328,13 @@ meta_background_paint_node_new (MetaBackground *self,
                               opacity);
 
   node = clutter_pipeline_node_new (priv->pipeline);
+
+  needs_blending = (opacity < 255) || (texture_has_alpha (priv->texture));
+
+  if (needs_blending)
+    cogl_pipeline_set_blend (priv->pipeline, "RGBA = ADD (SRC_COLOR, DST_COLOR*(1-SRC_COLOR[A]))", NULL);
+  else
+    cogl_pipeline_set_blend (priv->pipeline, "RGBA = ADD (SRC_COLOR, 0)", NULL);
 
   return node;
 }
@@ -382,8 +410,6 @@ meta_background_paint_content (ClutterContent   *content,
   if (priv->texture == NULL)
     return;
 
-  node = meta_background_paint_node_new (self, actor);
-
   clutter_actor_get_content_box (actor, &actor_box);
 
   /* First figure out where on the monitor the texture is supposed to be painted.
@@ -413,11 +439,13 @@ meta_background_paint_content (ClutterContent   *content,
       clip_region = meta_background_actor_get_clip_region (META_BACKGROUND_ACTOR (actor));
 
       if (clip_region != NULL)
-        {
-          cairo_region_intersect (paintable_region, clip_region);
-          cairo_region_destroy (clip_region);
-        }
+        cairo_region_intersect (paintable_region, clip_region);
     }
+
+  if (cairo_region_is_empty (paintable_region))
+    goto out;
+
+  node = meta_background_paint_node_new (self, actor);
 
   /* Finally, split the paintable region up into distinct areas
    * and paint each area one by one
@@ -441,10 +469,11 @@ meta_background_paint_content (ClutterContent   *content,
 
       clutter_paint_node_add_texture_rectangle (node, &texture_rectangle, tx1, ty1, tx2, ty2);
     }
-  cairo_region_destroy (paintable_region);
-
   clutter_paint_node_add_child (root, node);
   clutter_paint_node_unref (node);
+
+ out:
+  cairo_region_destroy (paintable_region);
 }
 
 static void
@@ -498,13 +527,22 @@ set_brightness (MetaBackground *self,
 
   priv->brightness = brightness;
 
-  if (priv->effects & META_BACKGROUND_EFFECTS_VIGNETTE)
+  if (clutter_feature_available (CLUTTER_FEATURE_SHADERS_GLSL) &&
+      priv->effects & META_BACKGROUND_EFFECTS_VIGNETTE)
     {
       ensure_pipeline (self);
       cogl_pipeline_set_uniform_1f (priv->pipeline,
                                     cogl_pipeline_get_uniform_location (priv->pipeline,
                                                                         "brightness"),
                                     priv->brightness);
+    }
+  else
+    {
+      ensure_pipeline (self);
+      CoglColor blend_color;
+      cogl_color_init_from_4f (&blend_color, brightness, brightness, brightness, 1.0);
+      cogl_pipeline_set_layer_combine (priv->pipeline, 1, "RGB=MODULATE(PREVIOUS, CONSTANT) A=REPLACE(PREVIOUS)", NULL);
+      cogl_pipeline_set_layer_combine_constant (priv->pipeline, 1, &blend_color);
     }
 
   clutter_content_invalidate (CLUTTER_CONTENT (self));
@@ -522,6 +560,9 @@ set_vignette_sharpness (MetaBackground *self,
     return;
 
   priv->vignette_sharpness = sharpness;
+
+  if (!clutter_feature_available (CLUTTER_FEATURE_SHADERS_GLSL))
+    return;
 
   if (priv->effects & META_BACKGROUND_EFFECTS_VIGNETTE)
     {
@@ -542,6 +583,9 @@ add_vignette (MetaBackground *self)
 {
   MetaBackgroundPrivate *priv = self->priv;
   static CoglSnippet *snippet = NULL;
+
+  if (!clutter_feature_available (CLUTTER_FEATURE_SHADERS_GLSL))
+    return;
 
   ensure_pipeline (self);
 
@@ -770,6 +814,8 @@ meta_background_load_gradient (MetaBackground             *self,
                                ClutterColor               *color,
                                ClutterColor               *second_color)
 {
+  ClutterBackend *backend = clutter_get_default_backend ();
+  CoglContext *ctx = clutter_backend_get_cogl_context (backend);
   MetaBackgroundPrivate *priv = self->priv;
   CoglTexture *texture;
   guint width, height;
@@ -799,18 +845,17 @@ meta_background_load_gradient (MetaBackground             *self,
   pixels[0] = color->red;
   pixels[1] = color->green;
   pixels[2] = color->blue;
-  pixels[3] = color->alpha;
+  pixels[3] = 0xFF;
   pixels[4] = second_color->red;
   pixels[5] = second_color->green;
   pixels[6] = second_color->blue;
-  pixels[7] = second_color->alpha;
+  pixels[7] = 0xFF;
 
-  texture = cogl_texture_new_from_data (width, height,
-                                        COGL_TEXTURE_NO_SLICING,
-                                        COGL_PIXEL_FORMAT_RGBA_8888,
-                                        COGL_PIXEL_FORMAT_ANY,
-                                        4,
-                                        pixels);
+  texture = COGL_TEXTURE (cogl_texture_2d_new_from_data (ctx, width, height,
+                                                         COGL_PIXEL_FORMAT_RGB_888,
+                                                         4,
+                                                         pixels,
+                                                         NULL));
   set_texture (self, COGL_TEXTURE (texture));
 }
 
@@ -828,10 +873,13 @@ void
 meta_background_load_color (MetaBackground *self,
                             ClutterColor   *color)
 {
+  ClutterBackend *backend = clutter_get_default_backend ();
+  CoglContext *ctx = clutter_backend_get_cogl_context (backend);
   MetaBackgroundPrivate *priv = self->priv;
   CoglTexture  *texture;
   ClutterActor *stage = meta_get_stage_for_screen (priv->screen);
   ClutterColor  stage_color;
+  uint8_t pixels[4];
 
   ensure_pipeline (self);
 
@@ -844,11 +892,16 @@ meta_background_load_color (MetaBackground *self,
       color = &stage_color;
     }
 
-  texture = meta_create_color_texture_4ub (color->red,
-                                           color->green,
-                                           color->blue,
-                                           0xff,
-                                           COGL_TEXTURE_NO_SLICING);
+  pixels[0] = color->red;
+  pixels[1] = color->green;
+  pixels[2] = color->blue;
+  pixels[3] = 0xFF;
+
+  texture = COGL_TEXTURE (cogl_texture_2d_new_from_data (ctx, 1, 1,
+                                                         COGL_PIXEL_FORMAT_RGB_888,
+                                                         4,
+                                                         pixels,
+                                                         NULL));
   set_texture (self, COGL_TEXTURE (texture));
 }
 
@@ -946,6 +999,8 @@ meta_background_load_file_finish (MetaBackground  *self,
                                   GAsyncResult    *result,
                                   GError         **error)
 {
+  ClutterBackend *backend = clutter_get_default_backend ();
+  CoglContext *ctx = clutter_backend_get_cogl_context (backend);
   GTask *task;
   LoadFileTaskData *task_data;
   CoglTexture *texture;
@@ -954,6 +1009,7 @@ meta_background_load_file_finish (MetaBackground  *self,
   guchar *pixels;
   gboolean has_alpha;
   gboolean loaded = FALSE;
+  CoglPixelFormat pixel_format;
 
   g_return_val_if_fail (g_task_is_valid (result, self), FALSE);
 
@@ -972,15 +1028,13 @@ meta_background_load_file_finish (MetaBackground  *self,
   pixels = gdk_pixbuf_get_pixels (pixbuf);
   has_alpha = gdk_pixbuf_get_has_alpha (pixbuf);
 
-  texture = cogl_texture_new_from_data (width,
-                                        height,
-                                        COGL_TEXTURE_NO_ATLAS,
-                                        has_alpha ?
-                                        COGL_PIXEL_FORMAT_RGBA_8888 :
-                                        COGL_PIXEL_FORMAT_RGB_888,
-                                        COGL_PIXEL_FORMAT_ANY,
-                                        row_stride,
-                                        pixels);
+  pixel_format = has_alpha ? COGL_PIXEL_FORMAT_RGBA_8888 : COGL_PIXEL_FORMAT_RGB_888;
+
+  texture = COGL_TEXTURE (cogl_texture_2d_new_from_data (ctx, width, height,
+                                                         pixel_format,
+                                                         row_stride,
+                                                         pixels,
+                                                         NULL));
 
   if (texture == NULL)
     {
