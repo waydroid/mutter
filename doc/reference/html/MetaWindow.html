@@ -8,7 +8,7 @@
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="MetaScreen.html" title="MetaScreen">
 <link rel="next" href="MetaWorkspace.html" title="MetaWorkspace">
-<meta name="generator" content="GTK-Doc V1.20.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.21.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -100,18 +100,10 @@
 </tr>
 <tr>
 <td class="function_type">
-<a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="returnvalue">MetaRectangle</span></a> *
-</td>
-<td class="function_name">
-<a class="link" href="MetaWindow.html#meta-window-get-rect" title="meta_window_get_rect ()">meta_window_get_rect</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">
 <span class="returnvalue">void</span>
 </td>
 <td class="function_name">
-<a class="link" href="MetaWindow.html#meta-window-get-input-rect" title="meta_window_get_input_rect ()">meta_window_get_input_rect</a> <span class="c_punctuation">()</span>
+<a class="link" href="MetaWindow.html#meta-window-get-buffer-rect" title="meta_window_get_buffer_rect ()">meta_window_get_buffer_rect</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -310,14 +302,6 @@
 <span class="returnvalue">void</span>
 </td>
 <td class="function_name">
-<a class="link" href="MetaWindow.html#meta-window-move" title="meta_window_move ()">meta_window_move</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">
-<span class="returnvalue">void</span>
-</td>
-<td class="function_name">
 <a class="link" href="MetaWindow.html#meta-window-move-frame" title="meta_window_move_frame ()">meta_window_move_frame</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
@@ -335,14 +319,6 @@
 </td>
 <td class="function_name">
 <a class="link" href="MetaWindow.html#meta-window-move-to-monitor" title="meta_window_move_to_monitor ()">meta_window_move_to_monitor</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">
-<span class="returnvalue">void</span>
-</td>
-<td class="function_name">
-<a class="link" href="MetaWindow.html#meta-window-resize" title="meta_window_resize ()">meta_window_resize</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -888,6 +864,11 @@
 </tr>
 <tr>
 <td class="property_type"><span class="type">gboolean</span></td>
+<td class="property_name"><a class="link" href="MetaWindow.html#MetaWindow--on-all-workspaces" title="The “on-all-workspaces” property">on-all-workspaces</a></td>
+<td class="property_flags">Read</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gboolean</span></td>
 <td class="property_name"><a class="link" href="MetaWindow.html#MetaWindow--resizeable" title="The “resizeable” property">resizeable</a></td>
 <td class="property_flags">Read</td>
 </tr>
@@ -1151,45 +1132,18 @@ meta_window_is_skip_taskbar (<em class="parameter"><code><a class="link" href="M
 </div>
 <hr>
 <div class="refsect2">
-<a name="meta-window-get-rect"></a><h3>meta_window_get_rect ()</h3>
-<pre class="programlisting"><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="returnvalue">MetaRectangle</span></a> *
-meta_window_get_rect (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
-<p>Gets the rectangle that bounds <em class="parameter"><code>window</code></em>
-, ignoring any window decorations.</p>
-<div class="refsect3">
-<a name="id-1.4.20.9.9.5"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.20.9.9.6"></a><h4>Returns</h4>
-<p> the <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> for the window. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-get-input-rect"></a><h3>meta_window_get_input_rect ()</h3>
+<a name="meta-window-get-buffer-rect"></a><h3>meta_window_get_buffer_rect ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
-meta_window_get_input_rect (<em class="parameter"><code>const <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                            <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);</pre>
-<p>Gets the rectangle that bounds <em class="parameter"><code>window</code></em>
- that is responsive to mouse events.
-This includes decorations - the visible portion of its border - and (if
-present) any invisible area that we make make responsive to mouse clicks in
-order to allow convenient border dragging.</p>
+meta_window_get_buffer_rect (<em class="parameter"><code>const <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
+                             <em class="parameter"><code><a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *rect</code></em>);</pre>
+<p>Gets the rectangle that the pixmap or buffer of <em class="parameter"><code>window</code></em>
+ occupies.</p>
+<p>For X11 windows, this is the server-side geometry of the toplevel
+window.</p>
+<p>For Wayland windows, this is the bounding rectangle of the attached
+buffer.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.10.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.9.7"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1223,7 +1177,7 @@ as the edge of the window. This doesn't include any extra reactive
 area that we or the client adds to the window, or any area that the
 client adds to draw a client-side shadow.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.11.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.10.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1261,7 +1215,7 @@ as the edge of the window. This doesn't include any extra reactive
 area that we or the client adds to the window, or any area that the
 client adds to draw a client-side shadow.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.12.6"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.11.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1294,7 +1248,7 @@ meta_window_client_rect_to_frame_rect (<em class="parameter"><code><a class="lin
 into the corresponding bounds of the window frame (excluding invisible borders
 and client side shadows.)</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.13.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.12.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1331,7 +1285,7 @@ meta_window_frame_rect_to_client_rect (<em class="parameter"><code><a class="lin
 <p>Converts a desired frame bounds for a window into the bounds of the client
 window - what is passed to <code class="function">meta_window_move_resize()</code>.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.14.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.13.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1365,7 +1319,7 @@ window - what is passed to <code class="function">meta_window_move_resize()</cod
 meta_window_get_screen (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> that the window is on.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.15.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.14.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1380,7 +1334,7 @@ meta_window_get_screen (<em class="parameter"><code><a class="link" href="MetaWi
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.15.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.14.6"></a><h4>Returns</h4>
 <p> the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> for the window. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -1391,7 +1345,7 @@ meta_window_get_screen (<em class="parameter"><code><a class="link" href="MetaWi
 <pre class="programlisting"><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="returnvalue">MetaDisplay</span></a> *
 meta_window_get_display (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.20.9.16.4"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.15.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1406,7 +1360,7 @@ meta_window_get_display (<em class="parameter"><code><a class="link" href="MetaW
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.16.5"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.15.5"></a><h4>Returns</h4>
 <p> The display for <em class="parameter"><code>window</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -1418,7 +1372,7 @@ meta_window_get_display (<em class="parameter"><code><a class="link" href="MetaW
 <pre class="programlisting"><span class="returnvalue">Window</span>
 meta_window_get_xwindow (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.20.9.17.4"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.16.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1448,6 +1402,33 @@ meta_window_get_workspace (<em class="parameter"><code><a class="link" href="Met
 If the window is on all workspaces, returns the currently active
 workspace.</p>
 <div class="refsect3">
+<a name="id-1.4.20.9.18.5"></a><h4>Parameters</h4>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>window</p></td>
+<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="id-1.4.20.9.18.6"></a><h4>Returns</h4>
+<p> the <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> for the window. </p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-window-get-monitor"></a><h3>meta_window_get_monitor ()</h3>
+<pre class="programlisting"><span class="returnvalue">int</span>
+meta_window_get_monitor (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<p>Gets index of the monitor that this window is on.</p>
+<div class="refsect3">
 <a name="id-1.4.20.9.19.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
@@ -1464,33 +1445,6 @@ workspace.</p>
 </div>
 <div class="refsect3">
 <a name="id-1.4.20.9.19.6"></a><h4>Returns</h4>
-<p> the <a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> for the window. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-get-monitor"></a><h3>meta_window_get_monitor ()</h3>
-<pre class="programlisting"><span class="returnvalue">int</span>
-meta_window_get_monitor (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
-<p>Gets index of the monitor that this window is on.</p>
-<div class="refsect3">
-<a name="id-1.4.20.9.20.5"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.20.9.20.6"></a><h4>Returns</h4>
 <p> The index of the monitor in the screens monitor list</p>
 <p></p>
 </div>
@@ -1508,7 +1462,7 @@ meta_window_is_on_all_workspaces (<em class="parameter"><code><a class="link" hr
 meta_window_located_on_workspace (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
                                   <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.20.9.22.4"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.21.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1530,7 +1484,7 @@ meta_window_located_on_workspace (<em class="parameter"><code><a class="link" hr
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.22.5"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.21.5"></a><h4>Returns</h4>
 <p> whether <em class="parameter"><code>window</code></em>
 is displayed on <em class="parameter"><code>workspace</code></em>
 , or whether it
@@ -1572,7 +1526,7 @@ meta_window_get_description (<em class="parameter"><code><a class="link" href="M
 meta_window_get_wm_class (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>Return the current value of the name part of WM_CLASS X property.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.27.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.26.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1594,7 +1548,7 @@ meta_window_get_wm_class (<em class="parameter"><code><a class="link" href="Meta
 meta_window_get_wm_class_instance (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>Return the current value of the instance part of WM_CLASS X property.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.28.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.27.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1615,7 +1569,7 @@ meta_window_get_wm_class_instance (<em class="parameter"><code><a class="link" h
 <pre class="programlisting"><span class="returnvalue">gboolean</span>
 meta_window_showing_on_its_workspace (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.20.9.29.4"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.28.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1630,7 +1584,7 @@ meta_window_showing_on_its_workspace (<em class="parameter"><code><a class="link
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.29.5"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.28.5"></a><h4>Returns</h4>
 <p> <code class="literal">TRUE</code> if window would be visible, if its workspace was current</p>
 <p></p>
 </div>
@@ -1640,6 +1594,32 @@ meta_window_showing_on_its_workspace (<em class="parameter"><code><a class="link
 <a name="meta-window-get-gtk-application-id"></a><h3>meta_window_get_gtk_application_id ()</h3>
 <pre class="programlisting">const <span class="returnvalue">char</span> *
 meta_window_get_gtk_application_id (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<div class="refsect3">
+<a name="id-1.4.20.9.29.4"></a><h4>Parameters</h4>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>window</p></td>
+<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="id-1.4.20.9.29.5"></a><h4>Returns</h4>
+<p> the application ID. </p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-window-get-gtk-unique-bus-name"></a><h3>meta_window_get_gtk_unique_bus_name ()</h3>
+<pre class="programlisting">const <span class="returnvalue">char</span> *
+meta_window_get_gtk_unique_bus_name (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
 <a name="id-1.4.20.9.30.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
@@ -1657,15 +1637,16 @@ meta_window_get_gtk_application_id (<em class="parameter"><code><a class="link" 
 </div>
 <div class="refsect3">
 <a name="id-1.4.20.9.30.5"></a><h4>Returns</h4>
-<p> the application ID. </p>
+<p> the unique name. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
 <div class="refsect2">
-<a name="meta-window-get-gtk-unique-bus-name"></a><h3>meta_window_get_gtk_unique_bus_name ()</h3>
+<a name="meta-window-get-gtk-application-object-path"></a><h3>meta_window_get_gtk_application_object_path ()</h3>
 <pre class="programlisting">const <span class="returnvalue">char</span> *
-meta_window_get_gtk_unique_bus_name (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+meta_window_get_gtk_application_object_path
+                               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
 <a name="id-1.4.20.9.31.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
@@ -1683,15 +1664,15 @@ meta_window_get_gtk_unique_bus_name (<em class="parameter"><code><a class="link"
 </div>
 <div class="refsect3">
 <a name="id-1.4.20.9.31.5"></a><h4>Returns</h4>
-<p> the unique name. </p>
+<p> the object path. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
 <div class="refsect2">
-<a name="meta-window-get-gtk-application-object-path"></a><h3>meta_window_get_gtk_application_object_path ()</h3>
+<a name="meta-window-get-gtk-window-object-path"></a><h3>meta_window_get_gtk_window_object_path ()</h3>
 <pre class="programlisting">const <span class="returnvalue">char</span> *
-meta_window_get_gtk_application_object_path
+meta_window_get_gtk_window_object_path
                                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
 <a name="id-1.4.20.9.32.4"></a><h4>Parameters</h4>
@@ -1716,9 +1697,9 @@ meta_window_get_gtk_application_object_path
 </div>
 <hr>
 <div class="refsect2">
-<a name="meta-window-get-gtk-window-object-path"></a><h3>meta_window_get_gtk_window_object_path ()</h3>
+<a name="meta-window-get-gtk-app-menu-object-path"></a><h3>meta_window_get_gtk_app_menu_object_path ()</h3>
 <pre class="programlisting">const <span class="returnvalue">char</span> *
-meta_window_get_gtk_window_object_path
+meta_window_get_gtk_app_menu_object_path
                                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
 <a name="id-1.4.20.9.33.4"></a><h4>Parameters</h4>
@@ -1743,9 +1724,9 @@ meta_window_get_gtk_window_object_path
 </div>
 <hr>
 <div class="refsect2">
-<a name="meta-window-get-gtk-app-menu-object-path"></a><h3>meta_window_get_gtk_app_menu_object_path ()</h3>
+<a name="meta-window-get-gtk-menubar-object-path"></a><h3>meta_window_get_gtk_menubar_object_path ()</h3>
 <pre class="programlisting">const <span class="returnvalue">char</span> *
-meta_window_get_gtk_app_menu_object_path
+meta_window_get_gtk_menubar_object_path
                                (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
 <a name="id-1.4.20.9.34.4"></a><h4>Parameters</h4>
@@ -1770,78 +1751,6 @@ meta_window_get_gtk_app_menu_object_path
 </div>
 <hr>
 <div class="refsect2">
-<a name="meta-window-get-gtk-menubar-object-path"></a><h3>meta_window_get_gtk_menubar_object_path ()</h3>
-<pre class="programlisting">const <span class="returnvalue">char</span> *
-meta_window_get_gtk_menubar_object_path
-                               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
-<div class="refsect3">
-<a name="id-1.4.20.9.35.4"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.20.9.35.5"></a><h4>Returns</h4>
-<p> the object path. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-move"></a><h3>meta_window_move ()</h3>
-<pre class="programlisting"><span class="returnvalue">void</span>
-meta_window_move (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                  <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
-                  <em class="parameter"><code><span class="type">int</span> root_x_nw</code></em>,
-                  <em class="parameter"><code><span class="type">int</span> root_y_nw</code></em>);</pre>
-<p>Moves the window to the desired location on window's assigned workspace.
-NOTE: does NOT place according to the origin of the enclosing
-frame/window-decoration, but according to the origin of the window,
-itself.</p>
-<div class="refsect3">
-<a name="id-1.4.20.9.36.5"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody>
-<tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-<tr>
-<td class="parameter_name"><p>user_op</p></td>
-<td class="parameter_description"><p>bool to indicate whether or not this is a user operation</p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-<tr>
-<td class="parameter_name"><p>root_x_nw</p></td>
-<td class="parameter_description"><p>desired x pos</p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-<tr>
-<td class="parameter_name"><p>root_y_nw</p></td>
-<td class="parameter_description"><p>desired y pos</p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-</tbody>
-</table></div>
-</div>
-</div>
-<hr>
-<div class="refsect2">
 <a name="meta-window-move-frame"></a><h3>meta_window_move_frame ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 meta_window_move_frame (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
@@ -1851,9 +1760,9 @@ meta_window_move_frame (<em class="parameter"><code><a class="link" href="MetaWi
 <p>Moves the window to the desired location on window's assigned
 workspace, using the northwest edge of the frame as the reference,
 instead of the actual window's origin, but only if a frame is present.
-Otherwise, acts identically to <a class="link" href="MetaWindow.html#meta-window-move" title="meta_window_move ()"><code class="function">meta_window_move()</code></a>.</p>
+Otherwise, acts identically to <code class="function">meta_window_move()</code>.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.37.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.35.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1898,7 +1807,7 @@ meta_window_move_resize_frame (<em class="parameter"><code><a class="link" href=
 <p>Resizes the window so that its outer bounds (including frame)
 fit within the given rect</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.38.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.36.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1950,7 +1859,7 @@ meta_window_move_to_monitor (<em class="parameter"><code><a class="link" href="M
 , keeping
 the relative position of the window's top left corner.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.39.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.37.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1966,48 +1875,6 @@ the relative position of the window's top left corner.</p>
 <tr>
 <td class="parameter_name"><p>monitor</p></td>
 <td class="parameter_description"><p>desired monitor index</p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-</tbody>
-</table></div>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-resize"></a><h3>meta_window_resize ()</h3>
-<pre class="programlisting"><span class="returnvalue">void</span>
-meta_window_resize (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>,
-                    <em class="parameter"><code><span class="type">gboolean</span> user_op</code></em>,
-                    <em class="parameter"><code><span class="type">int</span> w</code></em>,
-                    <em class="parameter"><code><span class="type">int</span> h</code></em>);</pre>
-<p>Resize the window to the desired size.</p>
-<div class="refsect3">
-<a name="id-1.4.20.9.40.5"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody>
-<tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-<tr>
-<td class="parameter_name"><p>user_op</p></td>
-<td class="parameter_description"><p>bool to indicate whether or not this is a user operation</p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-<tr>
-<td class="parameter_name"><p>w</p></td>
-<td class="parameter_description"><p>desired width</p></td>
-<td class="parameter_annotations"> </td>
-</tr>
-<tr>
-<td class="parameter_name"><p>h</p></td>
-<td class="parameter_description"><p>desired height</p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 </tbody>
@@ -2055,7 +1922,7 @@ meta_window_get_compositor_private (<em class="parameter"><code><a class="link" 
 <p>Gets the compositor's wrapper object for <em class="parameter"><code>window</code></em>
 .</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.46.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.43.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2070,7 +1937,7 @@ meta_window_get_compositor_private (<em class="parameter"><code><a class="link" 
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.46.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.43.6"></a><h4>Returns</h4>
 <p> the wrapper object. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -2103,7 +1970,7 @@ meta_window_find_root_ancestor (<em class="parameter"><code><a class="link" href
 , skipping transient windows,
 and return the "root" window which has no non-transient parent.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.50.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.47.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2118,7 +1985,7 @@ and return the "root" window which has no non-transient parent.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.50.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.47.6"></a><h4>Returns</h4>
 <p> The root ancestor window. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -2137,7 +2004,7 @@ so by traversing the <em class="parameter"><code>transient</code></em>
 
 or reaches an ancestor that is not transient.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.51.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.48.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2159,7 +2026,7 @@ or reaches an ancestor that is not transient.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.51.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.48.6"></a><h4>Returns</h4>
 <p> <code class="literal">TRUE</code> if window is an ancestor of transient. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -2187,7 +2054,7 @@ The order of window enumeration is not defined.</p>
 <p>Iteration will stop if <em class="parameter"><code>func</code></em>
  at any point returns <code class="literal">FALSE</code>.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.53.6"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.50.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2228,7 +2095,7 @@ meta_window_foreach_ancestor (<em class="parameter"><code><a class="link" href="
 repeatedly until either we find a non-transient window, or <em class="parameter"><code>func</code></em>
  returns <code class="literal">FALSE</code>.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.54.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.51.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2264,7 +2131,7 @@ meta_window_get_maximized (<em class="parameter"><code><a class="link" href="Met
 <p>Gets the current maximization state of the window, as combination
 of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><code class="literal">META_MAXIMIZE_HORIZONTAL</code></a> and <a class="link" href="MetaWindow.html#META-MAXIMIZE-VERTICAL:CAPS"><code class="literal">META_MAXIMIZE_VERTICAL</code></a> flags;</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.55.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.52.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2279,7 +2146,7 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.55.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.52.6"></a><h4>Returns</h4>
 <p> current maximization state</p>
 <p></p>
 </div>
@@ -2289,6 +2156,86 @@ of the <a class="link" href="MetaWindow.html#META-MAXIMIZE-HORIZONTAL:CAPS"><cod
 <a name="meta-window-is-fullscreen"></a><h3>meta_window_is_fullscreen ()</h3>
 <pre class="programlisting"><span class="returnvalue">gboolean</span>
 meta_window_is_fullscreen (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<div class="refsect3">
+<a name="id-1.4.20.9.53.4"></a><h4>Parameters</h4>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>window</p></td>
+<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="id-1.4.20.9.53.5"></a><h4>Returns</h4>
+<p> <code class="literal">TRUE</code> if the window is currently fullscreen</p>
+<p></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-window-is-on-primary-monitor"></a><h3>meta_window_is_on_primary_monitor ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+meta_window_is_on_primary_monitor (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<div class="refsect3">
+<a name="id-1.4.20.9.54.4"></a><h4>Parameters</h4>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>window</p></td>
+<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="id-1.4.20.9.54.5"></a><h4>Returns</h4>
+<p> <code class="literal">TRUE</code> if the window is on the primary monitor</p>
+<p></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-window-requested-bypass-compositor"></a><h3>meta_window_requested_bypass_compositor ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+meta_window_requested_bypass_compositor
+                               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<div class="refsect3">
+<a name="id-1.4.20.9.55.4"></a><h4>Parameters</h4>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>window</p></td>
+<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="id-1.4.20.9.55.5"></a><h4>Returns</h4>
+<p> <code class="literal">TRUE</code> if the window requested to bypass the compositor</p>
+<p></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-window-requested-dont-bypass-compositor"></a><h3>meta_window_requested_dont_bypass_compositor ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+meta_window_requested_dont_bypass_compositor
+                               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
 <a name="id-1.4.20.9.56.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
@@ -2306,86 +2253,6 @@ meta_window_is_fullscreen (<em class="parameter"><code><a class="link" href="Met
 </div>
 <div class="refsect3">
 <a name="id-1.4.20.9.56.5"></a><h4>Returns</h4>
-<p> <code class="literal">TRUE</code> if the window is currently fullscreen</p>
-<p></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-is-on-primary-monitor"></a><h3>meta_window_is_on_primary_monitor ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>
-meta_window_is_on_primary_monitor (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
-<div class="refsect3">
-<a name="id-1.4.20.9.57.4"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.20.9.57.5"></a><h4>Returns</h4>
-<p> <code class="literal">TRUE</code> if the window is on the primary monitor</p>
-<p></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-requested-bypass-compositor"></a><h3>meta_window_requested_bypass_compositor ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>
-meta_window_requested_bypass_compositor
-                               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
-<div class="refsect3">
-<a name="id-1.4.20.9.58.4"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.20.9.58.5"></a><h4>Returns</h4>
-<p> <code class="literal">TRUE</code> if the window requested to bypass the compositor</p>
-<p></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-requested-dont-bypass-compositor"></a><h3>meta_window_requested_dont_bypass_compositor ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>
-meta_window_requested_dont_bypass_compositor
-                               (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
-<div class="refsect3">
-<a name="id-1.4.20.9.59.4"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.20.9.59.5"></a><h4>Returns</h4>
 <p> <code class="literal">TRUE</code> if the window requested to opt out of unredirecting</p>
 <p></p>
 </div>
@@ -2400,7 +2267,7 @@ meta_window_get_icon_geometry (<em class="parameter"><code><a class="link" href=
 will be provided set by the task bar or other user interface element
 displaying the icon, and is relative to the root window.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.60.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.57.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2422,7 +2289,7 @@ displaying the icon, and is relative to the root window.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.60.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.57.6"></a><h4>Returns</h4>
 <p> <code class="literal">TRUE</code> if the icon geometry was succesfully retrieved.</p>
 <p></p>
 </div>
@@ -2437,7 +2304,7 @@ meta_window_set_icon_geometry (<em class="parameter"><code><a class="link" href=
 set, the location should correspond to a dock, task bar or other user
 interface element displaying the icon, and is relative to the root window.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.61.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.58.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2453,7 +2320,7 @@ interface element displaying the icon, and is relative to the root window.</p>
 <tr>
 <td class="parameter_name"><p>rect</p></td>
 <td class="parameter_description"><p> rectangle with the desired geometry or <code class="literal">NULL</code>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></td>
 </tr>
 </tbody>
 </table></div>
@@ -2503,7 +2370,7 @@ meta_window_lower (<em class="parameter"><code><a class="link" href="MetaWindow.
 <pre class="programlisting">const <span class="returnvalue">char</span> *
 meta_window_get_title (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.20.9.68.4"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.65.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2518,7 +2385,7 @@ meta_window_get_title (<em class="parameter"><code><a class="link" href="MetaWin
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.68.5"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.65.5"></a><h4>Returns</h4>
 <p> the current title of the window.</p>
 <p></p>
 </div>
@@ -2534,7 +2401,7 @@ or <code class="function">XSetTransientForHint()</code>). Metacity keeps transie
 parents. A typical usage of this hint is for a dialog that wants to stay
 above its associated window.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.69.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.66.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2549,7 +2416,7 @@ above its associated window.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.69.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.66.6"></a><h4>Returns</h4>
 <p> the window this window is transient for, or
 <code class="literal">NULL</code> if the WM_TRANSIENT_FOR hint is unset or does not point to a toplevel
 window that Metacity knows about. </p>
@@ -2573,7 +2440,7 @@ unique integer assigned to each <a class="link" href="MetaWindow.html" title="Me
 <p>This number can be useful for sorting windows in a stable
 fashion.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.71.6"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.68.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2588,7 +2455,7 @@ fashion.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.71.7"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.68.7"></a><h4>Returns</h4>
 <p> Internal sequence number for this window</p>
 <p></p>
 </div>
@@ -2606,7 +2473,7 @@ and updated thereafter on input events (key and button presses) seen by Mutter,
 client updates to the _NET_WM_USER_TIME property (if later than the current time)
 and when focusing the window.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.72.6"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.69.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2621,7 +2488,7 @@ and when focusing the window.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.72.7"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.69.7"></a><h4>Returns</h4>
 <p> The last time the user interacted with this window.</p>
 <p></p>
 </div>
@@ -2633,6 +2500,93 @@ and when focusing the window.</p>
 meta_window_get_pid (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>Returns pid of the process that created this window, if known (obtained from
 the _NET_WM_PID property).</p>
+<div class="refsect3">
+<a name="id-1.4.20.9.70.5"></a><h4>Parameters</h4>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>window</p></td>
+<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="id-1.4.20.9.70.6"></a><h4>Returns</h4>
+<p> the pid, or -1 if not known. </p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-window-get-client-machine"></a><h3>meta_window_get_client_machine ()</h3>
+<pre class="programlisting">const <span class="returnvalue">char</span> *
+meta_window_get_client_machine (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<p>Returns name of the client machine from which this windows was created,
+if known (obtained from the WM_CLIENT_MACHINE property).</p>
+<div class="refsect3">
+<a name="id-1.4.20.9.71.5"></a><h4>Parameters</h4>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>window</p></td>
+<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="id-1.4.20.9.71.6"></a><h4>Returns</h4>
+<p> the machine name, or NULL; the string is
+owned by the window manager and should not be freed or modified by the
+caller. </p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-window-is-remote"></a><h3>meta_window_is_remote ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+meta_window_is_remote (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<div class="refsect3">
+<a name="id-1.4.20.9.72.4"></a><h4>Parameters</h4>
+<div class="informaltable"><table width="100%" border="0">
+<colgroup>
+<col width="150px" class="parameters_name">
+<col class="parameters_description">
+<col width="200px" class="parameters_annotations">
+</colgroup>
+<tbody><tr>
+<td class="parameter_name"><p>window</p></td>
+<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
+<td class="parameter_annotations"> </td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect3">
+<a name="id-1.4.20.9.72.5"></a><h4>Returns</h4>
+<p> <code class="literal">TRUE</code> if this window originates from a host
+different from the one running mutter.</p>
+<p></p>
+</div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="meta-window-is-attached-dialog"></a><h3>meta_window_is_attached_dialog ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+meta_window_is_attached_dialog (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<p>Tests if <em class="parameter"><code>window</code></em>
+ is should be attached to its parent window.
+(If the "attach_modal_dialogs" option is not enabled, this will
+always return <code class="literal">FALSE</code>.)</p>
 <div class="refsect3">
 <a name="id-1.4.20.9.73.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
@@ -2650,93 +2604,6 @@ the _NET_WM_PID property).</p>
 </div>
 <div class="refsect3">
 <a name="id-1.4.20.9.73.6"></a><h4>Returns</h4>
-<p> the pid, or -1 if not known. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-get-client-machine"></a><h3>meta_window_get_client_machine ()</h3>
-<pre class="programlisting">const <span class="returnvalue">char</span> *
-meta_window_get_client_machine (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
-<p>Returns name of the client machine from which this windows was created,
-if known (obtained from the WM_CLIENT_MACHINE property).</p>
-<div class="refsect3">
-<a name="id-1.4.20.9.74.5"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.20.9.74.6"></a><h4>Returns</h4>
-<p> the machine name, or NULL; the string is
-owned by the window manager and should not be freed or modified by the
-caller. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-is-remote"></a><h3>meta_window_is_remote ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>
-meta_window_is_remote (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
-<div class="refsect3">
-<a name="id-1.4.20.9.75.4"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.20.9.75.5"></a><h4>Returns</h4>
-<p> <code class="literal">TRUE</code> if this window originates from a host
-different from the one running mutter.</p>
-<p></p>
-</div>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-window-is-attached-dialog"></a><h3>meta_window_is_attached_dialog ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>
-meta_window_is_attached_dialog (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
-<p>Tests if <em class="parameter"><code>window</code></em>
- is should be attached to its parent window.
-(If the "attach_modal_dialogs" option is not enabled, this will
-always return <code class="literal">FALSE</code>.)</p>
-<div class="refsect3">
-<a name="id-1.4.20.9.76.5"></a><h4>Parameters</h4>
-<div class="informaltable"><table width="100%" border="0">
-<colgroup>
-<col width="150px" class="parameters_name">
-<col class="parameters_description">
-<col width="200px" class="parameters_annotations">
-</colgroup>
-<tbody><tr>
-<td class="parameter_name"><p>window</p></td>
-<td class="parameter_description"><p>a <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a></p></td>
-<td class="parameter_annotations"> </td>
-</tr></tbody>
-</table></div>
-</div>
-<div class="refsect3">
-<a name="id-1.4.20.9.76.6"></a><h4>Returns</h4>
 <p> whether <em class="parameter"><code>window</code></em>
 should be attached to its parent</p>
 <p></p>
@@ -2756,7 +2623,7 @@ any plugin-specific hints must be suitably namespaced to allow for shared
 use; 'mutter-' key prefix is reserved for internal use, and must not be used
 by plugins.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.77.7"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.74.7"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2771,7 +2638,7 @@ by plugins.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.77.8"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.74.8"></a><h4>Returns</h4>
 <p> the _MUTTER_HINTS string, or <code class="literal">NULL</code> if no hints
 are set. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -2784,7 +2651,7 @@ are set. </p>
 meta_window_get_frame_type (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>Gets the type of window decorations that should be used for this window.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.78.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.75.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2799,7 +2666,7 @@ meta_window_get_frame_type (<em class="parameter"><code><a class="link" href="Me
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.78.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.75.6"></a><h4>Returns</h4>
 <p> the frame type</p>
 <p></p>
 </div>
@@ -2811,7 +2678,7 @@ meta_window_get_frame_type (<em class="parameter"><code><a class="link" href="Me
 meta_window_get_frame_bounds (<em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
 <p>Gets a region representing the outer bounds of the window's frame.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.79.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.76.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2826,11 +2693,11 @@ meta_window_get_frame_bounds (<em class="parameter"><code><a class="link" href="
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.79.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.76.6"></a><h4>Returns</h4>
 <p> a <span class="type">cairo_region_t</span>
 holding the outer bounds of the window, or <code class="literal">NULL</code> if the window
 doesn't have a frame. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -2849,7 +2716,7 @@ the topmost tiled window in a complementary tile mode that is:</p>
 partially visible in the common edge.</p></li>
 </ul></div>
 <div class="refsect3">
-<a name="id-1.4.20.9.80.6"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.77.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2864,10 +2731,10 @@ partially visible in the common edge.</p></li>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.20.9.80.7"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.77.7"></a><h4>Returns</h4>
 <p> the matching tiled window or
 <code class="literal">NULL</code> if it doesn't exist. </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span></p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="NULL may be passed as the value in, out, in-out; or as a return value."><span class="acronym">nullable</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -2950,7 +2817,7 @@ meta_window_get_work_area_current_monitor
 <p>Get the work area for the monitor <em class="parameter"><code>window</code></em>
  is currently on.</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.92.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.89.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -2984,7 +2851,7 @@ meta_window_get_work_area_for_monitor (<em class="parameter"><code><a class="lin
 <em class="parameter"><code>which_monitor</code></em>
 .</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.93.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.90.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -3021,7 +2888,7 @@ meta_window_get_work_area_all_monitors
 <p>Get the work area for all monitors for <em class="parameter"><code>window</code></em>
 .</p>
 <div class="refsect3">
-<a name="id-1.4.20.9.94.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.91.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -3367,6 +3234,14 @@ meta_window_begin_grab_op (<em class="parameter"><code><a class="link" href="Met
 </div>
 <hr>
 <div class="refsect2">
+<a name="MetaWindow--on-all-workspaces"></a><h3>The <code class="literal">“on-all-workspaces”</code> property</h3>
+<pre class="programlisting">  “on-all-workspaces”        <span class="type">gboolean</span></pre>
+<p>Whether the window is set to appear on all workspaces.</p>
+<p>Flags: Read</p>
+<p>Default value: FALSE</p>
+</div>
+<hr>
+<div class="refsect2">
 <a name="MetaWindow--resizeable"></a><h3>The <code class="literal">“resizeable”</code> property</h3>
 <pre class="programlisting">  “resizeable”               <span class="type">gboolean</span></pre>
 <p>Whether the window can be resized.</p>
@@ -3520,7 +3395,6 @@ user_function (<a class="link" href="MetaWindow.html" title="MetaWindow"><span c
 <a name="MetaWindow-workspace-changed"></a><h3>The <code class="literal">“workspace-changed”</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 user_function (<a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *metawindow,
-               <span class="type">gint</span>        arg1,
                <span class="type">gpointer</span>    user_data)</pre>
 <p>Flags: Run Last</p>
 </div>
@@ -3528,6 +3402,6 @@ user_function (<a class="link" href="MetaWindow.html" title="MetaWindow"><span c
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.20.1</div>
+          Generated by GTK-Doc V1.21.1</div>
 </body>
 </html>

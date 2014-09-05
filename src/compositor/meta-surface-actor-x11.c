@@ -34,6 +34,7 @@
 #include "window-private.h"
 #include "meta-shaped-texture-private.h"
 #include "meta-cullable.h"
+#include "x11/window-x11.h"
 
 struct _MetaSurfaceActorX11Private
 {
@@ -143,7 +144,7 @@ update_pixmap (MetaSurfaceActorX11 *self)
   if (priv->pixmap == None)
     {
       Pixmap new_pixmap;
-      Window xwindow = meta_window_get_toplevel_xwindow (priv->window);
+      Window xwindow = meta_window_x11_get_toplevel_xwindow (priv->window);
 
       meta_error_trap_push (display);
       new_pixmap = XCompositeNameWindowPixmap (xdisplay, xwindow);
@@ -179,19 +180,6 @@ is_visible (MetaSurfaceActorX11 *self)
 }
 
 static void
-damage_area (MetaSurfaceActorX11 *self,
-             int x, int y, int width, int height)
-{
-  MetaSurfaceActorX11Private *priv = meta_surface_actor_x11_get_instance_private (self);
-
-  if (!is_visible (self))
-    return;
-
-  cogl_texture_pixmap_x11_update_area (priv->texture, x, y, width, height);
-  meta_surface_actor_update_area (META_SURFACE_ACTOR (self), x, y, width, height);
-}
-
-static void
 meta_surface_actor_x11_process_damage (MetaSurfaceActor *actor,
                                        int x, int y, int width, int height)
 {
@@ -217,11 +205,10 @@ meta_surface_actor_x11_process_damage (MetaSurfaceActor *actor,
         priv->does_full_damage = TRUE;
     }
 
-  /* Drop damage event for unredirected windows */
-  if (priv->unredirected)
+  if (!is_visible (self))
     return;
 
-  damage_area (self, x, y, width, height);
+  cogl_texture_pixmap_x11_update_area (priv->texture, x, y, width, height);
 }
 
 static void
@@ -237,26 +224,6 @@ meta_surface_actor_x11_pre_paint (MetaSurfaceActor *actor)
       meta_error_trap_push (display);
       XDamageSubtract (xdisplay, priv->damage, None, None);
       meta_error_trap_pop (display);
-
-      /* We need to make sure that any X drawing that happens before the
-       * XDamageSubtract() above is visible to subsequent GL rendering;
-       * the only standardized way to do this is EXT_x11_sync_object,
-       * which isn't yet widely available. For now, we count on details
-       * of Xorg and the open source drivers, and hope for the best
-       * otherwise.
-       *
-       * Xorg and open source driver specifics:
-       *
-       * The X server makes sure to flush drawing to the kernel before
-       * sending out damage events, but since we use DamageReportBoundingBox
-       * there may be drawing between the last damage event and the
-       * XDamageSubtract() that needs to be flushed as well.
-       *
-       * Xorg always makes sure that drawing is flushed to the kernel
-       * before writing events or responses to the client, so any round trip
-       * request at this point is sufficient to flush the GLX buffers.
-       */
-      XSync (xdisplay, False);
 
       priv->received_damage = FALSE;
     }
@@ -312,7 +279,7 @@ sync_unredirected (MetaSurfaceActorX11 *self)
   MetaSurfaceActorX11Private *priv = meta_surface_actor_x11_get_instance_private (self);
   MetaDisplay *display = priv->display;
   Display *xdisplay = meta_display_get_xdisplay (display);
-  Window xwindow = meta_window_get_toplevel_xwindow (priv->window);
+  Window xwindow = meta_window_x11_get_toplevel_xwindow (priv->window);
 
   meta_error_trap_push (display);
 
@@ -404,7 +371,7 @@ create_damage (MetaSurfaceActorX11 *self)
 {
   MetaSurfaceActorX11Private *priv = meta_surface_actor_x11_get_instance_private (self);
   Display *xdisplay = meta_display_get_xdisplay (priv->display);
-  Window xwindow = meta_window_get_toplevel_xwindow (priv->window);
+  Window xwindow = meta_window_x11_get_toplevel_xwindow (priv->window);
 
   priv->damage = XDamageCreate (xdisplay, xwindow, XDamageReportBoundingBox);
 }

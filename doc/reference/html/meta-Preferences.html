@@ -8,7 +8,7 @@
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
 <link rel="prev" href="meta-Gradients.html" title="Gradients">
 <link rel="next" href="meta-Utility-functions.html" title="Utility functions">
-<meta name="generator" content="GTK-Doc V1.20.1 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.21.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -376,14 +376,6 @@
 </td>
 <td class="function_name">
 <a class="link" href="meta-Preferences.html#meta-prefs-get-keybinding-action" title="meta_prefs_get_keybinding_action ()">meta_prefs_get_keybinding_action</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">
-<span class="returnvalue">void</span>
-</td>
-<td class="function_name">
-<a class="link" href="meta-Preferences.html#meta-prefs-get-window-binding" title="meta_prefs_get_window_binding ()">meta_prefs_get_window_binding</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -847,14 +839,6 @@ meta_prefs_get_keybinding_action (<em class="parameter"><code>const <span class=
 </div>
 <hr>
 <div class="refsect2">
-<a name="meta-prefs-get-window-binding"></a><h3>meta_prefs_get_window_binding ()</h3>
-<pre class="programlisting"><span class="returnvalue">void</span>
-meta_prefs_get_window_binding (<em class="parameter"><code>const <span class="type">char</span> *name</code></em>,
-                               <em class="parameter"><code>unsigned <span class="type">int</span> *keysym</code></em>,
-                               <em class="parameter"><code><a class="link" href="meta-Common.html#MetaVirtualModifier" title="enum MetaVirtualModifier"><span class="type">MetaVirtualModifier</span></a> *modifiers</code></em>);</pre>
-</div>
-<hr>
-<div class="refsect2">
 <a name="meta-prefs-get-visual-bell"></a><h3>meta_prefs_get_visual_bell ()</h3>
 <pre class="programlisting"><span class="returnvalue">gboolean</span>
 meta_prefs_get_visual_bell (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
@@ -1116,6 +1100,11 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
+<tr>
+<td class="enum_member_name"><p><a name="META-PREF-DRAG-THRESHOLD:CAPS"></a>META_PREF_DRAG_THRESHOLD</p></td>
+<td> </td>
+<td> </td>
+</tr>
 </tbody>
 </table></div>
 </div>
@@ -1135,476 +1124,476 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-NONE:CAPS"></a>META_KEYBINDING_ACTION_NONE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-1:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_1</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-2:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_2</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-3:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_3</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-4:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_4</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-5:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_5</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-6:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_6</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-7:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_7</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-8:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_8</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-9:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_9</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-10:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_10</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-11:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_11</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-12:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_12</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-LEFT:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_LEFT</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-RIGHT:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_RIGHT</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-UP:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_UP</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-DOWN:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_DOWN</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-WORKSPACE-LAST:CAPS"></a>META_KEYBINDING_ACTION_WORKSPACE_LAST</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SWITCH-APPLICATIONS:CAPS"></a>META_KEYBINDING_ACTION_SWITCH_APPLICATIONS</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SWITCH-APPLICATIONS-BACKWARD:CAPS"></a>META_KEYBINDING_ACTION_SWITCH_APPLICATIONS_BACKWARD</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SWITCH-GROUP:CAPS"></a>META_KEYBINDING_ACTION_SWITCH_GROUP</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SWITCH-GROUP-BACKWARD:CAPS"></a>META_KEYBINDING_ACTION_SWITCH_GROUP_BACKWARD</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SWITCH-WINDOWS:CAPS"></a>META_KEYBINDING_ACTION_SWITCH_WINDOWS</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SWITCH-WINDOWS-BACKWARD:CAPS"></a>META_KEYBINDING_ACTION_SWITCH_WINDOWS_BACKWARD</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SWITCH-PANELS:CAPS"></a>META_KEYBINDING_ACTION_SWITCH_PANELS</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SWITCH-PANELS-BACKWARD:CAPS"></a>META_KEYBINDING_ACTION_SWITCH_PANELS_BACKWARD</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-CYCLE-GROUP:CAPS"></a>META_KEYBINDING_ACTION_CYCLE_GROUP</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-CYCLE-GROUP-BACKWARD:CAPS"></a>META_KEYBINDING_ACTION_CYCLE_GROUP_BACKWARD</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-CYCLE-WINDOWS:CAPS"></a>META_KEYBINDING_ACTION_CYCLE_WINDOWS</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-CYCLE-WINDOWS-BACKWARD:CAPS"></a>META_KEYBINDING_ACTION_CYCLE_WINDOWS_BACKWARD</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-CYCLE-PANELS:CAPS"></a>META_KEYBINDING_ACTION_CYCLE_PANELS</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-CYCLE-PANELS-BACKWARD:CAPS"></a>META_KEYBINDING_ACTION_CYCLE_PANELS_BACKWARD</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SHOW-DESKTOP:CAPS"></a>META_KEYBINDING_ACTION_SHOW_DESKTOP</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-PANEL-MAIN-MENU:CAPS"></a>META_KEYBINDING_ACTION_PANEL_MAIN_MENU</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-PANEL-RUN-DIALOG:CAPS"></a>META_KEYBINDING_ACTION_PANEL_RUN_DIALOG</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-TOGGLE-RECORDING:CAPS"></a>META_KEYBINDING_ACTION_TOGGLE_RECORDING</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-SET-SPEW-MARK:CAPS"></a>META_KEYBINDING_ACTION_SET_SPEW_MARK</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-ACTIVATE-WINDOW-MENU:CAPS"></a>META_KEYBINDING_ACTION_ACTIVATE_WINDOW_MENU</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-TOGGLE-FULLSCREEN:CAPS"></a>META_KEYBINDING_ACTION_TOGGLE_FULLSCREEN</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-TOGGLE-MAXIMIZED:CAPS"></a>META_KEYBINDING_ACTION_TOGGLE_MAXIMIZED</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-TOGGLE-TILED-LEFT:CAPS"></a>META_KEYBINDING_ACTION_TOGGLE_TILED_LEFT</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-TOGGLE-TILED-RIGHT:CAPS"></a>META_KEYBINDING_ACTION_TOGGLE_TILED_RIGHT</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-TOGGLE-ABOVE:CAPS"></a>META_KEYBINDING_ACTION_TOGGLE_ABOVE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MAXIMIZE:CAPS"></a>META_KEYBINDING_ACTION_MAXIMIZE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-UNMAXIMIZE:CAPS"></a>META_KEYBINDING_ACTION_UNMAXIMIZE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-TOGGLE-SHADED:CAPS"></a>META_KEYBINDING_ACTION_TOGGLE_SHADED</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MINIMIZE:CAPS"></a>META_KEYBINDING_ACTION_MINIMIZE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-CLOSE:CAPS"></a>META_KEYBINDING_ACTION_CLOSE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-BEGIN-MOVE:CAPS"></a>META_KEYBINDING_ACTION_BEGIN_MOVE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-BEGIN-RESIZE:CAPS"></a>META_KEYBINDING_ACTION_BEGIN_RESIZE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-TOGGLE-ON-ALL-WORKSPACES:CAPS"></a>META_KEYBINDING_ACTION_TOGGLE_ON_ALL_WORKSPACES</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-1:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_1</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-2:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_2</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-3:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_3</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-4:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_4</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-5:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_5</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-6:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_6</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-7:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_7</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-8:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_8</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-9:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_9</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-10:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_10</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-11:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_11</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-12:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_12</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-LEFT:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_LEFT</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-RIGHT:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_RIGHT</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-UP:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_UP</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-DOWN:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_DOWN</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-WORKSPACE-LAST:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_WORKSPACE_LAST</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -1639,105 +1628,105 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-RAISE-OR-LOWER:CAPS"></a>META_KEYBINDING_ACTION_RAISE_OR_LOWER</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-RAISE:CAPS"></a>META_KEYBINDING_ACTION_RAISE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-LOWER:CAPS"></a>META_KEYBINDING_ACTION_LOWER</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MAXIMIZE-VERTICALLY:CAPS"></a>META_KEYBINDING_ACTION_MAXIMIZE_VERTICALLY</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MAXIMIZE-HORIZONTALLY:CAPS"></a>META_KEYBINDING_ACTION_MAXIMIZE_HORIZONTALLY</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-CORNER-NW:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_CORNER_NW</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-CORNER-NE:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_CORNER_NE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-CORNER-SW:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_CORNER_SW</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-CORNER-SE:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_CORNER_SE</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-SIDE-N:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_SIDE_N</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-SIDE-S:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_SIDE_S</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-SIDE-E:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_SIDE_E</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-SIDE-W:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_SIDE_W</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-MOVE-TO-CENTER:CAPS"></a>META_KEYBINDING_ACTION_MOVE_TO_CENTER</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-OVERLAY-KEY:CAPS"></a>META_KEYBINDING_ACTION_OVERLAY_KEY</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -1749,14 +1738,14 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-ALWAYS-ON-TOP:CAPS"></a>META_KEYBINDING_ACTION_ALWAYS_ON_TOP</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
 <td class="enum_member_name"><p><a name="META-KEYBINDING-ACTION-LAST:CAPS"></a>META_KEYBINDING_ACTION_LAST</p></td>
 <td class="enum_member_description">
-<p>FILLME </p>
+<p>FILLME</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -1798,13 +1787,6 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="META-KEY-BINDING-REVERSES:CAPS"></a>META_KEY_BINDING_REVERSES</p></td>
-<td class="enum_member_description">
-<p>reverses</p>
-</td>
-<td class="enum_member_annotations"> </td>
-</tr>
-<tr>
 <td class="enum_member_name"><p><a name="META-KEY-BINDING-IS-REVERSED:CAPS"></a>META_KEY_BINDING_IS_REVERSED</p></td>
 <td class="enum_member_description">
 <p>is reversed</p>
@@ -1819,6 +1801,6 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.20.1</div>
+          Generated by GTK-Doc V1.21.1</div>
 </body>
 </html>

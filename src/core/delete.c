@@ -2,10 +2,10 @@
 
 /* Mutter window deletion */
 
-/* 
+/*
  * Copyright (C) 2001, 2002 Havoc Pennington
  * Copyright (C) 2004 Elijah Newren
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -15,7 +15,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
@@ -37,49 +37,70 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "wayland/meta-wayland-surface.h"
-
-static void meta_window_present_delete_dialog (MetaWindow *window,
-                                               guint32     timestamp);
-
-static void
-delete_ping_reply_func (MetaWindow  *window,
-                        guint32      timestamp,
-                        void        *user_data)
-{
-  meta_topic (META_DEBUG_PING, "Got reply to delete ping for %s\n", window->desc);
-
-  /* we do nothing */
-}
-
 static void
 dialog_exited (GPid pid, int status, gpointer user_data)
 {
-  MetaWindow *ours = (MetaWindow*) user_data;
+  MetaWindow *window = user_data;
 
-  ours->dialog_pid = -1;
+  window->dialog_pid = -1;
 
   /* exit status of 1 means the user pressed "Force Quit" */
   if (WIFEXITED (status) && WEXITSTATUS (status) == 1)
-    meta_window_kill (ours);
+    meta_window_kill (window);
 }
 
 static void
-delete_ping_timeout_func (MetaWindow  *window,
-                          guint32      timestamp,
-                          void        *user_data)
+present_existing_delete_dialog (MetaWindow *window,
+                                guint32     timestamp)
+{
+  meta_topic (META_DEBUG_PING,
+              "Presenting existing ping dialog for %s\n",
+              window->desc);
+
+  if (window->dialog_pid >= 0)
+    {
+      GSList *windows;
+      GSList *tmp;
+
+      /* Activate transient for window that belongs to
+       * mutter-dialog
+       */
+
+      windows = meta_display_list_windows (window->display, META_LIST_DEFAULT);
+      tmp = windows;
+      while (tmp != NULL)
+        {
+          MetaWindow *w = tmp->data;
+
+          if (w->transient_for == window && w->res_class &&
+              g_ascii_strcasecmp (w->res_class, "mutter-dialog") == 0)
+            {
+              meta_window_activate (w, timestamp);
+              break;
+            }
+
+          tmp = tmp->next;
+        }
+
+      g_slist_free (windows);
+    }
+}
+
+static void
+show_delete_dialog (MetaWindow *window,
+                    guint32     timestamp)
 {
   char *window_title;
   gchar *window_content, *tmp;
   GPid dialog_pid;
-  
+
   meta_topic (META_DEBUG_PING,
               "Got delete ping timeout for %s\n",
               window->desc);
 
   if (window->dialog_pid >= 0)
     {
-      meta_window_present_delete_dialog (window, timestamp);
+      present_existing_delete_dialog (window, timestamp);
       return;
     }
 
@@ -128,15 +149,33 @@ delete_ping_timeout_func (MetaWindow  *window,
   g_child_watch_add (dialog_pid, dialog_exited, window);
 }
 
+static void
+kill_delete_dialog (MetaWindow *window)
+{
+  if (window->dialog_pid > -1)
+    kill (window->dialog_pid, SIGTERM);
+}
+
+void
+meta_window_set_alive (MetaWindow *window,
+                       gboolean    is_alive)
+{
+  if (window->is_alive == is_alive)
+    return;
+
+  window->is_alive = is_alive;
+
+  if (window->is_alive)
+    kill_delete_dialog (window);
+  else
+    show_delete_dialog (window, CurrentTime);
+}
+
 void
 meta_window_check_alive (MetaWindow *window,
                          guint32     timestamp)
 {
-  meta_display_ping_window (window,
-                            timestamp,
-                            delete_ping_reply_func,
-                            delete_ping_timeout_func,
-                            NULL);
+  meta_display_ping_window (window, timestamp);
 }
 
 void
@@ -149,7 +188,7 @@ meta_window_delete (MetaWindow  *window,
 
   if (window->has_focus)
     {
-      /* FIXME Clean this up someday 
+      /* FIXME Clean this up someday
        * http://bugzilla.gnome.org/show_bug.cgi?id=108706
        */
 #if 0
@@ -189,41 +228,5 @@ meta_window_free_delete_dialog (MetaWindow *window)
     {
       kill (window->dialog_pid, 9);
       window->dialog_pid = -1;
-    }
-}
-
-static void
-meta_window_present_delete_dialog (MetaWindow *window, guint32 timestamp)
-{
-  meta_topic (META_DEBUG_PING,
-              "Presenting existing ping dialog for %s\n",
-              window->desc);
-  
-  if (window->dialog_pid >= 0)
-    {
-      GSList *windows;
-      GSList *tmp;
-
-      /* Activate transient for window that belongs to
-       * mutter-dialog
-       */
-      
-      windows = meta_display_list_windows (window->display, META_LIST_DEFAULT);
-      tmp = windows;
-      while (tmp != NULL)
-        {
-          MetaWindow *w = tmp->data;
-
-          if (w->transient_for == window && w->res_class &&
-              g_ascii_strcasecmp (w->res_class, "mutter-dialog") == 0)
-            {
-              meta_window_activate (w, timestamp);
-              break;
-            }
-          
-          tmp = tmp->next;
-        }
-
-      g_slist_free (windows);
     }
 }

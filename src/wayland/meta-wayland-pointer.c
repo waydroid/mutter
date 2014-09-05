@@ -200,8 +200,6 @@ meta_wayland_pointer_init (MetaWaylandPointer *pointer,
 
   pointer->cursor_surface = NULL;
   pointer->cursor_surface_destroy_listener.notify = pointer_handle_cursor_surface_destroy;
-  pointer->hotspot_x = 16;
-  pointer->hotspot_y = 16;
 
   pointer->default_grab.interface = &default_pointer_grab_interface;
   pointer->default_grab.pointer = pointer;
@@ -209,11 +207,14 @@ meta_wayland_pointer_init (MetaWaylandPointer *pointer,
 
   manager = clutter_device_manager_get_default ();
   pointer->device = clutter_device_manager_get_core_device (manager, CLUTTER_POINTER_DEVICE);
+
+  pointer->cursor_tracker = meta_cursor_tracker_get_for_screen (NULL);
 }
 
 void
 meta_wayland_pointer_release (MetaWaylandPointer *pointer)
 {
+  meta_wayland_pointer_set_focus (pointer, NULL);
   set_cursor_surface (pointer, NULL);
 }
 
@@ -245,14 +246,25 @@ sync_focus_surface (MetaWaylandPointer *pointer)
   MetaDisplay *display = meta_get_display ();
   MetaWaylandSurface *focus_surface;
 
-  /* Don't update the focus surface while we have a move/resize grab. */
-  if (meta_grab_op_is_moving_or_resizing (display->grab_op))
-    return;
+  switch (display->event_route)
+    {
+    case META_EVENT_ROUTE_WINDOW_OP:
+      /* Don't update the focus surface while we're grabbing a window. */
+      return;
 
-  if (meta_grab_op_should_block_wayland (display->grab_op))
-    focus_surface = NULL;
-  else
-    focus_surface = pointer->current;
+    case META_EVENT_ROUTE_COMPOSITOR_GRAB:
+      /* The compositor has focus, so remove our focus... */
+      focus_surface = NULL;
+      break;
+
+    case META_EVENT_ROUTE_NORMAL:
+    case META_EVENT_ROUTE_WAYLAND_POPUP:
+      focus_surface = pointer->current;
+      break;
+
+    default:
+      g_assert_not_reached ();
+    }
 
   if (focus_surface != pointer->focus_surface)
     {
@@ -300,17 +312,9 @@ void
 meta_wayland_pointer_update (MetaWaylandPointer *pointer,
                              const ClutterEvent *event)
 {
-  pointer->button_count = count_buttons (event);
-
   repick_for_event (pointer, event);
 
-  if (pointer->cursor_tracker)
-    {
-      ClutterPoint pos;
-
-      clutter_input_device_get_coords (pointer->device, NULL, &pos);
-      meta_cursor_tracker_update_position (pointer->cursor_tracker, pos.x, pos.y);
-    }
+  pointer->button_count = count_buttons (event);
 }
 
 static void
@@ -383,9 +387,13 @@ handle_scroll_event (MetaWaylandPointer *pointer,
     case CLUTTER_SCROLL_SMOOTH:
       {
         double dx, dy;
+        /* Clutter smooth scroll events are in discrete steps (1 step = 1.0 long
+         * vector along one axis). To convert to smooth scroll events that are
+         * in pointer motion event space, multiply the vector with the 10. */
+        const double factor = 10.0;
         clutter_event_get_scroll_delta (event, &dx, &dy);
-        x_value = wl_fixed_from_double (dx);
-        y_value = wl_fixed_from_double (dy);
+        x_value = wl_fixed_from_double (dx) * factor;
+        y_value = wl_fixed_from_double (dy) * factor;
       }
       break;
 
@@ -721,11 +729,11 @@ meta_wayland_pointer_get_relative_coordinates (MetaWaylandPointer *pointer,
   ClutterPoint pos;
 
   clutter_input_device_get_coords (pointer->device, NULL, &pos);
-  clutter_actor_transform_stage_point (CLUTTER_ACTOR (surface->surface_actor),
+  clutter_actor_transform_stage_point (CLUTTER_ACTOR (meta_surface_actor_get_texture (surface->surface_actor)),
                                        pos.x, pos.y, &xf, &yf);
 
-  *sx = wl_fixed_from_double (xf);
-  *sy = wl_fixed_from_double (yf);
+  *sx = wl_fixed_from_double (xf) / surface->scale;
+  *sy = wl_fixed_from_double (yf) / surface->scale;
 }
 
 void
@@ -797,11 +805,20 @@ meta_wayland_pointer_create_new_resource (MetaWaylandPointer *pointer,
 {
   struct wl_resource *cr;
 
-  cr = wl_resource_create (client, &wl_pointer_interface,
-			   MIN (META_WL_POINTER_VERSION, wl_resource_get_version (seat_resource)), id);
+  cr = wl_resource_create (client, &wl_pointer_interface, wl_resource_get_version (seat_resource), id);
   wl_resource_set_implementation (cr, &pointer_interface, pointer, unbind_resource);
   wl_list_insert (&pointer->resource_list, wl_resource_get_link (cr));
 
   if (pointer->focus_surface && wl_resource_get_client (pointer->focus_surface->resource) == client)
     meta_wayland_pointer_set_focus (pointer, pointer->focus_surface);
+}
+
+gboolean
+meta_wayland_pointer_can_grab_surface (MetaWaylandPointer *pointer,
+                                       MetaWaylandSurface *surface,
+                                       uint32_t            serial)
+{
+  return (pointer->button_count > 0 &&
+          pointer->grab_serial == serial &&
+          pointer->focus_surface == surface);
 }

@@ -27,13 +27,13 @@
 #include "meta-cursor-renderer.h"
 #include "meta-cursor-private.h"
 
+#include <meta/meta-backend.h>
+#include <meta/util.h>
+
 #include <cogl/cogl.h>
-#include <cogl/cogl-wayland-server.h>
 #include <clutter/clutter.h>
 
 #include "meta-stage.h"
-
-#include "wayland/meta-wayland-private.h"
 
 struct _MetaCursorRendererPrivate
 {
@@ -41,6 +41,7 @@ struct _MetaCursorRendererPrivate
   MetaRectangle current_rect;
 
   MetaCursorReference *displayed_cursor;
+  gboolean handled_by_backend;
 };
 typedef struct _MetaCursorRendererPrivate MetaCursorRendererPrivate;
 
@@ -50,26 +51,26 @@ static void
 queue_redraw (MetaCursorRenderer *renderer)
 {
   MetaCursorRendererPrivate *priv = meta_cursor_renderer_get_instance_private (renderer);
-  MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
-  ClutterActor *stage = compositor->stage;
+  MetaBackend *backend = meta_get_backend ();
+  ClutterActor *stage = meta_backend_get_stage (backend);
+  CoglTexture *texture;
 
   /* During early initialization, we can have no stage */
   if (!stage)
     return;
 
-  /* If we're not using a MetaStage, quit early */
-  if (!META_IS_STAGE (stage))
-    return;
+  if (priv->displayed_cursor && !priv->handled_by_backend)
+    texture = meta_cursor_reference_get_cogl_texture (priv->displayed_cursor, NULL, NULL);
+  else
+    texture = NULL;
 
-  meta_stage_set_cursor (META_STAGE (stage),
-                         priv->displayed_cursor,
-                         &priv->current_rect);
+  meta_stage_set_cursor (META_STAGE (stage), texture, &priv->current_rect);
 }
 
-static void
+static gboolean
 meta_cursor_renderer_real_update_cursor (MetaCursorRenderer *renderer)
 {
-  queue_redraw (renderer);
+  return FALSE;
 }
 
 static void
@@ -87,6 +88,8 @@ static void
 update_cursor (MetaCursorRenderer *renderer)
 {
   MetaCursorRendererPrivate *priv = meta_cursor_renderer_get_instance_private (renderer);
+  gboolean handled_by_backend;
+  gboolean should_redraw = FALSE;
 
   if (priv->displayed_cursor)
     {
@@ -108,7 +111,18 @@ update_cursor (MetaCursorRenderer *renderer)
       priv->current_rect.height = 0;
     }
 
-  META_CURSOR_RENDERER_GET_CLASS (renderer)->update_cursor (renderer);
+  handled_by_backend = META_CURSOR_RENDERER_GET_CLASS (renderer)->update_cursor (renderer);
+  if (handled_by_backend != priv->handled_by_backend)
+    {
+      priv->handled_by_backend = handled_by_backend;
+      should_redraw = TRUE;
+    }
+
+  if (!handled_by_backend)
+    should_redraw = TRUE;
+
+  if (should_redraw)
+    queue_redraw (renderer);
 }
 
 MetaCursorRenderer *

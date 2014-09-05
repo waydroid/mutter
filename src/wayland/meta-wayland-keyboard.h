@@ -69,10 +69,11 @@ struct _MetaWaylandKeyboard
   struct wl_listener focus_surface_listener;
   uint32_t focus_serial;
 
-  struct wl_array keys;
+  struct wl_array pressed_keys;
 
-  struct xkb_context *xkb_context;
   MetaWaylandXkbInfo xkb_info;
+
+  GSettings *settings;
 };
 
 void meta_wayland_keyboard_init (MetaWaylandKeyboard *keyboard,
@@ -88,18 +89,6 @@ gboolean meta_wayland_keyboard_handle_event (MetaWaylandKeyboard *keyboard,
 
 void meta_wayland_keyboard_set_focus (MetaWaylandKeyboard *keyboard,
                                       MetaWaylandSurface *surface);
-
-typedef enum {
-  META_WAYLAND_KEYBOARD_SKIP_XCLIENTS = 1,
-} MetaWaylandKeyboardSetKeymapFlags;
-
-void meta_wayland_keyboard_set_keymap_names (MetaWaylandKeyboard *keyboard,
-                                             const char          *rules,
-                                             const char          *model,
-                                             const char          *layout,
-                                             const char          *variant,
-                                             const char          *options,
-                                             int                  flags);
 
 struct wl_client * meta_wayland_keyboard_get_focus_client (MetaWaylandKeyboard *keyboard);
 

@@ -66,9 +66,6 @@ GType meta_display_get_type (void) G_GNUC_CONST;
 
 #define meta_XFree(p) do { if ((p)) XFree ((p)); } while (0)
 
-void meta_display_get_compositor_version (MetaDisplay *display,
-                                          int         *major,
-                                          int         *minor);
 int meta_display_get_xinput_opcode (MetaDisplay *display);
 gboolean meta_display_supports_extended_barriers (MetaDisplay *display);
 Display *meta_display_get_xdisplay (MetaDisplay *display);
@@ -94,7 +91,6 @@ guint32 meta_display_get_current_time_roundtrip (MetaDisplay *display);
 
 GList* meta_display_get_tab_list (MetaDisplay   *display,
                                   MetaTabList    type,
-                                  MetaScreen    *screen,
                                   MetaWorkspace *workspace);
 
 MetaWindow* meta_display_get_tab_next (MetaDisplay   *display,
@@ -183,4 +179,7 @@ void meta_display_ungrab_keyboard (MetaDisplay *display,
                                    guint32      timestamp);
 void meta_display_unfreeze_keyboard (MetaDisplay *display,
                                      guint32      timestamp);
+gboolean meta_display_is_pointer_emulating_sequence (MetaDisplay          *display,
+                                                     ClutterEventSequence *sequence);
+
 #endif

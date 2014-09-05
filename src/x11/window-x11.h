@@ -24,6 +24,7 @@
 #define META_WINDOW_X11_H
 
 #include <meta/window.h>
+#include <meta/compositor.h>
 #include <X11/Xlib.h>
 
 G_BEGIN_DECLS
@@ -40,6 +41,11 @@ GType meta_window_x11_get_type (void);
 typedef struct _MetaWindowX11      MetaWindowX11;
 typedef struct _MetaWindowX11Class MetaWindowX11Class;
 
+MetaWindow * meta_window_x11_new           (MetaDisplay        *display,
+                                            Window              xwindow,
+                                            gboolean            must_be_viewable,
+                                            MetaCompEffect      effect);
+
 void meta_window_x11_set_net_wm_state            (MetaWindow *window);
 void meta_window_x11_set_wm_state                (MetaWindow *window);
 void meta_window_x11_set_allowed_actions_hint    (MetaWindow *window);
@@ -49,9 +55,6 @@ void meta_window_x11_destroy_sync_request_alarm  (MetaWindow *window);
 void meta_window_x11_update_sync_request_counter (MetaWindow *window,
                                                   gint64      new_counter_value);
 
-void meta_window_x11_update_role                 (MetaWindow *window);
-void meta_window_x11_update_net_wm_type          (MetaWindow *window);
-void meta_window_x11_update_opaque_region        (MetaWindow *window);
 void meta_window_x11_update_input_region         (MetaWindow *window);
 void meta_window_x11_update_shape_region         (MetaWindow *window);
 
@@ -66,5 +69,7 @@ gboolean meta_window_x11_client_message          (MetaWindow *window,
 
 void     meta_window_x11_configure_notify        (MetaWindow      *window,
                                                   XConfigureEvent *event);
+
+Window   meta_window_x11_get_toplevel_xwindow    (MetaWindow *window);
 
 #endif

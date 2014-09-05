@@ -1,8 +1,8 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* 
+/*
  * Copyright (C) 2013 Red Hat Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -12,7 +12,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
@@ -39,8 +39,6 @@
 #include <meta/main.h>
 #include <meta/errors.h>
 #include "edid.h"
-
-#define ALL_WL_TRANSFORMS ((1 << (WL_OUTPUT_TRANSFORM_FLIPPED_270 + 1)) - 1)
 
 typedef struct {
   drmModeConnector *connector;
@@ -259,7 +257,7 @@ find_output_by_id (MetaOutput *outputs,
   unsigned i;
 
   for (i = 0; i < n_outputs; i++)
-    if (outputs[i].output_id == id)
+    if (outputs[i].winsys_id == id)
       return &outputs[i];
 
   return NULL;
@@ -363,9 +361,9 @@ meta_monitor_manager_kms_read_current (MetaMonitorManager *manager)
       meta_crtc->rect.width = crtc->width;
       meta_crtc->rect.height = crtc->height;
       meta_crtc->is_dirty = FALSE;
-      meta_crtc->transform = WL_OUTPUT_TRANSFORM_NORMAL;
+      meta_crtc->transform = META_MONITOR_TRANSFORM_NORMAL;
       /* FIXME: implement! */
-      meta_crtc->all_transforms = 1 << WL_OUTPUT_TRANSFORM_NORMAL;
+      meta_crtc->all_transforms = 1 << META_MONITOR_TRANSFORM_NORMAL;
 
       if (crtc->mode_valid)
         {
@@ -408,7 +406,7 @@ meta_monitor_manager_kms_read_current (MetaMonitorManager *manager)
           meta_output->driver_private = output_kms = g_slice_new0 (MetaOutputKms);
           meta_output->driver_notify = (GDestroyNotify)meta_output_destroy_notify;
 
-	  meta_output->output_id = connector->connector_id;
+	  meta_output->winsys_id = connector->connector_id;
 	  meta_output->name = make_output_name (connector);
 	  meta_output->width_mm = connector->mmWidth;
 	  meta_output->height_mm = connector->mmHeight;
@@ -491,7 +489,7 @@ meta_monitor_manager_kms_read_current (MetaMonitorManager *manager)
             meta_output->crtc = NULL;
 
           old_output = find_output_by_id (old_outputs, n_old_outputs,
-                                          meta_output->output_id);
+                                          meta_output->winsys_id);
           if (old_output)
             {
               meta_output->is_primary = old_output->is_primary;
@@ -667,7 +665,7 @@ meta_monitor_manager_kms_set_power_save_mode (MetaMonitorManager *manager,
 
       if (output_kms->dpms_prop_id != 0)
         {
-          int ok = drmModeConnectorSetProperty(manager_kms->fd, meta_output->output_id,
+          int ok = drmModeConnectorSetProperty(manager_kms->fd, meta_output->winsys_id,
                                                output_kms->dpms_prop_id, state);
 
           if (ok < 0)
@@ -748,7 +746,7 @@ meta_monitor_manager_kms_apply_configuration (MetaMonitorManager *manager,
             {
               MetaOutput *output = g_ptr_array_index (crtc_info->outputs, j);
 
-              connectors[j] = output->output_id;
+              connectors[j] = output->winsys_id;
 
               output->is_dirty = TRUE;
               output->crtc = crtc;

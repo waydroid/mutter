@@ -50,10 +50,6 @@ typedef struct
 typedef struct
 {
   struct wl_list link;
-
-  /* Pointer back to the compositor */
-  MetaWaylandCompositor *compositor;
-
   struct wl_resource *resource;
 } MetaWaylandFrameCallback;
 
@@ -74,11 +70,9 @@ typedef struct
 struct _MetaWaylandCompositor
 {
   struct wl_display *wayland_display;
-  char *display_name;
-  struct wl_event_loop *wayland_loop;
+  const char *display_name;
   ClutterActor *stage;
   GHashTable *outputs;
-  GSource *wayland_event_source;
   struct wl_list frame_callbacks;
 
   MetaXWaylandManager xwayland_manager;

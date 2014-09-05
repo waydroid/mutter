@@ -2,9 +2,9 @@
 
 /* Mutter window icons */
 
-/* 
+/*
  * Copyright (C) 2002 Havoc Pennington
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -14,7 +14,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
@@ -44,7 +44,6 @@ struct _MetaIconCache
   int origin;
   Pixmap prev_pixmap;
   Pixmap prev_mask;
-  guint want_fallback : 1;
   /* TRUE if these props have changed */
   guint wm_hints_dirty : 1;
   guint kwm_win_icon_dirty : 1;
@@ -52,7 +51,6 @@ struct _MetaIconCache
 };
 
 void           meta_icon_cache_init                 (MetaIconCache *icon_cache);
-void           meta_icon_cache_free                 (MetaIconCache *icon_cache);
 void           meta_icon_cache_property_changed     (MetaIconCache *icon_cache,
                                                      MetaDisplay   *display,
                                                      Atom           atom);

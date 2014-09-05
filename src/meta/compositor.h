@@ -101,18 +101,14 @@ void meta_compositor_unmaximize_window (MetaCompositor      *compositor,
 void meta_compositor_sync_window_geometry (MetaCompositor *compositor,
                                            MetaWindow     *window,
                                            gboolean        did_placement);
-void meta_compositor_set_updates_frozen   (MetaCompositor *compositor,
-                                           MetaWindow     *window,
-                                           gboolean        updates_frozen);
+void meta_compositor_sync_updates_frozen  (MetaCompositor *compositor,
+                                           MetaWindow     *window);
 void meta_compositor_queue_frame_drawn    (MetaCompositor *compositor,
                                            MetaWindow     *window,
                                            gboolean        no_delay_frame);
 
 void meta_compositor_sync_stack                (MetaCompositor *compositor,
                                                 GList          *stack);
-void meta_compositor_sync_screen_size          (MetaCompositor *compositor,
-                                                guint           width,
-                                                guint           height);
 
 void meta_compositor_flash_screen              (MetaCompositor *compositor,
                                                 MetaScreen     *screen);
@@ -122,5 +118,14 @@ void meta_compositor_show_tile_preview (MetaCompositor *compositor,
                                         MetaRectangle  *tile_rect,
                                         int             tile_monitor_number);
 void meta_compositor_hide_tile_preview (MetaCompositor *compositor);
+void meta_compositor_show_window_menu (MetaCompositor     *compositor,
+                                       MetaWindow         *window,
+				       MetaWindowMenuType  menu,
+                                       int                 x,
+                                       int                 y);
+void meta_compositor_show_window_menu_for_rect (MetaCompositor     *compositor,
+                                                MetaWindow         *window,
+				                MetaWindowMenuType  menu,
+                                                MetaRectangle      *rect);
 
 #endif /* META_COMPOSITOR_H */

@@ -37,7 +37,7 @@
 
 #include <wayland-server.h>
 
-#include "backends/meta-backend.h"
+#include <meta/meta-backend.h>
 
 #include "meta-wayland-private.h"
 #include "meta-xwayland-private.h"
@@ -187,9 +187,7 @@ meta_wayland_compositor_set_input_focus (MetaWaylandCompositor *compositor,
 {
   MetaWaylandSurface *surface = window ? window->surface : NULL;
 
-  meta_wayland_keyboard_set_focus (&compositor->seat->keyboard,
-                                   surface);
-  meta_wayland_data_device_set_keyboard_focus (compositor->seat);
+  meta_wayland_seat_set_input_focus (compositor->seat, surface);
 }
 
 void
@@ -199,9 +197,9 @@ meta_wayland_compositor_repick (MetaWaylandCompositor *compositor)
 }
 
 static void
-meta_wayland_compositor_create_surface (struct wl_client *client,
-                                        struct wl_resource *resource,
-                                        guint32 id)
+wl_compositor_create_surface (struct wl_client *client,
+                              struct wl_resource *resource,
+                              guint32 id)
 {
   MetaWaylandCompositor *compositor = wl_resource_get_user_data (resource);
 
@@ -209,19 +207,19 @@ meta_wayland_compositor_create_surface (struct wl_client *client,
 }
 
 static void
-meta_wayland_region_destroy (struct wl_client *client,
-                             struct wl_resource *resource)
+wl_region_destroy (struct wl_client *client,
+                   struct wl_resource *resource)
 {
   wl_resource_destroy (resource);
 }
 
 static void
-meta_wayland_region_add (struct wl_client *client,
-                         struct wl_resource *resource,
-                         gint32 x,
-                         gint32 y,
-                         gint32 width,
-                         gint32 height)
+wl_region_add (struct wl_client *client,
+               struct wl_resource *resource,
+               gint32 x,
+               gint32 y,
+               gint32 width,
+               gint32 height)
 {
   MetaWaylandRegion *region = wl_resource_get_user_data (resource);
   cairo_rectangle_int_t rectangle = { x, y, width, height };
@@ -230,12 +228,12 @@ meta_wayland_region_add (struct wl_client *client,
 }
 
 static void
-meta_wayland_region_subtract (struct wl_client *client,
-                              struct wl_resource *resource,
-                              gint32 x,
-                              gint32 y,
-                              gint32 width,
-                              gint32 height)
+wl_region_subtract (struct wl_client *client,
+                    struct wl_resource *resource,
+                    gint32 x,
+                    gint32 y,
+                    gint32 width,
+                    gint32 height)
 {
   MetaWaylandRegion *region = wl_resource_get_user_data (resource);
   cairo_rectangle_int_t rectangle = { x, y, width, height };
@@ -243,10 +241,10 @@ meta_wayland_region_subtract (struct wl_client *client,
   cairo_region_subtract_rectangle (region->region, &rectangle);
 }
 
-const struct wl_region_interface meta_wayland_region_interface = {
-  meta_wayland_region_destroy,
-  meta_wayland_region_add,
-  meta_wayland_region_subtract
+static const struct wl_region_interface meta_wayland_region_interface = {
+  wl_region_destroy,
+  wl_region_add,
+  wl_region_subtract
 };
 
 static void
@@ -259,27 +257,21 @@ meta_wayland_region_resource_destroy_cb (struct wl_resource *resource)
 }
 
 static void
-meta_wayland_compositor_create_region (struct wl_client *wayland_client,
-                                       struct wl_resource *compositor_resource,
-                                       uint32_t id)
+wl_compositor_create_region (struct wl_client *client,
+                             struct wl_resource *compositor_resource,
+                             uint32_t id)
 {
   MetaWaylandRegion *region = g_slice_new0 (MetaWaylandRegion);
 
-  region->resource = wl_resource_create (wayland_client,
-					 &wl_region_interface,
-					 MIN (META_WL_REGION_VERSION,
-					      wl_resource_get_version (compositor_resource)),
-					 id);
-  wl_resource_set_implementation (region->resource,
-				  &meta_wayland_region_interface, region,
-				  meta_wayland_region_resource_destroy_cb);
+  region->resource = wl_resource_create (client, &wl_region_interface, wl_resource_get_version (compositor_resource), id);
+  wl_resource_set_implementation (region->resource, &meta_wayland_region_interface, region, meta_wayland_region_resource_destroy_cb);
 
   region->region = cairo_region_create ();
 }
 
 const static struct wl_compositor_interface meta_wayland_compositor_interface = {
-  meta_wayland_compositor_create_surface,
-  meta_wayland_compositor_create_region
+  wl_compositor_create_surface,
+  wl_compositor_create_region
 };
 
 void
@@ -304,8 +296,7 @@ compositor_bind (struct wl_client *client,
   MetaWaylandCompositor *compositor = data;
   struct wl_resource *resource;
 
-  resource = wl_resource_create (client, &wl_compositor_interface,
-				 MIN (META_WL_COMPOSITOR_VERSION, version), id);
+  resource = wl_resource_create (client, &wl_compositor_interface, version, id);
   wl_resource_set_implementation (resource, &meta_wayland_compositor_interface, compositor, NULL);
 }
 
@@ -360,7 +351,7 @@ set_gnome_env (const char *name,
 			       "Setenv",
 			       g_variant_new ("(ss)", name, value),
 			       NULL,
-			       G_DBUS_CALL_FLAGS_NONE,
+			       G_DBUS_CALL_FLAGS_NO_AUTO_START,
 			       -1, NULL, &error);
   if (error)
     {
@@ -380,32 +371,43 @@ meta_wayland_log_func (const char *fmt,
   g_free (str);
 }
 
+static void
+meta_wayland_compositor_init (MetaWaylandCompositor *compositor)
+{
+  memset (compositor, 0, sizeof (MetaWaylandCompositor));
+  wl_list_init (&compositor->frame_callbacks);
+}
+
 void
-meta_wayland_init (void)
+meta_wayland_pre_clutter_init (void)
 {
   MetaWaylandCompositor *compositor = &_meta_wayland_compositor;
 
-  memset (compositor, 0, sizeof (MetaWaylandCompositor));
+  meta_wayland_compositor_init (compositor);
+
+  /* Set up our logging. */
+  wl_log_set_handler_server (meta_wayland_log_func);
 
   compositor->wayland_display = wl_display_create ();
   if (compositor->wayland_display == NULL)
-    g_error ("failed to create wayland display");
+    g_error ("Failed to create the global wl_display");
 
-  wl_display_init_shm (compositor->wayland_display);
-  wl_log_set_handler_server(meta_wayland_log_func);
+  clutter_wayland_set_compositor_display (compositor->wayland_display);
+}
 
-  wl_list_init (&compositor->frame_callbacks);
+void
+meta_wayland_init (void)
+{
+  MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
+  GSource *wayland_event_source;
 
   if (!wl_global_create (compositor->wayland_display,
 			 &wl_compositor_interface,
 			 META_WL_COMPOSITOR_VERSION,
 			 compositor, compositor_bind))
-    g_error ("Failed to register wayland compositor object");
+    g_error ("Failed to register the global wl_compositor");
 
-  compositor->wayland_loop =
-    wl_display_get_event_loop (compositor->wayland_display);
-  compositor->wayland_event_source =
-    wayland_event_source_new (compositor->wayland_display);
+  wayland_event_source = wayland_event_source_new (compositor->wayland_display);
 
   /* XXX: Here we are setting the wayland event source to have a
    * slightly lower priority than the X event source, because we are
@@ -416,12 +418,10 @@ meta_wayland_init (void)
    * At some point we could perhaps try and get the X protocol proxied
    * over the wayland protocol so that we don't have to worry about
    * synchronizing the two command streams. */
-  g_source_set_priority (compositor->wayland_event_source,
-                         GDK_PRIORITY_EVENTS + 1);
-  g_source_attach (compositor->wayland_event_source, NULL);
-  clutter_wayland_set_compositor_display (compositor->wayland_display);
+  g_source_set_priority (wayland_event_source, GDK_PRIORITY_EVENTS + 1);
+  g_source_attach (wayland_event_source, NULL);
 
-  meta_clutter_init ();
+  wl_display_init_shm (compositor->wayland_display);
 
   meta_wayland_outputs_init (compositor);
   meta_wayland_data_device_manager_init (compositor);
@@ -429,8 +429,8 @@ meta_wayland_init (void)
   meta_wayland_seat_init (compositor);
 
   /* FIXME: find the first free name instead */
-  compositor->display_name = g_strdup ("wayland-0");
-  if (wl_display_add_socket (compositor->wayland_display, compositor->display_name))
+  compositor->display_name = wl_display_add_socket_auto (compositor->wayland_display);
+  if (compositor->display_name == NULL)
     g_error ("Failed to create socket");
 
   /* XXX: It's important that we only try and start xwayland after we

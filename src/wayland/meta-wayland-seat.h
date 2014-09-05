@@ -26,35 +26,22 @@
 #include <clutter/clutter.h>
 
 #include "meta-wayland-types.h"
-#include "meta-wayland-keyboard.h"
 #include "meta-wayland-pointer.h"
-
-struct _MetaWaylandDataOffer
-{
-  struct wl_resource *resource;
-  MetaWaylandDataSource *source;
-  struct wl_listener source_destroy_listener;
-};
-
-struct _MetaWaylandDataSource
-{
-  struct wl_resource *resource;
-  struct wl_array mime_types;
-};
+#include "meta-wayland-keyboard.h"
+#include "meta-wayland-touch.h"
+#include "meta-wayland-data-device.h"
 
 struct _MetaWaylandSeat
 {
   struct wl_list base_resource_list;
+  struct wl_display *wl_display;
 
-  uint32_t selection_serial;
-  MetaWaylandDataSource *selection_data_source;
-  struct wl_listener selection_data_source_listener;
-
-  struct wl_list data_device_resource_list;
   MetaWaylandPointer pointer;
   MetaWaylandKeyboard keyboard;
+  MetaWaylandTouch touch;
+  MetaWaylandDataDevice data_device;
 
-  struct wl_display *display;
+  guint capabilities;
 };
 
 void meta_wayland_seat_init (MetaWaylandCompositor *compositor);
@@ -67,7 +54,16 @@ void meta_wayland_seat_update (MetaWaylandSeat    *seat,
 gboolean meta_wayland_seat_handle_event (MetaWaylandSeat *seat,
                                          const ClutterEvent *event);
 
+void meta_wayland_seat_set_input_focus (MetaWaylandSeat    *seat,
+                                        MetaWaylandSurface *surface);
+
 void meta_wayland_seat_repick (MetaWaylandSeat *seat);
 void meta_wayland_seat_update_cursor_surface (MetaWaylandSeat *seat);
+
+gboolean meta_wayland_seat_get_grab_info (MetaWaylandSeat    *seat,
+					  MetaWaylandSurface *surface,
+					  uint32_t            serial,
+					  gfloat             *x,
+					  gfloat             *y);
 
 #endif /* META_WAYLAND_SEAT_H */

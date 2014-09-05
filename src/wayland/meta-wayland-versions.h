@@ -37,30 +37,12 @@
 /* Global/master objects (version exported by wl_registry and negotiated through bind) */
 #define META_WL_COMPOSITOR_VERSION          3
 #define META_WL_DATA_DEVICE_MANAGER_VERSION 1
+#define META_XDG_SHELL_VERSION              1
 #define META_WL_SHELL_VERSION               1
-#define META_WL_SEAT_VERSION                3
+#define META_WL_SEAT_VERSION                4
 #define META_WL_OUTPUT_VERSION              2
 #define META_XSERVER_VERSION                1
 #define META_GTK_SHELL_VERSION              1
 #define META_WL_SUBCOMPOSITOR_VERSION       1
-
-/* Slave objects (version inherited from a master object) */
-#define META_WL_DATA_OFFER_VERSION          1 /* from wl_data_device */
-#define META_WL_DATA_SOURCE_VERSION         1 /* from wl_data_device */
-#define META_WL_DATA_DEVICE_VERSION         1 /* from wl_data_device_manager */
-#define META_WL_SURFACE_VERSION             3 /* from wl_compositor */
-#define META_WL_POINTER_VERSION             3 /* from wl_seat */
-#define META_WL_KEYBOARD_VERSION            3 /* from wl_seat */
-#define META_WL_TOUCH_VERSION               0 /* from wl_seat; wl_touch not supported */
-#define META_WL_REGION_VERSION              1 /* from wl_compositor */
-#define META_XDG_SURFACE_VERSION            1 /* from xdg_shell */
-#define META_XDG_POPUP_VERSION              1 /* from xdg_shell */
-#define META_WL_SHELL_SURFACE_VERSION       1 /* from wl_shell */
-#define META_GTK_SURFACE_VERSION            1 /* from gtk_shell */
-#define META_WL_SUBSURFACE_VERSION          1 /* from wl_subcompositor */
-
-/* The first version to implement a specific event */
-#define META_WL_SEAT_HAS_NAME               2
-#define META_WL_OUTPUT_HAS_DONE             2
 
 #endif

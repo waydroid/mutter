@@ -170,6 +170,15 @@ meta_plugin_manager_event_simple (MetaPluginManager *plugin_mgr,
           klass->minimize (plugin, actor);
         }
       break;
+    case META_PLUGIN_UNMINIMIZE:
+      if (klass->unminimize)
+        {
+          retval = TRUE;
+          meta_plugin_manager_kill_window_effects (plugin_mgr,
+                                                   actor);
+          klass->unminimize (plugin, actor);
+        }
+      break;
     case META_PLUGIN_MAP:
       if (klass->map)
         {
@@ -355,4 +364,39 @@ meta_plugin_manager_hide_tile_preview (MetaPluginManager *plugin_mgr)
     }
 
   return FALSE;
+}
+
+void
+meta_plugin_manager_show_window_menu (MetaPluginManager  *plugin_mgr,
+                                      MetaWindow         *window,
+                                      MetaWindowMenuType  menu,
+                                      int                 x,
+                                      int                 y)
+{
+  MetaPlugin *plugin = plugin_mgr->plugin;
+  MetaPluginClass *klass = META_PLUGIN_GET_CLASS (plugin);
+  MetaDisplay *display = plugin_mgr->compositor->display;
+
+  if (display->display_opening)
+    return;
+
+  if (klass->show_window_menu)
+    klass->show_window_menu (plugin, window, menu, x, y);
+}
+
+void
+meta_plugin_manager_show_window_menu_for_rect (MetaPluginManager  *plugin_mgr,
+                                               MetaWindow         *window,
+                                               MetaWindowMenuType  menu,
+					       MetaRectangle      *rect)
+{
+  MetaPlugin *plugin = plugin_mgr->plugin;
+  MetaPluginClass *klass = META_PLUGIN_GET_CLASS (plugin);
+  MetaDisplay *display = plugin_mgr->compositor->display;
+
+  if (display->display_opening)
+    return;
+
+  if (klass->show_window_menu_for_rect)
+    klass->show_window_menu_for_rect (plugin, window, menu, rect);
 }

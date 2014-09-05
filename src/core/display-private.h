@@ -2,12 +2,12 @@
 
 /* Mutter X display handler */
 
-/* 
+/*
  * Copyright (C) 2001 Havoc Pennington
  * Copyright (C) 2002 Red Hat, Inc.
  * Copyright (C) 2003 Rob Adams
  * Copyright (C) 2004-2006 Elijah Newren
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -17,7 +17,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
@@ -35,6 +35,7 @@
 #include <meta/boxes.h>
 #include <meta/display.h>
 #include "keybindings-private.h"
+#include "meta-gesture-tracker-private.h"
 #include <meta/prefs.h>
 #include <meta/barrier.h>
 #include <clutter/clutter.h>
@@ -52,10 +53,6 @@ typedef struct _MetaGroupPropHooks  MetaGroupPropHooks;
 typedef struct _MetaWindowPropHooks MetaWindowPropHooks;
 
 typedef struct MetaEdgeResistanceData MetaEdgeResistanceData;
-
-typedef void (* MetaWindowPingFunc) (MetaWindow  *window,
-                                     guint32      timestamp,
-                                     gpointer     user_data);
 
 typedef enum {
   META_LIST_DEFAULT                   = 0,      /* normal windows */
@@ -82,10 +79,28 @@ typedef enum {
   META_TILE_MAXIMIZED
 } MetaTileMode;
 
+typedef enum {
+  /* Normal interaction where you're interacting with windows.
+   * Events go to windows normally. */
+  META_EVENT_ROUTE_NORMAL,
+
+  /* In a compositor grab operation. All events go to the
+   * compositor plugin. */
+  META_EVENT_ROUTE_COMPOSITOR_GRAB,
+
+  /* A Wayland application has a popup open. All events go to
+   * the Wayland application. */
+  META_EVENT_ROUTE_WAYLAND_POPUP,
+
+  /* In a window operation like moving or resizing. All events
+   * goes to MetaWindow, but not to the actual client window. */
+  META_EVENT_ROUTE_WINDOW_OP,
+} MetaEventRoute;
+
 struct _MetaDisplay
 {
   GObject parent_instance;
-  
+
   char *name;
   Display *xdisplay;
 
@@ -143,13 +158,11 @@ struct _MetaDisplay
    * multiple events with the same serial.
    */
   guint focused_by_us : 1;
-  
+
   /*< private-ish >*/
   MetaScreen *screen;
   GHashTable *xids;
   GHashTable *wayland_windows;
-
-  int server_grab_count;
 
   /* serials of leave/unmap events that may
    * correspond to an enter event we should
@@ -157,7 +170,7 @@ struct _MetaDisplay
    */
   unsigned long ignored_crossing_serials[N_IGNORED_CROSSING_SERIALS];
   Window ungrab_should_not_cause_focus_window;
-  
+
   guint32 current_time;
 
   /* We maintain a sequence counter, incremented for each #MetaWindow
@@ -179,13 +192,12 @@ struct _MetaDisplay
   guint       autoraise_timeout_id;
   MetaWindow* autoraise_window;
 
-  /* Alt+click button grabs */
-  ClutterModifierType window_grab_modifiers;
-  
+  /* Event routing */
+  MetaEventRoute event_route;
+
   /* current window operation */
   MetaGrabOp  grab_op;
   MetaWindow *grab_window;
-  Window      grab_xwindow;
   int         grab_button;
   int         grab_anchor_root_x;
   int         grab_anchor_root_y;
@@ -206,35 +218,18 @@ struct _MetaDisplay
   GTimeVal    grab_last_moveresize_time;
   MetaEdgeResistanceData *grab_edge_resistance_data;
   unsigned int grab_last_user_action_was_snap;
-  guint32     grab_timestamp;
 
   /* we use property updates as sentinels for certain window focus events
    * to avoid some race conditions on EnterNotify events
    */
   int         sentinel_counter;
 
-#ifdef HAVE_XKB
   int         xkb_base_event_type;
   guint32     last_bell_time;
-#endif
   int	      grab_resize_timeout_id;
 
-  /* Keybindings stuff */
-  GHashTable     *key_bindings;
-  GHashTable     *key_bindings_index;
-  int             min_keycode;
-  int             max_keycode;
-  KeySym *keymap;
-  int keysyms_per_keycode;
-  unsigned int ignored_modifier_mask;
-  unsigned int hyper_mask;
-  unsigned int super_mask;
-  unsigned int meta_mask;
-  MetaKeyCombo overlay_key_combo;
-  gboolean overlay_key_only_pressed;
-  MetaKeyCombo *iso_next_group_combos;
-  int n_iso_next_group_combos;
-  
+  MetaKeyBindingManager key_binding_manager;
+
   /* Monitor cache */
   unsigned int monitor_cache_invalidated : 1;
 
@@ -247,10 +242,6 @@ struct _MetaDisplay
   /* Managed by group.c */
   GHashTable *groups_by_leader;
 
-  /* currently-active window menu if any */
-  MetaWindowMenu *window_menu;
-  MetaWindow *window_with_menu;
-
   /* Managed by window-props.c */
   MetaWindowPropHooks *prop_hooks_table;
   GHashTable *prop_hooks;
@@ -261,6 +252,9 @@ struct _MetaDisplay
 
   /* Managed by compositor.c */
   MetaCompositor *compositor;
+
+  MetaGestureTracker *gesture_tracker;
+  ClutterEventSequence *pointer_emulating_sequence;
 
   int composite_event_base;
   int composite_error_base;
@@ -320,8 +314,6 @@ struct _MetaDisplayClass
 gboolean      meta_display_open                (void);
 void          meta_display_close               (MetaDisplay *display,
                                                 guint32      timestamp);
-void          meta_display_grab                (MetaDisplay *display);
-void          meta_display_ungrab              (MetaDisplay *display);
 
 void          meta_display_unmanage_windows_for_screen (MetaDisplay *display,
                                                         MetaScreen  *screen,
@@ -367,9 +359,7 @@ MetaDisplay* meta_get_display            (void);
 Cursor         meta_display_create_x_cursor (MetaDisplay *display,
                                              MetaCursor   cursor);
 
-void     meta_display_set_grab_op_cursor (MetaDisplay *display,
-                                          MetaGrabOp   op,
-                                          guint32      timestamp);
+void     meta_display_update_cursor (MetaDisplay *display);
 
 void    meta_display_check_threshold_reached (MetaDisplay *display,
                                               int          x,
@@ -399,26 +389,17 @@ const char* meta_event_detail_to_string (int d);
 void meta_display_queue_retheme_all_windows (MetaDisplay *display);
 void meta_display_retheme_all (void);
 
-void meta_display_ping_window      (MetaWindow         *window,
-                                    guint32             timestamp,
-                                    MetaWindowPingFunc  ping_reply_func,
-                                    MetaWindowPingFunc  ping_timeout_func,
-                                    void               *user_data);
-void meta_display_pong_for_serial  (MetaDisplay        *display,
-                                    guint32             serial);
+void meta_display_ping_window      (MetaWindow  *window,
+                                    guint32      serial);
+void meta_display_pong_for_serial  (MetaDisplay *display,
+                                    guint32      serial);
 
 int meta_resize_gravity_from_grab_op (MetaGrabOp op);
 
 gboolean meta_grab_op_is_moving   (MetaGrabOp op);
 gboolean meta_grab_op_is_resizing (MetaGrabOp op);
-gboolean meta_grab_op_is_moving_or_resizing (MetaGrabOp op);
 gboolean meta_grab_op_is_mouse    (MetaGrabOp op);
 gboolean meta_grab_op_is_keyboard (MetaGrabOp op);
-gboolean meta_grab_op_should_block_wayland (MetaGrabOp op);
-
-void meta_display_devirtualize_modifiers (MetaDisplay        *display,
-                                          MetaVirtualModifier modifiers,
-                                          unsigned int       *mask);
 
 void meta_display_increment_focus_sentinel (MetaDisplay *display);
 void meta_display_decrement_focus_sentinel (MetaDisplay *display);
@@ -455,5 +436,21 @@ void meta_display_sanity_check_timestamps (MetaDisplay *display,
                                            guint32      timestamp);
 gboolean meta_display_timestamp_too_old (MetaDisplay *display,
                                          guint32     *timestamp);
+
+void meta_display_remove_pending_pings_for_window (MetaDisplay *display,
+                                                   MetaWindow  *window);
+
+MetaGestureTracker * meta_display_get_gesture_tracker (MetaDisplay *display);
+
+gboolean meta_display_show_restart_message (MetaDisplay *display,
+                                            const char  *message);
+gboolean meta_display_request_restart      (MetaDisplay *display);
+
+void meta_restart_init (void);
+void meta_restart_finish (void);
+
+void meta_display_cancel_touch (MetaDisplay *display);
+
+gboolean meta_display_windows_are_interactable (MetaDisplay *display);
 
 #endif

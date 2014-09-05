@@ -1,8 +1,8 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* 
+/*
  * Copyright 2013 Red Hat, Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -12,7 +12,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
@@ -38,7 +38,7 @@
 #include <meta/meta-idle-monitor.h>
 #include "meta-idle-monitor-private.h"
 #include "meta-idle-monitor-dbus.h"
-#include "meta-backend.h"
+#include "meta-backend-private.h"
 
 G_STATIC_ASSERT(sizeof(unsigned long) == sizeof(gpointer));
 
@@ -210,9 +210,9 @@ make_watch (MetaIdleMonitor           *monitor,
  * meta_idle_monitor_add_idle_watch:
  * @monitor: A #MetaIdleMonitor
  * @interval_msec: The idletime interval, in milliseconds
- * @callback: (allow-none): The callback to call when the user has
+ * @callback: (nullable): The callback to call when the user has
  *     accumulated @interval_msec milliseconds of idle time.
- * @user_data: (allow-none): The user data to pass to the callback
+ * @user_data: (nullable): The user data to pass to the callback
  * @notify: A #GDestroyNotify
  *
  * Returns: a watch id
@@ -252,9 +252,9 @@ meta_idle_monitor_add_idle_watch (MetaIdleMonitor	       *monitor,
 /**
  * meta_idle_monitor_add_user_active_watch:
  * @monitor: A #MetaIdleMonitor
- * @callback: (allow-none): The callback to call when the user is
+ * @callback: (nullable): The callback to call when the user is
  *     active again.
- * @user_data: (allow-none): The user data to pass to the callback
+ * @user_data: (nullable): The user data to pass to the callback
  * @notify: A #GDestroyNotify
  *
  * Returns: a watch id

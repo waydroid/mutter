@@ -1,6 +1,6 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
-/* 
+/*
  * Copyright (C) 2001, 2002 Havoc Pennington
  * Copyright (C) 2002, 2003 Red Hat Inc.
  * Some ICCCM manager selection code derived from fvwm2,
@@ -8,7 +8,7 @@
  * Copyright (C) 2003 Rob Adams
  * Copyright (C) 2004-2006 Elijah Newren
  * Copyright (C) 2013 Red Hat Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -18,7 +18,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
@@ -60,7 +60,7 @@ typedef struct {
   gboolean enabled;
   MetaRectangle rect;
   float refresh_rate;
-  enum wl_output_transform transform;
+  MetaMonitorTransform transform;
 
   gboolean is_primary;
   gboolean is_presentation;
@@ -78,6 +78,7 @@ struct _MetaMonitorConfig {
   GHashTable *configs;
   MetaConfiguration *current;
   gboolean current_is_stored;
+  gboolean current_is_for_laptop_lid;
   MetaConfiguration *previous;
 
   GFile *file;
@@ -570,7 +571,7 @@ is_all_whitespace (const char *text,
                    gsize       text_len)
 {
   gsize i;
-  
+
   for (i = 0; i < text_len; i++)
     if (!g_ascii_isspace (text[i]))
       return FALSE;
@@ -655,20 +656,20 @@ handle_text (GMarkupParseContext *context,
         else if (strcmp (parser->output_field, "rotation") == 0)
           {
             if (strncmp (text, "normal", text_len) == 0)
-              parser->output.transform = WL_OUTPUT_TRANSFORM_NORMAL;
+              parser->output.transform = META_MONITOR_TRANSFORM_NORMAL;
             else if (strncmp (text, "left", text_len) == 0)
-              parser->output.transform = WL_OUTPUT_TRANSFORM_90;
+              parser->output.transform = META_MONITOR_TRANSFORM_90;
             else if (strncmp (text, "upside_down", text_len) == 0)
-              parser->output.transform = WL_OUTPUT_TRANSFORM_180;
+              parser->output.transform = META_MONITOR_TRANSFORM_180;
             else if (strncmp (text, "right", text_len) == 0)
-              parser->output.transform = WL_OUTPUT_TRANSFORM_270;
+              parser->output.transform = META_MONITOR_TRANSFORM_270;
             else
               g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
                            "Invalid rotation type %.*s", (int)text_len, text);
           }
         else if (strcmp (parser->output_field, "reflect_x") == 0)
           parser->output.transform += read_bool (text, text_len, error) ?
-            WL_OUTPUT_TRANSFORM_FLIPPED : 0;
+            META_MONITOR_TRANSFORM_FLIPPED : 0;
         else if (strcmp (parser->output_field, "reflect_y") == 0)
           {
             /* FIXME (look at the rotation map in monitor.c) */
@@ -877,7 +878,8 @@ apply_configuration (MetaMonitorConfig  *self,
 
   /* Stored (persistent) configurations override the previous one always.
      Also, we clear the previous configuration if the current one (which is
-     about to become previous) is stored.
+     about to become previous) is stored, or if the current one has
+     different outputs.
   */
   if (stored ||
       (self->current && self->current_is_stored))
@@ -888,11 +890,27 @@ apply_configuration (MetaMonitorConfig  *self,
     }
   else
     {
-      self->previous = self->current;
+      /* Despite the name, config_equal() only checks the set of outputs,
+         not their modes
+      */
+      if (self->current && config_equal (self->current, config))
+        {
+          self->previous = self->current;
+        }
+      else
+        {
+          if (self->current)
+            config_free (self->current);
+          self->previous = NULL;
+        }
     }
 
   self->current = config;
   self->current_is_stored = stored;
+  /* If true, we'll be overridden at the end of this call
+     inside turn_off_laptop_display()
+  */
+  self->current_is_for_laptop_lid = FALSE;
 
   if (self->current == self->previous)
     self->previous = NULL;
@@ -1009,8 +1027,16 @@ meta_monitor_config_apply_stored (MetaMonitorConfig  *self,
       if (self->lid_is_closed &&
           stored->n_outputs > 1 &&
           laptop_display_is_on (stored))
-        return apply_configuration (self, make_laptop_lid_config (stored),
-                                    manager, FALSE);
+        {
+          if (apply_configuration (self, make_laptop_lid_config (stored),
+                                   manager, FALSE))
+            {
+              self->current_is_for_laptop_lid = TRUE;
+              return TRUE;
+            }
+          else
+            return FALSE;
+        }
       else
         return apply_configuration (self, stored, manager, TRUE);
     }
@@ -1089,7 +1115,7 @@ make_default_config (MetaMonitorConfig *self,
       ret->outputs[0].rect.width = outputs[0].preferred_mode->width;
       ret->outputs[0].rect.height = outputs[0].preferred_mode->height;
       ret->outputs[0].refresh_rate = outputs[0].preferred_mode->refresh_rate;
-      ret->outputs[0].transform = WL_OUTPUT_TRANSFORM_NORMAL;
+      ret->outputs[0].transform = META_MONITOR_TRANSFORM_NORMAL;
       ret->outputs[0].is_primary = TRUE;
 
       return ret;
@@ -1141,7 +1167,7 @@ make_default_config (MetaMonitorConfig *self,
                   ret->outputs[j].rect.width = outputs[0].preferred_mode->width;
                   ret->outputs[j].rect.height = outputs[0].preferred_mode->height;
                   ret->outputs[j].refresh_rate = outputs[0].preferred_mode->refresh_rate;
-                  ret->outputs[j].transform = WL_OUTPUT_TRANSFORM_NORMAL;
+                  ret->outputs[j].transform = META_MONITOR_TRANSFORM_NORMAL;
                   ret->outputs[j].is_primary = FALSE;
                   ret->outputs[j].is_presentation = FALSE;
                 }
@@ -1176,7 +1202,7 @@ make_default_config (MetaMonitorConfig *self,
       ret->outputs[i].rect.width = output->preferred_mode->width;
       ret->outputs[i].rect.height = output->preferred_mode->height;
       ret->outputs[i].refresh_rate = output->preferred_mode->refresh_rate;
-      ret->outputs[i].transform = WL_OUTPUT_TRANSFORM_NORMAL;
+      ret->outputs[i].transform = META_MONITOR_TRANSFORM_NORMAL;
       ret->outputs[i].is_primary = (output == primary);
 
       /* Disable outputs that would go beyond framebuffer limits */
@@ -1224,7 +1250,7 @@ ensure_at_least_one_output (MetaMonitorConfig  *self,
           ret->outputs[i].rect.width = output->preferred_mode->width;
           ret->outputs[i].rect.height = output->preferred_mode->height;
           ret->outputs[i].refresh_rate = output->preferred_mode->refresh_rate;
-          ret->outputs[i].transform = WL_OUTPUT_TRANSFORM_NORMAL;
+          ret->outputs[i].transform = META_MONITOR_TRANSFORM_NORMAL;
           ret->outputs[i].is_primary = TRUE;
         }
       else
@@ -1357,6 +1383,7 @@ turn_off_laptop_display (MetaMonitorConfig  *self,
 
   new = make_laptop_lid_config (self->current);
   apply_configuration (self, new, manager, FALSE);
+  self->current_is_for_laptop_lid = TRUE;
 }
 
 static void
@@ -1376,7 +1403,7 @@ power_client_changed_cb (UpClient   *client,
 
       if (is_closed)
         turn_off_laptop_display (self, manager);
-      else
+      else if (self->current_is_for_laptop_lid)
         meta_monitor_config_restore_previous (self, manager);
     }
 }
@@ -1485,7 +1512,7 @@ meta_monitor_config_save (MetaMonitorConfig *self)
                                       output->rect.x,
                                       output->rect.y,
                                       rotation_map[output->transform & 0x3],
-                                      output->transform >= WL_OUTPUT_TRANSFORM_FLIPPED ? "yes" : "no",
+                                      output->transform >= META_MONITOR_TRANSFORM_FLIPPED ? "yes" : "no",
                                       output->is_primary ? "yes" : "no",
                                       output->is_presentation ? "yes" : "no");
             }
@@ -1594,13 +1621,13 @@ output_supports_mode (MetaOutput      *output,
 }
 
 static gboolean
-crtc_assignment_assign (CrtcAssignment            *assign,
-			MetaCRTC                  *crtc,
-			MetaMonitorMode           *mode,
-			int                        x,
-			int                        y,
-			enum wl_output_transform   transform,
-			MetaOutput                *output)
+crtc_assignment_assign (CrtcAssignment       *assign,
+			MetaCRTC             *crtc,
+			MetaMonitorMode      *mode,
+			int                   x,
+			int                   y,
+			MetaMonitorTransform  transform,
+			MetaOutput           *output)
 {
   MetaCRTCInfo *info = g_hash_table_lookup (assign->info, crtc);
 

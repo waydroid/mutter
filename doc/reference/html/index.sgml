@@ -19,7 +19,6 @@
 <ANCHOR id="meta-Common.other" href="meta/meta-Common.html#meta-Common.other">
 <ANCHOR id="meta-Common.description" href="meta/meta-Common.html#meta-Common.description">
 <ANCHOR id="meta-Common.functions_details" href="meta/meta-Common.html#meta-Common.functions_details">
-<ANCHOR id="MetaWindowMenuFunc" href="meta/meta-Common.html#MetaWindowMenuFunc">
 <ANCHOR id="meta-frame-borders-clear" href="meta/meta-Common.html#meta-frame-borders-clear">
 <ANCHOR id="META-PRIORITY-RESIZE:CAPS" href="meta/meta-Common.html#META-PRIORITY-RESIZE:CAPS">
 <ANCHOR id="META-PRIORITY-BEFORE-REDRAW:CAPS" href="meta/meta-Common.html#META-PRIORITY-BEFORE-REDRAW:CAPS">
@@ -30,7 +29,6 @@
 <ANCHOR id="META-VIRTUAL-CORE-POINTER-ID:CAPS" href="meta/meta-Common.html#META-VIRTUAL-CORE-POINTER-ID:CAPS">
 <ANCHOR id="META-VIRTUAL-CORE-KEYBOARD-ID:CAPS" href="meta/meta-Common.html#META-VIRTUAL-CORE-KEYBOARD-ID:CAPS">
 <ANCHOR id="MetaFrameFlags" href="meta/meta-Common.html#MetaFrameFlags">
-<ANCHOR id="MetaMenuOp" href="meta/meta-Common.html#MetaMenuOp">
 <ANCHOR id="MetaGrabOp" href="meta/meta-Common.html#MetaGrabOp">
 <ANCHOR id="MetaCursor" href="meta/meta-Common.html#MetaCursor">
 <ANCHOR id="MetaFrameType" href="meta/meta-Common.html#MetaFrameType">
@@ -48,8 +46,6 @@
 <ANCHOR id="META-MINI-ICON-HEIGHT:CAPS" href="meta/meta-Common.html#META-MINI-ICON-HEIGHT:CAPS">
 <ANCHOR id="META-DEFAULT-ICON-NAME:CAPS" href="meta/meta-Common.html#META-DEFAULT-ICON-NAME:CAPS">
 <ANCHOR id="MetaStackLayer" href="meta/meta-Common.html#MetaStackLayer">
-<ANCHOR id="MetaWindowMenu" href="meta/meta-Common.html#MetaWindowMenu">
-<ANCHOR id="MetaResizePopup" href="meta/meta-Common.html#MetaResizePopup">
 <ANCHOR id="meta-Gradients" href="meta/meta-Gradients.html">
 <ANCHOR id="meta-Gradients.functions" href="meta/meta-Gradients.html#meta-Gradients.functions">
 <ANCHOR id="meta-Gradients.other" href="meta/meta-Gradients.html#meta-Gradients.other">
@@ -109,7 +105,6 @@
 <ANCHOR id="meta-prefs-set-ignore-request-hide-titlebar" href="meta/meta-Preferences.html#meta-prefs-set-ignore-request-hide-titlebar">
 <ANCHOR id="MetaKeyHandlerFunc" href="meta/meta-Preferences.html#MetaKeyHandlerFunc">
 <ANCHOR id="meta-prefs-get-keybinding-action" href="meta/meta-Preferences.html#meta-prefs-get-keybinding-action">
-<ANCHOR id="meta-prefs-get-window-binding" href="meta/meta-Preferences.html#meta-prefs-get-window-binding">
 <ANCHOR id="meta-prefs-get-visual-bell" href="meta/meta-Preferences.html#meta-prefs-get-visual-bell">
 <ANCHOR id="meta-prefs-bell-is-audible" href="meta/meta-Preferences.html#meta-prefs-bell-is-audible">
 <ANCHOR id="meta-prefs-get-visual-bell-type" href="meta/meta-Preferences.html#meta-prefs-get-visual-bell-type">
@@ -172,6 +167,7 @@
 <ANCHOR id="META-PLUGIN-DECLARE:CAPS" href="meta/MetaPlugin.html#META-PLUGIN-DECLARE:CAPS">
 <ANCHOR id="meta-plugin-switch-workspace-completed" href="meta/MetaPlugin.html#meta-plugin-switch-workspace-completed">
 <ANCHOR id="meta-plugin-minimize-completed" href="meta/MetaPlugin.html#meta-plugin-minimize-completed">
+<ANCHOR id="meta-plugin-unminimize-completed" href="meta/MetaPlugin.html#meta-plugin-unminimize-completed">
 <ANCHOR id="meta-plugin-maximize-completed" href="meta/MetaPlugin.html#meta-plugin-maximize-completed">
 <ANCHOR id="meta-plugin-unmaximize-completed" href="meta/MetaPlugin.html#meta-plugin-unmaximize-completed">
 <ANCHOR id="meta-plugin-map-completed" href="meta/MetaPlugin.html#meta-plugin-map-completed">
@@ -254,10 +250,8 @@
 <ANCHOR id="meta-compositor-maximize-window" href="meta/meta-MetaCompositor.html#meta-compositor-maximize-window">
 <ANCHOR id="meta-compositor-unmaximize-window" href="meta/meta-MetaCompositor.html#meta-compositor-unmaximize-window">
 <ANCHOR id="meta-compositor-sync-window-geometry" href="meta/meta-MetaCompositor.html#meta-compositor-sync-window-geometry">
-<ANCHOR id="meta-compositor-set-updates-frozen" href="meta/meta-MetaCompositor.html#meta-compositor-set-updates-frozen">
 <ANCHOR id="meta-compositor-queue-frame-drawn" href="meta/meta-MetaCompositor.html#meta-compositor-queue-frame-drawn">
 <ANCHOR id="meta-compositor-sync-stack" href="meta/meta-MetaCompositor.html#meta-compositor-sync-stack">
-<ANCHOR id="meta-compositor-sync-screen-size" href="meta/meta-MetaCompositor.html#meta-compositor-sync-screen-size">
 <ANCHOR id="meta-compositor-flash-screen" href="meta/meta-MetaCompositor.html#meta-compositor-flash-screen">
 <ANCHOR id="meta-get-stage-for-screen" href="meta/meta-MetaCompositor.html#meta-get-stage-for-screen">
 <ANCHOR id="meta-get-overlay-window" href="meta/meta-MetaCompositor.html#meta-get-overlay-window">
@@ -280,7 +274,6 @@
 <ANCHOR id="MetaDisplay.description" href="meta/MetaDisplay.html#MetaDisplay.description">
 <ANCHOR id="MetaDisplay.functions_details" href="meta/MetaDisplay.html#MetaDisplay.functions_details">
 <ANCHOR id="meta-XFree" href="meta/MetaDisplay.html#meta-XFree">
-<ANCHOR id="meta-display-get-compositor-version" href="meta/MetaDisplay.html#meta-display-get-compositor-version">
 <ANCHOR id="meta-display-get-xinput-opcode" href="meta/MetaDisplay.html#meta-display-get-xinput-opcode">
 <ANCHOR id="meta-display-supports-extended-barriers" href="meta/MetaDisplay.html#meta-display-supports-extended-barriers">
 <ANCHOR id="meta-display-get-xdisplay" href="meta/MetaDisplay.html#meta-display-get-xdisplay">
@@ -322,6 +315,8 @@
 <ANCHOR id="MetaDisplay-grab-op-end" href="meta/MetaDisplay.html#MetaDisplay-grab-op-end">
 <ANCHOR id="MetaDisplay-modifiers-accelerator-activated" href="meta/MetaDisplay.html#MetaDisplay-modifiers-accelerator-activated">
 <ANCHOR id="MetaDisplay-overlay-key" href="meta/MetaDisplay.html#MetaDisplay-overlay-key">
+<ANCHOR id="MetaDisplay-restart" href="meta/MetaDisplay.html#MetaDisplay-restart">
+<ANCHOR id="MetaDisplay-show-restart-message" href="meta/MetaDisplay.html#MetaDisplay-show-restart-message">
 <ANCHOR id="MetaDisplay-window-created" href="meta/MetaDisplay.html#MetaDisplay-window-created">
 <ANCHOR id="MetaDisplay-window-demands-attention" href="meta/MetaDisplay.html#MetaDisplay-window-demands-attention">
 <ANCHOR id="MetaDisplay-window-marked-urgent" href="meta/MetaDisplay.html#MetaDisplay-window-marked-urgent">
@@ -384,6 +379,7 @@
 <ANCHOR id="MetaShadowFactory-changed" href="meta/MetaShadowFactory.html#MetaShadowFactory-changed">
 <ANCHOR id="MetaShapedTexture" href="meta/MetaShapedTexture.html">
 <ANCHOR id="MetaShapedTexture.functions" href="meta/MetaShapedTexture.html#MetaShapedTexture.functions">
+<ANCHOR id="MetaShapedTexture.signals" href="meta/MetaShapedTexture.html#MetaShapedTexture.signals">
 <ANCHOR id="MetaShapedTexture.other" href="meta/MetaShapedTexture.html#MetaShapedTexture.other">
 <ANCHOR id="MetaShapedTexture.object-hierarchy" href="meta/MetaShapedTexture.html#MetaShapedTexture.object-hierarchy">
 <ANCHOR id="MetaShapedTexture.implemented-interfaces" href="meta/MetaShapedTexture.html#MetaShapedTexture.implemented-interfaces">
@@ -398,9 +394,12 @@
 <ANCHOR id="MetaShapedTexture.other_details" href="meta/MetaShapedTexture.html#MetaShapedTexture.other_details">
 <ANCHOR id="MetaShapedTexture-struct" href="meta/MetaShapedTexture.html#MetaShapedTexture-struct">
 <ANCHOR id="MetaShapedTextureClass" href="meta/MetaShapedTexture.html#MetaShapedTextureClass">
+<ANCHOR id="MetaShapedTexture.signal-details" href="meta/MetaShapedTexture.html#MetaShapedTexture.signal-details">
+<ANCHOR id="MetaShapedTexture-size-changed" href="meta/MetaShapedTexture.html#MetaShapedTexture-size-changed">
 <ANCHOR id="MetaWindowActor" href="meta/MetaWindowActor.html">
 <ANCHOR id="MetaWindowActor.functions" href="meta/MetaWindowActor.html#MetaWindowActor.functions">
 <ANCHOR id="MetaWindowActor.properties" href="meta/MetaWindowActor.html#MetaWindowActor.properties">
+<ANCHOR id="MetaWindowActor.signals" href="meta/MetaWindowActor.html#MetaWindowActor.signals">
 <ANCHOR id="MetaWindowActor.other" href="meta/MetaWindowActor.html#MetaWindowActor.other">
 <ANCHOR id="MetaWindowActor.object-hierarchy" href="meta/MetaWindowActor.html#MetaWindowActor.object-hierarchy">
 <ANCHOR id="MetaWindowActor.implemented-interfaces" href="meta/MetaWindowActor.html#MetaWindowActor.implemented-interfaces">
@@ -417,6 +416,8 @@
 <ANCHOR id="MetaWindowActor--meta-window" href="meta/MetaWindowActor.html#MetaWindowActor--meta-window">
 <ANCHOR id="MetaWindowActor--no-shadow" href="meta/MetaWindowActor.html#MetaWindowActor--no-shadow">
 <ANCHOR id="MetaWindowActor--shadow-class" href="meta/MetaWindowActor.html#MetaWindowActor--shadow-class">
+<ANCHOR id="MetaWindowActor.signal-details" href="meta/MetaWindowActor.html#MetaWindowActor.signal-details">
+<ANCHOR id="MetaWindowActor-first-frame" href="meta/MetaWindowActor.html#MetaWindowActor-first-frame">
 <ANCHOR id="MetaScreen" href="meta/MetaScreen.html">
 <ANCHOR id="MetaScreen.functions" href="meta/MetaScreen.html#MetaScreen.functions">
 <ANCHOR id="MetaScreen.properties" href="meta/MetaScreen.html#MetaScreen.properties">
@@ -478,8 +479,7 @@
 <ANCHOR id="meta-window-is-monitor-sized" href="meta/MetaWindow.html#meta-window-is-monitor-sized">
 <ANCHOR id="meta-window-is-override-redirect" href="meta/MetaWindow.html#meta-window-is-override-redirect">
 <ANCHOR id="meta-window-is-skip-taskbar" href="meta/MetaWindow.html#meta-window-is-skip-taskbar">
-<ANCHOR id="meta-window-get-rect" href="meta/MetaWindow.html#meta-window-get-rect">
-<ANCHOR id="meta-window-get-input-rect" href="meta/MetaWindow.html#meta-window-get-input-rect">
+<ANCHOR id="meta-window-get-buffer-rect" href="meta/MetaWindow.html#meta-window-get-buffer-rect">
 <ANCHOR id="meta-window-get-frame-rect" href="meta/MetaWindow.html#meta-window-get-frame-rect">
 <ANCHOR id="meta-window-get-outer-rect" href="meta/MetaWindow.html#meta-window-get-outer-rect">
 <ANCHOR id="meta-window-client-rect-to-frame-rect" href="meta/MetaWindow.html#meta-window-client-rect-to-frame-rect">
@@ -505,11 +505,9 @@
 <ANCHOR id="meta-window-get-gtk-window-object-path" href="meta/MetaWindow.html#meta-window-get-gtk-window-object-path">
 <ANCHOR id="meta-window-get-gtk-app-menu-object-path" href="meta/MetaWindow.html#meta-window-get-gtk-app-menu-object-path">
 <ANCHOR id="meta-window-get-gtk-menubar-object-path" href="meta/MetaWindow.html#meta-window-get-gtk-menubar-object-path">
-<ANCHOR id="meta-window-move" href="meta/MetaWindow.html#meta-window-move">
 <ANCHOR id="meta-window-move-frame" href="meta/MetaWindow.html#meta-window-move-frame">
 <ANCHOR id="meta-window-move-resize-frame" href="meta/MetaWindow.html#meta-window-move-resize-frame">
 <ANCHOR id="meta-window-move-to-monitor" href="meta/MetaWindow.html#meta-window-move-to-monitor">
-<ANCHOR id="meta-window-resize" href="meta/MetaWindow.html#meta-window-resize">
 <ANCHOR id="meta-window-set-demands-attention" href="meta/MetaWindow.html#meta-window-set-demands-attention">
 <ANCHOR id="meta-window-unset-demands-attention" href="meta/MetaWindow.html#meta-window-unset-demands-attention">
 <ANCHOR id="meta-window-get-startup-id" href="meta/MetaWindow.html#meta-window-get-startup-id">
@@ -588,6 +586,7 @@
 <ANCHOR id="MetaWindow--mini-icon" href="meta/MetaWindow.html#MetaWindow--mini-icon">
 <ANCHOR id="MetaWindow--minimized" href="meta/MetaWindow.html#MetaWindow--minimized">
 <ANCHOR id="MetaWindow--mutter-hints" href="meta/MetaWindow.html#MetaWindow--mutter-hints">
+<ANCHOR id="MetaWindow--on-all-workspaces" href="meta/MetaWindow.html#MetaWindow--on-all-workspaces">
 <ANCHOR id="MetaWindow--resizeable" href="meta/MetaWindow.html#MetaWindow--resizeable">
 <ANCHOR id="MetaWindow--skip-taskbar" href="meta/MetaWindow.html#MetaWindow--skip-taskbar">
 <ANCHOR id="MetaWindow--title" href="meta/MetaWindow.html#MetaWindow--title">
@@ -617,7 +616,6 @@
 <ANCHOR id="meta-workspace-get-work-area-all-monitors" href="meta/MetaWorkspace.html#meta-workspace-get-work-area-all-monitors">
 <ANCHOR id="meta-workspace-activate" href="meta/MetaWorkspace.html#meta-workspace-activate">
 <ANCHOR id="meta-workspace-activate-with-focus" href="meta/MetaWorkspace.html#meta-workspace-activate-with-focus">
-<ANCHOR id="meta-workspace-update-window-hints" href="meta/MetaWorkspace.html#meta-workspace-update-window-hints">
 <ANCHOR id="meta-workspace-set-builtin-struts" href="meta/MetaWorkspace.html#meta-workspace-set-builtin-struts">
 <ANCHOR id="meta-workspace-get-neighbor" href="meta/MetaWorkspace.html#meta-workspace-get-neighbor">
 <ANCHOR id="MetaWorkspace.other_details" href="meta/MetaWorkspace.html#MetaWorkspace.other_details">
@@ -625,6 +623,7 @@
 <ANCHOR id="MetaWorkspaceClass" href="meta/MetaWorkspace.html#MetaWorkspaceClass">
 <ANCHOR id="MetaWorkspace.property-details" href="meta/MetaWorkspace.html#MetaWorkspace.property-details">
 <ANCHOR id="MetaWorkspace--n-windows" href="meta/MetaWorkspace.html#MetaWorkspace--n-windows">
+<ANCHOR id="MetaWorkspace--workspace-index" href="meta/MetaWorkspace.html#MetaWorkspace--workspace-index">
 <ANCHOR id="MetaWorkspace.signal-details" href="meta/MetaWorkspace.html#MetaWorkspace.signal-details">
 <ANCHOR id="MetaWorkspace-window-added" href="meta/MetaWorkspace.html#MetaWorkspace-window-added">
 <ANCHOR id="MetaWorkspace-window-removed" href="meta/MetaWorkspace.html#MetaWorkspace-window-removed">
@@ -632,6 +631,7 @@
 <ANCHOR id="annotation-glossterm-array" href="meta/annotation-glossary.html#annotation-glossterm-array">
 <ANCHOR id="annotation-glossterm-closure" href="meta/annotation-glossary.html#annotation-glossterm-closure">
 <ANCHOR id="annotation-glossterm-element-type" href="meta/annotation-glossary.html#annotation-glossterm-element-type">
+<ANCHOR id="annotation-glossterm-nullable" href="meta/annotation-glossary.html#annotation-glossterm-nullable">
 <ANCHOR id="annotation-glossterm-out" href="meta/annotation-glossary.html#annotation-glossterm-out">
 <ANCHOR id="annotation-glossterm-out caller-allocates" href="meta/annotation-glossary.html#annotation-glossterm-out caller-allocates">
 <ANCHOR id="annotation-glossterm-scope call" href="meta/annotation-glossary.html#annotation-glossterm-scope call">

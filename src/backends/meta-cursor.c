@@ -27,8 +27,11 @@
 
 #include "display-private.h"
 #include "screen-private.h"
-#include "meta-backend.h"
+#include "meta-backend-private.h"
+
+#ifdef HAVE_NATIVE_BACKEND
 #include "backends/native/meta-cursor-renderer-native.h"
+#endif
 
 #include <string.h>
 
@@ -36,7 +39,9 @@
 #include <X11/extensions/Xfixes.h>
 #include <X11/Xcursor/Xcursor.h>
 
+#ifdef HAVE_WAYLAND
 #include <cogl/cogl-wayland-server.h>
+#endif
 
 MetaCursorReference *
 meta_cursor_reference_ref (MetaCursorReference *self)
@@ -171,13 +176,15 @@ meta_cursor_image_load_gbm_buffer (struct gbm_device *gbm,
 static struct gbm_device *
 get_gbm_device (void)
 {
+#ifdef HAVE_NATIVE_BACKEND
   MetaBackend *meta_backend = meta_get_backend ();
   MetaCursorRenderer *renderer = meta_backend_get_cursor_renderer (meta_backend);
 
   if (META_IS_CURSOR_RENDERER_NATIVE (renderer))
     return meta_cursor_renderer_native_get_gbm_device (META_CURSOR_RENDERER_NATIVE (renderer));
-  else
-    return NULL;
+#endif
+
+  return NULL;
 }
 
 static void
@@ -242,6 +249,7 @@ meta_cursor_reference_from_theme (MetaCursor cursor)
   return self;
 }
 
+#ifdef HAVE_WAYLAND
 static void
 meta_cursor_image_load_from_buffer (MetaCursorImage    *image,
                                     struct wl_resource *buffer,
@@ -340,6 +348,7 @@ meta_cursor_reference_from_buffer (struct wl_resource *buffer,
 
   return self;
 }
+#endif
 
 CoglTexture *
 meta_cursor_reference_get_cogl_texture (MetaCursorReference *cursor,
