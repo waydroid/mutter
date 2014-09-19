@@ -2,7 +2,7 @@ AC_PREREQ(2.62)
 
 m4_define([mutter_major_version], [3])
 m4_define([mutter_minor_version], [13])
-m4_define([mutter_micro_version], [91])
+m4_define([mutter_micro_version], [92])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -126,6 +126,12 @@ AC_ARG_WITH([xwayland-path],
             [AS_HELP_STRING([--with-xwayland-path], [Absolute path for an X Wayland server])],
             [XWAYLAND_PATH="$withval"],
             [XWAYLAND_PATH="$bindir/Xwayland"])
+
+AC_ARG_ENABLE(installed_tests,
+              AS_HELP_STRING([--enable-installed-tests],
+                             [Install test programs (default: no)]),,
+              [enable_installed_tests=no])
+AM_CONDITIONAL(BUILDOPT_INSTALL_TESTS, test x$enable_installed_tests = xyes)
 
 ## here we get the flags we'll actually use
 

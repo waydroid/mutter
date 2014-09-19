@@ -97,6 +97,10 @@ typedef enum {
   META_EVENT_ROUTE_WINDOW_OP,
 } MetaEventRoute;
 
+typedef gboolean (*MetaAlarmFilter) (MetaDisplay           *display,
+                                     XSyncAlarmNotifyEvent *event,
+                                     gpointer               data);
+
 struct _MetaDisplay
 {
   GObject parent_instance;
@@ -162,6 +166,7 @@ struct _MetaDisplay
   /*< private-ish >*/
   MetaScreen *screen;
   GHashTable *xids;
+  GHashTable *stamps;
   GHashTable *wayland_windows;
 
   /* serials of leave/unmap events that may
@@ -256,6 +261,9 @@ struct _MetaDisplay
   MetaGestureTracker *gesture_tracker;
   ClutterEventSequence *pointer_emulating_sequence;
 
+  MetaAlarmFilter alarm_filter;
+  gpointer alarm_filter_data;
+
   int composite_event_base;
   int composite_error_base;
   int composite_major_version;
@@ -333,6 +341,29 @@ void        meta_display_register_x_window   (MetaDisplay *display,
                                               MetaWindow  *window);
 void        meta_display_unregister_x_window (MetaDisplay *display,
                                               Window       xwindow);
+
+/* Each MetaWindow is uniquely identified by a 64-bit "stamp"; unlike a
+ * a MetaWindow *, a stamp will never be recycled
+ */
+MetaWindow* meta_display_lookup_stamp     (MetaDisplay *display,
+                                           guint64      stamp);
+void        meta_display_register_stamp   (MetaDisplay *display,
+                                           guint64     *stampp,
+                                           MetaWindow  *window);
+void        meta_display_unregister_stamp (MetaDisplay *display,
+                                           guint64      stamp);
+
+/* A "stack id" is a XID or a stamp */
+
+#define META_STACK_ID_IS_X11(id) ((id) < G_GUINT64_CONSTANT(0x100000000))
+MetaWindow* meta_display_lookup_stack_id   (MetaDisplay *display,
+                                            guint64      stack_id);
+
+/* for debug logging only; returns a human-description of the stack
+ * ID - a small number of buffers are recycled, so the result must
+ * be used immediately or copied */
+const char *meta_display_describe_stack_id (MetaDisplay *display,
+                                            guint64      stack_id);
 
 void        meta_display_register_wayland_window   (MetaDisplay *display,
                                                     MetaWindow  *window);
@@ -452,5 +483,9 @@ void meta_restart_finish (void);
 void meta_display_cancel_touch (MetaDisplay *display);
 
 gboolean meta_display_windows_are_interactable (MetaDisplay *display);
+
+void meta_display_set_alarm_filter (MetaDisplay    *display,
+                                    MetaAlarmFilter filter,
+                                    gpointer        data);
 
 #endif

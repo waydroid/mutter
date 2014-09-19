@@ -151,6 +151,9 @@ ensure_buffer_texture (MetaWaylandBuffer *buffer)
   CoglError *catch_error = NULL;
   CoglTexture *texture;
 
+  if (buffer->texture)
+    return;
+
   texture = COGL_TEXTURE (cogl_wayland_texture_2d_new_from_buffer (ctx,
                                                                    buffer->resource,
                                                                    &catch_error));
@@ -752,7 +755,8 @@ xdg_shell_use_unstable_version (struct wl_client *client,
                                 int32_t version)
 {
   if (version != XDG_SHELL_VERSION_CURRENT)
-    g_warning ("Bad xdg_shell version: %d", version);
+    wl_resource_post_error (resource, WL_DISPLAY_ERROR_INVALID_OBJECT,
+                            "bad xdg-shell version: %d\n", version);
 }
 
 static void

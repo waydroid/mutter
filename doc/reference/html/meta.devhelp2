@@ -296,6 +296,12 @@
     <keyword type="struct" name="MetaKeyBinding" link="meta-MetaKeybinding.html#MetaKeyBinding-struct"/>
     <keyword type="struct" name="struct MetaBackgroundActor" link="MetaBackgroundActor.html#MetaBackgroundActor-struct"/>
     <keyword type="struct" name="struct MetaBackgroundActorClass" link="MetaBackgroundActor.html#MetaBackgroundActorClass"/>
+    <keyword type="property" name="The “background” property" link="MetaBackgroundActor.html#MetaBackgroundActor--background"/>
+    <keyword type="property" name="The “brightness” property" link="MetaBackgroundActor.html#MetaBackgroundActor--brightness"/>
+    <keyword type="property" name="The “meta-screen” property" link="MetaBackgroundActor.html#MetaBackgroundActor--meta-screen"/>
+    <keyword type="property" name="The “monitor” property" link="MetaBackgroundActor.html#MetaBackgroundActor--monitor"/>
+    <keyword type="property" name="The “vignette” property" link="MetaBackgroundActor.html#MetaBackgroundActor--vignette"/>
+    <keyword type="property" name="The “vignette-sharpness” property" link="MetaBackgroundActor.html#MetaBackgroundActor--vignette-sharpness"/>
     <keyword type="function" name="meta_shadow_factory_get_default ()" link="MetaShadowFactory.html#meta-shadow-factory-get-default"/>
     <keyword type="function" name="meta_shadow_factory_set_params ()" link="MetaShadowFactory.html#meta-shadow-factory-set-params"/>
     <keyword type="function" name="meta_shadow_factory_get_params ()" link="MetaShadowFactory.html#meta-shadow-factory-get-params"/>
