@@ -60,11 +60,8 @@ meta_window_wayland_manage (MetaWindow *window)
   meta_display_register_wayland_window (display, window);
 
   {
-    MetaStackWindow stack_window;
-    stack_window.any.type = META_WINDOW_CLIENT_TYPE_WAYLAND;
-    stack_window.wayland.meta_window = window;
     meta_stack_tracker_record_add (window->screen->stack_tracker,
-                                   &stack_window,
+                                   window->stamp,
                                    0);
   }
 }
@@ -73,11 +70,8 @@ static void
 meta_window_wayland_unmanage (MetaWindow *window)
 {
   {
-    MetaStackWindow stack_window;
-    stack_window.any.type = META_WINDOW_CLIENT_TYPE_WAYLAND;
-    stack_window.wayland.meta_window = window;
     meta_stack_tracker_record_remove (window->screen->stack_tracker,
-                                      &stack_window,
+                                      window->stamp,
                                       0);
   }
 
@@ -194,12 +188,21 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
     }
   else
     {
+      /* If we get a 0x0 size, this means that we're trying to resize
+       * a surface that doesn't have any buffer attached. This can happen
+       * when a client requests an xdg surface before bringing it up.
+       * The constrained_rect will be 1x1 because of how our constraints
+       * code works, and sending that to the window would cause it to
+       * redraw itself, so just don't send anything. Pretend like this
+       * move_resize never happened.
+       */
+      if (unconstrained_rect.width == 0 &&
+          unconstrained_rect.height == 0)
+        return;
+
       if (constrained_rect.width != window->rect.width ||
           constrained_rect.height != window->rect.height)
         {
-          wl_window->last_sent_width = constrained_rect.width;
-          wl_window->last_sent_height = constrained_rect.height;
-
           meta_wayland_surface_configure_notify (window->surface,
                                                  constrained_rect.width,
                                                  constrained_rect.height,
@@ -215,6 +218,9 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
           can_move_now = TRUE;
         }
     }
+
+  wl_window->last_sent_width = constrained_rect.width;
+  wl_window->last_sent_height = constrained_rect.height;
 
   if (can_move_now)
     {
@@ -302,8 +308,8 @@ meta_window_wayland_new (MetaDisplay        *display,
 
   attrs.x = 0;
   attrs.y = 0;
-  attrs.width = 1;
-  attrs.height = 1;
+  attrs.width = 0;
+  attrs.height = 0;
   attrs.border_width = 0;
   attrs.depth = 24;
   attrs.visual = NULL;

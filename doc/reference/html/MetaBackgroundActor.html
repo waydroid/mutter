@@ -17,7 +17,8 @@
 <a href="#" class="shortcut">Top</a><span id="nav_description">  <span class="dim">|</span> 
                   <a href="#MetaBackgroundActor.description" class="shortcut">Description</a></span><span id="nav_hierarchy">  <span class="dim">|</span> 
                   <a href="#MetaBackgroundActor.object-hierarchy" class="shortcut">Object Hierarchy</a></span><span id="nav_interfaces">  <span class="dim">|</span> 
-                  <a href="#MetaBackgroundActor.implemented-interfaces" class="shortcut">Implemented Interfaces</a></span>
+                  <a href="#MetaBackgroundActor.implemented-interfaces" class="shortcut">Implemented Interfaces</a></span><span id="nav_properties">  <span class="dim">|</span> 
+                  <a href="#MetaBackgroundActor.properties" class="shortcut">Properties</a></span>
 </td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
 <td><a accesskey="u" href="core-reference.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
@@ -33,6 +34,50 @@
 </td>
 <td class="gallery_image" valign="top" align="right"></td>
 </tr></table></div>
+<div class="refsect1">
+<a name="MetaBackgroundActor.properties"></a><h2>Properties</h2>
+<div class="informaltable"><table border="0">
+<colgroup>
+<col width="150px" class="properties_type">
+<col width="300px" class="properties_name">
+<col width="200px" class="properties_flags">
+</colgroup>
+<tbody>
+<tr>
+<td class="property_type">
+<span class="type">MetaBackground</span> *</td>
+<td class="property_name"><a class="link" href="MetaBackgroundActor.html#MetaBackgroundActor--background" title="The “background” property">background</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gdouble</span></td>
+<td class="property_name"><a class="link" href="MetaBackgroundActor.html#MetaBackgroundActor--brightness" title="The “brightness” property">brightness</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
+<td class="property_type">
+<a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *</td>
+<td class="property_name"><a class="link" href="MetaBackgroundActor.html#MetaBackgroundActor--meta-screen" title="The “meta-screen” property">meta-screen</a></td>
+<td class="property_flags">Read / Write / Construct Only</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gint</span></td>
+<td class="property_name"><a class="link" href="MetaBackgroundActor.html#MetaBackgroundActor--monitor" title="The “monitor” property">monitor</a></td>
+<td class="property_flags">Read / Write / Construct Only</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gboolean</span></td>
+<td class="property_name"><a class="link" href="MetaBackgroundActor.html#MetaBackgroundActor--vignette" title="The “vignette” property">vignette</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gdouble</span></td>
+<td class="property_name"><a class="link" href="MetaBackgroundActor.html#MetaBackgroundActor--vignette-sharpness" title="The “vignette-sharpness” property">vignette-sharpness</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+</tbody>
+</table></div>
+</div>
 <div class="refsect1">
 <a name="MetaBackgroundActor.other"></a><h2>Types and Values</h2>
 <div class="informaltable"><table width="100%" border="0">
@@ -87,6 +132,57 @@ the background that are obscured by other windows.</p>
 <pre class="programlisting">struct MetaBackgroundActorClass {
 };
 </pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="MetaBackgroundActor.property-details"></a><h2>Property Details</h2>
+<div class="refsect2">
+<a name="MetaBackgroundActor--background"></a><h3>The <code class="literal">“background”</code> property</h3>
+<pre class="programlisting">  “background”               <span class="type">MetaBackground</span> *</pre>
+<p>MetaBackground object holding background parameters.</p>
+<p>Flags: Read / Write</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBackgroundActor--brightness"></a><h3>The <code class="literal">“brightness”</code> property</h3>
+<pre class="programlisting">  “brightness”               <span class="type">gdouble</span></pre>
+<p>Brightness of vignette effect.</p>
+<p>Flags: Read / Write</p>
+<p>Allowed values: [0,1]</p>
+<p>Default value: 1</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBackgroundActor--meta-screen"></a><h3>The <code class="literal">“meta-screen”</code> property</h3>
+<pre class="programlisting">  “meta-screen”              <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *</pre>
+<p>MetaScreen.</p>
+<p>Flags: Read / Write / Construct Only</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBackgroundActor--monitor"></a><h3>The <code class="literal">“monitor”</code> property</h3>
+<pre class="programlisting">  “monitor”                  <span class="type">gint</span></pre>
+<p>monitor.</p>
+<p>Flags: Read / Write / Construct Only</p>
+<p>Allowed values: &gt;= 0</p>
+<p>Default value: 0</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBackgroundActor--vignette"></a><h3>The <code class="literal">“vignette”</code> property</h3>
+<pre class="programlisting">  “vignette”                 <span class="type">gboolean</span></pre>
+<p>Whether vignette effect is enabled.</p>
+<p>Flags: Read / Write</p>
+<p>Default value: FALSE</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaBackgroundActor--vignette-sharpness"></a><h3>The <code class="literal">“vignette-sharpness”</code> property</h3>
+<pre class="programlisting">  “vignette-sharpness”       <span class="type">gdouble</span></pre>
+<p>Sharpness of vignette effect.</p>
+<p>Flags: Read / Write</p>
+<p>Allowed values: &gt;= 0</p>
+<p>Default value: 0</p>
 </div>
 </div>
 </div>

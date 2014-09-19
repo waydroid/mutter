@@ -83,6 +83,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@HAVE_WAYLAND_FALSE@am__append_1 = \
+@HAVE_WAYLAND_FALSE@	meta-surface-actor-wayland.h	\
+@HAVE_WAYLAND_FALSE@	wayland				\
+@HAVE_WAYLAND_FALSE@	$(NULL)
+
 DIST_COMMON = $(top_srcdir)/gtk-doc.make $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(srcdir)/meta-docs.sgml.in
 subdir = doc/reference
@@ -363,59 +368,22 @@ EXTRA_HFILES =
 
 # Header files or dirs to ignore when scanning. Use base file/dir names
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h private_code
-IGNORE_HFILES = \
-	async-getprop.h \
-	atoms.h \
-	bell.h \
-	boxes-private.h \
-	clutter-utils.h \
-	cogl-utils.h \
-	compositor-private.h \
-	constraints.h \
-	core.h \
-	display-private.h \
-	draw-workspace.h \
-	edge-resistance.h \
-	eventqueue.h \
-	frame.h \
-	frames.h \
-	group-private.h \
-	group-props.h \
-	iconcache.h \
-	inlinepixbufs.h \
-	keybindings-private.h \
-	meta-background-actor-private.h \
-	meta-background-group-private.h \
-	meta-module.h \
-	meta-plugin-manager.h \
-	meta-shadow-factory-private.h \
-	meta-texture-rectangle.h \
-	meta-texture-tower.h \
-	meta-window-actor-private.h \
-	meta-window-group.h \
-	meta-window-shape.h \
-	mutter-enum-types.h \
-	mutter-Xatomtype.h \
-	place.h \
-	preview-widget.h \
-	region-utils.h \
-	resizepopup.h \
-	screen-private.h \
-	session.h \
-	stack.h \
-	stack-tracker.h \
-	stamp-mutter-enum-types.h \
-	tabpopup.h \
-	theme.h \
-	theme-private.h \
-	tile-preview.h \
-	ui.h \
-	window-private.h \
-	window-props.h \
-	workspace-private.h \
-	xprops.h \
-	$(NULL)
-
+IGNORE_HFILES = async-getprop.h atoms.h bell.h boxes-private.h \
+	clutter-utils.h cogl-utils.h compositor-private.h \
+	constraints.h core.h display-private.h draw-workspace.h \
+	edge-resistance.h eventqueue.h frame.h frames.h \
+	group-private.h group-props.h iconcache.h inlinepixbufs.h \
+	keybindings-private.h meta-background-actor-private.h \
+	meta-background-group-private.h meta-module.h \
+	meta-plugin-manager.h meta-shadow-factory-private.h \
+	meta-texture-rectangle.h meta-texture-tower.h \
+	meta-window-actor-private.h meta-window-group.h \
+	meta-window-shape.h mutter-enum-types.h mutter-Xatomtype.h \
+	place.h preview-widget.h region-utils.h resizepopup.h \
+	screen-private.h session.h stack.h stack-tracker.h \
+	stamp-mutter-enum-types.h tabpopup.h theme.h theme-private.h \
+	tile-preview.h ui.h window-private.h window-props.h \
+	workspace-private.h xprops.h $(NULL) $(am__append_1)
 
 # Images to copy into HTML directory.
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png

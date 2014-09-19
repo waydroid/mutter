@@ -10,6 +10,8 @@ meta_backend_x11_get_type
 meta_background_actor_get_type
 meta_background_get_type
 meta_background_group_get_type
+meta_background_image_cache_get_type
+meta_background_image_get_type
 meta_barrier_event_get_type
 meta_barrier_get_type
 meta_cullable_get_type

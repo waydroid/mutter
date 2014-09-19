@@ -52,9 +52,7 @@
 #define KEY_GNOME_ACCESSIBILITY "toolkit-accessibility"
 #define KEY_GNOME_ANIMATIONS "enable-animations"
 #define KEY_GNOME_CURSOR_THEME "cursor-theme"
-#define KEY_GNOME_CURSOR_SIZE "cursor-size"
 #define KEY_XKB_OPTIONS "xkb-options"
-#define KEY_XSETTINGS_OVERRIDES "overrides"
 
 #define KEY_OVERLAY_KEY "overlay-key"
 #define KEY_WORKSPACES_ONLY_ON_PRIMARY "workspaces-only-on-primary"
@@ -133,9 +131,13 @@ static void bindings_changed (GSettings      *settings,
                               gchar          *key,
                               gpointer        data);
 
-static void xsettings_overrides_changed (GSettings  *settings,
-                                         gchar      *key,
-                                         gpointer    data);
+static void shell_shows_app_menu_changed (GtkSettings *settings,
+                                          GParamSpec  *pspec,
+                                          gpointer     data);
+
+static void update_cursor_size (GtkSettings *settings,
+                                GParamSpec *pspec,
+                                gpointer data);
 
 static void queue_changed (MetaPreference  pref);
 
@@ -478,13 +480,6 @@ static MetaIntPreference preferences_int[] =
         META_PREF_AUTO_RAISE_DELAY,
       },
       &auto_raise_delay
-    },
-    {
-      { "cursor-size",
-        SCHEMA_INTERFACE,
-        META_PREF_CURSOR_SIZE,
-      },
-      &cursor_size
     },
     {
       { "draggable-border-width",
@@ -951,24 +946,6 @@ queue_changed (MetaPreference pref)
 /* Initialisation.                                                          */
 /****************************************************************************/
 
-static GSettings *
-get_xsettings_settings (void)
-{
-  GSettings *settings = NULL;
-  GSettingsSchema *schema;
-
-  schema = g_settings_schema_source_lookup (g_settings_schema_source_get_default (),
-                                            SCHEMA_XSETTINGS, FALSE);
-
-  if (schema)
-    {
-      settings = g_settings_new_full (schema, NULL, NULL);
-      g_settings_schema_unref (schema);
-    }
-
-  return settings;
-}
-
 void
 meta_prefs_init (void)
 {
@@ -998,19 +975,14 @@ meta_prefs_init (void)
                     G_CALLBACK (settings_changed), NULL);
   g_signal_connect (settings, "changed::" KEY_GNOME_CURSOR_THEME,
                     G_CALLBACK (settings_changed), NULL);
-  g_signal_connect (settings, "changed::" KEY_GNOME_CURSOR_SIZE,
-                    G_CALLBACK (settings_changed), NULL);
   g_hash_table_insert (settings_schemas, g_strdup (SCHEMA_INTERFACE), settings);
 
-  settings = get_xsettings_settings ();
-  if (settings)
-    {
-      g_signal_connect (settings, "changed::" KEY_XSETTINGS_OVERRIDES,
-                        G_CALLBACK (xsettings_overrides_changed), NULL);
-      g_hash_table_insert (settings_schemas, g_strdup (SCHEMA_XSETTINGS), settings);
+  g_signal_connect (gtk_settings_get_default (),
+                    "notify::gtk-shell-shows-app-menu",
+                    G_CALLBACK (shell_shows_app_menu_changed), NULL);
 
-      xsettings_overrides_changed (settings, KEY_XSETTINGS_OVERRIDES, NULL);
-    }
+  g_signal_connect (gtk_settings_get_default (), "notify::gtk-cursor-theme-size",
+                    G_CALLBACK (update_cursor_size), NULL);
 
   settings = g_settings_new (SCHEMA_INPUT_SOURCES);
   g_signal_connect (settings, "changed::" KEY_XKB_OPTIONS,
@@ -1031,6 +1003,9 @@ meta_prefs_init (void)
   handle_preference_init_string ();
   handle_preference_init_string_array ();
   handle_preference_init_int ();
+
+  update_cursor_size (gtk_settings_get_default (), NULL, NULL);
+  shell_shows_app_menu_changed (gtk_settings_get_default (), NULL, NULL);
 
   init_bindings ();
 }
@@ -1232,42 +1207,47 @@ bindings_changed (GSettings *settings,
   g_strfreev (strokes);
 }
 
-/* The fallback app menu should be enabled if either we are not
- * showing the app menu (e.g. when using the default plugin) or
- * with a corresponding XSettings override; we ignore the former
- * and assume that we always show the app menu, not least
- * because we rely on the compositor implementation to display
- * the fallback ...
- */
 static void
-xsettings_overrides_changed (GSettings  *settings,
-                             gchar      *key,
-                             gpointer    data)
+shell_shows_app_menu_changed (GtkSettings *settings,
+                              GParamSpec *pspec,
+                              gpointer data)
 {
-  GVariant *value;
-  GVariantDict overrides;
   int shell_shows_app_menu = 1;
   gboolean changed = FALSE;
 
-  if (!g_settings_get_boolean (settings, "active"))
-    goto out;
+  g_object_get (settings,
+                "gtk-shell-shows-app-menu", &shell_shows_app_menu,
+                NULL);
 
-  value = g_settings_get_value (settings, KEY_XSETTINGS_OVERRIDES);
-
-  g_variant_dict_init (&overrides, value);
-  g_variant_unref (value);
-
-  g_variant_dict_lookup (&overrides,
-                         "Gtk/ShellShowsAppMenu", "i", &shell_shows_app_menu);
-  g_variant_dict_clear (&overrides);
 
   changed = (show_fallback_app_menu == !!shell_shows_app_menu);
 
-out:
   show_fallback_app_menu = !shell_shows_app_menu;
 
   if (changed)
     queue_changed (META_PREF_BUTTON_LAYOUT);
+}
+
+static void
+update_cursor_size (GtkSettings *settings,
+                    GParamSpec *pspec,
+                    gpointer data)
+{
+  GdkScreen *screen = gdk_screen_get_default ();
+  GValue value = G_VALUE_INIT;
+  int xsettings_cursor_size = 24;
+
+  g_value_init (&value, G_TYPE_INT);
+  if (gdk_screen_get_setting (screen, "gtk-cursor-theme-size", &value))
+    {
+      xsettings_cursor_size = g_value_get_int (&value);
+    }
+
+  if (xsettings_cursor_size != cursor_size)
+    {
+      cursor_size = xsettings_cursor_size;
+      queue_changed (META_PREF_CURSOR_SIZE);
+    }
 }
 
 /**
@@ -1347,26 +1327,10 @@ meta_prefs_get_cursor_theme (void)
   return cursor_theme;
 }
 
-static int
-get_scale_factor (void)
-{
-  GdkScreen *screen;
-  GValue value = G_VALUE_INIT;
-
-  g_value_init (&value, G_TYPE_INT);
-
-  /* XXX: Should this be in ui/ ? Or MetaMonitorManager? */
-  screen = gdk_screen_get_default ();
-  if (gdk_screen_get_setting (screen, "gdk-window-scaling-factor", &value))
-    return g_value_get_int (&value);
-  else
-    return 1;
-}
-
 int
 meta_prefs_get_cursor_size (void)
 {
-  return cursor_size * get_scale_factor ();
+  return cursor_size;
 }
 
 

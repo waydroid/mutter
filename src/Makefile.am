@@ -5,6 +5,8 @@ lib_LTLIBRARIES = libmutter.la
 
 SUBDIRS=compositor/plugins
 
+EXTRA_DIST =
+
 AM_CPPFLAGS = \
 	-DCLUTTER_ENABLE_COMPOSITOR_API					\
 	-DCLUTTER_ENABLE_EXPERIMENTAL_API				\
@@ -100,8 +102,10 @@ libmutter_la_SOURCES =				\
 	compositor/compositor.c			\
 	compositor/compositor-private.h		\
 	compositor/meta-background.c		\
+	compositor/meta-background-private.h	\
 	compositor/meta-background-actor.c	\
 	compositor/meta-background-actor-private.h	\
+	compositor/meta-background-image.c	\
 	compositor/meta-background-group.c	\
 	compositor/meta-cullable.c		\
 	compositor/meta-cullable.h		\
@@ -133,6 +137,7 @@ libmutter_la_SOURCES =				\
 	meta/compositor.h			\
 	meta/meta-background.h			\
 	meta/meta-background-actor.h		\
+	meta/meta-background-image.h		\
 	meta/meta-background-group.h		\
 	meta/meta-plugin.h			\
 	meta/meta-shadow-factory.h		\
@@ -282,9 +287,10 @@ libmutterinclude_headers =			\
 	meta/keybindings.h			\
 	meta/main.h				\
 	meta/meta-backend.h			\
-	meta/meta-background-actor.h		\
-	meta/meta-background-group.h		\
 	meta/meta-background.h			\
+	meta/meta-background-actor.h		\
+	meta/meta-background-image.h		\
+	meta/meta-background-group.h		\
 	meta/meta-cursor-tracker.h		\
 	meta/meta-idle-monitor.h		\
 	meta/meta-plugin.h			\
@@ -321,6 +327,7 @@ nodist_libmutterinclude_HEADERS =		\
 	$(libmutterinclude_built_headers)
 
 bin_PROGRAMS=mutter
+noinst_PROGRAMS=
 
 mutter_SOURCES = core/mutter.c
 mutter_LDADD = $(MUTTER_LIBS) libmutter.la
@@ -328,6 +335,8 @@ mutter_LDADD = $(MUTTER_LIBS) libmutter.la
 libexec_PROGRAMS = mutter-restart-helper
 mutter_restart_helper_SOURCES = core/restart-helper.c
 mutter_restart_helper_LDADD = $(MUTTER_LIBS)
+
+include Makefile-tests.am
 
 if HAVE_INTROSPECTION
 include $(INTROSPECTION_MAKEFILE)
@@ -362,16 +371,6 @@ Meta-$(api_version).gir: libmutter.la
 
 endif
 
-testboxes_SOURCES = core/testboxes.c
-testgradient_SOURCES = ui/testgradient.c
-testasyncgetprop_SOURCES = x11/testasyncgetprop.c
-
-noinst_PROGRAMS=testboxes testgradient testasyncgetprop
-
-testboxes_LDADD = $(MUTTER_LIBS) libmutter.la
-testgradient_LDADD = $(MUTTER_LIBS) libmutter.la
-testasyncgetprop_LDADD = $(MUTTER_LIBS) libmutter.la
-
 dbus_idle_built_sources = meta-dbus-idle-monitor.c meta-dbus-idle-monitor.h
 
 CLEANFILES =					\
@@ -385,7 +384,7 @@ DISTCLEANFILES = 				\
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libmutter.pc
 
-EXTRA_DIST =				\
+EXTRA_DIST +=				\
 	$(wayland_protocols)		\
 	libmutter.pc.in \
 	mutter-enum-types.h.in \

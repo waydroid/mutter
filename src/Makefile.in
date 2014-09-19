@@ -14,6 +14,8 @@
 
 @SET_MAKE@
 
+# A framework for running scripted tests
+
 
 
 
@@ -130,13 +132,18 @@ host_triplet = @host@
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/dbus-utils.h
 
 bin_PROGRAMS = mutter$(EXEEXT)
+noinst_PROGRAMS = $(am__EXEEXT_1) testboxes$(EXEEXT) \
+	testgradient$(EXEEXT) testasyncgetprop$(EXEEXT)
 libexec_PROGRAMS = mutter-restart-helper$(EXEEXT)
-noinst_PROGRAMS = testboxes$(EXEEXT) testgradient$(EXEEXT) \
-	testasyncgetprop$(EXEEXT)
-subdir = src
-DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(srcdir)/libmutter.pc.in $(top_srcdir)/build-aux/depcomp \
+DIST_COMMON = $(srcdir)/Makefile-tests.am $(srcdir)/Makefile.in \
+	$(srcdir)/Makefile.am $(srcdir)/libmutter.pc.in \
+	$(top_srcdir)/build-aux/depcomp $(am__dist_stacking_DATA_DIST) \
 	$(libmutterinclude_HEADERS)
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@installedtestsbin_PROGRAMS = mutter-test-client$(EXEEXT) \
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	mutter-test-runner$(EXEEXT)
+@BUILDOPT_INSTALL_TESTS_FALSE@@HAVE_WAYLAND_TRUE@am__append_4 = mutter-test-client mutter-test-runner
+@HAVE_WAYLAND_TRUE@am__append_5 = tests/mutter-all.test.in
+subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gtk-doc.m4 \
 	$(top_srcdir)/m4/intltool.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -177,9 +184,10 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
-	"$(DESTDIR)$(libexecdir)" "$(DESTDIR)$(girdir)" \
-	"$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(typelibdir)" \
-	"$(DESTDIR)$(libmutterincludedir)" \
+	"$(DESTDIR)$(installedtestsbindir)" "$(DESTDIR)$(libexecdir)" \
+	"$(DESTDIR)$(stackingdir)" "$(DESTDIR)$(girdir)" \
+	"$(DESTDIR)$(installedtestsdir)" "$(DESTDIR)$(pkgconfigdir)" \
+	"$(DESTDIR)$(typelibdir)" "$(DESTDIR)$(libmutterincludedir)" \
 	"$(DESTDIR)$(libmutterincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
@@ -217,8 +225,10 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	compositor/clutter-utils.h compositor/cogl-utils.c \
 	compositor/cogl-utils.h compositor/compositor.c \
 	compositor/compositor-private.h compositor/meta-background.c \
+	compositor/meta-background-private.h \
 	compositor/meta-background-actor.c \
 	compositor/meta-background-actor-private.h \
+	compositor/meta-background-image.c \
 	compositor/meta-background-group.c compositor/meta-cullable.c \
 	compositor/meta-cullable.h compositor/meta-module.c \
 	compositor/meta-module.h compositor/meta-plugin.c \
@@ -241,15 +251,15 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	compositor/meta-window-shape.c compositor/meta-window-shape.h \
 	compositor/region-utils.c compositor/region-utils.h \
 	meta/compositor.h meta/meta-background.h \
-	meta/meta-background-actor.h meta/meta-background-group.h \
-	meta/meta-plugin.h meta/meta-shadow-factory.h \
-	meta/meta-window-actor.h meta/compositor-mutter.h \
-	core/constraints.c core/constraints.h core/core.c \
-	core/delete.c core/display.c core/display-private.h \
-	meta/display.h core/edge-resistance.c core/edge-resistance.h \
-	core/events.c core/events.h core/errors.c meta/errors.h \
-	core/frame.c core/frame.h ui/gradient.c meta/gradient.h \
-	core/meta-gesture-tracker.c \
+	meta/meta-background-actor.h meta/meta-background-image.h \
+	meta/meta-background-group.h meta/meta-plugin.h \
+	meta/meta-shadow-factory.h meta/meta-window-actor.h \
+	meta/compositor-mutter.h core/constraints.c core/constraints.h \
+	core/core.c core/delete.c core/display.c \
+	core/display-private.h meta/display.h core/edge-resistance.c \
+	core/edge-resistance.h core/events.c core/events.h \
+	core/errors.c meta/errors.h core/frame.c core/frame.h \
+	ui/gradient.c meta/gradient.h core/meta-gesture-tracker.c \
 	core/meta-gesture-tracker-private.h core/keybindings.c \
 	core/keybindings-private.h core/main.c core/place.c \
 	core/place.h core/prefs.c meta/prefs.h core/screen.c \
@@ -328,6 +338,7 @@ am_libmutter_la_OBJECTS = backends/meta-backend.lo \
 	compositor/cogl-utils.lo compositor/compositor.lo \
 	compositor/meta-background.lo \
 	compositor/meta-background-actor.lo \
+	compositor/meta-background-image.lo \
 	compositor/meta-background-group.lo \
 	compositor/meta-cullable.lo compositor/meta-module.lo \
 	compositor/meta-plugin.lo compositor/meta-plugin-manager.lo \
@@ -369,13 +380,28 @@ am__v_lt_1 =
 libmutter_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libmutter_la_LDFLAGS) $(LDFLAGS) -o $@
-PROGRAMS = $(bin_PROGRAMS) $(libexec_PROGRAMS) $(noinst_PROGRAMS)
+@BUILDOPT_INSTALL_TESTS_FALSE@@HAVE_WAYLAND_TRUE@am__EXEEXT_1 = mutter-test-client$(EXEEXT) \
+@BUILDOPT_INSTALL_TESTS_FALSE@@HAVE_WAYLAND_TRUE@	mutter-test-runner$(EXEEXT)
+PROGRAMS = $(bin_PROGRAMS) $(installedtestsbin_PROGRAMS) \
+	$(libexec_PROGRAMS) $(noinst_PROGRAMS)
 am_mutter_OBJECTS = core/mutter.$(OBJEXT)
 mutter_OBJECTS = $(am_mutter_OBJECTS)
 mutter_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
 am_mutter_restart_helper_OBJECTS = core/restart-helper.$(OBJEXT)
 mutter_restart_helper_OBJECTS = $(am_mutter_restart_helper_OBJECTS)
 mutter_restart_helper_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am__mutter_test_client_SOURCES_DIST = tests/test-client.c
+@HAVE_WAYLAND_TRUE@am_mutter_test_client_OBJECTS =  \
+@HAVE_WAYLAND_TRUE@	tests/test-client.$(OBJEXT)
+mutter_test_client_OBJECTS = $(am_mutter_test_client_OBJECTS)
+@HAVE_WAYLAND_TRUE@mutter_test_client_DEPENDENCIES =  \
+@HAVE_WAYLAND_TRUE@	$(am__DEPENDENCIES_1) libmutter.la
+am__mutter_test_runner_SOURCES_DIST = tests/test-runner.c
+@HAVE_WAYLAND_TRUE@am_mutter_test_runner_OBJECTS =  \
+@HAVE_WAYLAND_TRUE@	tests/test-runner.$(OBJEXT)
+mutter_test_runner_OBJECTS = $(am_mutter_test_runner_OBJECTS)
+@HAVE_WAYLAND_TRUE@mutter_test_runner_DEPENDENCIES =  \
+@HAVE_WAYLAND_TRUE@	$(am__DEPENDENCIES_1) libmutter.la
 am_testasyncgetprop_OBJECTS = x11/testasyncgetprop.$(OBJEXT)
 testasyncgetprop_OBJECTS = $(am_testasyncgetprop_OBJECTS)
 testasyncgetprop_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
@@ -421,11 +447,15 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libmutter_la_SOURCES) $(nodist_libmutter_la_SOURCES) \
 	$(mutter_SOURCES) $(mutter_restart_helper_SOURCES) \
+	$(mutter_test_client_SOURCES) $(mutter_test_runner_SOURCES) \
 	$(testasyncgetprop_SOURCES) $(testboxes_SOURCES) \
 	$(testgradient_SOURCES)
 DIST_SOURCES = $(am__libmutter_la_SOURCES_DIST) $(mutter_SOURCES) \
-	$(mutter_restart_helper_SOURCES) $(testasyncgetprop_SOURCES) \
-	$(testboxes_SOURCES) $(testgradient_SOURCES)
+	$(mutter_restart_helper_SOURCES) \
+	$(am__mutter_test_client_SOURCES_DIST) \
+	$(am__mutter_test_runner_SOURCES_DIST) \
+	$(testasyncgetprop_SOURCES) $(testboxes_SOURCES) \
+	$(testgradient_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -439,7 +469,12 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-DATA = $(gir_DATA) $(pkgconfig_DATA) $(typelib_DATA)
+am__dist_stacking_DATA_DIST = tests/stacking/basic-x11.metatest \
+	tests/stacking/basic-wayland.metatest \
+	tests/stacking/mixed-windows.metatest \
+	tests/stacking/override-redirect.metatest
+DATA = $(dist_stacking_DATA) $(gir_DATA) $(installedtests_DATA) \
+	$(pkgconfig_DATA) $(typelib_DATA)
 HEADERS = $(libmutterinclude_HEADERS) \
 	$(nodist_libmutterinclude_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
@@ -683,6 +718,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libmutter.la
 SUBDIRS = compositor/plugins
+EXTRA_DIST = $(am__append_5) $(wayland_protocols) libmutter.pc.in \
+	mutter-enum-types.h.in mutter-enum-types.c.in \
+	org.freedesktop.login1.xml org.gnome.Mutter.DisplayConfig.xml \
+	org.gnome.Mutter.IdleMonitor.xml
 AM_CPPFLAGS = \
 	-DCLUTTER_ENABLE_COMPOSITOR_API					\
 	-DCLUTTER_ENABLE_EXPERIMENTAL_API				\
@@ -749,8 +788,10 @@ libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	compositor/clutter-utils.h compositor/cogl-utils.c \
 	compositor/cogl-utils.h compositor/compositor.c \
 	compositor/compositor-private.h compositor/meta-background.c \
+	compositor/meta-background-private.h \
 	compositor/meta-background-actor.c \
 	compositor/meta-background-actor-private.h \
+	compositor/meta-background-image.c \
 	compositor/meta-background-group.c compositor/meta-cullable.c \
 	compositor/meta-cullable.h compositor/meta-module.c \
 	compositor/meta-module.h compositor/meta-plugin.c \
@@ -773,15 +814,15 @@ libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	compositor/meta-window-shape.c compositor/meta-window-shape.h \
 	compositor/region-utils.c compositor/region-utils.h \
 	meta/compositor.h meta/meta-background.h \
-	meta/meta-background-actor.h meta/meta-background-group.h \
-	meta/meta-plugin.h meta/meta-shadow-factory.h \
-	meta/meta-window-actor.h meta/compositor-mutter.h \
-	core/constraints.c core/constraints.h core/core.c \
-	core/delete.c core/display.c core/display-private.h \
-	meta/display.h core/edge-resistance.c core/edge-resistance.h \
-	core/events.c core/events.h core/errors.c meta/errors.h \
-	core/frame.c core/frame.h ui/gradient.c meta/gradient.h \
-	core/meta-gesture-tracker.c \
+	meta/meta-background-actor.h meta/meta-background-image.h \
+	meta/meta-background-group.h meta/meta-plugin.h \
+	meta/meta-shadow-factory.h meta/meta-window-actor.h \
+	meta/compositor-mutter.h core/constraints.c core/constraints.h \
+	core/core.c core/delete.c core/display.c \
+	core/display-private.h meta/display.h core/edge-resistance.c \
+	core/edge-resistance.h core/events.c core/events.h \
+	core/errors.c meta/errors.h core/frame.c core/frame.h \
+	ui/gradient.c meta/gradient.h core/meta-gesture-tracker.c \
 	core/meta-gesture-tracker-private.h core/keybindings.c \
 	core/keybindings-private.h core/main.c core/place.c \
 	core/place.h core/prefs.c meta/prefs.h core/screen.c \
@@ -821,9 +862,10 @@ libmutterinclude_headers = \
 	meta/keybindings.h			\
 	meta/main.h				\
 	meta/meta-backend.h			\
-	meta/meta-background-actor.h		\
-	meta/meta-background-group.h		\
 	meta/meta-background.h			\
+	meta/meta-background-actor.h		\
+	meta/meta-background-image.h		\
+	meta/meta-background-group.h		\
 	meta/meta-cursor-tracker.h		\
 	meta/meta-idle-monitor.h		\
 	meta/meta-plugin.h			\
@@ -863,6 +905,28 @@ mutter_SOURCES = core/mutter.c
 mutter_LDADD = $(MUTTER_LIBS) libmutter.la
 mutter_restart_helper_SOURCES = core/restart-helper.c
 mutter_restart_helper_LDADD = $(MUTTER_LIBS)
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@stackingdir = $(pkgdatadir)/tests/stacking
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@dist_stacking_DATA = \
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/basic-x11.metatest	\
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/basic-wayland.metatest	\
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/mixed-windows.metatest   \
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/override-redirect.metatest
+
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@installedtestsdir = $(datadir)/installed-tests/mutter
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@installedtests_DATA = mutter-all.test
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@installedtestsbindir = $(libexecdir)/installed-tests/mutter
+@HAVE_WAYLAND_TRUE@mutter_test_client_SOURCES = tests/test-client.c
+@HAVE_WAYLAND_TRUE@mutter_test_client_LDADD = $(MUTTER_LIBS) libmutter.la
+@HAVE_WAYLAND_TRUE@mutter_test_runner_SOURCES = tests/test-runner.c
+@HAVE_WAYLAND_TRUE@mutter_test_runner_LDADD = $(MUTTER_LIBS) libmutter.la
+
+# Some random test programs for bits of the code
+testboxes_SOURCES = core/testboxes.c
+testgradient_SOURCES = ui/testgradient.c
+testasyncgetprop_SOURCES = x11/testasyncgetprop.c
+testboxes_LDADD = $(MUTTER_LIBS) libmutter.la
+testgradient_LDADD = $(MUTTER_LIBS) libmutter.la
+testasyncgetprop_LDADD = $(MUTTER_LIBS) libmutter.la
 
 # Since we don't make any guarantees about stability and we don't support
 # parallel install, there's no real reason to change directories, filenames,
@@ -888,12 +952,6 @@ mutter_restart_helper_LDADD = $(MUTTER_LIBS)
 @HAVE_INTROSPECTION_TRUE@	$(filter %.c,$(libmutter_la_SOURCES) $(nodist_libmutter_la_SOURCES))
 
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_SCANNERFLAGS = --warn-all --warn-error
-testboxes_SOURCES = core/testboxes.c
-testgradient_SOURCES = ui/testgradient.c
-testasyncgetprop_SOURCES = x11/testasyncgetprop.c
-testboxes_LDADD = $(MUTTER_LIBS) libmutter.la
-testgradient_LDADD = $(MUTTER_LIBS) libmutter.la
-testasyncgetprop_LDADD = $(MUTTER_LIBS) libmutter.la
 dbus_idle_built_sources = meta-dbus-idle-monitor.c meta-dbus-idle-monitor.h
 CLEANFILES = $(mutter_built_sources) $(typelib_DATA) $(gir_DATA) \
 	$(MUTTER_STAMP_FILES)
@@ -902,15 +960,6 @@ DISTCLEANFILES = \
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libmutter.pc
-EXTRA_DIST = \
-	$(wayland_protocols)		\
-	libmutter.pc.in \
-	mutter-enum-types.h.in \
-	mutter-enum-types.c.in \
-	org.freedesktop.login1.xml	\
-	org.gnome.Mutter.DisplayConfig.xml	\
-	org.gnome.Mutter.IdleMonitor.xml
-
 BUILT_SOURCES = \
 	$(mutter_built_sources)			\
 	$(libmutterinclude_built_headers)
@@ -923,7 +972,7 @@ all: $(BUILT_SOURCES)
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/Makefile-tests.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -944,6 +993,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
+$(srcdir)/Makefile-tests.am:
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -1060,6 +1110,8 @@ compositor/compositor.lo: compositor/$(am__dirstamp) \
 compositor/meta-background.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
 compositor/meta-background-actor.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-background-image.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
 compositor/meta-background-group.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
@@ -1246,6 +1298,55 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+install-installedtestsbinPROGRAMS: $(installedtestsbin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	@list='$(installedtestsbin_PROGRAMS)'; test -n "$(installedtestsbindir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(installedtestsbindir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(installedtestsbindir)" || exit 1; \
+	fi; \
+	for p in $$list; do echo "$$p $$p"; done | \
+	sed 's/$(EXEEXT)$$//' | \
+	while read p p1; do if test -f $$p \
+	 || test -f $$p1 \
+	  ; then echo "$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n;h' \
+	    -e 's|.*|.|' \
+	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
+	sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
+	    else { print "f", $$3 "/" $$4, $$1; } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	    test -z "$$files" || { \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(installedtestsbindir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(installedtestsbindir)$$dir" || exit $$?; \
+	    } \
+	; done
+
+uninstall-installedtestsbinPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(installedtestsbin_PROGRAMS)'; test -n "$(installedtestsbindir)" || list=; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
+	      -e 's/$$/$(EXEEXT)/' \
+	`; \
+	test -n "$$list" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(installedtestsbindir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(installedtestsbindir)" && rm -f $$files
+
+clean-installedtestsbinPROGRAMS:
+	@list='$(installedtestsbin_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
 install-libexecPROGRAMS: $(libexec_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(libexec_PROGRAMS)'; test -n "$(libexecdir)" || list=; \
@@ -1316,6 +1417,24 @@ core/restart-helper.$(OBJEXT): core/$(am__dirstamp) \
 mutter-restart-helper$(EXEEXT): $(mutter_restart_helper_OBJECTS) $(mutter_restart_helper_DEPENDENCIES) $(EXTRA_mutter_restart_helper_DEPENDENCIES) 
 	@rm -f mutter-restart-helper$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mutter_restart_helper_OBJECTS) $(mutter_restart_helper_LDADD) $(LIBS)
+tests/$(am__dirstamp):
+	@$(MKDIR_P) tests
+	@: > tests/$(am__dirstamp)
+tests/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) tests/$(DEPDIR)
+	@: > tests/$(DEPDIR)/$(am__dirstamp)
+tests/test-client.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+mutter-test-client$(EXEEXT): $(mutter_test_client_OBJECTS) $(mutter_test_client_DEPENDENCIES) $(EXTRA_mutter_test_client_DEPENDENCIES) 
+	@rm -f mutter-test-client$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(mutter_test_client_OBJECTS) $(mutter_test_client_LDADD) $(LIBS)
+tests/test-runner.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+mutter-test-runner$(EXEEXT): $(mutter_test_runner_OBJECTS) $(mutter_test_runner_DEPENDENCIES) $(EXTRA_mutter_test_runner_DEPENDENCIES) 
+	@rm -f mutter-test-runner$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(mutter_test_runner_OBJECTS) $(mutter_test_runner_LDADD) $(LIBS)
 x11/testasyncgetprop.$(OBJEXT): x11/$(am__dirstamp) \
 	x11/$(DEPDIR)/$(am__dirstamp)
 
@@ -1347,6 +1466,7 @@ mostlyclean-compile:
 	-rm -f compositor/*.lo
 	-rm -f core/*.$(OBJEXT)
 	-rm -f core/*.lo
+	-rm -f tests/*.$(OBJEXT)
 	-rm -f ui/*.$(OBJEXT)
 	-rm -f ui/*.lo
 	-rm -f wayland/*.$(OBJEXT)
@@ -1389,6 +1509,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/compositor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-background-actor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-background-group.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-background-image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-background.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-cullable.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-module.Plo@am__quote@
@@ -1432,6 +1553,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/util.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/window.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/workspace.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test-client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test-runner.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/frames.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/gradient.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/resizepopup.Plo@am__quote@
@@ -1497,6 +1620,27 @@ clean-libtool:
 	-rm -rf ui/.libs ui/_libs
 	-rm -rf wayland/.libs wayland/_libs
 	-rm -rf x11/.libs x11/_libs
+install-dist_stackingDATA: $(dist_stacking_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_stacking_DATA)'; test -n "$(stackingdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(stackingdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(stackingdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(stackingdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(stackingdir)" || exit $$?; \
+	done
+
+uninstall-dist_stackingDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_stacking_DATA)'; test -n "$(stackingdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(stackingdir)'; $(am__uninstall_files_from_dir)
 install-girDATA: $(gir_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(gir_DATA)'; test -n "$(girdir)" || list=; \
@@ -1518,6 +1662,27 @@ uninstall-girDATA:
 	@list='$(gir_DATA)'; test -n "$(girdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(girdir)'; $(am__uninstall_files_from_dir)
+install-installedtestsDATA: $(installedtests_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(installedtests_DATA)'; test -n "$(installedtestsdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(installedtestsdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(installedtestsdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(installedtestsdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(installedtestsdir)" || exit $$?; \
+	done
+
+uninstall-installedtestsDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(installedtests_DATA)'; test -n "$(installedtestsdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(installedtestsdir)'; $(am__uninstall_files_from_dir)
 install-pkgconfigDATA: $(pkgconfig_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(pkgconfig_DATA)'; test -n "$(pkgconfigdir)" || list=; \
@@ -1765,7 +1930,7 @@ install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(libexecdir)" "$(DESTDIR)$(girdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(typelibdir)" "$(DESTDIR)$(libmutterincludedir)" "$(DESTDIR)$(libmutterincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(installedtestsbindir)" "$(DESTDIR)$(libexecdir)" "$(DESTDIR)$(stackingdir)" "$(DESTDIR)$(girdir)" "$(DESTDIR)$(installedtestsdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(typelibdir)" "$(DESTDIR)$(libmutterincludedir)" "$(DESTDIR)$(libmutterincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -1806,6 +1971,8 @@ distclean-generic:
 	-rm -f compositor/$(am__dirstamp)
 	-rm -f core/$(DEPDIR)/$(am__dirstamp)
 	-rm -f core/$(am__dirstamp)
+	-rm -f tests/$(DEPDIR)/$(am__dirstamp)
+	-rm -f tests/$(am__dirstamp)
 	-rm -f ui/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ui/$(am__dirstamp)
 	-rm -f wayland/$(DEPDIR)/$(am__dirstamp)
@@ -1820,12 +1987,13 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
+clean-am: clean-binPROGRAMS clean-generic \
+	clean-installedtestsbinPROGRAMS clean-libLTLIBRARIES \
 	clean-libexecPROGRAMS clean-libtool clean-noinstPROGRAMS \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) tests/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1842,7 +2010,9 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-girDATA install-libmutterincludeHEADERS \
+install-data-am: install-dist_stackingDATA install-girDATA \
+	install-installedtestsDATA install-installedtestsbinPROGRAMS \
+	install-libmutterincludeHEADERS \
 	install-nodist_libmutterincludeHEADERS install-pkgconfigDATA \
 	install-typelibDATA
 
@@ -1874,7 +2044,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) tests/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1891,9 +2061,10 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-girDATA \
-	uninstall-libLTLIBRARIES uninstall-libexecPROGRAMS \
-	uninstall-libmutterincludeHEADERS \
+uninstall-am: uninstall-binPROGRAMS uninstall-dist_stackingDATA \
+	uninstall-girDATA uninstall-installedtestsDATA \
+	uninstall-installedtestsbinPROGRAMS uninstall-libLTLIBRARIES \
+	uninstall-libexecPROGRAMS uninstall-libmutterincludeHEADERS \
 	uninstall-nodist_libmutterincludeHEADERS \
 	uninstall-pkgconfigDATA uninstall-typelibDATA
 
@@ -1902,23 +2073,28 @@ uninstall-am: uninstall-binPROGRAMS uninstall-girDATA \
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am check \
 	check-am clean clean-binPROGRAMS clean-generic \
-	clean-libLTLIBRARIES clean-libexecPROGRAMS clean-libtool \
-	clean-noinstPROGRAMS cscopelist-am ctags ctags-am distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-girDATA install-html install-html-am \
-	install-info install-info-am install-libLTLIBRARIES \
-	install-libexecPROGRAMS install-libmutterincludeHEADERS \
-	install-man install-nodist_libmutterincludeHEADERS install-pdf \
+	clean-installedtestsbinPROGRAMS clean-libLTLIBRARIES \
+	clean-libexecPROGRAMS clean-libtool clean-noinstPROGRAMS \
+	cscopelist-am ctags ctags-am distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-binPROGRAMS install-data install-data-am \
+	install-dist_stackingDATA install-dvi install-dvi-am \
+	install-exec install-exec-am install-girDATA install-html \
+	install-html-am install-info install-info-am \
+	install-installedtestsDATA install-installedtestsbinPROGRAMS \
+	install-libLTLIBRARIES install-libexecPROGRAMS \
+	install-libmutterincludeHEADERS install-man \
+	install-nodist_libmutterincludeHEADERS install-pdf \
 	install-pdf-am install-pkgconfigDATA install-ps install-ps-am \
 	install-strip install-typelibDATA installcheck installcheck-am \
 	installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS \
-	uninstall-girDATA uninstall-libLTLIBRARIES \
+	uninstall-dist_stackingDATA uninstall-girDATA \
+	uninstall-installedtestsDATA \
+	uninstall-installedtestsbinPROGRAMS uninstall-libLTLIBRARIES \
 	uninstall-libexecPROGRAMS uninstall-libmutterincludeHEADERS \
 	uninstall-nodist_libmutterincludeHEADERS \
 	uninstall-pkgconfigDATA uninstall-typelibDATA
@@ -1926,6 +2102,14 @@ uninstall-am: uninstall-binPROGRAMS uninstall-girDATA \
 
 # Flag build for parallelism; see https://savannah.gnu.org/patch/?6905
 .AUTOPARALLEL:
+
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@mutter-all.test: tests/mutter-all.test.in
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	$(AM_V_GEN) sed  -e "s|@libexecdir[@]|$(libexecdir)|g"  $< > $@.tmp && mv $@.tmp $@
+
+@HAVE_WAYLAND_TRUE@.PHONY: run-tests
+
+@HAVE_WAYLAND_TRUE@run-tests: mutter-test-client mutter-test-runner
+@HAVE_WAYLAND_TRUE@	./mutter-test-runner $(dist_stacking_DATA)
 
 @HAVE_INTROSPECTION_TRUE@include $(INTROSPECTION_MAKEFILE)
 

@@ -353,6 +353,7 @@
 <ANCHOR id="meta-MetaKeybinding.other_details" href="meta/meta-MetaKeybinding.html#meta-MetaKeybinding.other_details">
 <ANCHOR id="MetaKeyBinding-struct" href="meta/meta-MetaKeybinding.html#MetaKeyBinding-struct">
 <ANCHOR id="MetaBackgroundActor" href="meta/MetaBackgroundActor.html">
+<ANCHOR id="MetaBackgroundActor.properties" href="meta/MetaBackgroundActor.html#MetaBackgroundActor.properties">
 <ANCHOR id="MetaBackgroundActor.other" href="meta/MetaBackgroundActor.html#MetaBackgroundActor.other">
 <ANCHOR id="MetaBackgroundActor.object-hierarchy" href="meta/MetaBackgroundActor.html#MetaBackgroundActor.object-hierarchy">
 <ANCHOR id="MetaBackgroundActor.implemented-interfaces" href="meta/MetaBackgroundActor.html#MetaBackgroundActor.implemented-interfaces">
@@ -361,6 +362,13 @@
 <ANCHOR id="MetaBackgroundActor.other_details" href="meta/MetaBackgroundActor.html#MetaBackgroundActor.other_details">
 <ANCHOR id="MetaBackgroundActor-struct" href="meta/MetaBackgroundActor.html#MetaBackgroundActor-struct">
 <ANCHOR id="MetaBackgroundActorClass" href="meta/MetaBackgroundActor.html#MetaBackgroundActorClass">
+<ANCHOR id="MetaBackgroundActor.property-details" href="meta/MetaBackgroundActor.html#MetaBackgroundActor.property-details">
+<ANCHOR id="MetaBackgroundActor--background" href="meta/MetaBackgroundActor.html#MetaBackgroundActor--background">
+<ANCHOR id="MetaBackgroundActor--brightness" href="meta/MetaBackgroundActor.html#MetaBackgroundActor--brightness">
+<ANCHOR id="MetaBackgroundActor--meta-screen" href="meta/MetaBackgroundActor.html#MetaBackgroundActor--meta-screen">
+<ANCHOR id="MetaBackgroundActor--monitor" href="meta/MetaBackgroundActor.html#MetaBackgroundActor--monitor">
+<ANCHOR id="MetaBackgroundActor--vignette" href="meta/MetaBackgroundActor.html#MetaBackgroundActor--vignette">
+<ANCHOR id="MetaBackgroundActor--vignette-sharpness" href="meta/MetaBackgroundActor.html#MetaBackgroundActor--vignette-sharpness">
 <ANCHOR id="MetaShadowFactory" href="meta/MetaShadowFactory.html">
 <ANCHOR id="MetaShadowFactory.functions" href="meta/MetaShadowFactory.html#MetaShadowFactory.functions">
 <ANCHOR id="MetaShadowFactory.signals" href="meta/MetaShadowFactory.html#MetaShadowFactory.signals">
