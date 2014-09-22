@@ -214,8 +214,29 @@ send_configure_notify (MetaWindow *window)
   event.xconfigure.display = window->display->xdisplay;
   event.xconfigure.event = window->xwindow;
   event.xconfigure.window = window->xwindow;
-  event.xconfigure.x = window->rect.x - priv->border_width;
-  event.xconfigure.y = window->rect.y - priv->border_width;
+  event.xconfigure.x = priv->client_rect.x - priv->border_width;
+  event.xconfigure.y = priv->client_rect.y - priv->border_width;
+  if (window->frame)
+    {
+      if (window->withdrawn)
+        {
+          MetaFrameBorders borders;
+          /* We reparent the client window and put it to the position
+           * where the visible top-left of the frame window currently is.
+           */
+
+          meta_frame_calc_borders (window->frame, &borders);
+
+          event.xconfigure.x = window->frame->rect.x + borders.invisible.left;
+          event.xconfigure.y = window->frame->rect.y + borders.invisible.top;
+        }
+      else
+        {
+          /* Need to be in root window coordinates */
+          event.xconfigure.x += window->frame->rect.x;
+          event.xconfigure.y += window->frame->rect.y;
+        }
+    }
   event.xconfigure.width = priv->client_rect.width;
   event.xconfigure.height = priv->client_rect.height;
   event.xconfigure.border_width = priv->border_width; /* requested not actual */
@@ -249,6 +270,17 @@ adjust_for_gravity (MetaWindow        *window,
   int frame_width, frame_height;
   MetaFrameBorders borders;
 
+  /* We're computing position to pass to window_move, which is
+   * the position of the client window (StaticGravity basically)
+   *
+   * (see WM spec description of gravity computation, but note that
+   * their formulas assume we're honoring the border width, rather
+   * than compensating for having turned it off)
+   */
+
+  if (gravity == StaticGravity)
+    return;
+
   if (coords_assume_border)
     bw = priv->border_width;
   else
@@ -260,14 +292,6 @@ adjust_for_gravity (MetaWindow        *window,
   child_y = borders.visible.top;
   frame_width = child_x + rect->width + borders.visible.right;
   frame_height = child_y + rect->height + borders.visible.bottom;
-
-  /* We're computing position to pass to window_move, which is
-   * the position of the client window (StaticGravity basically)
-   *
-   * (see WM spec description of gravity computation, but note that
-   * their formulas assume we're honoring the border width, rather
-   * than compensating for having turned it off)
-   */
 
   /* Calculate the the reference point, which is the corner of the
    * outer window specified by the gravity. So, NorthEastGravity
