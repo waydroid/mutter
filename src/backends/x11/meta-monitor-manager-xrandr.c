@@ -144,7 +144,7 @@ static gboolean
 output_get_boolean_property (MetaMonitorManagerXrandr *manager_xrandr,
                              MetaOutput *output, const char *propname)
 {
-  gboolean value;
+  gboolean value = FALSE;
   Atom atom, actual_type;
   int actual_format;
   unsigned long nitems, bytes_after;
@@ -158,12 +158,12 @@ output_get_boolean_property (MetaMonitorManagerXrandr *manager_xrandr,
                         &actual_type, &actual_format,
                         &nitems, &bytes_after, &buffer);
 
-  if (actual_type != XA_CARDINAL || actual_format != 32 ||
-      nitems < 1)
-    return FALSE;
+  if (actual_type != XA_CARDINAL || actual_format != 32 || nitems < 1)
+    goto out;
 
   value = ((int*)buffer)[0];
 
+ out:
   XFree (buffer);
   return value;
 }
@@ -187,7 +187,7 @@ static int
 output_get_backlight_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
                              MetaOutput               *output)
 {
-  gboolean value;
+  int value = -1;
   Atom atom, actual_type;
   int actual_format;
   unsigned long nitems, bytes_after;
@@ -201,14 +201,17 @@ output_get_backlight_xrandr (MetaMonitorManagerXrandr *manager_xrandr,
                         &actual_type, &actual_format,
                         &nitems, &bytes_after, &buffer);
 
-  if (actual_type != XA_INTEGER || actual_format != 32 ||
-      nitems < 1)
-    return -1;
+  if (actual_type != XA_INTEGER || actual_format != 32 || nitems < 1)
+    goto out;
 
   value = ((int*)buffer)[0];
 
+ out:
   XFree (buffer);
-  return normalize_backlight (output, value);
+  if (value > 0)
+    return normalize_backlight (output, value);
+  else
+    return -1;
 }
 
 static void
@@ -1072,6 +1075,7 @@ meta_monitor_manager_xrandr_handle_xevent (MetaMonitorManagerXrandr *manager_xra
   MetaMonitorMode *old_modes;
   unsigned int n_old_outputs, n_old_modes;
   gboolean new_config;
+  gboolean applied_config = FALSE;
 
   if ((event->type - manager_xrandr->rr_event_base) != RRScreenChangeNotify)
     return FALSE;
@@ -1088,39 +1092,32 @@ meta_monitor_manager_xrandr_handle_xevent (MetaMonitorManagerXrandr *manager_xra
   manager->serial++;
   meta_monitor_manager_xrandr_read_current (manager);
 
-  new_config = manager_xrandr->resources->timestamp >=
-    manager_xrandr->resources->configTimestamp;
-  if (meta_monitor_manager_has_hotplug_mode_update (manager))
+  new_config = manager_xrandr->resources->timestamp >= manager_xrandr->resources->configTimestamp;
 
+  /* If this is the X server telling us we set a new configuration,
+   * we can simply short-cut to rebuilding our logical configuration.
+   */
+  if (new_config || meta_monitor_config_match_current (manager->config, manager))
     {
-      /* Check if the current intended configuration is a result of an
-         XRandR call.  Otherwise, hotplug_mode_update tells us to get
-         a new preferred mode on hotplug events to handle dynamic
-         guest resizing. */
-      if (new_config)
-        meta_monitor_manager_xrandr_rebuild_derived (manager);
-      else
-        meta_monitor_config_make_default (manager->config, manager);
-    }
-  else
-    {
-      /* Check if the current intended configuration has the same outputs
-         as the new real one, or if the event is a result of an XRandR call.
-         If so, we can go straight to rebuild the logical config and tell
-         the outside world.
-         Otherwise, this event was caused by hotplug, so give a chance to
-         MetaMonitorConfig.
-
-         Note that we need to check both the timestamps and the list of
-         outputs, because the X server might emit spurious events with new
-         configTimestamps (bug 702804), and the driver may have changed
-         the EDID for some other reason (old qxl and vbox drivers). */
-      if (new_config || meta_monitor_config_match_current (manager->config, manager))
-        meta_monitor_manager_xrandr_rebuild_derived (manager);
-      else if (!meta_monitor_config_apply_stored (manager->config, manager))
-        meta_monitor_config_make_default (manager->config, manager);
+      meta_monitor_manager_xrandr_rebuild_derived (manager);
+      goto out;
     }
 
+  /* If the monitor has hotplug_mode_update (which is used by VMs), don't bother
+   * applying our stored configuration, because it's likely the user just resizing
+   * the window.
+   */
+  if (!meta_monitor_manager_has_hotplug_mode_update (manager))
+    {
+      if (meta_monitor_config_apply_stored (manager->config, manager))
+        applied_config = TRUE;
+    }
+
+  /* If we haven't applied any configuration, apply the default configuration. */
+  if (!applied_config)
+    meta_monitor_config_make_default (manager->config, manager);
+
+ out:
   meta_monitor_manager_free_output_array (old_outputs, n_old_outputs);
   meta_monitor_manager_free_mode_array (old_modes, n_old_modes);
   g_free (old_crtcs);

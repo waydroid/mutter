@@ -98,6 +98,10 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-xwayland.c			\
 @HAVE_WAYLAND_TRUE@	wayland/meta-xwayland.h			\
 @HAVE_WAYLAND_TRUE@	wayland/meta-xwayland-private.h		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-buffer.c      	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-buffer.h      	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-region.c      	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-region.h      	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device.c      \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device.h      \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-keyboard.c		\
@@ -230,9 +234,12 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	compositor/meta-background-actor-private.h \
 	compositor/meta-background-image.c \
 	compositor/meta-background-group.c compositor/meta-cullable.c \
-	compositor/meta-cullable.h compositor/meta-module.c \
-	compositor/meta-module.h compositor/meta-plugin.c \
-	compositor/meta-plugin-manager.c \
+	compositor/meta-cullable.h compositor/meta-dnd-actor.c \
+	compositor/meta-dnd-actor-private.h \
+	compositor/meta-feedback-actor.c \
+	compositor/meta-feedback-actor-private.h \
+	compositor/meta-module.c compositor/meta-module.h \
+	compositor/meta-plugin.c compositor/meta-plugin-manager.c \
 	compositor/meta-plugin-manager.h \
 	compositor/meta-shadow-factory.c \
 	compositor/meta-shadow-factory-private.h \
@@ -281,7 +288,9 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	compositor/meta-surface-actor-wayland.h wayland/meta-wayland.c \
 	wayland/meta-wayland.h wayland/meta-wayland-private.h \
 	wayland/meta-xwayland.c wayland/meta-xwayland.h \
-	wayland/meta-xwayland-private.h \
+	wayland/meta-xwayland-private.h wayland/meta-wayland-buffer.c \
+	wayland/meta-wayland-buffer.h wayland/meta-wayland-region.c \
+	wayland/meta-wayland-region.h \
 	wayland/meta-wayland-data-device.c \
 	wayland/meta-wayland-data-device.h \
 	wayland/meta-wayland-keyboard.c \
@@ -308,6 +317,8 @@ am__dirstamp = $(am__leading_dot)dirstamp
 @HAVE_WAYLAND_TRUE@	compositor/meta-surface-actor-wayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-xwayland.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-buffer.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-region.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-keyboard.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer.lo \
@@ -340,7 +351,8 @@ am_libmutter_la_OBJECTS = backends/meta-backend.lo \
 	compositor/meta-background-actor.lo \
 	compositor/meta-background-image.lo \
 	compositor/meta-background-group.lo \
-	compositor/meta-cullable.lo compositor/meta-module.lo \
+	compositor/meta-cullable.lo compositor/meta-dnd-actor.lo \
+	compositor/meta-feedback-actor.lo compositor/meta-module.lo \
 	compositor/meta-plugin.lo compositor/meta-plugin-manager.lo \
 	compositor/meta-shadow-factory.lo \
 	compositor/meta-shaped-texture.lo \
@@ -471,6 +483,7 @@ am__can_run_installinfo = \
   esac
 am__dist_stacking_DATA_DIST = tests/stacking/basic-x11.metatest \
 	tests/stacking/basic-wayland.metatest \
+	tests/stacking/minimized.metatest \
 	tests/stacking/mixed-windows.metatest \
 	tests/stacking/override-redirect.metatest
 DATA = $(dist_stacking_DATA) $(gir_DATA) $(installedtests_DATA) \
@@ -793,9 +806,12 @@ libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	compositor/meta-background-actor-private.h \
 	compositor/meta-background-image.c \
 	compositor/meta-background-group.c compositor/meta-cullable.c \
-	compositor/meta-cullable.h compositor/meta-module.c \
-	compositor/meta-module.h compositor/meta-plugin.c \
-	compositor/meta-plugin-manager.c \
+	compositor/meta-cullable.h compositor/meta-dnd-actor.c \
+	compositor/meta-dnd-actor-private.h \
+	compositor/meta-feedback-actor.c \
+	compositor/meta-feedback-actor-private.h \
+	compositor/meta-module.c compositor/meta-module.h \
+	compositor/meta-plugin.c compositor/meta-plugin-manager.c \
 	compositor/meta-plugin-manager.h \
 	compositor/meta-shadow-factory.c \
 	compositor/meta-shadow-factory-private.h \
@@ -909,6 +925,7 @@ mutter_restart_helper_LDADD = $(MUTTER_LIBS)
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@dist_stacking_DATA = \
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/basic-x11.metatest	\
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/basic-wayland.metatest	\
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/minimized.metatest   	\
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/mixed-windows.metatest   \
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/override-redirect.metatest
 
@@ -1117,6 +1134,10 @@ compositor/meta-background-group.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
 compositor/meta-cullable.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-dnd-actor.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-feedback-actor.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
 compositor/meta-module.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
 compositor/meta-plugin.lo: compositor/$(am__dirstamp) \
@@ -1207,6 +1228,10 @@ wayland/$(DEPDIR)/$(am__dirstamp):
 wayland/meta-wayland.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-xwayland.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-buffer.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-region.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-data-device.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
@@ -1512,6 +1537,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-background-image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-background.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-cullable.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-dnd-actor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-feedback-actor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-module.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-plugin-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-plugin.Plo@am__quote@
@@ -1562,10 +1589,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/theme-parser.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/theme.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/ui.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-buffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-data-device.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-keyboard.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-outputs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-pointer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-region.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-seat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-surface.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-touch.Plo@am__quote@

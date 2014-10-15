@@ -69,9 +69,8 @@ struct _MetaWaylandKeyboard
   struct wl_listener focus_surface_listener;
   uint32_t focus_serial;
 
-  struct wl_array pressed_keys;
-
   MetaWaylandXkbInfo xkb_info;
+  enum xkb_state_component mods_changed;
 
   GSettings *settings;
 };

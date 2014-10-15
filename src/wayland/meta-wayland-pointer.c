@@ -48,6 +48,7 @@
 
 #include "meta-wayland-pointer.h"
 #include "meta-wayland-private.h"
+#include "meta-wayland-buffer.h"
 #include "meta-cursor.h"
 #include "meta-cursor-tracker-private.h"
 #include "meta-surface-actor-wayland.h"
@@ -272,11 +273,8 @@ sync_focus_surface (MetaWaylandPointer *pointer)
       g_assert_not_reached ();
     }
 
-  if (focus_surface != pointer->focus_surface)
-    {
-      const MetaWaylandPointerGrabInterface *interface = pointer->grab->interface;
-      interface->focus (pointer->grab, focus_surface);
-    }
+  const MetaWaylandPointerGrabInterface *interface = pointer->grab->interface;
+  interface->focus (pointer->grab, focus_surface);
 }
 
 static void
@@ -307,9 +305,6 @@ repick_for_event (MetaWaylandPointer *pointer,
     pointer->current = meta_surface_actor_wayland_get_surface (META_SURFACE_ACTOR_WAYLAND (actor));
   else
     pointer->current = NULL;
-
-  if (pointer->cursor_tracker && pointer->current == NULL)
-    meta_cursor_tracker_unset_window_cursor (pointer->cursor_tracker);
 
   sync_focus_surface (pointer);
 }
@@ -545,6 +540,8 @@ meta_wayland_pointer_set_focus (MetaWaylandPointer *pointer,
             }
         }
     }
+
+  meta_wayland_pointer_update_cursor_surface (pointer);
 }
 
 void
@@ -569,6 +566,8 @@ meta_wayland_pointer_end_grab (MetaWaylandPointer *pointer)
   pointer->grab = &pointer->default_grab;
   interface = pointer->grab->interface;
   interface->focus (pointer->grab, pointer->current);
+
+  meta_wayland_pointer_update_cursor_surface (pointer);
 }
 
 typedef struct {
@@ -718,10 +717,10 @@ meta_wayland_pointer_start_popup_grab (MetaWaylandPointer *pointer,
   popup->grab = grab;
   popup->surface = surface;
   popup->surface_destroy_listener.notify = on_popup_surface_destroy;
-  if (surface->xdg_popup.resource)
-    wl_resource_add_destroy_listener (surface->xdg_popup.resource, &popup->surface_destroy_listener);
-  else if (surface->wl_shell_surface.resource)
-    wl_resource_add_destroy_listener (surface->wl_shell_surface.resource, &popup->surface_destroy_listener);
+  if (surface->xdg_popup)
+    wl_resource_add_destroy_listener (surface->xdg_popup, &popup->surface_destroy_listener);
+  else if (surface->wl_shell_surface)
+    wl_resource_add_destroy_listener (surface->wl_shell_surface, &popup->surface_destroy_listener);
 
   wl_list_insert (&grab->all_popups, &popup->link);
   return TRUE;
@@ -753,25 +752,32 @@ meta_wayland_pointer_get_relative_coordinates (MetaWaylandPointer *pointer,
 void
 meta_wayland_pointer_update_cursor_surface (MetaWaylandPointer *pointer)
 {
-  MetaCursorReference *cursor;
-
   if (pointer->cursor_tracker == NULL)
     return;
 
-  if (pointer->cursor_surface && pointer->cursor_surface->buffer)
+  if (pointer->current)
     {
-      struct wl_resource *buffer = pointer->cursor_surface->buffer->resource;
-      cursor = meta_cursor_reference_from_buffer (buffer,
-                                                  pointer->hotspot_x,
-                                                  pointer->hotspot_y);
+      MetaCursorReference *cursor;
+
+      if (pointer->cursor_surface && pointer->cursor_surface->buffer)
+        {
+          struct wl_resource *buffer = pointer->cursor_surface->buffer->resource;
+          cursor = meta_cursor_reference_from_buffer (buffer,
+                                                      pointer->hotspot_x,
+                                                      pointer->hotspot_y);
+        }
+      else
+        cursor = NULL;
+
+      meta_cursor_tracker_set_window_cursor (pointer->cursor_tracker, cursor);
+
+      if (cursor)
+        meta_cursor_reference_unref (cursor);
     }
   else
-    cursor = NULL;
-
-  meta_cursor_tracker_set_window_cursor (pointer->cursor_tracker, cursor);
-
-  if (cursor)
-    meta_cursor_reference_unref (cursor);
+    {
+      meta_cursor_tracker_unset_window_cursor (pointer->cursor_tracker);
+    }
 }
 
 static void

@@ -170,6 +170,7 @@ MetaWorkspace*
 meta_workspace_new (MetaScreen *screen)
 {
   MetaWorkspace *workspace;
+  GSList *windows, *l;
 
   workspace = g_object_new (META_TYPE_WORKSPACE, NULL);
 
@@ -196,6 +197,13 @@ meta_workspace_new (MetaScreen *screen)
   workspace->all_struts = NULL;
 
   workspace->showing_desktop = FALSE;
+
+  /* make sure sticky windows are in our mru_list */
+  windows = meta_display_list_windows (screen->display, META_LIST_SORTED);
+  for (l = windows; l; l = l->next)
+    if (meta_window_located_on_workspace (l->data, workspace))
+      meta_workspace_add_window (workspace, l->data);
+  g_slist_free (windows);
 
   return workspace;
 }
@@ -358,7 +366,7 @@ meta_workspace_relocate_windows (MetaWorkspace *workspace,
     {
       MetaWindow *window = l->data;
 
-      if (!window->override_redirect)
+      if (!window->on_all_workspaces)
         meta_window_change_workspace (window, new_home);
     }
 

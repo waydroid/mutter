@@ -1062,8 +1062,8 @@ _meta_window_shared_new (MetaDisplay         *display,
 
   if (window->initial_workspace_set)
     {
-      gboolean on_all_workspaces;
-      MetaWorkspace *workspace;
+      gboolean on_all_workspaces = window->on_all_workspaces;
+      MetaWorkspace *workspace = NULL;
 
       if (window->initial_workspace == (int) 0xFFFFFFFF)
         {
@@ -1077,15 +1077,13 @@ _meta_window_shared_new (MetaDisplay         *display,
           window->on_all_workspaces_requested = TRUE;
 
           on_all_workspaces = TRUE;
-          workspace = NULL;
         }
-      else
+      else if (!on_all_workspaces)
         {
           meta_topic (META_DEBUG_PLACEMENT,
                       "Window %s is initially on space %d\n",
                       window->desc, window->initial_workspace);
 
-          on_all_workspaces = FALSE;
           workspace = meta_screen_get_workspace_by_index (window->screen,
                                                           window->initial_workspace);
         }
@@ -1099,9 +1097,9 @@ _meta_window_shared_new (MetaDisplay         *display,
    * but appear on other workspaces. override-redirect windows are part
    * of no workspace.
    */
-  if (!window->override_redirect)
+  if (!window->override_redirect && window->workspace == NULL)
     {
-      if (window->workspace == NULL && window->transient_for != NULL)
+      if (window->transient_for != NULL)
         {
           meta_topic (META_DEBUG_PLACEMENT,
                       "Putting window %s on same workspace as parent %s\n",
@@ -1112,7 +1110,15 @@ _meta_window_shared_new (MetaDisplay         *display,
                                window->transient_for->workspace);
         }
 
-      if (window->workspace == NULL)
+      if (window->on_all_workspaces)
+        {
+          meta_topic (META_DEBUG_PLACEMENT,
+                      "Putting window %s on all workspaces\n",
+                      window->desc);
+
+          set_workspace_state (window, TRUE, NULL);
+        }
+      else
         {
           meta_topic (META_DEBUG_PLACEMENT,
                       "Putting window %s on active workspace\n",
@@ -2089,7 +2095,7 @@ windows_overlap (const MetaWindow *w1, const MetaWindow *w2)
 static gboolean
 window_would_be_covered (const MetaWindow *newbie)
 {
-  MetaWorkspace *workspace = newbie->workspace;
+  MetaWorkspace *workspace = meta_window_get_workspace ((MetaWindow *)newbie);
   GList *tmp, *windows;
 
   windows = meta_workspace_list_windows (workspace);
@@ -2616,6 +2622,9 @@ meta_window_maximize_internal (MetaWindow        *window,
   meta_window_recalc_features (window);
   set_net_wm_state (window);
 
+  if (window->monitor->in_fullscreen)
+    meta_screen_queue_check_fullscreen (window->screen);
+
   g_object_freeze_notify (G_OBJECT (window));
   g_object_notify_by_pspec (G_OBJECT (window), obj_props[PROP_MAXIMIZED_HORIZONTALLY]);
   g_object_notify_by_pspec (G_OBJECT (window), obj_props[PROP_MAXIMIZED_VERTICALLY]);
@@ -3060,6 +3069,8 @@ meta_window_unmaximize_internal (MetaWindow        *window,
 
       meta_window_recalc_features (window);
       set_net_wm_state (window);
+      if (!window->monitor->in_fullscreen)
+        meta_screen_queue_check_fullscreen (window->screen);
     }
 
   g_object_freeze_notify (G_OBJECT (window));
@@ -4291,7 +4302,7 @@ meta_window_focus (MetaWindow  *window,
  *  - workspace->windows is a list of windows that is located on
  *    that workspace.
  *
- *  - If the window is on_all_workspaces, then then
+ *  - If the window is on_all_workspaces, then
  *    window->workspace == NULL, but workspace->windows contains
  *    the window.
  */
@@ -4313,7 +4324,8 @@ set_workspace_state (MetaWindow    *window,
     g_return_if_fail ((window->constructing && on_all_workspaces) || window->unmanaging);
 
   if (on_all_workspaces == window->on_all_workspaces &&
-      workspace == window->workspace)
+      workspace == window->workspace &&
+      !window->constructing)
     return;
 
   if (window->workspace)
@@ -4645,6 +4657,32 @@ meta_window_appears_focused_changed (MetaWindow *window)
     meta_frame_queue_draw (window->frame);
 }
 
+static gboolean
+should_propagate_focus_appearance (MetaWindow *window)
+{
+  /* Parents of attached modal dialogs should appear focused. */
+  if (meta_window_is_attached_dialog (window))
+    return TRUE;
+
+  /* Parents of these sorts of override-redirect windows should
+   * appear focused. */
+  switch (window->type)
+    {
+    case META_WINDOW_DROPDOWN_MENU:
+    case META_WINDOW_POPUP_MENU:
+    case META_WINDOW_COMBO:
+    case META_WINDOW_TOOLTIP:
+    case META_WINDOW_NOTIFICATION:
+    case META_WINDOW_DND:
+    case META_WINDOW_OVERRIDE_OTHER:
+      return TRUE;
+    default:
+      break;
+    }
+
+  return FALSE;
+}
+
 /**
  * meta_window_propagate_focus_appearance:
  * @window: the window to start propagating from
@@ -4668,7 +4706,7 @@ meta_window_propagate_focus_appearance (MetaWindow *window,
 
   child = window;
   parent = meta_window_get_transient_for (child);
-  while (parent && (!focused || meta_window_is_attached_dialog (child)))
+  while (parent && (!focused || should_propagate_focus_appearance (child)))
     {
       gboolean child_focus_state_changed;
 
@@ -5385,7 +5423,7 @@ meta_window_shove_titlebar_onscreen (MetaWindow *window)
 gboolean
 meta_window_titlebar_is_onscreen (MetaWindow *window)
 {
-  MetaRectangle  titlebar_rect;
+  MetaRectangle  titlebar_rect, frame_rect;
   GList         *onscreen_region;
   gboolean       is_onscreen;
 
@@ -5399,6 +5437,11 @@ meta_window_titlebar_is_onscreen (MetaWindow *window)
 
   /* Get the rectangle corresponding to the titlebar */
   meta_window_get_titlebar_rect (window, &titlebar_rect);
+
+  /* Translate into screen coordinates */
+  meta_window_get_frame_rect (window, &frame_rect);
+  titlebar_rect.x = frame_rect.x;
+  titlebar_rect.y = frame_rect.y;
 
   /* Run through the spanning rectangles for the screen and see if one of
    * them overlaps with the titlebar sufficiently to consider it onscreen.
@@ -6719,7 +6762,7 @@ meta_window_set_demands_attention (MetaWindow *window)
           other_window = stack->data;
           stack = stack->next;
 
-          if (meta_window_located_on_workspace (other_window, window->workspace))
+          if (meta_window_located_on_workspace (other_window, workspace))
             {
               meta_window_get_frame_rect (other_window, &other_rect);
 

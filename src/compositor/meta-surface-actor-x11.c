@@ -193,8 +193,8 @@ meta_surface_actor_x11_process_damage (MetaSurfaceActor *actor,
       MetaRectangle window_rect;
       meta_window_get_frame_rect (priv->window, &window_rect);
 
-      if (window_rect.x == x &&
-          window_rect.y == y &&
+      if (x == 0 &&
+          y == 0 &&
           window_rect.width == width &&
           window_rect.height == height)
         priv->full_damage_frames_count++;
@@ -383,6 +383,7 @@ window_decorated_notify (MetaWindow *window,
 {
   MetaSurfaceActorX11 *self = META_SURFACE_ACTOR_X11 (user_data);
 
+  detach_pixmap (self);
   free_damage (self);
   create_damage (self);
 }

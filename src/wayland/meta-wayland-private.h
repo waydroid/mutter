@@ -24,7 +24,6 @@
 #include <clutter/clutter.h>
 
 #include <glib.h>
-#include <cairo.h>
 
 #include "window-private.h"
 #include <meta/meta-cursor-tracker.h>
@@ -33,19 +32,6 @@
 #include "meta-wayland-versions.h"
 #include "meta-wayland-surface.h"
 #include "meta-wayland-seat.h"
-
-typedef struct
-{
-  struct wl_resource *resource;
-  cairo_region_t *region;
-} MetaWaylandRegion;
-
-typedef struct
-{
-  GSource source;
-  GPollFD pfd;
-  struct wl_display *display;
-} WaylandEventSource;
 
 typedef struct
 {
@@ -71,7 +57,6 @@ struct _MetaWaylandCompositor
 {
   struct wl_display *wayland_display;
   const char *display_name;
-  ClutterActor *stage;
   GHashTable *outputs;
   struct wl_list frame_callbacks;
 
@@ -79,9 +64,5 @@ struct _MetaWaylandCompositor
 
   MetaWaylandSeat *seat;
 };
-
-MetaWaylandBuffer *     meta_wayland_buffer_from_resource       (struct wl_resource    *resource);
-void                    meta_wayland_buffer_ref                 (MetaWaylandBuffer     *buffer);
-void                    meta_wayland_buffer_unref               (MetaWaylandBuffer     *buffer);
 
 #endif /* META_WAYLAND_PRIVATE_H */
