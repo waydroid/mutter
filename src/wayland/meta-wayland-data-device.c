@@ -34,6 +34,7 @@
 #include "meta-wayland-seat.h"
 #include "meta-wayland-pointer.h"
 #include "meta-wayland-private.h"
+#include "meta-dnd-actor-private.h"
 
 typedef struct
 {
@@ -46,6 +47,7 @@ struct _MetaWaylandDataSource
 {
   struct wl_resource *resource;
   struct wl_array mime_types;
+  gboolean has_target;
 };
 
 static void
@@ -67,7 +69,10 @@ data_offer_accept (struct wl_client *client,
    * this be a wl_data_device request? */
 
   if (offer->source)
-    wl_data_source_send_target (offer->source->resource, mime_type);
+    {
+      wl_data_source_send_target (offer->source->resource, mime_type);
+      offer->source->has_target = mime_type != NULL;
+    }
 }
 
 static void
@@ -162,7 +167,7 @@ static struct wl_data_source_interface data_source_interface = {
   data_source_destroy
 };
 
-typedef struct {
+struct _MetaWaylandDragGrab {
   MetaWaylandPointerGrab  generic;
 
   MetaWaylandSeat        *seat;
@@ -177,7 +182,14 @@ typedef struct {
 
   MetaWaylandDataSource  *drag_data_source;
   struct wl_listener      drag_data_source_listener;
-} MetaWaylandDragGrab;
+
+  ClutterActor           *feedback_actor;
+
+  MetaWaylandSurface     *drag_origin;
+  struct wl_listener      drag_origin_listener;
+
+  int                     drag_start_x, drag_start_y;
+};
 
 static void
 destroy_drag_focus (struct wl_listener *listener, void *data)
@@ -257,11 +269,21 @@ drag_grab_motion (MetaWaylandPointerGrab *grab,
 				  clutter_event_get_time (event),
 				  sx, sy);
     }
+
+  if (drag_grab->drag_surface)
+    meta_feedback_actor_update (META_FEEDBACK_ACTOR (drag_grab->feedback_actor),
+                                event);
 }
 
 static void
 data_device_end_drag_grab (MetaWaylandDragGrab *drag_grab)
 {
+  if (drag_grab->drag_origin)
+    {
+      drag_grab->drag_origin = NULL;
+      wl_list_remove (&drag_grab->drag_origin_listener.link);
+    }
+
   if (drag_grab->drag_surface)
     {
       drag_grab->drag_surface = NULL;
@@ -269,7 +291,18 @@ data_device_end_drag_grab (MetaWaylandDragGrab *drag_grab)
     }
 
   if (drag_grab->drag_data_source)
-    wl_list_remove (&drag_grab->drag_data_source_listener.link);
+    {
+      drag_grab->drag_data_source->has_target = FALSE;
+      wl_list_remove (&drag_grab->drag_data_source_listener.link);
+    }
+
+  if (drag_grab->feedback_actor)
+    {
+      clutter_actor_remove_all_children (drag_grab->feedback_actor);
+      clutter_actor_destroy (drag_grab->feedback_actor);
+    }
+
+  drag_grab->seat->data_device.current_grab = NULL;
 
   drag_grab_focus (&drag_grab->generic, NULL);
 
@@ -285,10 +318,23 @@ drag_grab_button (MetaWaylandPointerGrab *grab,
   MetaWaylandSeat *seat = drag_grab->seat;
   ClutterEventType event_type = clutter_event_type (event);
 
-  if (drag_grab->drag_focus_data_device &&
-      drag_grab->generic.pointer->grab_button == clutter_event_get_button (event) &&
+  if (drag_grab->generic.pointer->grab_button == clutter_event_get_button (event) &&
       event_type == CLUTTER_BUTTON_RELEASE)
-    wl_data_device_send_drop (drag_grab->drag_focus_data_device);
+    {
+      gboolean success = FALSE;
+
+      if (drag_grab->drag_focus_data_device &&
+          drag_grab->drag_data_source->has_target)
+        {
+          wl_data_device_send_drop (drag_grab->drag_focus_data_device);
+          success = TRUE;
+        }
+
+      /* Finish drag and let actor self-destruct */
+      meta_dnd_actor_drag_finish (META_DND_ACTOR (drag_grab->feedback_actor),
+                                  success);
+      drag_grab->feedback_actor = NULL;
+    }
 
   if (seat->pointer.button_count == 0 &&
       event_type == CLUTTER_BUTTON_RELEASE)
@@ -300,6 +346,16 @@ static const MetaWaylandPointerGrabInterface drag_grab_interface = {
   drag_grab_motion,
   drag_grab_button,
 };
+
+static void
+destroy_data_device_origin (struct wl_listener *listener, void *data)
+{
+  MetaWaylandDragGrab *drag_grab =
+    wl_container_of (listener, drag_grab, drag_origin_listener);
+
+  drag_grab->drag_origin = NULL;
+  data_device_end_drag_grab (drag_grab);
+}
 
 static void
 destroy_data_device_source (struct wl_listener *listener, void *data)
@@ -318,6 +374,9 @@ destroy_data_device_icon (struct wl_listener *listener, void *data)
     wl_container_of (listener, drag_grab, drag_data_source_listener);
 
   drag_grab->drag_surface = NULL;
+
+  if (drag_grab->feedback_actor)
+    clutter_actor_remove_all_children (drag_grab->feedback_actor);
 }
 
 static void
@@ -329,26 +388,46 @@ data_device_start_drag (struct wl_client *client,
 {
   MetaWaylandDataDevice *data_device = wl_resource_get_user_data (resource);
   MetaWaylandSeat *seat = wl_container_of (data_device, seat, data_device);
+  MetaWaylandSurface *surface = NULL;
   MetaWaylandDragGrab *drag_grab;
+  ClutterPoint pos;
 
-  if ((seat->pointer.button_count == 0 ||
-       seat->pointer.grab_serial != serial ||
-       !seat->pointer.focus_surface ||
-       seat->pointer.focus_surface != wl_resource_get_user_data (origin_resource)))
+  if (origin_resource)
+    surface = wl_resource_get_user_data (origin_resource);
+
+  if (!surface)
+    return;
+
+  if (seat->pointer.button_count == 0 ||
+      seat->pointer.grab_serial != serial ||
+      !seat->pointer.focus_surface ||
+      seat->pointer.focus_surface != surface)
     return;
 
   /* FIXME: Check that the data source type array isn't empty. */
 
-  if (seat->pointer.grab != &seat->pointer.default_grab)
+  if (data_device->current_grab ||
+      seat->pointer.grab != &seat->pointer.default_grab)
     return;
 
-  drag_grab = g_slice_new0 (MetaWaylandDragGrab);
+  data_device->current_grab = drag_grab = g_slice_new0 (MetaWaylandDragGrab);
 
   drag_grab->generic.interface = &drag_grab_interface;
   drag_grab->generic.pointer = &seat->pointer;
 
   drag_grab->drag_client = client;
   drag_grab->seat = seat;
+
+  drag_grab->drag_origin = surface;
+  drag_grab->drag_origin_listener.notify = destroy_data_device_origin;
+  wl_resource_add_destroy_listener (origin_resource,
+                                    &drag_grab->drag_origin_listener);
+
+  clutter_input_device_get_coords (seat->pointer.device, NULL, &pos);
+  clutter_actor_transform_stage_point (CLUTTER_ACTOR (meta_surface_actor_get_texture (surface->surface_actor)),
+                                       pos.x, pos.y, &pos.x, &pos.y);
+  drag_grab->drag_start_x = pos.x;
+  drag_grab->drag_start_y = pos.y;
 
   if (source_resource)
     {
@@ -364,6 +443,19 @@ data_device_start_drag (struct wl_client *client,
       drag_grab->drag_icon_listener.notify = destroy_data_device_icon;
       wl_resource_add_destroy_listener (icon_resource,
                                         &drag_grab->drag_icon_listener);
+
+      drag_grab->feedback_actor = meta_dnd_actor_new (CLUTTER_ACTOR (drag_grab->drag_origin->surface_actor),
+                                                      drag_grab->drag_start_x,
+                                                      drag_grab->drag_start_y);
+      meta_feedback_actor_set_anchor (META_FEEDBACK_ACTOR (drag_grab->feedback_actor),
+                                      -drag_grab->drag_surface->offset_x,
+                                      -drag_grab->drag_surface->offset_y);
+      clutter_actor_add_child (drag_grab->feedback_actor,
+                               CLUTTER_ACTOR (drag_grab->drag_surface->surface_actor));
+
+      clutter_input_device_get_coords (seat->pointer.device, NULL, &pos);
+      meta_feedback_actor_set_position (META_FEEDBACK_ACTOR (drag_grab->feedback_actor),
+                                        pos.x, pos.y);
     }
 
   meta_wayland_pointer_set_focus (&seat->pointer, NULL);
@@ -550,4 +642,30 @@ meta_wayland_data_device_set_keyboard_focus (MetaWaylandDataDevice *data_device)
       offer = meta_wayland_data_source_send_offer (source, data_device_resource);
       wl_data_device_send_selection (data_device_resource, offer);
     }
+}
+
+gboolean
+meta_wayland_data_device_is_dnd_surface (MetaWaylandDataDevice *data_device,
+                                         MetaWaylandSurface    *surface)
+{
+  return data_device->current_grab &&
+    data_device->current_grab->drag_surface == surface;
+}
+
+void
+meta_wayland_data_device_update_dnd_surface (MetaWaylandDataDevice *data_device)
+{
+  MetaWaylandDragGrab *drag_grab;
+
+  if (!data_device->current_grab)
+    return;
+
+  drag_grab = data_device->current_grab;
+
+  if (!drag_grab->feedback_actor || !drag_grab->drag_surface)
+    return;
+
+  meta_feedback_actor_set_anchor (META_FEEDBACK_ACTOR (drag_grab->feedback_actor),
+                                  -drag_grab->drag_surface->offset_x,
+                                  -drag_grab->drag_surface->offset_y);
 }

@@ -27,12 +27,15 @@
 
 #include "meta-wayland-types.h"
 
+typedef struct _MetaWaylandDragGrab MetaWaylandDragGrab;
+
 struct _MetaWaylandDataDevice
 {
   uint32_t selection_serial;
   MetaWaylandDataSource *selection_data_source;
   struct wl_listener selection_data_source_listener;
   struct wl_list resource_list;
+  MetaWaylandDragGrab *current_grab;
 };
 
 void meta_wayland_data_device_manager_init (MetaWaylandCompositor *compositor);
@@ -40,5 +43,9 @@ void meta_wayland_data_device_manager_init (MetaWaylandCompositor *compositor);
 void meta_wayland_data_device_init (MetaWaylandDataDevice *data_device);
 
 void meta_wayland_data_device_set_keyboard_focus (MetaWaylandDataDevice *data_device);
+
+gboolean meta_wayland_data_device_is_dnd_surface (MetaWaylandDataDevice *data_device,
+                                                  MetaWaylandSurface    *surface);
+void meta_wayland_data_device_update_dnd_surface (MetaWaylandDataDevice *data_device);
 
 #endif /* META_WAYLAND_DATA_DEVICE_H */

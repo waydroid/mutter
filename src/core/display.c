@@ -150,6 +150,9 @@ static void update_cursor_theme (void);
 static void    prefs_changed_callback    (MetaPreference pref,
                                           void          *data);
 
+static int mru_cmp (gconstpointer a,
+                    gconstpointer b);
+
 static void
 meta_display_get_property(GObject         *object,
                           guint            prop_id,
@@ -1004,7 +1007,7 @@ meta_display_list_windows (MetaDisplay          *display,
     {
       MetaWindow *window = value;
 
-      if (!META_IS_WINDOW (window))
+      if (!META_IS_WINDOW (window) || window->unmanaging)
         continue;
 
       if (!window->override_redirect ||
@@ -1017,7 +1020,7 @@ meta_display_list_windows (MetaDisplay          *display,
     {
       MetaWindow *window = value;
 
-      if (!META_IS_WINDOW (window))
+      if (!META_IS_WINDOW (window) || window->unmanaging)
         continue;
 
       if (!window->override_redirect ||
@@ -1060,6 +1063,9 @@ meta_display_list_windows (MetaDisplay          *display,
 
       tmp = next;
     }
+
+  if (flags & META_LIST_SORTED)
+    winlist = g_slist_sort (winlist, mru_cmp);
 
   return winlist;
 }
@@ -2434,13 +2440,22 @@ meta_display_get_tab_list (MetaDisplay   *display,
 
   mru_list = workspace ? workspace->mru_list : global_mru_list;
 
-  /* Windows sellout mode - MRU order.
+  /* Windows sellout mode - MRU order. Collect unminimized windows
+   * then minimized so minimized windows aren't in the way so much.
    */
   for (tmp = mru_list; tmp; tmp = tmp->next)
     {
       MetaWindow *window = tmp->data;
 
-      if (IN_TAB_CHAIN (window, type))
+      if (!window->minimized && IN_TAB_CHAIN (window, type))
+        tab_list = g_list_prepend (tab_list, window);
+    }
+
+  for (tmp = mru_list; tmp; tmp = tmp->next)
+    {
+      MetaWindow *window = tmp->data;
+
+      if (window->minimized && IN_TAB_CHAIN (window, type))
         tab_list = g_list_prepend (tab_list, window);
     }
 

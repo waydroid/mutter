@@ -109,6 +109,10 @@ libmutter_la_SOURCES =				\
 	compositor/meta-background-group.c	\
 	compositor/meta-cullable.c		\
 	compositor/meta-cullable.h		\
+	compositor/meta-dnd-actor.c		\
+	compositor/meta-dnd-actor-private.h	\
+	compositor/meta-feedback-actor.c	\
+	compositor/meta-feedback-actor-private.h	\
 	compositor/meta-module.c		\
 	compositor/meta-module.h		\
 	compositor/meta-plugin.c		\
@@ -230,6 +234,10 @@ libmutter_la_SOURCES +=				\
 	wayland/meta-xwayland.c			\
 	wayland/meta-xwayland.h			\
 	wayland/meta-xwayland-private.h		\
+	wayland/meta-wayland-buffer.c      	\
+	wayland/meta-wayland-buffer.h      	\
+	wayland/meta-wayland-region.c      	\
+	wayland/meta-wayland-region.h      	\
 	wayland/meta-wayland-data-device.c      \
 	wayland/meta-wayland-data-device.h      \
 	wayland/meta-wayland-keyboard.c		\
