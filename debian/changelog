@@ -1,3 +1,10 @@
+mutter (3.14.1-2) unstable; urgency=medium
+
+  * gir1.2-mutter-3.0: tighten dependency on libmutter0e by making
+    it versioned to = ${binary:Version} (Closes: #766359)
+
+ -- Andreas Henriksson <andreas@fatal.se>  Tue, 28 Oct 2014 19:57:02 +0100
+
 mutter (3.14.1-1) unstable; urgency=medium
 
   * New upstream release.
