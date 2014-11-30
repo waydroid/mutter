@@ -393,10 +393,7 @@ commit_pending_state (MetaWaylandSurface      *surface,
     }
 
   if (pending->scale > 0)
-    {
-      surface->scale = pending->scale;
-      meta_surface_actor_wayland_scale_texture (META_SURFACE_ACTOR_WAYLAND (surface->surface_actor));
-    }
+    surface->scale = pending->scale;
 
   if (!cairo_region_is_empty (pending->damage))
     surface_process_damage (surface, pending->damage);
@@ -411,9 +408,13 @@ commit_pending_state (MetaWaylandSurface      *surface,
     }
   if (pending->input_region)
     {
-      pending->input_region = scale_region (pending->input_region, surface->scale);
+      pending->input_region = scale_region (pending->input_region,
+                                            meta_surface_actor_wayland_get_scale (META_SURFACE_ACTOR_WAYLAND (surface->surface_actor)));
       meta_surface_actor_set_input_region (surface->surface_actor, pending->input_region);
     }
+
+  /* scale surface texture */
+  meta_surface_actor_wayland_scale_texture (META_SURFACE_ACTOR_WAYLAND (surface->surface_actor));
 
   /* wl_surface.frame */
   wl_list_insert_list (&compositor->frame_callbacks, &pending->frame_callback_list);
