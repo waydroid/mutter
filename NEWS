@@ -1,3 +1,27 @@
+3.14.4
+======
+* Fix flash on unredirection [Chris; #743858]
+* Fix incompatibility with GLES2 GLSL [Alban; #745442]
+* Add function to refresh all background instances [Rui; #739178]
+* Fix geometry of shaded windows [Florian; #746145]
+* Misc. bug fixes [Florian, Rui; #698995, #743217, #743254]
+
+Contributors:
+  Alban Browaeys, Rui Matos, Florian Müllner, Chris Wilson
+
+Translations:
+  Matej Urbančič [sl], Muhammet Kara [tr], Samir Ribic [bs]
+
+3.14.3
+======
+* Fix crash when trying to unredirect a destroyed window [Florian; #740133]
+* Fix "flicker" during startup transition [Ray; #740377]
+* Don't leave left-over frames queued [Owen; #738686]
+* Set CRTC configuration even if it might be redundant [Rui; #740838]
+
+Contributors:
+  Rui Matos, Florian Müllner, Jasper St. Pierre, Ray Strode, Owen W. Taylor
+
 3.14.2
 ======
 * Prevent crash applying monitor config for a closed lid [Rui; #739450]

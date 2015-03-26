@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Mutter Reference Manual: MetaWorkspace</title>
+<title>MetaWorkspace: Mutter Reference Manual</title>
 <meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
@@ -60,7 +60,7 @@
 </tr>
 <tr>
 <td class="function_type">
-<span class="returnvalue">GList</span> *
+<a href="https://developer.gnome.org/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *
 </td>
 <td class="function_name">
 <a class="link" href="MetaWorkspace.html#meta-workspace-list-windows" title="meta_workspace_list_windows ()">meta_workspace_list_windows</a> <span class="c_punctuation">()</span>
@@ -127,12 +127,12 @@
 </colgroup>
 <tbody>
 <tr>
-<td class="property_type"><span class="type">guint</span></td>
+<td class="property_type"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></td>
 <td class="property_name"><a class="link" href="MetaWorkspace.html#MetaWorkspace--n-windows" title="The “n-windows” property">n-windows</a></td>
 <td class="property_flags">Read</td>
 </tr>
 <tr>
-<td class="property_type"><span class="type">guint</span></td>
+<td class="property_type"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></td>
 <td class="property_name"><a class="link" href="MetaWorkspace.html#MetaWorkspace--workspace-index" title="The “workspace-index” property">workspace-index</a></td>
 <td class="property_flags">Read</td>
 </tr>
@@ -151,12 +151,12 @@
 <tr>
 <td class="signal_type"><span class="returnvalue">void</span></td>
 <td class="signal_name"><a class="link" href="MetaWorkspace.html#MetaWorkspace-window-added" title="The “window-added” signal">window-added</a></td>
-<td class="signal_flags">Run Last</td>
+<td class="signal_flags"><a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></td>
 </tr>
 <tr>
 <td class="signal_type"><span class="returnvalue">void</span></td>
 <td class="signal_name"><a class="link" href="MetaWorkspace.html#MetaWorkspace-window-removed" title="The “window-removed” signal">window-removed</a></td>
-<td class="signal_flags">Run Last</td>
+<td class="signal_flags"><a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></td>
 </tr>
 </tbody>
 </table></div>
@@ -182,7 +182,7 @@
 </div>
 <div class="refsect1">
 <a name="MetaWorkspace.object-hierarchy"></a><h2>Object Hierarchy</h2>
-<pre class="screen">    GObject
+<pre class="screen">    <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
     <span class="lineart">╰──</span> MetaWorkspace
 </pre>
 </div>
@@ -231,7 +231,7 @@ meta_workspace_get_screen (<em class="parameter"><code><a class="link" href="Met
 <hr>
 <div class="refsect2">
 <a name="meta-workspace-list-windows"></a><h3>meta_workspace_list_windows ()</h3>
-<pre class="programlisting"><span class="returnvalue">GList</span> *
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *
 meta_workspace_list_windows (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <p>Gets windows contained on the workspace, including workspace-&gt;windows
 and also sticky windows. Override-redirect windows are not included.</p>
@@ -334,7 +334,7 @@ meta_workspace_get_work_area_all_monitors
 <a name="meta-workspace-activate"></a><h3>meta_workspace_activate ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 meta_workspace_activate (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
-                         <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                         <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -342,7 +342,7 @@ meta_workspace_activate (<em class="parameter"><code><a class="link" href="MetaW
 <pre class="programlisting"><span class="returnvalue">void</span>
 meta_workspace_activate_with_focus (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
                                     <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *focus_this</code></em>,
-                                    <em class="parameter"><code><span class="type">guint32</span> timestamp</code></em>);</pre>
+                                    <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> timestamp</code></em>);</pre>
 <p>Switches to <em class="parameter"><code>workspace</code></em>
  and possibly activates the window <em class="parameter"><code>focus_this</code></em>
 .</p>
@@ -373,7 +373,7 @@ no other window gets focused first before <em class="parameter"><code>focus_this
 </tr>
 <tr>
 <td class="parameter_name"><p>focus_this</p></td>
-<td class="parameter_description"><p>the <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> to be focused, or <code class="literal">NULL</code></p></td>
+<td class="parameter_description"><p>the <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> to be focused, or <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a></p></td>
 <td class="parameter_annotations"> </td>
 </tr>
 <tr>
@@ -391,7 +391,7 @@ no other window gets focused first before <em class="parameter"><code>focus_this
 <a name="meta-workspace-set-builtin-struts"></a><h3>meta_workspace_set_builtin_struts ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 meta_workspace_set_builtin_struts (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>,
-                                   <em class="parameter"><code><span class="type">GSList</span> *struts</code></em>);</pre>
+                                   <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="type">GSList</span></a> *struts</code></em>);</pre>
 <p>Sets a list of struts that will be used in addition to the struts
 of the windows in the workspace when computing the work area of
 the workspace.</p>
@@ -478,7 +478,7 @@ itself if the neighbor would be outside the layout. </p>
 <a name="MetaWorkspace.property-details"></a><h2>Property Details</h2>
 <div class="refsect2">
 <a name="MetaWorkspace--n-windows"></a><h3>The <code class="literal">“n-windows”</code> property</h3>
-<pre class="programlisting">  “n-windows”                <span class="type">guint</span></pre>
+<pre class="programlisting">  “n-windows”                <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>Number of windows.</p>
 <p>Flags: Read</p>
 <p>Default value: 0</p>
@@ -486,7 +486,7 @@ itself if the neighbor would be outside the layout. </p>
 <hr>
 <div class="refsect2">
 <a name="MetaWorkspace--workspace-index"></a><h3>The <code class="literal">“workspace-index”</code> property</h3>
-<pre class="programlisting">  “workspace-index”          <span class="type">guint</span></pre>
+<pre class="programlisting">  “workspace-index”          <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a></pre>
 <p>The workspace's index.</p>
 <p>Flags: Read</p>
 <p>Default value: 0</p>
@@ -499,8 +499,8 @@ itself if the neighbor would be outside the layout. </p>
 <pre class="programlisting"><span class="returnvalue">void</span>
 user_function (<a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *metaworkspace,
                <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>    *arg1,
-               <span class="type">gpointer</span>       user_data)</pre>
-<p>Flags: Run Last</p>
+               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>       user_data)</pre>
+<p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -508,8 +508,8 @@ user_function (<a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><
 <pre class="programlisting"><span class="returnvalue">void</span>
 user_function (<a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *metaworkspace,
                <a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a>    *arg1,
-               <span class="type">gpointer</span>       user_data)</pre>
-<p>Flags: Run Last</p>
+               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>       user_data)</pre>
+<p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></p>
 </div>
 </div>
 </div>
