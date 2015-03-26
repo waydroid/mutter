@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Mutter Reference Manual: MetaBarrier</title>
+<title>MetaBarrier: Mutter Reference Manual</title>
 <meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
@@ -44,7 +44,7 @@
 <tbody>
 <tr>
 <td class="function_type">
-<span class="returnvalue">gboolean</span>
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 </td>
 <td class="function_name">
 <a class="link" href="MetaBarrier.html#meta-barrier-is-active" title="meta_barrier_is_active ()">meta_barrier_is_active</a> <span class="c_punctuation">()</span>
@@ -90,22 +90,22 @@
 <td class="property_flags">Read / Write / Construct Only</td>
 </tr>
 <tr>
-<td class="property_type"><span class="type">gint</span></td>
+<td class="property_type"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a></td>
 <td class="property_name"><a class="link" href="MetaBarrier.html#MetaBarrier--x1" title="The “x1” property">x1</a></td>
 <td class="property_flags">Read / Write / Construct Only</td>
 </tr>
 <tr>
-<td class="property_type"><span class="type">gint</span></td>
+<td class="property_type"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a></td>
 <td class="property_name"><a class="link" href="MetaBarrier.html#MetaBarrier--x2" title="The “x2” property">x2</a></td>
 <td class="property_flags">Read / Write / Construct Only</td>
 </tr>
 <tr>
-<td class="property_type"><span class="type">gint</span></td>
+<td class="property_type"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a></td>
 <td class="property_name"><a class="link" href="MetaBarrier.html#MetaBarrier--y1" title="The “y1” property">y1</a></td>
 <td class="property_flags">Read / Write / Construct Only</td>
 </tr>
 <tr>
-<td class="property_type"><span class="type">gint</span></td>
+<td class="property_type"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a></td>
 <td class="property_name"><a class="link" href="MetaBarrier.html#MetaBarrier--y2" title="The “y2” property">y2</a></td>
 <td class="property_flags">Read / Write / Construct Only</td>
 </tr>
@@ -124,12 +124,12 @@
 <tr>
 <td class="signal_type"><span class="returnvalue">void</span></td>
 <td class="signal_name"><a class="link" href="MetaBarrier.html#MetaBarrier-hit" title="The “hit” signal">hit</a></td>
-<td class="signal_flags">Run First</td>
+<td class="signal_flags"><a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-FIRST:CAPS">Run First</a></td>
 </tr>
 <tr>
 <td class="signal_type"><span class="returnvalue">void</span></td>
 <td class="signal_name"><a class="link" href="MetaBarrier.html#MetaBarrier-left" title="The “left” signal">left</a></td>
-<td class="signal_flags">Run First</td>
+<td class="signal_flags"><a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-FIRST:CAPS">Run First</a></td>
 </tr>
 </tbody>
 </table></div>
@@ -165,7 +165,7 @@
 <a name="MetaBarrier.object-hierarchy"></a><h2>Object Hierarchy</h2>
 <pre class="screen">    GBoxed
     <span class="lineart">╰──</span> MetaBarrierEvent
-    GObject
+    <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
     <span class="lineart">╰──</span> MetaBarrier
 </pre>
 </div>
@@ -176,7 +176,7 @@
 <a name="MetaBarrier.functions_details"></a><h2>Functions</h2>
 <div class="refsect2">
 <a name="meta-barrier-is-active"></a><h3>meta_barrier_is_active ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 meta_barrier_is_active (<em class="parameter"><code><a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a> *barrier</code></em>);</pre>
 </div>
 <hr>
@@ -317,7 +317,7 @@ sent for this barrier</p></td>
 <td class="struct_member_annotations"> </td>
 </tr>
 <tr>
-<td class="struct_member_name"><p><span class="type">guint32</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.time"></a>time</code></em>;</p></td>
+<td class="struct_member_name"><p><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint32"><span class="type">guint32</span></a> <em class="structfield"><code><a name="MetaBarrierEvent-struct.time"></a>time</code></em>;</p></td>
 <td class="struct_member_description"><p>Server time, in milliseconds</p></td>
 <td class="struct_member_annotations"> </td>
 </tr>
@@ -344,16 +344,16 @@ of X movement past the barrier, in screen coordinates</p></td>
 <td class="struct_member_annotations"> </td>
 </tr>
 <tr>
-<td class="struct_member_name"><p><span class="type">gboolean</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.released"></a>released</code></em>;</p></td>
-<td class="struct_member_description"><p>A boolean flag, <code class="literal">TRUE</code> if this event generated
+<td class="struct_member_name"><p><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> <em class="structfield"><code><a name="MetaBarrierEvent-struct.released"></a>released</code></em>;</p></td>
+<td class="struct_member_description"><p>A boolean flag, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if this event generated
 by the pointer leaving the barrier as a result of a client
 calling <a class="link" href="MetaBarrier.html#meta-barrier-release" title="meta_barrier_release ()"><code class="function">meta_barrier_release()</code></a> (will be set only for
 MetaBarrier::leave signals)</p></td>
 <td class="struct_member_annotations"> </td>
 </tr>
 <tr>
-<td class="struct_member_name"><p><span class="type">gboolean</span> <em class="structfield"><code><a name="MetaBarrierEvent-struct.grabbed"></a>grabbed</code></em>;</p></td>
-<td class="struct_member_description"><p>A boolean flag, <code class="literal">TRUE</code> if the pointer was grabbed
+<td class="struct_member_name"><p><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> <em class="structfield"><code><a name="MetaBarrierEvent-struct.grabbed"></a>grabbed</code></em>;</p></td>
+<td class="struct_member_description"><p>A boolean flag, <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the pointer was grabbed
 at the time this event was sent</p></td>
 <td class="struct_member_annotations"> </td>
 </tr>
@@ -380,7 +380,7 @@ at the time this event was sent</p></td>
 <hr>
 <div class="refsect2">
 <a name="MetaBarrier--x1"></a><h3>The <code class="literal">“x1”</code> property</h3>
-<pre class="programlisting">  “x1”                       <span class="type">gint</span></pre>
+<pre class="programlisting">  “x1”                       <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a></pre>
 <p>The first X coordinate of the barrier.</p>
 <p>Flags: Read / Write / Construct Only</p>
 <p>Allowed values: [0,32767]</p>
@@ -389,7 +389,7 @@ at the time this event was sent</p></td>
 <hr>
 <div class="refsect2">
 <a name="MetaBarrier--x2"></a><h3>The <code class="literal">“x2”</code> property</h3>
-<pre class="programlisting">  “x2”                       <span class="type">gint</span></pre>
+<pre class="programlisting">  “x2”                       <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a></pre>
 <p>The second X coordinate of the barrier.</p>
 <p>Flags: Read / Write / Construct Only</p>
 <p>Allowed values: [0,32767]</p>
@@ -398,7 +398,7 @@ at the time this event was sent</p></td>
 <hr>
 <div class="refsect2">
 <a name="MetaBarrier--y1"></a><h3>The <code class="literal">“y1”</code> property</h3>
-<pre class="programlisting">  “y1”                       <span class="type">gint</span></pre>
+<pre class="programlisting">  “y1”                       <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a></pre>
 <p>The first Y coordinate of the barrier.</p>
 <p>Flags: Read / Write / Construct Only</p>
 <p>Allowed values: [0,32767]</p>
@@ -407,7 +407,7 @@ at the time this event was sent</p></td>
 <hr>
 <div class="refsect2">
 <a name="MetaBarrier--y2"></a><h3>The <code class="literal">“y2”</code> property</h3>
-<pre class="programlisting">  “y2”                       <span class="type">gint</span></pre>
+<pre class="programlisting">  “y2”                       <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a></pre>
 <p>The second Y coordinate of the barrier.</p>
 <p>Flags: Read / Write / Construct Only</p>
 <p>Allowed values: [0,32767]</p>
@@ -421,7 +421,7 @@ at the time this event was sent</p></td>
 <pre class="programlisting"><span class="returnvalue">void</span>
 user_function (<a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a>      *barrier,
                <a class="link" href="MetaBarrier.html#MetaBarrierEvent"><span class="type">MetaBarrierEvent</span></a> *event,
-               <span class="type">gpointer</span>          user_data)</pre>
+               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>          user_data)</pre>
 <p>When a pointer barrier is hit, this will trigger. This
 requires an XI2-enabled server.</p>
 <div class="refsect3">
@@ -452,7 +452,7 @@ the barrier was hit.</p></td>
 </tbody>
 </table></div>
 </div>
-<p>Flags: Run First</p>
+<p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-FIRST:CAPS">Run First</a></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -460,7 +460,7 @@ the barrier was hit.</p></td>
 <pre class="programlisting"><span class="returnvalue">void</span>
 user_function (<a class="link" href="MetaBarrier.html" title="MetaBarrier"><span class="type">MetaBarrier</span></a>      *barrier,
                <a class="link" href="MetaBarrier.html#MetaBarrierEvent"><span class="type">MetaBarrierEvent</span></a> *event,
-               <span class="type">gpointer</span>          user_data)</pre>
+               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>          user_data)</pre>
 <p>When a pointer barrier hitbox was left, this will trigger.
 This requires an XI2-enabled server.</p>
 <div class="refsect3">
@@ -491,7 +491,7 @@ the barrier was left.</p></td>
 </tbody>
 </table></div>
 </div>
-<p>Flags: Run First</p>
+<p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-FIRST:CAPS">Run First</a></p>
 </div>
 </div>
 </div>

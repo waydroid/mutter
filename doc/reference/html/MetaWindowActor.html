@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Mutter Reference Manual: MetaWindowActor</title>
+<title>MetaWindowActor: Mutter Reference Manual</title>
 <meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
@@ -69,7 +69,7 @@
 </tr>
 <tr>
 <td class="function_type">
-<span class="returnvalue">gboolean</span>
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 </td>
 <td class="function_name">
 <a class="link" href="MetaWindowActor.html#meta-window-actor-is-destroyed" title="meta_window_actor_is_destroyed ()">meta_window_actor_is_destroyed</a> <span class="c_punctuation">()</span>
@@ -94,13 +94,13 @@
 <td class="property_flags">Read / Write / Construct Only</td>
 </tr>
 <tr>
-<td class="property_type"><span class="type">gboolean</span></td>
+<td class="property_type"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a></td>
 <td class="property_name"><a class="link" href="MetaWindowActor.html#MetaWindowActor--no-shadow" title="The “no-shadow” property">no-shadow</a></td>
 <td class="property_flags">Read / Write</td>
 </tr>
 <tr>
 <td class="property_type">
-<span class="type">gchar</span> *</td>
+<a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</td>
 <td class="property_name"><a class="link" href="MetaWindowActor.html#MetaWindowActor--shadow-class" title="The “shadow-class” property">shadow-class</a></td>
 <td class="property_flags">Read / Write</td>
 </tr>
@@ -118,7 +118,7 @@
 <tbody><tr>
 <td class="signal_type"><span class="returnvalue">void</span></td>
 <td class="signal_name"><a class="link" href="MetaWindowActor.html#MetaWindowActor-first-frame" title="The “first-frame” signal">first-frame</a></td>
-<td class="signal_flags">Run Last</td>
+<td class="signal_flags"><a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></td>
 </tr></tbody>
 </table></div>
 </div>
@@ -143,8 +143,8 @@
 </div>
 <div class="refsect1">
 <a name="MetaWindowActor.object-hierarchy"></a><h2>Object Hierarchy</h2>
-<pre class="screen">    GObject
-    <span class="lineart">╰──</span> GInitiallyUnowned
+<pre class="screen">    <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+    <span class="lineart">╰──</span> <a href="https://developer.gnome.org/gobject/unstable/gobject-The-Base-Object-Type.html#GInitiallyUnowned">GInitiallyUnowned</a>
         <span class="lineart">╰──</span> ClutterActor
             <span class="lineart">╰──</span> MetaWindowActor
 </pre>
@@ -223,7 +223,7 @@ or NULL if no texture is shown yet, because the window is not mapped.</p>
 <hr>
 <div class="refsect2">
 <a name="meta-window-actor-is-destroyed"></a><h3>meta_window_actor_is_destroyed ()</h3>
-<pre class="programlisting"><span class="returnvalue">gboolean</span>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 meta_window_actor_is_destroyed (<em class="parameter"><code><a class="link" href="MetaWindowActor.html" title="MetaWindowActor"><span class="type">MetaWindowActor</span></a> *self</code></em>);</pre>
 <p>Gets whether the X window that the actor was displaying has been destroyed</p>
 <div class="refsect3">
@@ -243,7 +243,7 @@ meta_window_actor_is_destroyed (<em class="parameter"><code><a class="link" href
 </div>
 <div class="refsect3">
 <a name="id-1.4.18.10.5.6"></a><h4>Returns</h4>
-<p> <code class="literal">TRUE</code> when the window is destroyed, otherwise <code class="literal">FALSE</code></p>
+<p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> when the window is destroyed, otherwise <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a></p>
 <p></p>
 </div>
 </div>
@@ -273,7 +273,7 @@ meta_window_actor_is_destroyed (<em class="parameter"><code><a class="link" href
 <hr>
 <div class="refsect2">
 <a name="MetaWindowActor--no-shadow"></a><h3>The <code class="literal">“no-shadow”</code> property</h3>
-<pre class="programlisting">  “no-shadow”                <span class="type">gboolean</span></pre>
+<pre class="programlisting">  “no-shadow”                <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a></pre>
 <p>Do not add shaddow to this window.</p>
 <p>Flags: Read / Write</p>
 <p>Default value: FALSE</p>
@@ -281,7 +281,7 @@ meta_window_actor_is_destroyed (<em class="parameter"><code><a class="link" href
 <hr>
 <div class="refsect2">
 <a name="MetaWindowActor--shadow-class"></a><h3>The <code class="literal">“shadow-class”</code> property</h3>
-<pre class="programlisting">  “shadow-class”             <span class="type">gchar</span> *</pre>
+<pre class="programlisting">  “shadow-class”             <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *</pre>
 <p>NULL means to use the default shadow class for this window type.</p>
 <p>Flags: Read / Write</p>
 <p>Default value: NULL</p>
@@ -293,7 +293,7 @@ meta_window_actor_is_destroyed (<em class="parameter"><code><a class="link" href
 <a name="MetaWindowActor-first-frame"></a><h3>The <code class="literal">“first-frame”</code> signal</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 user_function (<a class="link" href="MetaWindowActor.html" title="MetaWindowActor"><span class="type">MetaWindowActor</span></a> *actor,
-               <span class="type">gpointer</span>         user_data)</pre>
+               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>         user_data)</pre>
 <p>The ::first-frame signal will be emitted the first time a frame
 of window contents has been drawn by the application and Mutter
 has had the chance to drawn that frame to the screen. If the
@@ -327,7 +327,7 @@ the screen is not useful.</p>
 </tbody>
 </table></div>
 </div>
-<p>Flags: Run Last</p>
+<p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></p>
 </div>
 </div>
 </div>
