@@ -51,9 +51,10 @@
 <ANCHOR id="META-FRAME-TILED-RIGHT:CAPS" href="meta/meta-Common.html#META-FRAME-TILED-RIGHT:CAPS">
 <ANCHOR id="MetaGrabOp" href="meta/meta-Common.html#MetaGrabOp">
 <ANCHOR id="META-GRAB-OP-NONE:CAPS" href="meta/meta-Common.html#META-GRAB-OP-NONE:CAPS">
+<ANCHOR id="META-GRAB-OP-WINDOW-BASE:CAPS" href="meta/meta-Common.html#META-GRAB-OP-WINDOW-BASE:CAPS">
 <ANCHOR id="META-GRAB-OP-COMPOSITOR:CAPS" href="meta/meta-Common.html#META-GRAB-OP-COMPOSITOR:CAPS">
 <ANCHOR id="META-GRAB-OP-WAYLAND-POPUP:CAPS" href="meta/meta-Common.html#META-GRAB-OP-WAYLAND-POPUP:CAPS">
-<ANCHOR id="META-GRAB-OP-WINDOW-BASE:CAPS" href="meta/meta-Common.html#META-GRAB-OP-WINDOW-BASE:CAPS">
+<ANCHOR id="META-GRAB-OP-FRAME-BUTTON:CAPS" href="meta/meta-Common.html#META-GRAB-OP-FRAME-BUTTON:CAPS">
 <ANCHOR id="META-GRAB-OP-MOVING:CAPS" href="meta/meta-Common.html#META-GRAB-OP-MOVING:CAPS">
 <ANCHOR id="META-GRAB-OP-RESIZING-NW:CAPS" href="meta/meta-Common.html#META-GRAB-OP-RESIZING-NW:CAPS">
 <ANCHOR id="META-GRAB-OP-RESIZING-N:CAPS" href="meta/meta-Common.html#META-GRAB-OP-RESIZING-N:CAPS">
@@ -168,21 +169,6 @@
 <ANCHOR id="META-LAYER-FOCUSED-WINDOW:CAPS" href="meta/meta-Common.html#META-LAYER-FOCUSED-WINDOW:CAPS">
 <ANCHOR id="META-LAYER-OVERRIDE-REDIRECT:CAPS" href="meta/meta-Common.html#META-LAYER-OVERRIDE-REDIRECT:CAPS">
 <ANCHOR id="META-LAYER-LAST:CAPS" href="meta/meta-Common.html#META-LAYER-LAST:CAPS">
-<ANCHOR id="meta-Gradients" href="meta/meta-Gradients.html">
-<ANCHOR id="meta-Gradients.functions" href="meta/meta-Gradients.html#meta-Gradients.functions">
-<ANCHOR id="meta-Gradients.other" href="meta/meta-Gradients.html#meta-Gradients.other">
-<ANCHOR id="meta-Gradients.description" href="meta/meta-Gradients.html#meta-Gradients.description">
-<ANCHOR id="meta-Gradients.functions_details" href="meta/meta-Gradients.html#meta-Gradients.functions_details">
-<ANCHOR id="meta-gradient-create-simple" href="meta/meta-Gradients.html#meta-gradient-create-simple">
-<ANCHOR id="meta-gradient-create-multi" href="meta/meta-Gradients.html#meta-gradient-create-multi">
-<ANCHOR id="meta-gradient-create-interwoven" href="meta/meta-Gradients.html#meta-gradient-create-interwoven">
-<ANCHOR id="meta-gradient-add-alpha" href="meta/meta-Gradients.html#meta-gradient-add-alpha">
-<ANCHOR id="meta-Gradients.other_details" href="meta/meta-Gradients.html#meta-Gradients.other_details">
-<ANCHOR id="MetaGradientType" href="meta/meta-Gradients.html#MetaGradientType">
-<ANCHOR id="META-GRADIENT-VERTICAL:CAPS" href="meta/meta-Gradients.html#META-GRADIENT-VERTICAL:CAPS">
-<ANCHOR id="META-GRADIENT-HORIZONTAL:CAPS" href="meta/meta-Gradients.html#META-GRADIENT-HORIZONTAL:CAPS">
-<ANCHOR id="META-GRADIENT-DIAGONAL:CAPS" href="meta/meta-Gradients.html#META-GRADIENT-DIAGONAL:CAPS">
-<ANCHOR id="META-GRADIENT-LAST:CAPS" href="meta/meta-Gradients.html#META-GRADIENT-LAST:CAPS">
 <ANCHOR id="meta-Preferences" href="meta/meta-Preferences.html">
 <ANCHOR id="meta-Preferences.functions" href="meta/meta-Preferences.html#meta-Preferences.functions">
 <ANCHOR id="meta-Preferences.other" href="meta/meta-Preferences.html#meta-Preferences.other">
@@ -201,7 +187,6 @@
 <ANCHOR id="meta-prefs-get-focus-new-windows" href="meta/meta-Preferences.html#meta-prefs-get-focus-new-windows">
 <ANCHOR id="meta-prefs-get-attach-modal-dialogs" href="meta/meta-Preferences.html#meta-prefs-get-attach-modal-dialogs">
 <ANCHOR id="meta-prefs-get-raise-on-click" href="meta/meta-Preferences.html#meta-prefs-get-raise-on-click">
-<ANCHOR id="meta-prefs-get-theme" href="meta/meta-Preferences.html#meta-prefs-get-theme">
 <ANCHOR id="meta-prefs-get-titlebar-font" href="meta/meta-Preferences.html#meta-prefs-get-titlebar-font">
 <ANCHOR id="meta-prefs-get-num-workspaces" href="meta/meta-Preferences.html#meta-prefs-get-num-workspaces">
 <ANCHOR id="meta-prefs-get-dynamic-workspaces" href="meta/meta-Preferences.html#meta-prefs-get-dynamic-workspaces">
@@ -247,7 +232,6 @@
 <ANCHOR id="META-PREF-AUTO-RAISE:CAPS" href="meta/meta-Preferences.html#META-PREF-AUTO-RAISE:CAPS">
 <ANCHOR id="META-PREF-AUTO-RAISE-DELAY:CAPS" href="meta/meta-Preferences.html#META-PREF-AUTO-RAISE-DELAY:CAPS">
 <ANCHOR id="META-PREF-FOCUS-CHANGE-ON-POINTER-REST:CAPS" href="meta/meta-Preferences.html#META-PREF-FOCUS-CHANGE-ON-POINTER-REST:CAPS">
-<ANCHOR id="META-PREF-THEME:CAPS" href="meta/meta-Preferences.html#META-PREF-THEME:CAPS">
 <ANCHOR id="META-PREF-TITLEBAR-FONT:CAPS" href="meta/meta-Preferences.html#META-PREF-TITLEBAR-FONT:CAPS">
 <ANCHOR id="META-PREF-NUM-WORKSPACES:CAPS" href="meta/meta-Preferences.html#META-PREF-NUM-WORKSPACES:CAPS">
 <ANCHOR id="META-PREF-DYNAMIC-WORKSPACES:CAPS" href="meta/meta-Preferences.html#META-PREF-DYNAMIC-WORKSPACES:CAPS">
@@ -366,6 +350,7 @@
 <ANCHOR id="META-KEY-BINDING-PER-WINDOW:CAPS" href="meta/meta-Preferences.html#META-KEY-BINDING-PER-WINDOW:CAPS">
 <ANCHOR id="META-KEY-BINDING-BUILTIN:CAPS" href="meta/meta-Preferences.html#META-KEY-BINDING-BUILTIN:CAPS">
 <ANCHOR id="META-KEY-BINDING-IS-REVERSED:CAPS" href="meta/meta-Preferences.html#META-KEY-BINDING-IS-REVERSED:CAPS">
+<ANCHOR id="MetaKeyCombo" href="meta/meta-Preferences.html#MetaKeyCombo">
 <ANCHOR id="meta-Utility-functions" href="meta/meta-Utility-functions.html">
 <ANCHOR id="meta-Utility-functions.functions" href="meta/meta-Utility-functions.html#meta-Utility-functions.functions">
 <ANCHOR id="meta-Utility-functions.other" href="meta/meta-Utility-functions.html#meta-Utility-functions.other">
@@ -620,6 +605,7 @@
 <ANCHOR id="MetaDisplay-modifiers-accelerator-activated" href="meta/MetaDisplay.html#MetaDisplay-modifiers-accelerator-activated">
 <ANCHOR id="MetaDisplay-overlay-key" href="meta/MetaDisplay.html#MetaDisplay-overlay-key">
 <ANCHOR id="MetaDisplay-restart" href="meta/MetaDisplay.html#MetaDisplay-restart">
+<ANCHOR id="MetaDisplay-show-resize-popup" href="meta/MetaDisplay.html#MetaDisplay-show-resize-popup">
 <ANCHOR id="MetaDisplay-show-restart-message" href="meta/MetaDisplay.html#MetaDisplay-show-restart-message">
 <ANCHOR id="MetaDisplay-window-created" href="meta/MetaDisplay.html#MetaDisplay-window-created">
 <ANCHOR id="MetaDisplay-window-demands-attention" href="meta/MetaDisplay.html#MetaDisplay-window-demands-attention">
@@ -743,7 +729,6 @@
 <ANCHOR id="meta-screen-get-xroot" href="meta/MetaScreen.html#meta-screen-get-xroot">
 <ANCHOR id="meta-screen-get-size" href="meta/MetaScreen.html#meta-screen-get-size">
 <ANCHOR id="meta-screen-set-cm-selection" href="meta/MetaScreen.html#meta-screen-set-cm-selection">
-<ANCHOR id="meta-screen-unset-cm-selection" href="meta/MetaScreen.html#meta-screen-unset-cm-selection">
 <ANCHOR id="meta-screen-get-startup-sequences" href="meta/MetaScreen.html#meta-screen-get-startup-sequences">
 <ANCHOR id="meta-screen-get-workspaces" href="meta/MetaScreen.html#meta-screen-get-workspaces">
 <ANCHOR id="meta-screen-get-n-workspaces" href="meta/MetaScreen.html#meta-screen-get-n-workspaces">
@@ -797,7 +782,6 @@
 <ANCHOR id="meta-window-is-skip-taskbar" href="meta/MetaWindow.html#meta-window-is-skip-taskbar">
 <ANCHOR id="meta-window-get-buffer-rect" href="meta/MetaWindow.html#meta-window-get-buffer-rect">
 <ANCHOR id="meta-window-get-frame-rect" href="meta/MetaWindow.html#meta-window-get-frame-rect">
-<ANCHOR id="meta-window-get-outer-rect" href="meta/MetaWindow.html#meta-window-get-outer-rect">
 <ANCHOR id="meta-window-client-rect-to-frame-rect" href="meta/MetaWindow.html#meta-window-client-rect-to-frame-rect">
 <ANCHOR id="meta-window-frame-rect-to-client-rect" href="meta/MetaWindow.html#meta-window-frame-rect-to-client-rect">
 <ANCHOR id="meta-window-get-screen" href="meta/MetaWindow.html#meta-window-get-screen">
@@ -964,12 +948,12 @@
 <ANCHOR id="MetaWorkspace-window-removed" href="meta/MetaWorkspace.html#MetaWorkspace-window-removed">
 <ANCHOR id="annotation-glossterm-allow-none" href="meta/annotation-glossary.html#annotation-glossterm-allow-none">
 <ANCHOR id="annotation-glossterm-array" href="meta/annotation-glossary.html#annotation-glossterm-array">
-<ANCHOR id="annotation-glossterm-closure" href="meta/annotation-glossary.html#annotation-glossterm-closure">
 <ANCHOR id="annotation-glossterm-element-type" href="meta/annotation-glossary.html#annotation-glossterm-element-type">
 <ANCHOR id="annotation-glossterm-nullable" href="meta/annotation-glossary.html#annotation-glossterm-nullable">
 <ANCHOR id="annotation-glossterm-out" href="meta/annotation-glossary.html#annotation-glossterm-out">
 <ANCHOR id="annotation-glossterm-out caller-allocates" href="meta/annotation-glossary.html#annotation-glossterm-out caller-allocates">
 <ANCHOR id="annotation-glossterm-scope call" href="meta/annotation-glossary.html#annotation-glossterm-scope call">
+<ANCHOR id="annotation-glossterm-skip" href="meta/annotation-glossary.html#annotation-glossterm-skip">
 <ANCHOR id="annotation-glossterm-transfer container" href="meta/annotation-glossary.html#annotation-glossterm-transfer container">
 <ANCHOR id="annotation-glossterm-transfer full" href="meta/annotation-glossary.html#annotation-glossterm-transfer full">
 <ANCHOR id="annotation-glossterm-transfer none" href="meta/annotation-glossary.html#annotation-glossterm-transfer none">

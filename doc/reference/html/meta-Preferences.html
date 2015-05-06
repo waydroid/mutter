@@ -6,7 +6,7 @@
 <meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
 <link rel="home" href="index.html" title="Mutter Reference Manual">
 <link rel="up" href="core-reference.html" title="Part III. Mutter Core Reference">
-<link rel="prev" href="meta-Gradients.html" title="Gradients">
+<link rel="prev" href="meta-Common.html" title="Common">
 <link rel="next" href="meta-Utility-functions.html" title="Utility functions">
 <meta name="generator" content="GTK-Doc V1.21.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
@@ -19,7 +19,7 @@
 </td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
 <td><a accesskey="u" href="core-reference.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
-<td><a accesskey="p" href="meta-Gradients.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="p" href="meta-Common.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
 <td><a accesskey="n" href="meta-Utility-functions.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
 </tr></table>
 <div class="refentry">
@@ -140,13 +140,6 @@
 </td>
 <td class="function_name">
 <a class="link" href="meta-Preferences.html#meta-prefs-get-raise-on-click" title="meta_prefs_get_raise_on_click ()">meta_prefs_get_raise_on_click</a> <span class="c_punctuation">()</span>
-</td>
-</tr>
-<tr>
-<td class="function_type">const <span class="returnvalue">char</span> *
-</td>
-<td class="function_name">
-<a class="link" href="meta-Preferences.html#meta-prefs-get-theme" title="meta_prefs_get_theme ()">meta_prefs_get_theme</a> <span class="c_punctuation">()</span>
 </td>
 </tr>
 <tr>
@@ -425,6 +418,10 @@
 <td class="datatype_keyword">enum</td>
 <td class="function_name"><a class="link" href="meta-Preferences.html#MetaKeyBindingFlags" title="enum MetaKeyBindingFlags">MetaKeyBindingFlags</a></td>
 </tr>
+<tr>
+<td class="datatype_keyword"> </td>
+<td class="function_name"><a class="link" href="meta-Preferences.html#MetaKeyCombo" title="MetaKeyCombo">MetaKeyCombo</a></td>
+</tr>
 </tbody>
 </table></div>
 </div>
@@ -445,8 +442,9 @@
 <pre class="programlisting"><span class="returnvalue">void</span>
 meta_prefs_add_listener (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaPrefsChangedFunc" title="MetaPrefsChangedFunc ()"><span class="type">MetaPrefsChangedFunc</span></a> func</code></em>,
                          <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.5.6.3.4"></a><h4>Parameters</h4>
+<a name="id-1.4.4.6.3.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -474,8 +472,9 @@ meta_prefs_add_listener (<em class="parameter"><code><a class="link" href="meta-
 <pre class="programlisting"><span class="returnvalue">void</span>
 meta_prefs_remove_listener (<em class="parameter"><code><a class="link" href="meta-Preferences.html#MetaPrefsChangedFunc" title="MetaPrefsChangedFunc ()"><span class="type">MetaPrefsChangedFunc</span></a> func</code></em>,
                             <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.5.6.4.4"></a><h4>Parameters</h4>
+<a name="id-1.4.4.6.4.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -516,7 +515,7 @@ called at any point, this function should generally be called in a
 plugin's constructor, rather than in its <code class="function">start()</code> method so the preference
 isn't first loaded with one value then changed to another value.</p>
 <div class="refsect3">
-<a name="id-1.4.5.6.6.5"></a><h4>Parameters</h4>
+<a name="id-1.4.4.6.6.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -586,12 +585,6 @@ meta_prefs_get_attach_modal_dialogs (<em class="parameter"><code><span class="ty
 <a name="meta-prefs-get-raise-on-click"></a><h3>meta_prefs_get_raise_on_click ()</h3>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
 meta_prefs_get_raise_on_click (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
-</div>
-<hr>
-<div class="refsect2">
-<a name="meta-prefs-get-theme"></a><h3>meta_prefs_get_theme ()</h3>
-<pre class="programlisting">const <span class="returnvalue">char</span> *
-meta_prefs_get_theme (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 </div>
 <hr>
 <div class="refsect2">
@@ -666,7 +659,7 @@ meta_prefs_get_auto_maximize (<em class="parameter"><code><span class="type">voi
 <pre class="programlisting"><span class="returnvalue">void</span>
 meta_prefs_get_button_layout (<em class="parameter"><code><a class="link" href="meta-Common.html#MetaButtonLayout" title="struct MetaButtonLayout"><span class="type">MetaButtonLayout</span></a> *button_layout</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.5.6.27.4"></a><h4>Parameters</h4>
+<a name="id-1.4.4.6.26.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -789,7 +782,7 @@ meta_prefs_set_ignore_request_hide_titlebar
                        <em class="parameter"><code><a class="link" href="meta-MetaKeybinding.html#MetaKeyBinding"><span class="type">MetaKeyBinding</span></a> *binding</code></em>,
                        <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a> user_data</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.5.6.43.4"></a><h4>Parameters</h4>
+<a name="id-1.4.4.6.42.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -861,7 +854,7 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 <div class="refsect2">
 <a name="MetaPreference"></a><h3>enum MetaPreference</h3>
 <div class="refsect3">
-<a name="id-1.4.5.7.2.3"></a><h4>Members</h4>
+<a name="id-1.4.4.7.2.3"></a><h4>Members</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="300px" class="enum_members_name">
@@ -943,13 +936,6 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 <td class="enum_member_name"><p><a name="META-PREF-FOCUS-CHANGE-ON-POINTER-REST:CAPS"></a>META_PREF_FOCUS_CHANGE_ON_POINTER_REST</p></td>
 <td class="enum_member_description">
 <p>focus change on pointer rest</p>
-</td>
-<td class="enum_member_annotations"> </td>
-</tr>
-<tr>
-<td class="enum_member_name"><p><a name="META-PREF-THEME:CAPS"></a>META_PREF_THEME</p></td>
-<td class="enum_member_description">
-<p>theme</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
@@ -1113,7 +1099,7 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 <div class="refsect2">
 <a name="MetaKeyBindingAction"></a><h3>enum MetaKeyBindingAction</h3>
 <div class="refsect3">
-<a name="id-1.4.5.7.3.3"></a><h4>Members</h4>
+<a name="id-1.4.4.7.3.3"></a><h4>Members</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="300px" class="enum_members_name">
@@ -1757,7 +1743,7 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 <div class="refsect2">
 <a name="MetaKeyBindingFlags"></a><h3>enum MetaKeyBindingFlags</h3>
 <div class="refsect3">
-<a name="id-1.4.5.7.4.3"></a><h4>Members</h4>
+<a name="id-1.4.4.7.4.3"></a><h4>Members</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="300px" class="enum_members_name">
@@ -1796,6 +1782,11 @@ meta_prefs_get_visual_bell_type (<em class="parameter"><code><span class="type">
 </tbody>
 </table></div>
 </div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaKeyCombo"></a><h3>MetaKeyCombo</h3>
+<pre class="programlisting">typedef struct _MetaKeyCombo MetaKeyCombo;</pre>
 </div>
 </div>
 </div>

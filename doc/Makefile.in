@@ -368,7 +368,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man reference
-EXTRA_DIST = theme-format.txt dialogs.txt code-overview.txt \
+EXTRA_DIST = dialogs.txt code-overview.txt \
 	how-to-get-focus-right.txt rationales.txt
 
 all: all-recursive

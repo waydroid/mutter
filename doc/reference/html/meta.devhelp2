@@ -7,7 +7,6 @@
     <sub name="Mutter Core Reference" link="core-reference.html">
       <sub name="Main" link="meta-Main.html"/>
       <sub name="Common" link="meta-Common.html"/>
-      <sub name="Gradients" link="meta-Gradients.html"/>
       <sub name="Preferences" link="meta-Preferences.html"/>
       <sub name="Utility functions" link="meta-Utility-functions.html"/>
       <sub name="Errors" link="meta-Errors.html"/>
@@ -67,11 +66,6 @@
     <keyword type="macro" name="META_MINI_ICON_HEIGHT" link="meta-Common.html#META-MINI-ICON-HEIGHT:CAPS"/>
     <keyword type="macro" name="META_DEFAULT_ICON_NAME" link="meta-Common.html#META-DEFAULT-ICON-NAME:CAPS"/>
     <keyword type="enum" name="enum MetaStackLayer" link="meta-Common.html#MetaStackLayer"/>
-    <keyword type="function" name="meta_gradient_create_simple ()" link="meta-Gradients.html#meta-gradient-create-simple"/>
-    <keyword type="function" name="meta_gradient_create_multi ()" link="meta-Gradients.html#meta-gradient-create-multi"/>
-    <keyword type="function" name="meta_gradient_create_interwoven ()" link="meta-Gradients.html#meta-gradient-create-interwoven"/>
-    <keyword type="function" name="meta_gradient_add_alpha ()" link="meta-Gradients.html#meta-gradient-add-alpha"/>
-    <keyword type="enum" name="enum MetaGradientType" link="meta-Gradients.html#MetaGradientType"/>
     <keyword type="function" name="MetaPrefsChangedFunc ()" link="meta-Preferences.html#MetaPrefsChangedFunc"/>
     <keyword type="function" name="meta_prefs_add_listener ()" link="meta-Preferences.html#meta-prefs-add-listener"/>
     <keyword type="function" name="meta_prefs_remove_listener ()" link="meta-Preferences.html#meta-prefs-remove-listener"/>
@@ -85,7 +79,6 @@
     <keyword type="function" name="meta_prefs_get_focus_new_windows ()" link="meta-Preferences.html#meta-prefs-get-focus-new-windows"/>
     <keyword type="function" name="meta_prefs_get_attach_modal_dialogs ()" link="meta-Preferences.html#meta-prefs-get-attach-modal-dialogs"/>
     <keyword type="function" name="meta_prefs_get_raise_on_click ()" link="meta-Preferences.html#meta-prefs-get-raise-on-click"/>
-    <keyword type="function" name="meta_prefs_get_theme ()" link="meta-Preferences.html#meta-prefs-get-theme"/>
     <keyword type="function" name="meta_prefs_get_titlebar_font ()" link="meta-Preferences.html#meta-prefs-get-titlebar-font"/>
     <keyword type="function" name="meta_prefs_get_num_workspaces ()" link="meta-Preferences.html#meta-prefs-get-num-workspaces"/>
     <keyword type="function" name="meta_prefs_get_dynamic_workspaces ()" link="meta-Preferences.html#meta-prefs-get-dynamic-workspaces"/>
@@ -121,6 +114,7 @@
     <keyword type="enum" name="enum MetaPreference" link="meta-Preferences.html#MetaPreference"/>
     <keyword type="enum" name="enum MetaKeyBindingAction" link="meta-Preferences.html#MetaKeyBindingAction"/>
     <keyword type="enum" name="enum MetaKeyBindingFlags" link="meta-Preferences.html#MetaKeyBindingFlags"/>
+    <keyword type="struct" name="MetaKeyCombo" link="meta-Preferences.html#MetaKeyCombo"/>
     <keyword type="function" name="meta_is_verbose ()" link="meta-Utility-functions.html#meta-is-verbose"/>
     <keyword type="function" name="meta_set_verbose ()" link="meta-Utility-functions.html#meta-set-verbose"/>
     <keyword type="function" name="meta_is_debugging ()" link="meta-Utility-functions.html#meta-is-debugging"/>
@@ -204,7 +198,7 @@
     <keyword type="struct" name="struct MetaStrut" link="MetaRectangle.html#MetaStrut"/>
     <keyword type="enum" name="enum MetaEdgeType" link="MetaRectangle.html#MetaEdgeType"/>
     <keyword type="struct" name="struct MetaEdge" link="MetaRectangle.html#MetaEdge"/>
-    <keyword type="" name="Containers" link="meta-MetaCompositor.html#id-1.4.11.5.9"/>
+    <keyword type="" name="Containers" link="meta-MetaCompositor.html#id-1.4.10.5.9"/>
     <keyword type="function" name="meta_compositor_new ()" link="meta-MetaCompositor.html#meta-compositor-new"/>
     <keyword type="function" name="meta_compositor_destroy ()" link="meta-MetaCompositor.html#meta-compositor-destroy"/>
     <keyword type="function" name="meta_compositor_window_shape_changed ()" link="meta-MetaCompositor.html#meta-compositor-window-shape-changed"/>
@@ -272,6 +266,7 @@
     <keyword type="signal" name="The “modifiers-accelerator-activated” signal" link="MetaDisplay.html#MetaDisplay-modifiers-accelerator-activated"/>
     <keyword type="signal" name="The “overlay-key” signal" link="MetaDisplay.html#MetaDisplay-overlay-key"/>
     <keyword type="signal" name="The “restart” signal" link="MetaDisplay.html#MetaDisplay-restart"/>
+    <keyword type="signal" name="The “show-resize-popup” signal" link="MetaDisplay.html#MetaDisplay-show-resize-popup"/>
     <keyword type="signal" name="The “show-restart-message” signal" link="MetaDisplay.html#MetaDisplay-show-restart-message"/>
     <keyword type="signal" name="The “window-created” signal" link="MetaDisplay.html#MetaDisplay-window-created"/>
     <keyword type="signal" name="The “window-demands-attention” signal" link="MetaDisplay.html#MetaDisplay-window-demands-attention"/>
@@ -333,7 +328,6 @@
     <keyword type="function" name="meta_screen_get_xroot ()" link="MetaScreen.html#meta-screen-get-xroot"/>
     <keyword type="function" name="meta_screen_get_size ()" link="MetaScreen.html#meta-screen-get-size"/>
     <keyword type="function" name="meta_screen_set_cm_selection ()" link="MetaScreen.html#meta-screen-set-cm-selection"/>
-    <keyword type="function" name="meta_screen_unset_cm_selection ()" link="MetaScreen.html#meta-screen-unset-cm-selection"/>
     <keyword type="function" name="meta_screen_get_startup_sequences ()" link="MetaScreen.html#meta-screen-get-startup-sequences"/>
     <keyword type="function" name="meta_screen_get_workspaces ()" link="MetaScreen.html#meta-screen-get-workspaces"/>
     <keyword type="function" name="meta_screen_get_n_workspaces ()" link="MetaScreen.html#meta-screen-get-n-workspaces"/>
@@ -372,7 +366,6 @@
     <keyword type="function" name="meta_window_is_skip_taskbar ()" link="MetaWindow.html#meta-window-is-skip-taskbar"/>
     <keyword type="function" name="meta_window_get_buffer_rect ()" link="MetaWindow.html#meta-window-get-buffer-rect"/>
     <keyword type="function" name="meta_window_get_frame_rect ()" link="MetaWindow.html#meta-window-get-frame-rect"/>
-    <keyword type="function" name="meta_window_get_outer_rect ()" link="MetaWindow.html#meta-window-get-outer-rect" deprecated="3.12: Use meta_window_get_frame_rect() instead."/>
     <keyword type="function" name="meta_window_client_rect_to_frame_rect ()" link="MetaWindow.html#meta-window-client-rect-to-frame-rect"/>
     <keyword type="function" name="meta_window_frame_rect_to_client_rect ()" link="MetaWindow.html#meta-window-frame-rect-to-client-rect"/>
     <keyword type="function" name="meta_window_get_screen ()" link="MetaWindow.html#meta-window-get-screen"/>
@@ -525,9 +518,10 @@
     <keyword type="constant" name="META_FRAME_TILED_LEFT" link="meta-Common.html#META-FRAME-TILED-LEFT:CAPS"/>
     <keyword type="constant" name="META_FRAME_TILED_RIGHT" link="meta-Common.html#META-FRAME-TILED-RIGHT:CAPS"/>
     <keyword type="constant" name="META_GRAB_OP_NONE" link="meta-Common.html#META-GRAB-OP-NONE:CAPS"/>
+    <keyword type="constant" name="META_GRAB_OP_WINDOW_BASE" link="meta-Common.html#META-GRAB-OP-WINDOW-BASE:CAPS"/>
     <keyword type="constant" name="META_GRAB_OP_COMPOSITOR" link="meta-Common.html#META-GRAB-OP-COMPOSITOR:CAPS"/>
     <keyword type="constant" name="META_GRAB_OP_WAYLAND_POPUP" link="meta-Common.html#META-GRAB-OP-WAYLAND-POPUP:CAPS"/>
-    <keyword type="constant" name="META_GRAB_OP_WINDOW_BASE" link="meta-Common.html#META-GRAB-OP-WINDOW-BASE:CAPS"/>
+    <keyword type="constant" name="META_GRAB_OP_FRAME_BUTTON" link="meta-Common.html#META-GRAB-OP-FRAME-BUTTON:CAPS"/>
     <keyword type="constant" name="META_GRAB_OP_MOVING" link="meta-Common.html#META-GRAB-OP-MOVING:CAPS"/>
     <keyword type="constant" name="META_GRAB_OP_RESIZING_NW" link="meta-Common.html#META-GRAB-OP-RESIZING-NW:CAPS"/>
     <keyword type="constant" name="META_GRAB_OP_RESIZING_N" link="meta-Common.html#META-GRAB-OP-RESIZING-N:CAPS"/>
@@ -626,10 +620,6 @@
     <keyword type="constant" name="META_LAYER_FOCUSED_WINDOW" link="meta-Common.html#META-LAYER-FOCUSED-WINDOW:CAPS"/>
     <keyword type="constant" name="META_LAYER_OVERRIDE_REDIRECT" link="meta-Common.html#META-LAYER-OVERRIDE-REDIRECT:CAPS"/>
     <keyword type="constant" name="META_LAYER_LAST" link="meta-Common.html#META-LAYER-LAST:CAPS"/>
-    <keyword type="constant" name="META_GRADIENT_VERTICAL" link="meta-Gradients.html#META-GRADIENT-VERTICAL:CAPS"/>
-    <keyword type="constant" name="META_GRADIENT_HORIZONTAL" link="meta-Gradients.html#META-GRADIENT-HORIZONTAL:CAPS"/>
-    <keyword type="constant" name="META_GRADIENT_DIAGONAL" link="meta-Gradients.html#META-GRADIENT-DIAGONAL:CAPS"/>
-    <keyword type="constant" name="META_GRADIENT_LAST" link="meta-Gradients.html#META-GRADIENT-LAST:CAPS"/>
     <keyword type="constant" name="META_PREF_MOUSE_BUTTON_MODS" link="meta-Preferences.html#META-PREF-MOUSE-BUTTON-MODS:CAPS"/>
     <keyword type="constant" name="META_PREF_FOCUS_MODE" link="meta-Preferences.html#META-PREF-FOCUS-MODE:CAPS"/>
     <keyword type="constant" name="META_PREF_FOCUS_NEW_WINDOWS" link="meta-Preferences.html#META-PREF-FOCUS-NEW-WINDOWS:CAPS"/>
@@ -641,7 +631,6 @@
     <keyword type="constant" name="META_PREF_AUTO_RAISE" link="meta-Preferences.html#META-PREF-AUTO-RAISE:CAPS"/>
     <keyword type="constant" name="META_PREF_AUTO_RAISE_DELAY" link="meta-Preferences.html#META-PREF-AUTO-RAISE-DELAY:CAPS"/>
     <keyword type="constant" name="META_PREF_FOCUS_CHANGE_ON_POINTER_REST" link="meta-Preferences.html#META-PREF-FOCUS-CHANGE-ON-POINTER-REST:CAPS"/>
-    <keyword type="constant" name="META_PREF_THEME" link="meta-Preferences.html#META-PREF-THEME:CAPS"/>
     <keyword type="constant" name="META_PREF_TITLEBAR_FONT" link="meta-Preferences.html#META-PREF-TITLEBAR-FONT:CAPS"/>
     <keyword type="constant" name="META_PREF_NUM_WORKSPACES" link="meta-Preferences.html#META-PREF-NUM-WORKSPACES:CAPS"/>
     <keyword type="constant" name="META_PREF_DYNAMIC_WORKSPACES" link="meta-Preferences.html#META-PREF-DYNAMIC-WORKSPACES:CAPS"/>

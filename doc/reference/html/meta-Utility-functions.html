@@ -318,10 +318,9 @@ we have already turned syncing on or off on startup, and we don't
 have any way to do so while Mutter is running, so it's rather
 pointless.</p>
 <div class="refsect3">
-<a name="id-1.4.6.6.6.6"></a><h4>Returns</h4>
+<a name="id-1.4.5.6.6.6"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if we must wait for events whenever we send X requests;
 <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> otherwise.</p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -331,7 +330,7 @@ pointless.</p>
 meta_set_syncing (<em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> setting</code></em>);</pre>
 <p>A handy way to turn on synchronisation on or off for every display.</p>
 <div class="refsect3">
-<a name="id-1.4.6.6.7.5"></a><h4>Parameters</h4>
+<a name="id-1.4.5.6.7.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -404,7 +403,7 @@ meta_add_verbose_topic (<em class="parameter"><code><a class="link" href="meta-U
 
 will be printed.</p>
 <div class="refsect3">
-<a name="id-1.4.6.6.15.5"></a><h4>Parameters</h4>
+<a name="id-1.4.5.6.15.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -431,7 +430,7 @@ i.e. if two calls to <a class="link" href="meta-Utility-functions.html#meta-add-
 topic are made, one call to <a class="link" href="meta-Utility-functions.html#meta-remove-verbose-topic" title="meta_remove_verbose_topic ()"><code class="function">meta_remove_verbose_topic()</code></a> will
 remove it.</p>
 <div class="refsect3">
-<a name="id-1.4.6.6.16.5"></a><h4>Parameters</h4>
+<a name="id-1.4.5.6.16.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -479,7 +478,7 @@ meta_frame_type_to_string (<em class="parameter"><code><a class="link" href="met
 <p>Converts a frame type enum value to the name string that would
 appear in the theme definition file.</p>
 <div class="refsect3">
-<a name="id-1.4.6.6.21.5"></a><h4>Parameters</h4>
+<a name="id-1.4.5.6.21.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -494,9 +493,8 @@ appear in the theme definition file.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.6.6.21.6"></a><h4>Returns</h4>
+<a name="id-1.4.5.6.21.6"></a><h4>Returns</h4>
 <p> the string value</p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -517,8 +515,9 @@ meta_g_utf8_strndup (<em class="parameter"><code>const <a href="https://develope
 <a name="meta-free-gslist-and-elements"></a><h3>meta_free_gslist_and_elements ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>
 meta_free_gslist_and_elements (<em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="type">GSList</span></a> *list_to_deep_free</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.6.6.24.4"></a><h4>Parameters</h4>
+<a name="id-1.4.5.6.24.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -547,8 +546,9 @@ meta_show_dialog (<em class="parameter"><code>const <span class="type">char</spa
                   <em class="parameter"><code>const <span class="type">int</span> transient_for</code></em>,
                   <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="type">GSList</span></a> *columns</code></em>,
                   <em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Singly-Linked-Lists.html#GSList"><span class="type">GSList</span></a> *entries</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.6.6.25.4"></a><h4>Parameters</h4>
+<a name="id-1.4.5.6.25.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -626,7 +626,7 @@ If a "later" function is added from a clutter event handler, and is supposed
 to be run before the stage is redrawn, it will be run before that redraw
 of the stage, not the next one.</p>
 <div class="refsect3">
-<a name="id-1.4.6.6.26.5"></a><h4>Parameters</h4>
+<a name="id-1.4.5.6.26.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -659,10 +659,9 @@ when it is no longer in use, or <a href="https://developer.gnome.org/glib/unstab
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.6.6.26.6"></a><h4>Returns</h4>
+<a name="id-1.4.5.6.26.6"></a><h4>Returns</h4>
 <p> an integer ID (guaranteed to be non-zero) that can be used
 to cancel the callback and prevent it from being run.</p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -672,7 +671,7 @@ to cancel the callback and prevent it from being run.</p>
 meta_later_remove (<em class="parameter"><code><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint"><span class="type">guint</span></a> later_id</code></em>);</pre>
 <p>Removes a callback added with <a class="link" href="meta-Utility-functions.html#meta-later-add" title="meta_later_add ()"><code class="function">meta_later_add()</code></a></p>
 <div class="refsect3">
-<a name="id-1.4.6.6.27.5"></a><h4>Parameters</h4>
+<a name="id-1.4.5.6.27.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -693,7 +692,7 @@ meta_later_remove (<em class="parameter"><code><a href="https://developer.gnome.
 <div class="refsect2">
 <a name="MetaDebugTopic"></a><h3>enum MetaDebugTopic</h3>
 <div class="refsect3">
-<a name="id-1.4.6.7.2.3"></a><h4>Members</h4>
+<a name="id-1.4.5.7.2.3"></a><h4>Members</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="300px" class="enum_members_name">
@@ -893,7 +892,7 @@ meta_later_remove (<em class="parameter"><code><a href="https://developer.gnome.
 <div class="refsect2">
 <a name="MetaLaterType"></a><h3>enum MetaLaterType</h3>
 <div class="refsect3">
-<a name="id-1.4.6.7.6.3"></a><h4>Members</h4>
+<a name="id-1.4.5.7.6.3"></a><h4>Members</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="300px" class="enum_members_name">

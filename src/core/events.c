@@ -66,9 +66,10 @@ get_window_for_event (MetaDisplay        *display,
         else
           return NULL;
       }
-    case META_EVENT_ROUTE_WAYLAND_POPUP:
     case META_EVENT_ROUTE_WINDOW_OP:
     case META_EVENT_ROUTE_COMPOSITOR_GRAB:
+    case META_EVENT_ROUTE_WAYLAND_POPUP:
+    case META_EVENT_ROUTE_FRAME_BUTTON:
       return display->grab_window;
     default:
       g_assert_not_reached ();
@@ -90,6 +91,15 @@ handle_idletime_for_event (const ClutterEvent *event)
 
       device = clutter_event_get_device (event);
       if (device == NULL)
+        return;
+
+      if (event->any.flags & CLUTTER_EVENT_FLAG_SYNTHETIC ||
+          event->type == CLUTTER_ENTER ||
+          event->type == CLUTTER_LEAVE ||
+          event->type == CLUTTER_STAGE_STATE ||
+          event->type == CLUTTER_DESTROY_NOTIFY ||
+          event->type == CLUTTER_CLIENT_MESSAGE ||
+          event->type == CLUTTER_DELETE)
         return;
 
       device_id = clutter_input_device_get_device_id (device);
@@ -151,23 +161,6 @@ sequence_is_pointer_emulated (MetaDisplay        *display,
   return FALSE;
 }
 
-static void
-meta_display_update_pointer_emulating_sequence (MetaDisplay        *display,
-                                                const ClutterEvent *event)
-{
-  ClutterEventSequence *sequence;
-
-  sequence = clutter_event_get_event_sequence (event);
-
-  if (event->type == CLUTTER_TOUCH_BEGIN &&
-      !display->pointer_emulating_sequence &&
-      sequence_is_pointer_emulated (display, event))
-    display->pointer_emulating_sequence = sequence;
-  else if (event->type == CLUTTER_TOUCH_END &&
-           display->pointer_emulating_sequence == sequence)
-    display->pointer_emulating_sequence = NULL;
-}
-
 static gboolean
 meta_display_handle_event (MetaDisplay        *display,
                            const ClutterEvent *event)
@@ -176,8 +169,16 @@ meta_display_handle_event (MetaDisplay        *display,
   gboolean bypass_clutter = FALSE;
   G_GNUC_UNUSED gboolean bypass_wayland = FALSE;
   MetaGestureTracker *tracker;
+  ClutterEventSequence *sequence;
+  ClutterInputDevice *source;
 
-  meta_display_update_pointer_emulating_sequence (display, event);
+  sequence = clutter_event_get_event_sequence (event);
+
+  /* Set the pointer emulating sequence on touch begin, if eligible */
+  if (event->type == CLUTTER_TOUCH_BEGIN &&
+      !display->pointer_emulating_sequence &&
+      sequence_is_pointer_emulated (display, event))
+    display->pointer_emulating_sequence = sequence;
 
 #ifdef HAVE_WAYLAND
   MetaWaylandCompositor *compositor = NULL;
@@ -188,10 +189,19 @@ meta_display_handle_event (MetaDisplay        *display,
     }
 #endif
 
+  source = clutter_event_get_source_device (event);
+
+  if (source)
+    {
+      meta_backend_update_last_device (meta_get_backend (),
+                                       clutter_input_device_get_device_id (source));
+    }
+
   if (meta_is_wayland_compositor () && event->type == CLUTTER_MOTION)
     {
       MetaCursorTracker *tracker = meta_cursor_tracker_get_for_screen (NULL);
       meta_cursor_tracker_update_position (tracker, event->motion.x, event->motion.y);
+      display->monitor_cache_invalidated = TRUE;
     }
 
   handle_idletime_for_event (event);
@@ -271,7 +281,8 @@ meta_display_handle_event (MetaDisplay        *display,
        * event, and if it doesn't, replay the event to release our
        * own sync grab. */
 
-      if (display->event_route == META_EVENT_ROUTE_WINDOW_OP)
+      if (display->event_route == META_EVENT_ROUTE_WINDOW_OP ||
+          display->event_route == META_EVENT_ROUTE_FRAME_BUTTON)
         {
           bypass_clutter = TRUE;
           bypass_wayland = TRUE;
@@ -313,6 +324,11 @@ meta_display_handle_event (MetaDisplay        *display,
         bypass_clutter = TRUE;
     }
 #endif
+
+  /* Unset the pointer emulating sequence after its end event is processed */
+  if (event->type == CLUTTER_TOUCH_END &&
+      display->pointer_emulating_sequence == sequence)
+    display->pointer_emulating_sequence = NULL;
 
   display->current_time = CurrentTime;
   return bypass_clutter;

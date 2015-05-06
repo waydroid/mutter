@@ -298,7 +298,7 @@ are transitions within the visible state. The window is resized __before__
 the call, so it may be necessary to readjust the display based on the
 old_rect to start the animation.</p>
 <div class="refsect2">
-<a name="id-1.4.11.5.9"></a><h3>Containers</h3>
+<a name="id-1.4.10.5.9"></a><h3>Containers</h3>
 <p>There's two containers in the stage that are used to place window actors, here
 are listed in the order in which they are painted:</p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
@@ -316,6 +316,7 @@ top window group.</p>
 <a name="meta-compositor-new"></a><h3>meta_compositor_new ()</h3>
 <pre class="programlisting"><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="returnvalue">MetaCompositor</span></a> *
 meta_compositor_new (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -337,6 +338,7 @@ meta_compositor_window_shape_changed (<em class="parameter"><code><a class="link
 meta_compositor_process_event (<em class="parameter"><code><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="type">MetaCompositor</span></a> *compositor</code></em>,
                                <em class="parameter"><code><span class="type">XEvent</span> *event</code></em>,
                                <em class="parameter"><code><a class="link" href="MetaWindow.html" title="MetaWindow"><span class="type">MetaWindow</span></a> *window</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -438,7 +440,7 @@ meta_compositor_flash_screen (<em class="parameter"><code><a class="link" href="
 <pre class="programlisting"><span class="returnvalue">ClutterActor</span> *
 meta_get_stage_for_screen (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.11.6.18.4"></a><h4>Parameters</h4>
+<a name="id-1.4.10.6.18.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -453,7 +455,7 @@ meta_get_stage_for_screen (<em class="parameter"><code><a class="link" href="Met
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.11.6.18.5"></a><h4>Returns</h4>
+<a name="id-1.4.10.6.18.5"></a><h4>Returns</h4>
 <p> The <span class="type">ClutterStage</span> for the screen. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -463,8 +465,9 @@ meta_get_stage_for_screen (<em class="parameter"><code><a class="link" href="Met
 <a name="meta-get-overlay-window"></a><h3>meta_get_overlay_window ()</h3>
 <pre class="programlisting"><span class="returnvalue">Window</span>
 meta_get_overlay_window (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.11.6.19.4"></a><h4>Parameters</h4>
+<a name="id-1.4.10.6.19.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -485,7 +488,7 @@ meta_get_overlay_window (<em class="parameter"><code><a class="link" href="MetaS
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *
 meta_get_window_actors (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.11.6.20.4"></a><h4>Parameters</h4>
+<a name="id-1.4.10.6.20.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -500,10 +503,10 @@ meta_get_window_actors (<em class="parameter"><code><a class="link" href="MetaSc
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.11.6.20.5"></a><h4>Returns</h4>
-<p> The set of <a class="link" href="MetaWindowActor.html" title="MetaWindowActor"><span class="type">MetaWindowActor</span></a> on <em class="parameter"><code>screen</code></em>
+<a name="id-1.4.10.6.20.5"></a><h4>Returns</h4>
+<p> (element-type Clutter.Actor): The set of <a class="link" href="MetaWindowActor.html" title="MetaWindowActor"><span class="type">MetaWindowActor</span></a> on <em class="parameter"><code>screen</code></em>
 . </p>
-<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> Clutter.Actor]</span></p>
+<p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -512,7 +515,7 @@ meta_get_window_actors (<em class="parameter"><code><a class="link" href="MetaSc
 <pre class="programlisting"><span class="returnvalue">ClutterActor</span> *
 meta_get_window_group_for_screen (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.11.6.21.4"></a><h4>Parameters</h4>
+<a name="id-1.4.10.6.21.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -527,7 +530,7 @@ meta_get_window_group_for_screen (<em class="parameter"><code><a class="link" hr
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.11.6.21.5"></a><h4>Returns</h4>
+<a name="id-1.4.10.6.21.5"></a><h4>Returns</h4>
 <p> The window group corresponding to <em class="parameter"><code>screen</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -539,7 +542,7 @@ meta_get_window_group_for_screen (<em class="parameter"><code><a class="link" hr
 <pre class="programlisting"><span class="returnvalue">ClutterActor</span> *
 meta_get_top_window_group_for_screen (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.11.6.22.4"></a><h4>Parameters</h4>
+<a name="id-1.4.10.6.22.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -554,7 +557,7 @@ meta_get_top_window_group_for_screen (<em class="parameter"><code><a class="link
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.11.6.22.5"></a><h4>Returns</h4>
+<a name="id-1.4.10.6.22.5"></a><h4>Returns</h4>
 <p> The top window group corresponding to <em class="parameter"><code>screen</code></em>
 . </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
@@ -568,7 +571,7 @@ meta_disable_unredirect_for_screen (<em class="parameter"><code><a class="link" 
 <p>Disables unredirection, can be usefull in situations where having
 unredirected windows is undesireable like when recording a video.</p>
 <div class="refsect3">
-<a name="id-1.4.11.6.23.5"></a><h4>Parameters</h4>
+<a name="id-1.4.10.6.23.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -590,7 +593,7 @@ unredirected windows is undesireable like when recording a video.</p>
 meta_enable_unredirect_for_screen (<em class="parameter"><code><a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> *screen</code></em>);</pre>
 <p>Enables unredirection which reduces the overhead for apps like games.</p>
 <div class="refsect3">
-<a name="id-1.4.11.6.24.5"></a><h4>Parameters</h4>
+<a name="id-1.4.10.6.24.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -626,7 +629,7 @@ meta_empty_stage_input_region (<em class="parameter"><code><a class="link" href=
 <p>Indicates the appropriate effect to show the user for
 <a class="link" href="meta-MetaCompositor.html#meta-compositor-show-window" title="meta_compositor_show_window ()"><code class="function">meta_compositor_show_window()</code></a> and <a class="link" href="meta-MetaCompositor.html#meta-compositor-hide-window" title="meta_compositor_hide_window ()"><code class="function">meta_compositor_hide_window()</code></a></p>
 <div class="refsect3">
-<a name="id-1.4.11.7.2.4"></a><h4>Members</h4>
+<a name="id-1.4.10.7.2.4"></a><h4>Members</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="300px" class="enum_members_name">

@@ -55,7 +55,8 @@ meta_cursor_reference_ref (MetaCursorReference *self)
 static void
 meta_cursor_image_free (MetaCursorImage *image)
 {
-  cogl_object_unref (image->texture);
+  if (image->texture)
+    cogl_object_unref (image->texture);
 
 #ifdef HAVE_NATIVE_BACKEND
   if (image->bo)
@@ -255,22 +256,30 @@ meta_cursor_image_load_from_xcursor_image (MetaCursorImage   *image,
 #endif
 }
 
+static void
+load_cursor_image (MetaCursorReference *cursor)
+{
+  XcursorImage *image;
+
+  /* Either cursors are loaded from X cursors or buffers. Since
+   * buffers are converted over immediately, we can make sure to
+   * load this directly. */
+  g_assert (cursor->cursor != META_CURSOR_NONE);
+
+  image = load_cursor_on_client (cursor->cursor);
+  if (!image)
+    return;
+
+  meta_cursor_image_load_from_xcursor_image (&cursor->image, image);
+  XcursorImageDestroy (image);
+}
+
 MetaCursorReference *
 meta_cursor_reference_from_theme (MetaCursor cursor)
 {
-  MetaCursorReference *self;
-  XcursorImage *image;
-
-  image = load_cursor_on_client (cursor);
-  if (!image)
-    return NULL;
-
-  self = g_slice_new0 (MetaCursorReference);
+  MetaCursorReference *self = g_slice_new0 (MetaCursorReference);
   self->ref_count = 1;
   self->cursor = cursor;
-  meta_cursor_image_load_from_xcursor_image (&self->image, image);
-
-  XcursorImageDestroy (image);
   return self;
 }
 
@@ -308,6 +317,8 @@ meta_cursor_image_load_from_buffer (MetaCursorImage    *image,
         {
           int rowstride = wl_shm_buffer_get_stride (shm_buffer);
 
+          wl_shm_buffer_begin_access (shm_buffer);
+
           switch (wl_shm_buffer_get_format (shm_buffer))
             {
 #if G_BYTE_ORDER == G_BIG_ENDIAN
@@ -335,6 +346,8 @@ meta_cursor_image_load_from_buffer (MetaCursorImage    *image,
                                              (uint8_t *) wl_shm_buffer_get_data (shm_buffer),
                                              width, height, rowstride,
                                              gbm_format);
+
+          wl_shm_buffer_end_access (shm_buffer);
         }
       else
         {
@@ -380,10 +393,14 @@ meta_cursor_reference_get_cogl_texture (MetaCursorReference *cursor,
                                         int                 *hot_x,
                                         int                 *hot_y)
 {
+  if (!cursor->image.texture)
+    load_cursor_image (cursor);
+
   if (hot_x)
     *hot_x = cursor->image.hot_x;
   if (hot_y)
     *hot_y = cursor->image.hot_y;
+
   return COGL_TEXTURE (cursor->image.texture);
 }
 
@@ -393,6 +410,9 @@ meta_cursor_reference_get_gbm_bo (MetaCursorReference *cursor,
                                   int                 *hot_x,
                                   int                 *hot_y)
 {
+  if (!cursor->image.bo)
+    load_cursor_image (cursor);
+
   if (hot_x)
     *hot_x = cursor->image.hot_x;
   if (hot_y)

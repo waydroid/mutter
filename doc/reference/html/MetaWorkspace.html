@@ -208,7 +208,7 @@ meta_workspace_index (<em class="parameter"><code><a class="link" href="MetaWork
 meta_workspace_get_screen (<em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <p>Gets the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> that the workspace is part of.</p>
 <div class="refsect3">
-<a name="id-1.4.21.9.3.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.3.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -223,7 +223,7 @@ meta_workspace_get_screen (<em class="parameter"><code><a class="link" href="Met
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.21.9.3.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.3.6"></a><h4>Returns</h4>
 <p> the <a class="link" href="MetaScreen.html" title="MetaScreen"><span class="type">MetaScreen</span></a> for the workspace. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -236,7 +236,7 @@ meta_workspace_list_windows (<em class="parameter"><code><a class="link" href="M
 <p>Gets windows contained on the workspace, including workspace-&gt;windows
 and also sticky windows. Override-redirect windows are not included.</p>
 <div class="refsect3">
-<a name="id-1.4.21.9.4.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.4.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -251,9 +251,9 @@ and also sticky windows. Override-redirect windows are not included.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.21.9.4.6"></a><h4>Returns</h4>
-<p> the list of windows. </p>
-<p><span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> MetaWindow]</span></p>
+<a name="id-1.4.20.9.4.6"></a><h4>Returns</h4>
+<p> (element-type MetaWindow): the list of windows. </p>
+<p><span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -270,7 +270,7 @@ meta_workspace_get_work_area_for_monitor
 in <em class="parameter"><code>area</code></em>
 .</p>
 <div class="refsect3">
-<a name="id-1.4.21.9.5.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.5.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -307,7 +307,7 @@ meta_workspace_get_work_area_all_monitors
 <p>Stores the work area in <em class="parameter"><code>area</code></em>
 .</p>
 <div class="refsect3">
-<a name="id-1.4.21.9.6.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.6.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -358,7 +358,7 @@ followed by <a class="link" href="MetaWindow.html#meta-window-activate" title="m
 no other window gets focused first before <em class="parameter"><code>focus_this</code></em>
 .</p>
 <div class="refsect3">
-<a name="id-1.4.21.9.8.8"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.8.8"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -396,7 +396,7 @@ meta_workspace_set_builtin_struts (<em class="parameter"><code><a class="link" h
 of the windows in the workspace when computing the work area of
 the workspace.</p>
 <div class="refsect3">
-<a name="id-1.4.21.9.9.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.9.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -411,8 +411,8 @@ the workspace.</p>
 </tr>
 <tr>
 <td class="parameter_name"><p>struts</p></td>
-<td class="parameter_description"><p> list of <a class="link" href="MetaRectangle.html#MetaStrut" title="struct MetaStrut"><span class="type">MetaStrut</span></a>. </p></td>
-<td class="parameter_annotations"><span class="annotation">[<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> Meta.Strut][<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></td>
+<td class="parameter_description"><p> (transfer none): list of <a class="link" href="MetaRectangle.html#MetaStrut" title="struct MetaStrut"><span class="type">MetaStrut</span></a>. </p></td>
+<td class="parameter_annotations"><span class="annotation">[<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> Meta.Strut]</span></td>
 </tr>
 </tbody>
 </table></div>
@@ -430,7 +430,7 @@ according to <em class="parameter"><code>direction</code></em>
  and the current workspace layout, as set
 by <a class="link" href="MetaScreen.html#meta-screen-override-workspace-layout" title="meta_screen_override_workspace_layout ()"><code class="function">meta_screen_override_workspace_layout()</code></a>.</p>
 <div class="refsect3">
-<a name="id-1.4.21.9.10.5"></a><h4>Parameters</h4>
+<a name="id-1.4.20.9.10.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -453,7 +453,7 @@ by <a class="link" href="MetaScreen.html#meta-screen-override-workspace-layout" 
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.21.9.10.6"></a><h4>Returns</h4>
+<a name="id-1.4.20.9.10.6"></a><h4>Returns</h4>
 <p> the workspace next to <em class="parameter"><code>workspace</code></em>
 , or
 <em class="parameter"><code>workspace</code></em>
