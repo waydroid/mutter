@@ -139,10 +139,10 @@ to investigate, read <code class="function">main()</code>, <code class="function
 meta_get_option_context (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 <p>Returns a <a href="https://developer.gnome.org/glib/unstable/glib-Commandline-option-parser.html#GOptionContext"><span class="type">GOptionContext</span></a> initialized with mutter-related options.
 Parse the command-line args with this before calling <a class="link" href="meta-Main.html#meta-init" title="meta_init ()"><code class="function">meta_init()</code></a>.</p>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.2.6.2.5"></a><h4>Returns</h4>
+<a name="id-1.4.2.6.2.6"></a><h4>Returns</h4>
 <p> the <a href="https://developer.gnome.org/glib/unstable/glib-Commandline-option-parser.html#GOptionContext"><span class="type">GOptionContext</span></a></p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -152,6 +152,7 @@ Parse the command-line args with this before calling <a class="link" href="meta-
 meta_init (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 <p>Initialize mutter. Call this after <a class="link" href="meta-Main.html#meta-get-option-context" title="meta_get_option_context ()"><code class="function">meta_get_option_context()</code></a> and
 <a class="link" href="MetaPlugin.html#meta-plugin-manager-set-plugin-type" title="meta_plugin_manager_set_plugin_type ()"><code class="function">meta_plugin_manager_set_plugin_type()</code></a>, and before <a class="link" href="meta-Main.html#meta-run" title="meta_run ()"><code class="function">meta_run()</code></a>.</p>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 </div>
 <hr>
 <div class="refsect2">
@@ -160,10 +161,10 @@ meta_init (<em class="parameter"><code><span class="type">void</span></code></em
 meta_run (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 <p>Runs mutter. Call this after completing initialization that doesn't require
 an event loop.</p>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.2.6.4.5"></a><h4>Returns</h4>
+<a name="id-1.4.2.6.4.6"></a><h4>Returns</h4>
 <p> mutter's exit status</p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -179,8 +180,9 @@ meta_get_replace_current_wm (<em class="parameter"><code><span class="type">void
 meta_set_wm_name (<em class="parameter"><code>const <span class="type">char</span> *wm_name</code></em>);</pre>
 <p>Set the value to use for the _NET_WM_NAME property. To take effect,
 it is necessary to call this function before <a class="link" href="meta-Main.html#meta-init" title="meta_init ()"><code class="function">meta_init()</code></a>.</p>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.2.6.6.5"></a><h4>Parameters</h4>
+<a name="id-1.4.2.6.6.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -202,8 +204,9 @@ it is necessary to call this function before <a class="link" href="meta-Main.htm
 meta_set_gnome_wm_keybindings (<em class="parameter"><code>const <span class="type">char</span> *wm_keybindings</code></em>);</pre>
 <p>Set the value to use for the _GNOME_WM_KEYBINDINGS property. To take
 effect, it is necessary to call this function before <a class="link" href="meta-Main.html#meta-init" title="meta_init ()"><code class="function">meta_init()</code></a>.</p>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.2.6.7.5"></a><h4>Parameters</h4>
+<a name="id-1.4.2.6.7.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">

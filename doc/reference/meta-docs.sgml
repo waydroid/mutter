@@ -3,7 +3,7 @@
                "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
   <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
-  <!ENTITY version "3.14.4">
+  <!ENTITY version "3.16.2">
 ]>
 <book id="index">
   <bookinfo>
@@ -22,7 +22,6 @@
     <title>Mutter Core Reference</title>
     <xi:include href="xml/main.xml"/>
     <xi:include href="xml/common.xml"/>
-    <xi:include href="xml/gradient.xml"/>
     <xi:include href="xml/prefs.xml"/>
     <xi:include href="xml/util.xml"/>
     <xi:include href="xml/errors.xml"/>

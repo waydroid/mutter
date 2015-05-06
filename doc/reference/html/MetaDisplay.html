@@ -332,6 +332,11 @@
 </tr>
 <tr>
 <td class="signal_type"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a></td>
+<td class="signal_name"><a class="link" href="MetaDisplay.html#MetaDisplay-show-resize-popup" title="The “show-resize-popup” signal">show-resize-popup</a></td>
+<td class="signal_flags"><a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></td>
+</tr>
+<tr>
+<td class="signal_type"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a></td>
 <td class="signal_name"><a class="link" href="MetaDisplay.html#MetaDisplay-show-restart-message" title="The “show-restart-message” signal">show-restart-message</a></td>
 <td class="signal_flags"><a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></td>
 </tr>
@@ -402,8 +407,9 @@
 <a name="meta-display-get-xinput-opcode"></a><h3>meta_display_get_xinput_opcode ()</h3>
 <pre class="programlisting"><span class="returnvalue">int</span>
 meta_display_get_xinput_opcode (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.12.9.3.4"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.3.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -425,7 +431,7 @@ meta_display_get_xinput_opcode (<em class="parameter"><code><a class="link" href
 meta_display_supports_extended_barriers
                                (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.12.9.4.4"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.4.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -440,13 +446,13 @@ meta_display_supports_extended_barriers
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.4.5"></a><h4>Returns</h4>
-<p> whether the X server supports extended barrier
-features as defined in version 2.3 of the XInput 2
-specification.</p>
+<a name="id-1.4.11.9.4.5"></a><h4>Returns</h4>
+<p> whether pointer barriers can be supported.</p>
+<p>When running as an X compositor the X server needs XInput 2
+version 2.3. When running as a display server it is supported
+when running on the native backend.</p>
 <p>Clients should use this method to determine whether their
 interfaces should depend on new barrier features.</p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -454,8 +460,9 @@ interfaces should depend on new barrier features.</p>
 <a name="meta-display-get-xdisplay"></a><h3>meta_display_get_xdisplay ()</h3>
 <pre class="programlisting"><span class="returnvalue">Display</span> *
 meta_display_get_xdisplay (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.12.9.5.4"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.5.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -475,8 +482,9 @@ meta_display_get_xdisplay (<em class="parameter"><code><a class="link" href="Met
 <a name="meta-display-get-compositor"></a><h3>meta_display_get_compositor ()</h3>
 <pre class="programlisting"><a class="link" href="meta-MetaCompositor.html#MetaCompositor" title="MetaCompositor"><span class="returnvalue">MetaCompositor</span></a> *
 meta_display_get_compositor (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
+<p><span class="annotation">[<acronym title="Exposed in C code, not necessarily available in other languages."><span class="acronym">skip</span></acronym>]</span></p>
 <div class="refsect3">
-<a name="id-1.4.12.9.6.4"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.6.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -506,7 +514,7 @@ meta_display_get_focus_window (<em class="parameter"><code><a class="link" href=
 the window that we expect will be focused at the point when the X
 server processes our next request).</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.8.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.8.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -521,7 +529,7 @@ server processes our next request).</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.8.6"></a><h4>Returns</h4>
+<a name="id-1.4.11.9.8.6"></a><h4>Returns</h4>
 <p> The current focus window. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -534,7 +542,7 @@ meta_display_xwindow_is_a_no_focus_window
                                (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>,
                                 <em class="parameter"><code><span class="type">Window</span> xwindow</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.12.9.9.4"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.9.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -556,11 +564,10 @@ meta_display_xwindow_is_a_no_focus_window
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.9.5"></a><h4>Returns</h4>
+<a name="id-1.4.11.9.9.5"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> iff window is one of mutter's internal "no focus" windows
 (there is one per screen) which will have the focus when there is no
 actual client window focused.</p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -592,7 +599,7 @@ means "older than anything else".</p>
 you need then you'll need to swap the order of the arguments and negate
 the result.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.12.6"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.12.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -625,7 +632,7 @@ the result.</p>
 <pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#guint32"><span class="returnvalue">guint32</span></a>
 meta_display_get_last_user_time (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <div class="refsect3">
-<a name="id-1.4.12.9.13.4"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.13.4"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -640,9 +647,8 @@ meta_display_get_last_user_time (<em class="parameter"><code><a class="link" hre
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.13.5"></a><h4>Returns</h4>
+<a name="id-1.4.11.9.13.5"></a><h4>Returns</h4>
 <p> Timestamp of the last user interaction event with a window</p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -673,7 +679,7 @@ If <em class="parameter"><code>workspace</code></em>
  or have the demands-attention hint set; otherwise it contains
 all windows.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.16.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.16.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -700,9 +706,9 @@ all windows.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.16.6"></a><h4>Returns</h4>
-<p> List of windows. </p>
-<p><span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> Meta.Window]</span></p>
+<a name="id-1.4.11.9.16.6"></a><h4>Returns</h4>
+<p> (element-type Meta.Window): List of windows. </p>
+<p><span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -717,7 +723,7 @@ meta_display_get_tab_next (<em class="parameter"><code><a class="link" href="Met
 <p>Determine the next window that should be displayed for Alt-TAB
 functionality.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.17.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.17.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -754,7 +760,7 @@ functionality.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.17.6"></a><h4>Returns</h4>
+<a name="id-1.4.11.9.17.6"></a><h4>Returns</h4>
 <p> Next window. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -768,7 +774,7 @@ meta_display_get_tab_current (<em class="parameter"><code><a class="link" href="
                               <em class="parameter"><code><a class="link" href="MetaWorkspace.html" title="MetaWorkspace"><span class="type">MetaWorkspace</span></a> *workspace</code></em>);</pre>
 <p>Determine the active window that should be displayed for Alt-TAB.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.18.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.18.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -795,7 +801,7 @@ meta_display_get_tab_current (<em class="parameter"><code><a class="link" href="
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.18.6"></a><h4>Returns</h4>
+<a name="id-1.4.11.9.18.6"></a><h4>Returns</h4>
 <p> Current window. </p>
 <p><span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span></p>
 </div>
@@ -830,7 +836,7 @@ meta_display_end_grab_op (<em class="parameter"><code><a class="link" href="Meta
 meta_display_get_grab_op (<em class="parameter"><code><a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a> *display</code></em>);</pre>
 <p>Gets the current grab operation, if any.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.21.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.21.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -845,12 +851,11 @@ meta_display_get_grab_op (<em class="parameter"><code><a class="link" href="Meta
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.21.6"></a><h4>Returns</h4>
+<a name="id-1.4.11.9.21.6"></a><h4>Returns</h4>
 <p> the current grab operation, or <a class="link" href="meta-Common.html#META-GRAB-OP-NONE:CAPS"><code class="literal">META_GRAB_OP_NONE</code></a> if
 Mutter doesn't currently have a grab. <a class="link" href="meta-Common.html#META-GRAB-OP-COMPOSITOR:CAPS"><code class="literal">META_GRAB_OP_COMPOSITOR</code></a> will
 be returned if a compositor-plugin modal operation is in effect
 (See <code class="function">mutter_begin_modal_for_plugin()</code>)</p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -875,7 +880,7 @@ list with a single element of either "" or "disabled", the keybinding is
 disabled.</p>
 <p>Use <a class="link" href="MetaDisplay.html#meta-display-remove-keybinding" title="meta_display_remove_keybinding ()"><code class="function">meta_display_remove_keybinding()</code></a> to remove the binding.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.22.6"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.22.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -925,10 +930,9 @@ is stored</p></td>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.22.7"></a><h4>Returns</h4>
+<a name="id-1.4.11.9.22.7"></a><h4>Returns</h4>
 <p> the corresponding keybinding action if the keybinding was
 added successfully, otherwise <a class="link" href="meta-Preferences.html#META-KEYBINDING-ACTION-NONE:CAPS"><code class="literal">META_KEYBINDING_ACTION_NONE</code></a></p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -942,7 +946,7 @@ meta_display_remove_keybinding (<em class="parameter"><code><a class="link" href
  is not a known
 keybinding or has not been added with <a class="link" href="MetaDisplay.html#meta-display-add-keybinding" title="meta_display_add_keybinding ()"><code class="function">meta_display_add_keybinding()</code></a>.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.23.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.23.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -964,10 +968,9 @@ keybinding or has not been added with <a class="link" href="MetaDisplay.html#met
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.23.6"></a><h4>Returns</h4>
+<a name="id-1.4.11.9.23.6"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the binding has been removed sucessfully,
 otherwise <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a></p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -983,7 +986,7 @@ have a fixed associated <a class="link" href="meta-Preferences.html#MetaKeyBindi
 dynamically the function will return the keybinding action
 <a class="link" href="MetaDisplay.html#meta-display-add-keybinding" title="meta_display_add_keybinding ()"><code class="function">meta_display_add_keybinding()</code></a> returns on registration.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.24.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.24.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1010,10 +1013,9 @@ dynamically the function will return the keybinding action
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.24.6"></a><h4>Returns</h4>
+<a name="id-1.4.11.9.24.6"></a><h4>Returns</h4>
 <p> The action that should be taken for the given key, or
 <a class="link" href="meta-Preferences.html#META-KEYBINDING-ACTION-NONE:CAPS"><code class="literal">META_KEYBINDING_ACTION_NONE</code></a>.</p>
-<p></p>
 </div>
 </div>
 <hr>
@@ -1049,7 +1051,7 @@ correspond to the actual stacking order in the X server.</p>
 <p>An example of using this would be to sort the list of transient dialogs for a
 window into their current stacking order.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.27.6"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.27.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1071,9 +1073,9 @@ window into their current stacking order.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.9.27.7"></a><h4>Returns</h4>
-<p> Input windows sorted by stacking order, from lowest to highest. </p>
-<p><span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>][<acronym title="Generics and defining elements of containers and arrays."><span class="acronym">element-type</span></acronym> MetaWindow]</span></p>
+<a name="id-1.4.11.9.27.7"></a><h4>Returns</h4>
+<p> (element-type MetaWindow): Input windows sorted by stacking order, from lowest to highest. </p>
+<p><span class="annotation">[<acronym title="Free data container after the code is done."><span class="acronym">transfer container</span></acronym>]</span></p>
 </div>
 </div>
 <hr>
@@ -1089,7 +1091,7 @@ for certain changes to the window hierarchy that we don't want
 to change the focus window, even if they cause the pointer to
 end up in a new window.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.28.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.28.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1129,7 +1131,7 @@ no longer ignored in mouse or sloppy focus.
 This is an internal function. It should be used only for reimplementing
 keybindings, and only in a manner compatible with core code.</p>
 <div class="refsect3">
-<a name="id-1.4.12.9.30.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.9.30.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1150,7 +1152,7 @@ keybindings, and only in a manner compatible with core code.</p>
 <div class="refsect2">
 <a name="MetaTabList"></a><h3>enum MetaTabList</h3>
 <div class="refsect3">
-<a name="id-1.4.12.10.2.3"></a><h4>Members</h4>
+<a name="id-1.4.11.10.2.3"></a><h4>Members</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="300px" class="enum_members_name">
@@ -1194,7 +1196,7 @@ keybindings, and only in a manner compatible with core code.</p>
 <div class="refsect2">
 <a name="MetaTabShowType"></a><h3>enum MetaTabShowType</h3>
 <div class="refsect3">
-<a name="id-1.4.12.10.3.3"></a><h4>Members</h4>
+<a name="id-1.4.11.10.3.3"></a><h4>Members</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="300px" class="enum_members_name">
@@ -1283,7 +1285,7 @@ user_function (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span
 <p>The ::modifiers-accelerator-activated signal will be emitted when
 a special modifiers-only keybinding is activated.</p>
 <div class="refsect3">
-<a name="id-1.4.12.12.5.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.12.5.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1305,11 +1307,10 @@ a special modifiers-only keybinding is activated.</p>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.12.5.6"></a><h4>Returns</h4>
+<a name="id-1.4.11.12.5.6"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> means that the keyboard device should remain
 frozen and <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> for the default behavior of unfreezing the
 keyboard.</p>
-<p></p>
 </div>
 <p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></p>
 </div>
@@ -1333,7 +1334,7 @@ emitted when <code class="function">meta_restart()</code> is called, either by M
 internally or by the embedding compositor. See also
 ::show-restart-message.</p>
 <div class="refsect3">
-<a name="id-1.4.12.12.7.5"></a><h4>Parameters</h4>
+<a name="id-1.4.11.12.7.5"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1355,12 +1356,23 @@ internally or by the embedding compositor. See also
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.12.7.6"></a><h4>Returns</h4>
+<a name="id-1.4.11.12.7.6"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> to indicate that the compositor could not
 be restarted. When the compositor is restarted, the signal
 should not return.</p>
-<p></p>
 </div>
+<p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="MetaDisplay-show-resize-popup"></a><h3>The <code class="literal">“show-resize-popup”</code> signal</h3>
+<pre class="programlisting"><a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>
+user_function (<a class="link" href="MetaDisplay.html" title="MetaDisplay"><span class="type">MetaDisplay</span></a>   *metadisplay,
+               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>       arg1,
+               <a class="link" href="MetaRectangle.html" title="MetaRectangle"><span class="type">MetaRectangle</span></a> *arg2,
+               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>           arg3,
+               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gint"><span class="type">gint</span></a>           arg4,
+               <a href="https://developer.gnome.org/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>       user_data)</pre>
 <p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></p>
 </div>
 <hr>
@@ -1381,7 +1393,7 @@ stage contents frozen as soon as the the stage is painted again.</p>
 with <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> for <em class="parameter"><code>message</code></em>
 .</p>
 <div class="refsect3">
-<a name="id-1.4.12.12.8.6"></a><h4>Parameters</h4>
+<a name="id-1.4.11.12.9.6"></a><h4>Parameters</h4>
 <div class="informaltable"><table width="100%" border="0">
 <colgroup>
 <col width="150px" class="parameters_name">
@@ -1409,10 +1421,9 @@ to clear a previous restart message. </p></td>
 </table></div>
 </div>
 <div class="refsect3">
-<a name="id-1.4.12.12.8.7"></a><h4>Returns</h4>
+<a name="id-1.4.11.12.9.7"></a><h4>Returns</h4>
 <p> <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> means the message was added to the stage; <a href="https://developer.gnome.org/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>
 indicates that the compositor did not show the message.</p>
-<p></p>
 </div>
 <p>Flags: <a href="https://developer.gnome.org/gobject/unstable/gobject-Signals.html#G-SIGNAL-RUN-LAST:CAPS">Run Last</a></p>
 </div>
