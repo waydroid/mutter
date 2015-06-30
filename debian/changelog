@@ -1,3 +1,11 @@
+mutter (3.16.2-3) unstable; urgency=medium
+
+  * Cherry-pick upstream commit which fixes the issue that window resize
+    handles were not shown.
+  * Drop obsolete Breaks/Replaces from pre-wheezy.
+
+ -- Michael Biebl <biebl@debian.org>  Tue, 30 Jun 2015 19:42:14 +0200
+
 mutter (3.16.2-2) unstable; urgency=medium
 
   * Upload to unstable.
