@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!DOCTYPE book PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "">
 <book xmlns="http://www.devhelp.net/book" title="Mutter Reference Manual" link="index.html" author="" name="meta" version="2" language="c">
   <chapters>
     <sub name="Overview" link="mutter-overview.html"/>
@@ -198,7 +197,6 @@
     <keyword type="struct" name="struct MetaStrut" link="MetaRectangle.html#MetaStrut"/>
     <keyword type="enum" name="enum MetaEdgeType" link="MetaRectangle.html#MetaEdgeType"/>
     <keyword type="struct" name="struct MetaEdge" link="MetaRectangle.html#MetaEdge"/>
-    <keyword type="" name="Containers" link="meta-MetaCompositor.html#id-1.4.10.5.9"/>
     <keyword type="function" name="meta_compositor_new ()" link="meta-MetaCompositor.html#meta-compositor-new"/>
     <keyword type="function" name="meta_compositor_destroy ()" link="meta-MetaCompositor.html#meta-compositor-destroy"/>
     <keyword type="function" name="meta_compositor_window_shape_changed ()" link="meta-MetaCompositor.html#meta-compositor-window-shape-changed"/>
