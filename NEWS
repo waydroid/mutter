@@ -1,31 +1,68 @@
-3.16.3
-======
-* Fix kill dialog not showing when first PING fails [Rui; #749076]
-* wayland: Reset idle time appropriately [Rui; #749711, #749994]
-* Fix crash when trying to focus a hidden window [Florian; #751715]
+3.17.90
+=======
+* Fix glitch with some fullscreen apps [Rui; #753020]
+* Fix screen update issue with NVidia driver [Aaron, Rui; #728464]
+* Only call frame callbacks for surfaces that get drawn [Adel; #739163]
+* Misc. bug fixes and cleanups [Jonas, Rui, Ting-Wei; #753222, #752753, #753237,
+  #753380, #744104, #744932]
 
 Contributors:
+  Jonas Ådahl, Adel Gadllah, Carlos Garnacho, Ting-Wei Lan, Rui Matos,
+  Florian Müllner, Aaron Plattner, Jasper St. Pierre
+
+Translations:
+  Akom Chotiphantawanon [th]
+
+3.17.4
+======
+* nested: Allow basic configuration of dummy outputs [Jonas; #747089]
+* Send wl_surface.enter and wl_surface.leave on output changes [Jonas; #744453]
+* Improve HiDPI handling on wayland [Jonas; #745655, #744934]
+* Implement compositor-side animated cursors [Carlos; #752342]
+* Misc. bug fixes [Peter, Marek, Carlos, Matthias, Rui; #750816, #751884,
+  #752248, #752551, #752552, #752673, #752674]
+
+Contributors:
+  Jonas Ådahl, Marek Chalupa, Matthias Clasen, Carlos Garnacho, Peter Hutterer,
+  Rui Matos, Florian Müllner, Jasper St. Pierre
+
+3.17.3
+======
+* Add X11/wayland clipboard interaction [Carlos; #738312]
+* Support VM monitor layout hints on wayland [Thomas; #750363]
+* Misc. bug fixes [Rui, Jonas, Olivier, Carlos, Ting-Wei, Peter, Florian;
+  #749994, #750256, #749716, #748705, #750552, #751036, #750007, #751136,
+  #750552, #751471, #751715, #750680]
+
+Contributors:
+  Jonas Ådahl, Dave Airlie, Cosimo Cecchi, Olivier Fourdan, Carlos Garnacho,
+  Thomas Hellstrom, Peter Hutterer, Ting-Wei Lan, Jasper Lievisse Adriaanse,
   Rui Matos, Florian Müllner, Jasper St. Pierre
 
 Translations:
-  Bernd Homuth [de]
+  Marek Černocký [cs], Christian Kirbach [de], Pedro Albuquerque [pt]
 
-3.16.2
+3.17.2
 ======
-* Fix scroll button setting [Ondrej; #747967]
-* Don't reset idle time for non-hardware events [Rui; #748541]
 * Honor default value for click method setting [Rui; #746290]
-* Misc. bug fixes [Rui; #748478]
+* Add X11/wayland clipboard interoperation [Carlos; #738312]
+* Misc. bug fixes [Rui; #749076, #749711]
 
 Contributors:
-  Carlos Garnacho, Ondrej Holy, Rui Matos
+  Carlos Garnacho, Rui Matos, Jasper St. Pierre
 
-3.16.1.1
-========
-* Prevent a crash when switching VTs or adding input devices [Carlos; #747886]
+3.17.1
+======
+* Add public method to get neighboring monitor [Florian; #633994]
+* Apply the right settings to the right input devices [Carlos; #747886]
+* Fix scroll button setting [Ondrej; #747967]
+* Add support for modal hint on wayland [Jonas; #745720]
+* Don't reset idle time for non-hardware events [Rui; #748541]
+* Misc. bug fixes [Ray, Rui; #748380, #748478]
 
 Contributors:
-  Carlos Garnacho
+  Jonas Ådahl, Carlos Garnacho, Ondrej Holy, Rui Matos, Florian Müllner,
+  Jasper St. Pierre, Ray Strode, Tomeu Vizoso
 
 3.16.1
 ======

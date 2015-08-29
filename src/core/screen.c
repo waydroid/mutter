@@ -40,7 +40,7 @@
 #include "keybindings-private.h"
 #include "stack.h"
 #include <meta/compositor.h>
-#include "mutter-enum-types.h"
+#include <meta/meta-enum-types.h>
 #include "core.h"
 #include "meta-cursor-tracker-private.h"
 
@@ -294,7 +294,7 @@ set_supported_hint (MetaScreen *screen)
   Atom atoms[] = {
 #define EWMH_ATOMS_ONLY
 #define item(x)  screen->display->atom_##x,
-#include <meta/atomnames.h>
+#include <x11/atomnames.h>
 #undef item
 #undef EWMH_ATOMS_ONLY
 
@@ -750,7 +750,7 @@ void
 meta_screen_init_workspaces (MetaScreen *screen)
 {
   MetaWorkspace *current_workspace;
-  gulong current_workspace_index = 0;
+  uint32_t current_workspace_index = 0;
   guint32 timestamp;
 
   g_return_if_fail (META_IS_SCREEN (screen));
@@ -1166,7 +1166,7 @@ update_num_workspaces (MetaScreen *screen,
   if (meta_prefs_get_dynamic_workspaces ())
     {
       int n_items;
-      gulong *list;
+      uint32_t *list;
 
       n_items = 0;
       list = NULL;
@@ -1265,9 +1265,6 @@ meta_screen_update_cursor (MetaScreen *screen)
   MetaCursorTracker *tracker = meta_cursor_tracker_get_for_screen (screen);
 
   cursor_ref = meta_cursor_reference_from_theme (cursor);
-  if (cursor_ref == NULL)
-    meta_fatal ("Could not find cursor. Perhaps set XCURSOR_PATH?");
-
   meta_cursor_tracker_set_root_cursor (tracker, cursor_ref);
   meta_cursor_reference_unref (cursor_ref);
 
@@ -1439,8 +1436,8 @@ meta_screen_get_monitor_for_rect (MetaScreen    *screen,
 }
 
 const MetaMonitorInfo*
-meta_screen_get_monitor_for_window (MetaScreen *screen,
-                                    MetaWindow *window)
+meta_screen_calculate_monitor_for_window (MetaScreen *screen,
+                                          MetaWindow *window)
 {
   MetaRectangle window_rect;
 
@@ -1488,6 +1485,16 @@ meta_screen_get_monitor_neighbor (MetaScreen         *screen,
     }
 
   return NULL;
+}
+
+int
+meta_screen_get_monitor_neighbor_index (MetaScreen         *screen,
+                                        int                 which_monitor,
+                                        MetaScreenDirection direction)
+{
+  const MetaMonitorInfo *monitor;
+  monitor = meta_screen_get_monitor_neighbor (screen, which_monitor, direction);
+  return monitor ? monitor->number : -1;
 }
 
 void
@@ -1745,7 +1752,7 @@ meta_screen_get_monitor_geometry (MetaScreen    *screen,
 void
 meta_screen_update_workspace_layout (MetaScreen *screen)
 {
-  gulong *list;
+  uint32_t *list;
   int n_items;
 
   if (screen->workspace_layout_overridden)
@@ -2378,11 +2385,11 @@ on_monitors_changed (MetaMonitorManager *manager,
                        &changes);
     }
 
-  /* Queue a resize on all the windows */
-  meta_screen_foreach_window (screen, META_LIST_DEFAULT, meta_screen_resize_func, 0);
-
   /* Fix up monitor for all windows on this screen */
   meta_screen_foreach_window (screen, META_LIST_INCLUDE_OVERRIDE_REDIRECT, (MetaScreenWindowFunc) meta_window_update_for_monitors_changed, 0);
+
+  /* Queue a resize on all the windows */
+  meta_screen_foreach_window (screen, META_LIST_DEFAULT, meta_screen_resize_func, 0);
 
   meta_screen_queue_check_fullscreen (screen);
 

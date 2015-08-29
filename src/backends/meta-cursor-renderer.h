@@ -30,20 +30,9 @@
 #include <meta/screen.h>
 #include "meta-cursor.h"
 
-#define META_TYPE_CURSOR_RENDERER            (meta_cursor_renderer_get_type ())
-#define META_CURSOR_RENDERER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), META_TYPE_CURSOR_RENDERER, MetaCursorRenderer))
-#define META_CURSOR_RENDERER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  META_TYPE_CURSOR_RENDERER, MetaCursorRendererClass))
-#define META_IS_CURSOR_RENDERER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), META_TYPE_CURSOR_RENDERER))
-#define META_IS_CURSOR_RENDERER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  META_TYPE_CURSOR_RENDERER))
-#define META_CURSOR_RENDERER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  META_TYPE_CURSOR_RENDERER, MetaCursorRendererClass))
-
-typedef struct _MetaCursorRenderer        MetaCursorRenderer;
-typedef struct _MetaCursorRendererClass   MetaCursorRendererClass;
-
-struct _MetaCursorRenderer
-{
-  GObject parent;
-};
+#define META_TYPE_CURSOR_RENDERER (meta_cursor_renderer_get_type ())
+G_DECLARE_DERIVABLE_TYPE (MetaCursorRenderer, meta_cursor_renderer,
+                          META, CURSOR_RENDERER, GObject);
 
 struct _MetaCursorRendererClass
 {
@@ -61,6 +50,7 @@ void meta_cursor_renderer_set_cursor (MetaCursorRenderer  *renderer,
 
 void meta_cursor_renderer_set_position (MetaCursorRenderer *renderer,
                                         int x, int y);
+void meta_cursor_renderer_force_update (MetaCursorRenderer *renderer);
 
 MetaCursorReference * meta_cursor_renderer_get_cursor (MetaCursorRenderer *renderer);
 const MetaRectangle * meta_cursor_renderer_get_rect (MetaCursorRenderer *renderer);

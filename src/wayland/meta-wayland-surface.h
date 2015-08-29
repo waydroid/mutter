@@ -62,7 +62,9 @@ typedef struct
   cairo_region_t *damage;
 
   cairo_region_t *input_region;
+  gboolean input_region_set;
   cairo_region_t *opaque_region;
+  gboolean opaque_region_set;
 
   /* wl_surface.frame */
   struct wl_list frame_callback_list;
@@ -70,6 +72,20 @@ typedef struct
   MetaRectangle new_geometry;
   gboolean has_new_geometry;
 } MetaWaylandPendingState;
+
+struct _MetaWaylandDragDestFuncs
+{
+  void (* focus_in)  (MetaWaylandDataDevice *data_device,
+                      MetaWaylandSurface    *surface,
+                      MetaWaylandDataOffer  *offer);
+  void (* focus_out) (MetaWaylandDataDevice *data_device,
+                      MetaWaylandSurface    *surface);
+  void (* motion)    (MetaWaylandDataDevice *data_device,
+                      MetaWaylandSurface    *surface,
+                      const ClutterEvent    *event);
+  void (* drop)      (MetaWaylandDataDevice *data_device,
+                      MetaWaylandSurface    *surface);
+};
 
 struct _MetaWaylandSurface
 {
@@ -86,6 +102,11 @@ struct _MetaWaylandSurface
   int scale;
   int32_t offset_x, offset_y;
   GList *subsurfaces;
+  GHashTable *outputs;
+
+  struct {
+    const MetaWaylandDragDestFuncs *funcs;
+  } dnd;
 
   /* All the pending state that wl_surface.commit will apply. */
   MetaWaylandPendingState pending;
@@ -101,6 +122,7 @@ struct _MetaWaylandSurface
   struct wl_resource *xdg_shell_resource;
   MetaWaylandSerial acked_configure_serial;
   gboolean has_set_geometry;
+  gboolean is_modal;
 
   /* xdg_popup */
   struct {
@@ -115,6 +137,9 @@ struct _MetaWaylandSurface
   struct {
     MetaWaylandSurface *parent;
     struct wl_listener parent_destroy_listener;
+
+    int x;
+    int y;
 
     /* When the surface is synchronous, its state will be applied
      * when the parent is committed. This is done by moving the
@@ -159,5 +184,17 @@ void                meta_wayland_surface_ping (MetaWaylandSurface *surface,
 void                meta_wayland_surface_delete (MetaWaylandSurface *surface);
 
 void                meta_wayland_surface_popup_done (MetaWaylandSurface *surface);
+
+/* Drag dest functions */
+void                meta_wayland_surface_drag_dest_focus_in  (MetaWaylandSurface   *surface,
+                                                              MetaWaylandDataOffer *offer);
+void                meta_wayland_surface_drag_dest_motion    (MetaWaylandSurface   *surface,
+                                                              const ClutterEvent   *event);
+void                meta_wayland_surface_drag_dest_focus_out (MetaWaylandSurface   *surface);
+void                meta_wayland_surface_drag_dest_drop      (MetaWaylandSurface   *surface);
+
+void                meta_wayland_surface_update_outputs (MetaWaylandSurface *surface);
+
+MetaWindow *        meta_wayland_surface_get_toplevel_window (MetaWaylandSurface *surface);
 
 #endif

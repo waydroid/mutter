@@ -94,6 +94,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @HAVE_WAYLAND_TRUE@am__append_1 = \
+@HAVE_WAYLAND_TRUE@	pointer-gestures-protocol.c		\
+@HAVE_WAYLAND_TRUE@	pointer-gestures-server-protocol.h	\
 @HAVE_WAYLAND_TRUE@	gtk-shell-protocol.c			\
 @HAVE_WAYLAND_TRUE@	gtk-shell-server-protocol.h		\
 @HAVE_WAYLAND_TRUE@	xdg-shell-protocol.c			\
@@ -108,6 +110,8 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-private.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-xwayland.c			\
 @HAVE_WAYLAND_TRUE@	wayland/meta-xwayland.h			\
+@HAVE_WAYLAND_TRUE@	wayland/meta-xwayland-selection.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-xwayland-selection-private.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-xwayland-private.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-buffer.c      	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-buffer.h      	\
@@ -115,6 +119,13 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-region.h      	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device.c      \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device.h      \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device-private.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gestures.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gestures.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gesture-swipe.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gesture-swipe.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gesture-pinch.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gesture-pinch.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-keyboard.c		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-keyboard.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer.c		\
@@ -131,8 +142,8 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-versions.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-outputs.c		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-outputs.h		\
-@HAVE_WAYLAND_TRUE@	wayland/window-wayland.c		\
-@HAVE_WAYLAND_TRUE@	wayland/window-wayland.h		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.c		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.h		\
 @HAVE_WAYLAND_TRUE@	$(NULL)
 
 @HAVE_NATIVE_BACKEND_TRUE@am__append_3 = \
@@ -156,8 +167,7 @@ host_triplet = @host@
 @HAVE_NATIVE_BACKEND_TRUE@	$(NULL)
 
 bin_PROGRAMS = mutter$(EXEEXT)
-noinst_PROGRAMS = $(am__EXEEXT_1) testboxes$(EXEEXT) \
-	testasyncgetprop$(EXEEXT)
+noinst_PROGRAMS = $(am__EXEEXT_1) testboxes$(EXEEXT)
 libexec_PROGRAMS = mutter-restart-helper$(EXEEXT)
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@installedtestsbin_PROGRAMS = mutter-test-client$(EXEEXT) \
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	mutter-test-runner$(EXEEXT)
@@ -165,11 +175,10 @@ libexec_PROGRAMS = mutter-restart-helper$(EXEEXT)
 @HAVE_WAYLAND_TRUE@am__append_5 = tests/mutter-all.test.in
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/gtk-doc.m4 \
-	$(top_srcdir)/m4/intltool.m4 $(top_srcdir)/m4/libtool.m4 \
-	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
-	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/intltool.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__dist_stacking_DATA_DIST) \
@@ -267,25 +276,25 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	compositor/meta-plugin.c compositor/meta-plugin-manager.c \
 	compositor/meta-plugin-manager.h \
 	compositor/meta-shadow-factory.c \
-	compositor/meta-shadow-factory-private.h \
 	compositor/meta-shaped-texture.c \
 	compositor/meta-shaped-texture-private.h \
 	compositor/meta-surface-actor.c \
 	compositor/meta-surface-actor.h \
 	compositor/meta-surface-actor-x11.c \
 	compositor/meta-surface-actor-x11.h \
+	compositor/meta-sync-ring.c compositor/meta-sync-ring.h \
 	compositor/meta-texture-rectangle.c \
 	compositor/meta-texture-rectangle.h \
 	compositor/meta-texture-tower.c \
 	compositor/meta-texture-tower.h compositor/meta-window-actor.c \
 	compositor/meta-window-actor-private.h \
 	compositor/meta-window-group.c compositor/meta-window-group.h \
-	compositor/meta-window-shape.c compositor/meta-window-shape.h \
-	compositor/region-utils.c compositor/region-utils.h \
-	meta/compositor.h meta/meta-background.h \
-	meta/meta-background-actor.h meta/meta-background-image.h \
-	meta/meta-background-group.h meta/meta-plugin.h \
-	meta/meta-shadow-factory.h meta/meta-window-actor.h \
+	compositor/meta-window-shape.c compositor/region-utils.c \
+	compositor/region-utils.h meta/compositor.h \
+	meta/meta-background.h meta/meta-background-actor.h \
+	meta/meta-background-image.h meta/meta-background-group.h \
+	meta/meta-plugin.h meta/meta-shadow-factory.h \
+	meta/meta-window-actor.h meta/meta-window-shape.h \
 	meta/compositor-mutter.h core/constraints.c core/constraints.h \
 	core/core.c core/delete.c core/display.c \
 	core/display-private.h meta/display.h core/edge-resistance.c \
@@ -302,10 +311,9 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	meta/window.h core/workspace.c core/workspace-private.h \
 	meta/common.h core/core.h ui/ui.h ui/frames.c ui/frames.h \
 	ui/theme.c meta/theme.h ui/theme-private.h ui/ui.c \
-	x11/iconcache.c x11/iconcache.h x11/async-getprop.c \
-	x11/async-getprop.h x11/events.c x11/events.h \
-	x11/group-private.h x11/group-props.c x11/group-props.h \
-	x11/group.c meta/group.h x11/session.c x11/session.h \
+	x11/atomnames.h x11/events.c x11/events.h x11/group-private.h \
+	x11/group-props.c x11/group-props.h x11/group.c meta/group.h \
+	x11/iconcache.c x11/iconcache.h x11/session.c x11/session.h \
 	x11/window-props.c x11/window-props.h x11/window-x11.c \
 	x11/window-x11.h x11/window-x11-private.h x11/xprops.c \
 	x11/xprops.h x11/mutter-Xatomtype.h \
@@ -313,11 +321,20 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	compositor/meta-surface-actor-wayland.h wayland/meta-wayland.c \
 	wayland/meta-wayland.h wayland/meta-wayland-private.h \
 	wayland/meta-xwayland.c wayland/meta-xwayland.h \
+	wayland/meta-xwayland-selection.c \
+	wayland/meta-xwayland-selection-private.h \
 	wayland/meta-xwayland-private.h wayland/meta-wayland-buffer.c \
 	wayland/meta-wayland-buffer.h wayland/meta-wayland-region.c \
 	wayland/meta-wayland-region.h \
 	wayland/meta-wayland-data-device.c \
 	wayland/meta-wayland-data-device.h \
+	wayland/meta-wayland-data-device-private.h \
+	wayland/meta-wayland-pointer-gestures.c \
+	wayland/meta-wayland-pointer-gestures.h \
+	wayland/meta-wayland-pointer-gesture-swipe.c \
+	wayland/meta-wayland-pointer-gesture-swipe.h \
+	wayland/meta-wayland-pointer-gesture-pinch.c \
+	wayland/meta-wayland-pointer-gesture-pinch.h \
 	wayland/meta-wayland-keyboard.c \
 	wayland/meta-wayland-keyboard.h wayland/meta-wayland-pointer.c \
 	wayland/meta-wayland-pointer.h wayland/meta-wayland-popup.c \
@@ -326,8 +343,9 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	wayland/meta-wayland-touch.h wayland/meta-wayland-surface.c \
 	wayland/meta-wayland-surface.h wayland/meta-wayland-types.h \
 	wayland/meta-wayland-versions.h wayland/meta-wayland-outputs.c \
-	wayland/meta-wayland-outputs.h wayland/window-wayland.c \
-	wayland/window-wayland.h backends/native/meta-backend-native.c \
+	wayland/meta-wayland-outputs.h wayland/meta-window-wayland.c \
+	wayland/meta-window-wayland.h \
+	backends/native/meta-backend-native.c \
 	backends/native/meta-backend-native.h \
 	backends/native/meta-backend-native-private.h \
 	backends/native/meta-barrier-native.c \
@@ -349,9 +367,13 @@ am__objects_1 =
 @HAVE_WAYLAND_TRUE@	compositor/meta-surface-actor-wayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-xwayland.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-xwayland-selection.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-buffer.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-region.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gestures.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gesture-swipe.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gesture-pinch.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-keyboard.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-popup.lo \
@@ -359,7 +381,8 @@ am__objects_1 =
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-touch.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-outputs.lo \
-@HAVE_WAYLAND_TRUE@	wayland/window-wayland.lo $(am__objects_1)
+@HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.lo \
+@HAVE_WAYLAND_TRUE@	$(am__objects_1)
 @HAVE_NATIVE_BACKEND_TRUE@am__objects_3 = backends/native/meta-backend-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-barrier-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.lo \
@@ -397,6 +420,7 @@ am_libmutter_la_OBJECTS = backends/meta-backend.lo \
 	compositor/meta-shaped-texture.lo \
 	compositor/meta-surface-actor.lo \
 	compositor/meta-surface-actor-x11.lo \
+	compositor/meta-sync-ring.lo \
 	compositor/meta-texture-rectangle.lo \
 	compositor/meta-texture-tower.lo \
 	compositor/meta-window-actor.lo \
@@ -409,17 +433,18 @@ am_libmutter_la_OBJECTS = backends/meta-backend.lo \
 	core/screen.lo core/restart.lo core/stack.lo \
 	core/stack-tracker.lo core/util.lo core/window.lo \
 	core/workspace.lo ui/frames.lo ui/theme.lo ui/ui.lo \
-	x11/iconcache.lo x11/async-getprop.lo x11/events.lo \
-	x11/group-props.lo x11/group.lo x11/session.lo \
-	x11/window-props.lo x11/window-x11.lo x11/xprops.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3)
+	x11/events.lo x11/group-props.lo x11/group.lo x11/iconcache.lo \
+	x11/session.lo x11/window-props.lo x11/window-x11.lo \
+	x11/xprops.lo $(am__objects_1) $(am__objects_2) \
+	$(am__objects_3)
 am__objects_4 = meta-dbus-idle-monitor.lo
 am__objects_5 = meta-dbus-display-config.lo
 am__objects_6 = meta-dbus-login1.lo
-@HAVE_WAYLAND_TRUE@am__objects_7 = gtk-shell-protocol.lo \
-@HAVE_WAYLAND_TRUE@	xdg-shell-protocol.lo $(am__objects_1)
+@HAVE_WAYLAND_TRUE@am__objects_7 = pointer-gestures-protocol.lo \
+@HAVE_WAYLAND_TRUE@	gtk-shell-protocol.lo xdg-shell-protocol.lo \
+@HAVE_WAYLAND_TRUE@	$(am__objects_1)
 am__objects_8 = $(am__objects_4) $(am__objects_5) $(am__objects_6) \
-	mutter-enum-types.lo $(am__objects_1) $(am__objects_7)
+	meta-enum-types.lo $(am__objects_1) $(am__objects_7)
 nodist_libmutter_la_OBJECTS = $(am__objects_8)
 libmutter_la_OBJECTS = $(am_libmutter_la_OBJECTS) \
 	$(nodist_libmutter_la_OBJECTS)
@@ -452,9 +477,6 @@ am__mutter_test_runner_SOURCES_DIST = tests/test-runner.c
 mutter_test_runner_OBJECTS = $(am_mutter_test_runner_OBJECTS)
 @HAVE_WAYLAND_TRUE@mutter_test_runner_DEPENDENCIES =  \
 @HAVE_WAYLAND_TRUE@	$(am__DEPENDENCIES_1) libmutter.la
-am_testasyncgetprop_OBJECTS = x11/testasyncgetprop.$(OBJEXT)
-testasyncgetprop_OBJECTS = $(am_testasyncgetprop_OBJECTS)
-testasyncgetprop_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
 am_testboxes_OBJECTS = core/testboxes.$(OBJEXT)
 testboxes_OBJECTS = $(am_testboxes_OBJECTS)
 testboxes_DEPENDENCIES = $(am__DEPENDENCIES_1) libmutter.la
@@ -495,12 +517,11 @@ am__v_CCLD_1 =
 SOURCES = $(libmutter_la_SOURCES) $(nodist_libmutter_la_SOURCES) \
 	$(mutter_SOURCES) $(mutter_restart_helper_SOURCES) \
 	$(mutter_test_client_SOURCES) $(mutter_test_runner_SOURCES) \
-	$(testasyncgetprop_SOURCES) $(testboxes_SOURCES)
+	$(testboxes_SOURCES)
 DIST_SOURCES = $(am__libmutter_la_SOURCES_DIST) $(mutter_SOURCES) \
 	$(mutter_restart_helper_SOURCES) \
 	$(am__mutter_test_client_SOURCES_DIST) \
-	$(am__mutter_test_runner_SOURCES_DIST) \
-	$(testasyncgetprop_SOURCES) $(testboxes_SOURCES)
+	$(am__mutter_test_runner_SOURCES_DIST) $(testboxes_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -621,13 +642,6 @@ GNOME_KEYBINDINGS_KEYSDIR = @GNOME_KEYBINDINGS_KEYSDIR@
 GOBJECT_QUERY = @GOBJECT_QUERY@
 GREP = @GREP@
 GSETTINGS_DISABLE_SCHEMAS_COMPILE = @GSETTINGS_DISABLE_SCHEMAS_COMPILE@
-GTKDOC_CHECK = @GTKDOC_CHECK@
-GTKDOC_CHECK_PATH = @GTKDOC_CHECK_PATH@
-GTKDOC_DEPS_CFLAGS = @GTKDOC_DEPS_CFLAGS@
-GTKDOC_DEPS_LIBS = @GTKDOC_DEPS_LIBS@
-GTKDOC_MKPDF = @GTKDOC_MKPDF@
-GTKDOC_REBASE = @GTKDOC_REBASE@
-HTML_DIR = @HTML_DIR@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -657,6 +671,7 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
@@ -766,7 +781,7 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libmutter.la
 SUBDIRS = compositor/plugins
 EXTRA_DIST = $(am__append_5) $(wayland_protocols) libmutter.pc.in \
-	mutter-enum-types.h.in mutter-enum-types.c.in \
+	meta-enum-types.h.in meta-enum-types.c.in \
 	org.freedesktop.login1.xml org.gnome.Mutter.DisplayConfig.xml \
 	org.gnome.Mutter.IdleMonitor.xml $(NULL)
 NULL = 
@@ -799,9 +814,10 @@ AM_CPPFLAGS = \
 
 mutter_built_sources = $(dbus_idle_built_sources) \
 	$(dbus_display_config_built_sources) \
-	$(dbus_login1_built_sources) mutter-enum-types.h \
-	mutter-enum-types.c $(NULL) $(am__append_1)
+	$(dbus_login1_built_sources) meta/meta-enum-types.h \
+	meta-enum-types.c $(NULL) $(am__append_1)
 wayland_protocols = \
+	wayland/protocol/pointer-gestures.xml	\
 	wayland/protocol/gtk-shell.xml		\
 	wayland/protocol/xdg-shell.xml		\
 	$(NULL)
@@ -858,25 +874,25 @@ libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	compositor/meta-plugin.c compositor/meta-plugin-manager.c \
 	compositor/meta-plugin-manager.h \
 	compositor/meta-shadow-factory.c \
-	compositor/meta-shadow-factory-private.h \
 	compositor/meta-shaped-texture.c \
 	compositor/meta-shaped-texture-private.h \
 	compositor/meta-surface-actor.c \
 	compositor/meta-surface-actor.h \
 	compositor/meta-surface-actor-x11.c \
 	compositor/meta-surface-actor-x11.h \
+	compositor/meta-sync-ring.c compositor/meta-sync-ring.h \
 	compositor/meta-texture-rectangle.c \
 	compositor/meta-texture-rectangle.h \
 	compositor/meta-texture-tower.c \
 	compositor/meta-texture-tower.h compositor/meta-window-actor.c \
 	compositor/meta-window-actor-private.h \
 	compositor/meta-window-group.c compositor/meta-window-group.h \
-	compositor/meta-window-shape.c compositor/meta-window-shape.h \
-	compositor/region-utils.c compositor/region-utils.h \
-	meta/compositor.h meta/meta-background.h \
-	meta/meta-background-actor.h meta/meta-background-image.h \
-	meta/meta-background-group.h meta/meta-plugin.h \
-	meta/meta-shadow-factory.h meta/meta-window-actor.h \
+	compositor/meta-window-shape.c compositor/region-utils.c \
+	compositor/region-utils.h meta/compositor.h \
+	meta/meta-background.h meta/meta-background-actor.h \
+	meta/meta-background-image.h meta/meta-background-group.h \
+	meta/meta-plugin.h meta/meta-shadow-factory.h \
+	meta/meta-window-actor.h meta/meta-window-shape.h \
 	meta/compositor-mutter.h core/constraints.c core/constraints.h \
 	core/core.c core/delete.c core/display.c \
 	core/display-private.h meta/display.h core/edge-resistance.c \
@@ -893,10 +909,9 @@ libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	meta/window.h core/workspace.c core/workspace-private.h \
 	meta/common.h core/core.h ui/ui.h ui/frames.c ui/frames.h \
 	ui/theme.c meta/theme.h ui/theme-private.h ui/ui.c \
-	x11/iconcache.c x11/iconcache.h x11/async-getprop.c \
-	x11/async-getprop.h x11/events.c x11/events.h \
-	x11/group-private.h x11/group-props.c x11/group-props.h \
-	x11/group.c meta/group.h x11/session.c x11/session.h \
+	x11/atomnames.h x11/events.c x11/events.h x11/group-private.h \
+	x11/group-props.c x11/group-props.h x11/group.c meta/group.h \
+	x11/iconcache.c x11/iconcache.h x11/session.c x11/session.h \
 	x11/window-props.c x11/window-props.h x11/window-x11.c \
 	x11/window-x11.h x11/window-x11-private.h x11/xprops.c \
 	x11/xprops.h x11/mutter-Xatomtype.h $(NULL) $(am__append_2) \
@@ -930,6 +945,7 @@ libmutterinclude_headers = \
 	meta/meta-shaped-texture.h		\
 	meta/meta-shadow-factory.h		\
 	meta/meta-window-actor.h		\
+	meta/meta-window-shape.h		\
 	meta/prefs.h				\
 	meta/screen.h				\
 	meta/theme.h				\
@@ -940,22 +956,17 @@ libmutterinclude_headers = \
 	$(NULL)
 
 libmutterinclude_built_headers = \
-	meta/meta-version.h
+	meta/meta-version.h			\
+	meta/meta-enum-types.h			\
+	$(NULL)
 
 libmutterinclude_base_headers = \
 	$(libmutterinclude_headers)		\
 	$(libmutterinclude_built_headers)
 
-
-# Excluded from scanning for introspection but installed
-# atomnames.h: macros cause problems for scanning process
-libmutterinclude_extra_headers = \
-	meta/atomnames.h
-
 libmutterincludedir = $(includedir)/mutter/meta
 libmutterinclude_HEADERS = \
-	$(libmutterinclude_headers)		\
-	$(libmutterinclude_extra_headers)
+	$(libmutterinclude_headers)
 
 nodist_libmutterinclude_HEADERS = \
 	$(libmutterinclude_built_headers)
@@ -982,9 +993,7 @@ mutter_restart_helper_LDADD = $(MUTTER_LIBS)
 
 # Some random test programs for bits of the code
 testboxes_SOURCES = core/testboxes.c
-testasyncgetprop_SOURCES = x11/testasyncgetprop.c
 testboxes_LDADD = $(MUTTER_LIBS) libmutter.la
-testasyncgetprop_LDADD = $(MUTTER_LIBS) libmutter.la
 
 # Since we don't make any guarantees about stability and we don't support
 # parallel install, there's no real reason to change directories, filenames,
@@ -1005,7 +1014,6 @@ testasyncgetprop_LDADD = $(MUTTER_LIBS) libmutter.la
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_CFLAGS = $(AM_CPPFLAGS)
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_LIBS = libmutter.la
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_FILES = \
-@HAVE_INTROSPECTION_TRUE@	mutter-enum-types.h			\
 @HAVE_INTROSPECTION_TRUE@	$(libmutterinclude_base_headers)	\
 @HAVE_INTROSPECTION_TRUE@	$(filter %.c,$(libmutter_la_SOURCES) $(nodist_libmutter_la_SOURCES))
 
@@ -1022,7 +1030,7 @@ BUILT_SOURCES = \
 	$(mutter_built_sources)			\
 	$(libmutterinclude_built_headers)
 
-MUTTER_STAMP_FILES = stamp-mutter-enum-types.h
+MUTTER_STAMP_FILES = stamp-meta-enum-types.h
 dbus_display_config_built_sources = meta-dbus-display-config.c meta-dbus-display-config.h
 dbus_login1_built_sources = meta-dbus-login1.c meta-dbus-login1.h
 all: $(BUILT_SOURCES)
@@ -1199,6 +1207,8 @@ compositor/meta-surface-actor.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
 compositor/meta-surface-actor-x11.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
+compositor/meta-sync-ring.lo: compositor/$(am__dirstamp) \
+	compositor/$(DEPDIR)/$(am__dirstamp)
 compositor/meta-texture-rectangle.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
 compositor/meta-texture-tower.lo: compositor/$(am__dirstamp) \
@@ -1251,12 +1261,10 @@ x11/$(am__dirstamp):
 x11/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) x11/$(DEPDIR)
 	@: > x11/$(DEPDIR)/$(am__dirstamp)
-x11/iconcache.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
-x11/async-getprop.lo: x11/$(am__dirstamp) \
-	x11/$(DEPDIR)/$(am__dirstamp)
 x11/events.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
 x11/group-props.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
 x11/group.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
+x11/iconcache.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
 x11/session.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
 x11/window-props.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
 x11/window-x11.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
@@ -1273,12 +1281,20 @@ wayland/meta-wayland.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-xwayland.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-xwayland-selection.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-buffer.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-region.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-data-device.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-pointer-gestures.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-pointer-gesture-swipe.lo:  \
+	wayland/$(am__dirstamp) wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-pointer-gesture-pinch.lo:  \
+	wayland/$(am__dirstamp) wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-keyboard.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-pointer.lo: wayland/$(am__dirstamp) \
@@ -1293,7 +1309,7 @@ wayland/meta-wayland-surface.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-outputs.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
-wayland/window-wayland.lo: wayland/$(am__dirstamp) \
+wayland/meta-window-wayland.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 backends/native/$(am__dirstamp):
 	@$(MKDIR_P) backends/native
@@ -1512,12 +1528,6 @@ tests/test-runner.$(OBJEXT): tests/$(am__dirstamp) \
 mutter-test-runner$(EXEEXT): $(mutter_test_runner_OBJECTS) $(mutter_test_runner_DEPENDENCIES) $(EXTRA_mutter_test_runner_DEPENDENCIES) 
 	@rm -f mutter-test-runner$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mutter_test_runner_OBJECTS) $(mutter_test_runner_LDADD) $(LIBS)
-x11/testasyncgetprop.$(OBJEXT): x11/$(am__dirstamp) \
-	x11/$(DEPDIR)/$(am__dirstamp)
-
-testasyncgetprop$(EXEEXT): $(testasyncgetprop_OBJECTS) $(testasyncgetprop_DEPENDENCIES) $(EXTRA_testasyncgetprop_DEPENDENCIES) 
-	@rm -f testasyncgetprop$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(testasyncgetprop_OBJECTS) $(testasyncgetprop_LDADD) $(LIBS)
 core/testboxes.$(OBJEXT): core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
 
@@ -1552,7 +1562,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-display-config.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-idle-monitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-login1.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutter-enum-types.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-enum-types.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pointer-gestures-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-shell-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/edid-parse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-backend.Plo@am__quote@
@@ -1599,6 +1610,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-surface-actor-wayland.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-surface-actor-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-surface-actor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-sync-ring.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-texture-rectangle.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-texture-tower.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/meta-window-actor.Plo@am__quote@
@@ -1640,6 +1652,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-data-device.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-keyboard.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-outputs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-pointer-gesture-pinch.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-pointer-gesture-swipe.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-pointer-gestures.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-pointer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-popup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-region.Plo@am__quote@
@@ -1647,15 +1662,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-surface.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-touch.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-window-wayland.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-xwayland-selection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-xwayland.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/window-wayland.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/async-getprop.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/events.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/group-props.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/group.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/iconcache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/session.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/testasyncgetprop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/window-props.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/window-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/xprops.Plo@am__quote@
@@ -2194,23 +2208,23 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_stackingDATA \
 
 @HAVE_INTROSPECTION_TRUE@Meta-$(api_version).gir: libmutter.la
 
-mutter-enum-types.h: stamp-mutter-enum-types.h Makefile
+meta/meta-enum-types.h: stamp-meta-enum-types.h Makefile
 	@true
-stamp-mutter-enum-types.h: $(libmutterinclude_base_headers) mutter-enum-types.h.in
+stamp-meta-enum-types.h: $(libmutterinclude_headers) meta-enum-types.h.in
 	$(AM_V_GEN) ( cd $(srcdir) && \
 	  $(GLIB_MKENUMS) \
-	    --template mutter-enum-types.h.in \
+	    --template meta-enum-types.h.in \
 	  $(libmutterinclude_base_headers) ) >> xgen-teth && \
-	(cmp -s xgen-teth mutter-enum-types.h || cp xgen-teth mutter-enum-types.h) && \
+	(cmp -s xgen-teth meta/meta-enum-types.h || cp xgen-teth meta/meta-enum-types.h) && \
 	rm -f xgen-teth && \
 	echo timestamp > $(@F)
 
-mutter-enum-types.c: stamp-mutter-enum-types.h mutter-enum-types.c.in
+meta-enum-types.c: stamp-meta-enum-types.h meta-enum-types.c.in
 	  $(AM_V_GEN) ( cd $(srcdir) && \
 	  $(GLIB_MKENUMS) \
-	    --template mutter-enum-types.c.in \
+	    --template meta-enum-types.c.in \
 	  $(libmutterinclude_base_headers) ) >> xgen-tetc && \
-	cp xgen-tetc mutter-enum-types.c && \
+	cp xgen-tetc meta-enum-types.c && \
 	rm -f xgen-tetc
 
 $(dbus_display_config_built_sources) : Makefile.am org.gnome.Mutter.DisplayConfig.xml
