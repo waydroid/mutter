@@ -228,7 +228,7 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	meta/meta-backend.h backends/meta-backend-private.h \
 	backends/meta-barrier.c backends/meta-barrier-private.h \
 	backends/meta-cursor.c backends/meta-cursor.h \
-	backends/meta-cursor-private.h backends/meta-cursor-tracker.c \
+	backends/meta-cursor-tracker.c \
 	backends/meta-cursor-tracker-private.h \
 	backends/meta-cursor-renderer.c \
 	backends/meta-cursor-renderer.h \
@@ -251,6 +251,8 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	backends/x11/meta-barrier-x11.h \
 	backends/x11/meta-cursor-renderer-x11.c \
 	backends/x11/meta-cursor-renderer-x11.h \
+	backends/x11/nested/meta-cursor-renderer-x11-nested.c \
+	backends/x11/nested/meta-cursor-renderer-x11-nested.h \
 	backends/x11/meta-idle-monitor-xsync.c \
 	backends/x11/meta-idle-monitor-xsync.h \
 	backends/x11/meta-input-settings-x11.c \
@@ -404,6 +406,7 @@ am_libmutter_la_OBJECTS = backends/meta-backend.lo \
 	backends/edid-parse.lo backends/x11/meta-backend-x11.lo \
 	backends/x11/meta-barrier-x11.lo \
 	backends/x11/meta-cursor-renderer-x11.lo \
+	backends/x11/nested/meta-cursor-renderer-x11-nested.lo \
 	backends/x11/meta-idle-monitor-xsync.lo \
 	backends/x11/meta-input-settings-x11.lo \
 	backends/x11/meta-monitor-manager-xrandr.lo \
@@ -825,8 +828,7 @@ wayland_protocols = \
 libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	backends/meta-backend-private.h backends/meta-barrier.c \
 	backends/meta-barrier-private.h backends/meta-cursor.c \
-	backends/meta-cursor.h backends/meta-cursor-private.h \
-	backends/meta-cursor-tracker.c \
+	backends/meta-cursor.h backends/meta-cursor-tracker.c \
 	backends/meta-cursor-tracker-private.h \
 	backends/meta-cursor-renderer.c \
 	backends/meta-cursor-renderer.h \
@@ -849,6 +851,8 @@ libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	backends/x11/meta-barrier-x11.h \
 	backends/x11/meta-cursor-renderer-x11.c \
 	backends/x11/meta-cursor-renderer-x11.h \
+	backends/x11/nested/meta-cursor-renderer-x11-nested.c \
+	backends/x11/nested/meta-cursor-renderer-x11-nested.h \
 	backends/x11/meta-idle-monitor-xsync.c \
 	backends/x11/meta-idle-monitor-xsync.h \
 	backends/x11/meta-input-settings-x11.c \
@@ -1150,6 +1154,15 @@ backends/x11/meta-barrier-x11.lo: backends/x11/$(am__dirstamp) \
 backends/x11/meta-cursor-renderer-x11.lo:  \
 	backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/nested/$(am__dirstamp):
+	@$(MKDIR_P) backends/x11/nested
+	@: > backends/x11/nested/$(am__dirstamp)
+backends/x11/nested/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) backends/x11/nested/$(DEPDIR)
+	@: > backends/x11/nested/$(DEPDIR)/$(am__dirstamp)
+backends/x11/nested/meta-cursor-renderer-x11-nested.lo:  \
+	backends/x11/nested/$(am__dirstamp) \
+	backends/x11/nested/$(DEPDIR)/$(am__dirstamp)
 backends/x11/meta-idle-monitor-xsync.lo: backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
 backends/x11/meta-input-settings-x11.lo: backends/x11/$(am__dirstamp) \
@@ -1543,6 +1556,8 @@ mostlyclean-compile:
 	-rm -f backends/native/*.lo
 	-rm -f backends/x11/*.$(OBJEXT)
 	-rm -f backends/x11/*.lo
+	-rm -f backends/x11/nested/*.$(OBJEXT)
+	-rm -f backends/x11/nested/*.lo
 	-rm -f compositor/*.$(OBJEXT)
 	-rm -f compositor/*.lo
 	-rm -f core/*.$(OBJEXT)
@@ -1592,6 +1607,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-idle-monitor-xsync.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-input-settings-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-monitor-manager-xrandr.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/nested/$(DEPDIR)/meta-cursor-renderer-x11-nested.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/clutter-utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/cogl-utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/compositor.Plo@am__quote@
@@ -1706,6 +1722,7 @@ clean-libtool:
 	-rm -rf backends/.libs backends/_libs
 	-rm -rf backends/native/.libs backends/native/_libs
 	-rm -rf backends/x11/.libs backends/x11/_libs
+	-rm -rf backends/x11/nested/.libs backends/x11/nested/_libs
 	-rm -rf compositor/.libs compositor/_libs
 	-rm -rf core/.libs core/_libs
 	-rm -rf ui/.libs ui/_libs
@@ -2058,6 +2075,8 @@ distclean-generic:
 	-rm -f backends/native/$(am__dirstamp)
 	-rm -f backends/x11/$(DEPDIR)/$(am__dirstamp)
 	-rm -f backends/x11/$(am__dirstamp)
+	-rm -f backends/x11/nested/$(DEPDIR)/$(am__dirstamp)
+	-rm -f backends/x11/nested/$(am__dirstamp)
 	-rm -f compositor/$(DEPDIR)/$(am__dirstamp)
 	-rm -f compositor/$(am__dirstamp)
 	-rm -f core/$(DEPDIR)/$(am__dirstamp)
@@ -2084,7 +2103,7 @@ clean-am: clean-binPROGRAMS clean-generic \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) tests/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) backends/x11/nested/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) tests/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -2135,7 +2154,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) tests/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) backends/$(DEPDIR) backends/native/$(DEPDIR) backends/x11/$(DEPDIR) backends/x11/nested/$(DEPDIR) compositor/$(DEPDIR) core/$(DEPDIR) tests/$(DEPDIR) ui/$(DEPDIR) wayland/$(DEPDIR) x11/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
