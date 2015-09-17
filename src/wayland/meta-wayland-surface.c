@@ -55,6 +55,11 @@
 #include "meta-surface-actor-wayland.h"
 #include "meta-xwayland-private.h"
 
+typedef struct _MetaWaylandSurfaceRolePrivate
+{
+  MetaWaylandSurface *surface;
+} MetaWaylandSurfaceRolePrivate;
+
 typedef enum
 {
   META_WAYLAND_SUBSURFACE_PLACEMENT_ABOVE,
@@ -68,24 +73,100 @@ typedef struct
   struct wl_listener sibling_destroy_listener;
 } MetaWaylandSubsurfacePlacementOp;
 
-int
-meta_wayland_surface_set_role (MetaWaylandSurface    *surface,
-                               MetaWaylandSurfaceRole role,
-                               struct wl_resource    *error_resource,
-                               uint32_t               error_code)
+GType meta_wayland_surface_get_type (void) G_GNUC_CONST;
+
+G_DEFINE_TYPE (MetaWaylandSurface, meta_wayland_surface, G_TYPE_OBJECT);
+
+GType meta_wayland_surface_role_get_type (void) G_GNUC_CONST;
+G_DEFINE_TYPE_WITH_PRIVATE (MetaWaylandSurfaceRole,
+                            meta_wayland_surface_role,
+                            G_TYPE_OBJECT);
+
+struct _MetaWaylandSurfaceRoleSubsurface
 {
-  if (surface->role == META_WAYLAND_SURFACE_ROLE_NONE ||
-      surface->role == role)
+  MetaWaylandSurfaceRole parent;
+};
+
+GType meta_wayland_surface_role_subsurface_get_type (void) G_GNUC_CONST;
+G_DEFINE_TYPE (MetaWaylandSurfaceRoleSubsurface,
+               meta_wayland_surface_role_subsurface,
+               META_TYPE_WAYLAND_SURFACE_ROLE);
+
+struct _MetaWaylandSurfaceRoleXdgSurface
+{
+  MetaWaylandSurfaceRole parent;
+};
+
+GType meta_wayland_surface_role_xdg_surface_get_type (void) G_GNUC_CONST;
+G_DEFINE_TYPE (MetaWaylandSurfaceRoleXdgSurface,
+               meta_wayland_surface_role_xdg_surface,
+               META_TYPE_WAYLAND_SURFACE_ROLE);
+
+struct _MetaWaylandSurfaceRoleXdgPopup
+{
+  MetaWaylandSurfaceRole parent;
+};
+
+GType meta_wayland_surface_role_xdg_popup_get_type (void) G_GNUC_CONST;
+G_DEFINE_TYPE (MetaWaylandSurfaceRoleXdgPopup,
+               meta_wayland_surface_role_xdg_popup,
+               META_TYPE_WAYLAND_SURFACE_ROLE);
+
+struct _MetaWaylandSurfaceRoleWlShellSurface
+{
+  MetaWaylandSurfaceRole parent;
+};
+
+GType meta_wayland_surface_role_wl_shell_surface_get_type (void) G_GNUC_CONST;
+G_DEFINE_TYPE (MetaWaylandSurfaceRoleWlShellSurface,
+               meta_wayland_surface_role_wl_shell_surface,
+               META_TYPE_WAYLAND_SURFACE_ROLE);
+
+struct _MetaWaylandSurfaceRoleDND
+{
+  MetaWaylandSurfaceRole parent;
+};
+
+GType meta_wayland_surface_role_dnd_get_type (void) G_GNUC_CONST;
+G_DEFINE_TYPE (MetaWaylandSurfaceRoleDND,
+               meta_wayland_surface_role_dnd,
+               META_TYPE_WAYLAND_SURFACE_ROLE);
+
+static void
+meta_wayland_surface_role_assigned (MetaWaylandSurfaceRole *surface_role);
+
+static void
+meta_wayland_surface_role_commit (MetaWaylandSurfaceRole  *surface_role,
+                                  MetaWaylandPendingState *pending);
+
+static gboolean
+meta_wayland_surface_role_is_on_output (MetaWaylandSurfaceRole *surface_role,
+                                        MetaMonitorInfo *info);
+
+gboolean
+meta_wayland_surface_assign_role (MetaWaylandSurface *surface,
+                                  GType               role_type)
+{
+  if (!surface->role)
     {
-      surface->role = role;
-      return 0;
+      MetaWaylandSurfaceRolePrivate *role_priv;
+
+      surface->role = g_object_new (role_type, NULL);
+      role_priv =
+        meta_wayland_surface_role_get_instance_private (surface->role);
+      role_priv->surface = surface;
+
+      meta_wayland_surface_role_assigned (surface->role);
+
+      return TRUE;
+    }
+  else if (G_OBJECT_TYPE (surface->role) != role_type)
+    {
+      return FALSE;
     }
   else
     {
-      wl_resource_post_error (error_resource, error_code,
-                              "wl_surface@%d already has a different role",
-                              wl_resource_get_id (surface->resource));
-      return -1;
+      return TRUE;
     }
 }
 
@@ -167,18 +248,24 @@ surface_process_damage (MetaWaylandSurface *surface,
   cairo_region_destroy (scaled_region);
 }
 
-static void
-cursor_surface_commit (MetaWaylandSurface      *surface,
-                       MetaWaylandPendingState *pending)
+void
+meta_wayland_surface_queue_pending_state_frame_callbacks (MetaWaylandSurface      *surface,
+                                                          MetaWaylandPendingState *pending)
 {
-  if (pending->newly_attached)
-    meta_wayland_seat_update_cursor_surface (surface->compositor->seat);
+  wl_list_insert_list (&surface->compositor->frame_callbacks,
+                       &pending->frame_callback_list);
+  wl_list_init (&pending->frame_callback_list);
 }
 
 static void
-dnd_surface_commit (MetaWaylandSurface      *surface,
+dnd_surface_commit (MetaWaylandSurfaceRole  *surface_role,
                     MetaWaylandPendingState *pending)
 {
+  MetaWaylandSurface *surface =
+    meta_wayland_surface_role_get_surface (surface_role);
+
+  meta_wayland_surface_queue_pending_state_frame_callbacks (surface, pending);
+
   meta_wayland_data_device_update_dnd_surface (&surface->compositor->seat->data_device);
 }
 
@@ -235,12 +322,28 @@ destroy_window (MetaWaylandSurface *surface)
 }
 
 static void
-toplevel_surface_commit (MetaWaylandSurface      *surface,
+queue_surface_actor_frame_callbacks (MetaWaylandSurface      *surface,
+                                     MetaWaylandPendingState *pending)
+{
+  MetaSurfaceActorWayland *surface_actor =
+    META_SURFACE_ACTOR_WAYLAND (surface->surface_actor);
+
+  meta_surface_actor_wayland_add_frame_callbacks (surface_actor,
+                                                  &pending->frame_callback_list);
+  wl_list_init (&pending->frame_callback_list);
+}
+
+static void
+toplevel_surface_commit (MetaWaylandSurfaceRole  *surface_role,
                          MetaWaylandPendingState *pending)
 {
+  MetaWaylandSurface *surface =
+    meta_wayland_surface_role_get_surface (surface_role);
   MetaWindow *window = surface->window;
 
-  if (surface->role == META_WAYLAND_SURFACE_ROLE_WL_SHELL_SURFACE)
+  queue_surface_actor_frame_callbacks (surface, pending);
+
+  if (META_IS_WAYLAND_SURFACE_ROLE_WL_SHELL_SURFACE (surface->role))
     {
       /* For wl_shell, it's equivalent to an unmap. Semantics
        * are poorly defined, so we can choose some that are
@@ -256,7 +359,7 @@ toplevel_surface_commit (MetaWaylandSurface      *surface,
           return;
         }
     }
-  else if (surface->role == META_WAYLAND_SURFACE_ROLE_XDG_POPUP)
+  else if (META_IS_WAYLAND_SURFACE_ROLE_XDG_POPUP (surface->role))
     {
       /* Ignore commits if we couldn't grab the pointer */
       if (!window)
@@ -392,11 +495,15 @@ move_pending_state (MetaWaylandPendingState *from,
 }
 
 static void
-subsurface_surface_commit (MetaWaylandSurface      *surface,
+subsurface_surface_commit (MetaWaylandSurfaceRole  *surface_role,
                            MetaWaylandPendingState *pending)
 {
+  MetaWaylandSurface *surface =
+    meta_wayland_surface_role_get_surface (surface_role);
   MetaSurfaceActorWayland *surface_actor =
     META_SURFACE_ACTOR_WAYLAND (surface->surface_actor);
+
+  queue_surface_actor_frame_callbacks (surface, pending);
 
   if (surface->buffer != NULL)
     clutter_actor_show (CLUTTER_ACTOR (surface_actor));
@@ -495,8 +602,6 @@ static void
 apply_pending_state (MetaWaylandSurface      *surface,
                      MetaWaylandPendingState *pending)
 {
-  MetaWaylandCompositor *compositor = surface->compositor;
-
   if (pending->newly_attached)
     {
       if (!surface->buffer && surface->window)
@@ -540,42 +645,20 @@ apply_pending_state (MetaWaylandSurface      *surface,
         surface->input_region = NULL;
     }
 
-  /* wl_surface.frame */
-  switch (surface->role)
+  if (surface->role)
     {
-    case META_WAYLAND_SURFACE_ROLE_NONE:
-    case META_WAYLAND_SURFACE_ROLE_CURSOR:
-    case META_WAYLAND_SURFACE_ROLE_DND:
-      wl_list_insert_list (&compositor->frame_callbacks, &pending->frame_callback_list);
-      break;
-    case META_WAYLAND_SURFACE_ROLE_XDG_SURFACE:
-    case META_WAYLAND_SURFACE_ROLE_XDG_POPUP:
-    case META_WAYLAND_SURFACE_ROLE_WL_SHELL_SURFACE:
-    case META_WAYLAND_SURFACE_ROLE_SUBSURFACE:
-      meta_surface_actor_wayland_add_frame_callbacks (META_SURFACE_ACTOR_WAYLAND (surface->surface_actor),
-                                                      &pending->frame_callback_list);
-    break;
+      meta_wayland_surface_role_commit (surface->role, pending);
+      g_assert (wl_list_empty (&pending->frame_callback_list));
     }
-  wl_list_init (&pending->frame_callback_list);
-
-  switch (surface->role)
+  else
     {
-    case META_WAYLAND_SURFACE_ROLE_NONE:
-      break;
-    case META_WAYLAND_SURFACE_ROLE_CURSOR:
-      cursor_surface_commit (surface, pending);
-      break;
-    case META_WAYLAND_SURFACE_ROLE_DND:
-      dnd_surface_commit (surface, pending);
-      break;
-    case META_WAYLAND_SURFACE_ROLE_XDG_SURFACE:
-    case META_WAYLAND_SURFACE_ROLE_XDG_POPUP:
-    case META_WAYLAND_SURFACE_ROLE_WL_SHELL_SURFACE:
-      toplevel_surface_commit (surface, pending);
-      break;
-    case META_WAYLAND_SURFACE_ROLE_SUBSURFACE:
-      subsurface_surface_commit (surface, pending);
-      break;
+      /* Since there is no role assigned to the surface yet, keep frame
+       * callbacks queued until a role is assigned and we know how
+       * the surface will be drawn.
+       */
+      wl_list_insert_list (&surface->pending_frame_callback_list,
+                           &pending->frame_callback_list);
+      wl_list_init (&pending->frame_callback_list);
     }
 
   meta_surface_actor_wayland_sync_state (
@@ -884,15 +967,27 @@ set_surface_is_on_output (MetaWaylandSurface *surface,
     }
 }
 
+static gboolean
+actor_surface_is_on_output (MetaWaylandSurfaceRole *surface_role,
+                            MetaMonitorInfo        *monitor)
+{
+  MetaWaylandSurface *surface =
+    meta_wayland_surface_role_get_surface (surface_role);
+  MetaSurfaceActorWayland *actor =
+    META_SURFACE_ACTOR_WAYLAND (surface->surface_actor);
+
+  return meta_surface_actor_wayland_is_on_monitor (actor, monitor);
+}
+
 static void
 update_surface_output_state (gpointer key, gpointer value, gpointer user_data)
 {
   MetaWaylandOutput *wayland_output = value;
   MetaWaylandSurface *surface = user_data;
-  MetaSurfaceActorWayland *actor =
-    META_SURFACE_ACTOR_WAYLAND (surface->surface_actor);
   MetaMonitorInfo *monitor;
   gboolean is_on_output;
+
+  g_assert (surface->role);
 
   monitor = wayland_output->monitor_info;
   if (!monitor)
@@ -901,7 +996,7 @@ update_surface_output_state (gpointer key, gpointer value, gpointer user_data)
       return;
     }
 
-  is_on_output = meta_surface_actor_wayland_is_on_monitor (actor, monitor);
+  is_on_output = meta_wayland_surface_role_is_on_output (surface->role, monitor);
   set_surface_is_on_output (surface, wayland_output, is_on_output);
 }
 
@@ -930,6 +1025,9 @@ wl_surface_destructor (struct wl_resource *resource)
 {
   MetaWaylandSurface *surface = wl_resource_get_user_data (resource);
   MetaWaylandCompositor *compositor = surface->compositor;
+  MetaWaylandFrameCallback *cb, *next;
+
+  g_clear_object (&surface->role);
 
   /* If we still have a window at the time of destruction, that means that
    * the client is disconnecting, as the resources are destroyed in a random
@@ -954,6 +1052,9 @@ wl_surface_destructor (struct wl_resource *resource)
 
   g_hash_table_unref (surface->outputs);
 
+  wl_list_for_each_safe (cb, next, &surface->pending_frame_callback_list, link)
+    wl_resource_destroy (cb->resource);
+
   if (surface->resource)
     wl_resource_set_user_data (surface->resource, NULL);
 
@@ -968,7 +1069,7 @@ wl_surface_destructor (struct wl_resource *resource)
   if (surface->gtk_surface)
     wl_resource_destroy (surface->gtk_surface);
 
-  g_slice_free (MetaWaylandSurface, surface);
+  g_object_unref (surface);
 
   meta_wayland_compositor_repick (compositor);
 }
@@ -979,7 +1080,7 @@ meta_wayland_surface_create (MetaWaylandCompositor *compositor,
                              struct wl_resource    *compositor_resource,
                              guint32                id)
 {
-  MetaWaylandSurface *surface = g_slice_new0 (MetaWaylandSurface);
+  MetaWaylandSurface *surface = g_object_new (META_TYPE_WAYLAND_SURFACE, NULL);
 
   surface->compositor = compositor;
   surface->scale = 1;
@@ -989,6 +1090,8 @@ meta_wayland_surface_create (MetaWaylandCompositor *compositor,
 
   surface->buffer_destroy_listener.notify = surface_handle_buffer_destroy;
   surface->surface_actor = g_object_ref_sink (meta_surface_actor_wayland_new (surface));
+
+  wl_list_init (&surface->pending_frame_callback_list);
 
   sync_drag_dest_funcs (surface);
 
@@ -1279,11 +1382,14 @@ xdg_shell_get_xdg_surface (struct wl_client *client,
       return;
     }
 
-  if (meta_wayland_surface_set_role (surface,
-                                     META_WAYLAND_SURFACE_ROLE_XDG_SURFACE,
-                                     surface_resource,
-                                     XDG_SHELL_ERROR_ROLE) != 0)
-    return;
+  if (!meta_wayland_surface_assign_role (surface,
+                                         META_TYPE_WAYLAND_SURFACE_ROLE_XDG_SURFACE))
+    {
+      wl_resource_post_error (resource, XDG_SHELL_ERROR_ROLE,
+                              "wl_surface@%d already has a different role",
+                              wl_resource_get_id (surface->resource));
+      return;
+    }
 
   surface->xdg_surface = wl_resource_create (client, &xdg_surface_interface, wl_resource_get_version (resource), id);
   wl_resource_set_implementation (surface->xdg_surface, &meta_wayland_xdg_surface_interface, surface, xdg_surface_destructor);
@@ -1387,11 +1493,14 @@ xdg_shell_get_xdg_popup (struct wl_client *client,
       return;
     }
 
-  if (meta_wayland_surface_set_role (surface,
-                                     META_WAYLAND_SURFACE_ROLE_XDG_POPUP,
-                                     surface_resource,
-                                     XDG_SHELL_ERROR_ROLE) != 0)
-    return;
+  if (!meta_wayland_surface_assign_role (surface,
+                                         META_TYPE_WAYLAND_SURFACE_ROLE_XDG_POPUP))
+    {
+      wl_resource_post_error (resource, XDG_SHELL_ERROR_ROLE,
+                              "wl_surface@%d already has a different role",
+                              wl_resource_get_id (surface->resource));
+      return;
+    }
 
   if (parent_surf == NULL ||
       parent_surf->window == NULL ||
@@ -1727,11 +1836,14 @@ wl_shell_get_shell_surface (struct wl_client *client,
       return;
     }
 
-  if (meta_wayland_surface_set_role (surface,
-                                     META_WAYLAND_SURFACE_ROLE_WL_SHELL_SURFACE,
-                                     surface_resource,
-                                     WL_SHELL_ERROR_ROLE) != 0)
-    return;
+  if (!meta_wayland_surface_assign_role (surface,
+                                         META_TYPE_WAYLAND_SURFACE_ROLE_WL_SHELL_SURFACE))
+    {
+      wl_resource_post_error (resource, WL_SHELL_ERROR_ROLE,
+                              "wl_surface@%d already has a different role",
+                              wl_resource_get_id (surface->resource));
+      return;
+    }
 
   surface->wl_shell_surface = wl_resource_create (client, &wl_shell_surface_interface, wl_resource_get_version (resource), id);
   wl_resource_set_implementation (surface->wl_shell_surface, &meta_wayland_wl_shell_surface_interface, surface, wl_shell_surface_destructor);
@@ -2076,11 +2188,17 @@ wl_subcompositor_get_subsurface (struct wl_client *client,
       return;
     }
 
-  if (meta_wayland_surface_set_role (surface,
-                                     META_WAYLAND_SURFACE_ROLE_SUBSURFACE,
-                                     surface_resource,
-                                     WL_SHELL_ERROR_ROLE) != 0)
-    return;
+  if (!meta_wayland_surface_assign_role (surface,
+                                         META_TYPE_WAYLAND_SURFACE_ROLE_SUBSURFACE))
+    {
+      /* FIXME: There is no subcompositor "role" error yet, so lets just use something
+       * similar until there is.
+       */
+      wl_resource_post_error (resource, WL_SHELL_ERROR_ROLE,
+                              "wl_surface@%d already has a different role",
+                              wl_resource_get_id (surface->resource));
+      return;
+    }
 
   surface->wl_subsurface = wl_resource_create (client, &wl_subsurface_interface, wl_resource_get_version (resource), id);
   wl_resource_set_implementation (surface->wl_subsurface, &meta_wayland_wl_subsurface_interface, surface, wl_subsurface_destructor);
@@ -2289,4 +2407,169 @@ meta_wayland_surface_get_toplevel_window (MetaWaylandSurface *surface)
     }
 
   return NULL;
+}
+
+static void
+meta_wayland_surface_init (MetaWaylandSurface *surface)
+{
+}
+
+static void
+meta_wayland_surface_class_init (MetaWaylandSurfaceClass *klass)
+{
+}
+
+static void
+meta_wayland_surface_role_init (MetaWaylandSurfaceRole *role)
+{
+}
+
+static void
+meta_wayland_surface_role_class_init (MetaWaylandSurfaceRoleClass *klass)
+{
+}
+
+static void
+meta_wayland_surface_role_assigned (MetaWaylandSurfaceRole *surface_role)
+{
+  META_WAYLAND_SURFACE_ROLE_GET_CLASS (surface_role)->assigned (surface_role);
+}
+
+static void
+meta_wayland_surface_role_commit (MetaWaylandSurfaceRole  *surface_role,
+                                  MetaWaylandPendingState *pending)
+{
+  META_WAYLAND_SURFACE_ROLE_GET_CLASS (surface_role)->commit (surface_role,
+                                                              pending);
+}
+
+static gboolean
+meta_wayland_surface_role_is_on_output (MetaWaylandSurfaceRole *surface_role,
+                                        MetaMonitorInfo        *monitor)
+{
+  MetaWaylandSurfaceRoleClass *klass;
+
+  klass = META_WAYLAND_SURFACE_ROLE_GET_CLASS (surface_role);
+  if (klass->is_on_output)
+    return klass->is_on_output (surface_role, monitor);
+  else
+    return FALSE;
+}
+
+MetaWaylandSurface *
+meta_wayland_surface_role_get_surface (MetaWaylandSurfaceRole *role)
+{
+  MetaWaylandSurfaceRolePrivate *priv =
+    meta_wayland_surface_role_get_instance_private (role);
+
+  return priv->surface;
+}
+
+void
+meta_wayland_surface_queue_pending_frame_callbacks (MetaWaylandSurface *surface)
+{
+  wl_list_insert_list (&surface->compositor->frame_callbacks,
+                       &surface->pending_frame_callback_list);
+  wl_list_init (&surface->pending_frame_callback_list);
+}
+
+static void
+default_role_assigned (MetaWaylandSurfaceRole *surface_role)
+{
+  MetaWaylandSurface *surface =
+    meta_wayland_surface_role_get_surface (surface_role);
+
+  meta_wayland_surface_queue_pending_frame_callbacks (surface);
+}
+
+static void
+actor_surface_assigned (MetaWaylandSurfaceRole *surface_role)
+{
+  MetaWaylandSurface *surface =
+    meta_wayland_surface_role_get_surface (surface_role);
+  MetaSurfaceActorWayland *surface_actor =
+    META_SURFACE_ACTOR_WAYLAND (surface->surface_actor);
+
+  meta_surface_actor_wayland_add_frame_callbacks (surface_actor,
+                                                  &surface->pending_frame_callback_list);
+  wl_list_init (&surface->pending_frame_callback_list);
+}
+
+static void
+meta_wayland_surface_role_dnd_init (MetaWaylandSurfaceRoleDND *role)
+{
+}
+
+static void
+meta_wayland_surface_role_dnd_class_init (MetaWaylandSurfaceRoleDNDClass *klass)
+{
+  MetaWaylandSurfaceRoleClass *surface_role_class =
+    META_WAYLAND_SURFACE_ROLE_CLASS (klass);
+
+  surface_role_class->assigned = default_role_assigned;
+  surface_role_class->commit = dnd_surface_commit;
+}
+
+static void
+meta_wayland_surface_role_xdg_surface_init (MetaWaylandSurfaceRoleXdgSurface *role)
+{
+}
+
+static void
+meta_wayland_surface_role_xdg_surface_class_init (MetaWaylandSurfaceRoleXdgSurfaceClass *klass)
+{
+  MetaWaylandSurfaceRoleClass *surface_role_class =
+    META_WAYLAND_SURFACE_ROLE_CLASS (klass);
+
+  surface_role_class->assigned = actor_surface_assigned;
+  surface_role_class->commit = toplevel_surface_commit;
+  surface_role_class->is_on_output = actor_surface_is_on_output;
+}
+
+static void
+meta_wayland_surface_role_xdg_popup_init (MetaWaylandSurfaceRoleXdgPopup *role)
+{
+}
+
+static void
+meta_wayland_surface_role_xdg_popup_class_init (MetaWaylandSurfaceRoleXdgPopupClass *klass)
+{
+  MetaWaylandSurfaceRoleClass *surface_role_class =
+    META_WAYLAND_SURFACE_ROLE_CLASS (klass);
+
+  surface_role_class->assigned = actor_surface_assigned;
+  surface_role_class->commit = toplevel_surface_commit;
+  surface_role_class->is_on_output = actor_surface_is_on_output;
+}
+
+static void
+meta_wayland_surface_role_wl_shell_surface_init (MetaWaylandSurfaceRoleWlShellSurface *role)
+{
+}
+
+static void
+meta_wayland_surface_role_wl_shell_surface_class_init (MetaWaylandSurfaceRoleWlShellSurfaceClass *klass)
+{
+  MetaWaylandSurfaceRoleClass *surface_role_class =
+    META_WAYLAND_SURFACE_ROLE_CLASS (klass);
+
+  surface_role_class->assigned = actor_surface_assigned;
+  surface_role_class->commit = toplevel_surface_commit;
+  surface_role_class->is_on_output = actor_surface_is_on_output;
+}
+
+static void
+meta_wayland_surface_role_subsurface_init (MetaWaylandSurfaceRoleSubsurface *role)
+{
+}
+
+static void
+meta_wayland_surface_role_subsurface_class_init (MetaWaylandSurfaceRoleSubsurfaceClass *klass)
+{
+  MetaWaylandSurfaceRoleClass *surface_role_class =
+    META_WAYLAND_SURFACE_ROLE_CLASS (klass);
+
+  surface_role_class->assigned = actor_surface_assigned;
+  surface_role_class->commit = subsurface_surface_commit;
+  surface_role_class->is_on_output = actor_surface_is_on_output;
 }
