@@ -1,3 +1,14 @@
+mutter (3.18.0-1) unstable; urgency=medium
+
+  [ Andreas Henriksson ]
+  * Fix typo in previous changelog entry.
+  * New upstream release.
+  * Drop debian/patches/git_launcher-fix-vt-switch.patch,
+    debian/patches/git_launcher-format-string.patch:
+    - now part of upstream release.
+
+ -- Laurent Bigonville <bigon@debian.org>  Sun, 11 Oct 2015 15:21:29 +0200
+
 mutter (3.17.92-1) experimental; urgency=medium
 
   [ Dmitry Shachnev ]
@@ -6,7 +17,7 @@ mutter (3.17.92-1) experimental; urgency=medium
     depend on a version of libgtk-3-common that contains the Adwaita theme.
 
   [ Andreas Henriksson ]
-  * New upstream release candidante
+  * New upstream release candidate
   * Add two patches cherry-picked from upstream git:
     - debian/patches/git_launcher-format-string.patch
       "launcher: Don't pass variable as format string"
