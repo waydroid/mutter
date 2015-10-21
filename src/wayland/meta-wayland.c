@@ -144,7 +144,7 @@ wl_compositor_create_region (struct wl_client *client,
   meta_wayland_region_create (compositor, client, resource, id);
 }
 
-const static struct wl_compositor_interface meta_wayland_wl_compositor_interface = {
+static const struct wl_compositor_interface meta_wayland_wl_compositor_interface = {
   wl_compositor_create_surface,
   wl_compositor_create_region
 };
@@ -271,6 +271,8 @@ set_gnome_env (const char *name,
       g_error_free (error);
     }
 }
+
+static void meta_wayland_log_func (const char *, va_list) G_GNUC_PRINTF (1, 0);
 
 static void
 meta_wayland_log_func (const char *fmt,

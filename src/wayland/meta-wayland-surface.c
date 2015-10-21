@@ -73,11 +73,8 @@ typedef struct
   struct wl_listener sibling_destroy_listener;
 } MetaWaylandSubsurfacePlacementOp;
 
-GType meta_wayland_surface_get_type (void) G_GNUC_CONST;
-
 G_DEFINE_TYPE (MetaWaylandSurface, meta_wayland_surface, G_TYPE_OBJECT);
 
-GType meta_wayland_surface_role_get_type (void) G_GNUC_CONST;
 G_DEFINE_TYPE_WITH_PRIVATE (MetaWaylandSurfaceRole,
                             meta_wayland_surface_role,
                             G_TYPE_OBJECT);
@@ -87,7 +84,6 @@ struct _MetaWaylandSurfaceRoleSubsurface
   MetaWaylandSurfaceRole parent;
 };
 
-GType meta_wayland_surface_role_subsurface_get_type (void) G_GNUC_CONST;
 G_DEFINE_TYPE (MetaWaylandSurfaceRoleSubsurface,
                meta_wayland_surface_role_subsurface,
                META_TYPE_WAYLAND_SURFACE_ROLE);
@@ -97,7 +93,6 @@ struct _MetaWaylandSurfaceRoleXdgSurface
   MetaWaylandSurfaceRole parent;
 };
 
-GType meta_wayland_surface_role_xdg_surface_get_type (void) G_GNUC_CONST;
 G_DEFINE_TYPE (MetaWaylandSurfaceRoleXdgSurface,
                meta_wayland_surface_role_xdg_surface,
                META_TYPE_WAYLAND_SURFACE_ROLE);
@@ -107,7 +102,6 @@ struct _MetaWaylandSurfaceRoleXdgPopup
   MetaWaylandSurfaceRole parent;
 };
 
-GType meta_wayland_surface_role_xdg_popup_get_type (void) G_GNUC_CONST;
 G_DEFINE_TYPE (MetaWaylandSurfaceRoleXdgPopup,
                meta_wayland_surface_role_xdg_popup,
                META_TYPE_WAYLAND_SURFACE_ROLE);
@@ -117,7 +111,6 @@ struct _MetaWaylandSurfaceRoleWlShellSurface
   MetaWaylandSurfaceRole parent;
 };
 
-GType meta_wayland_surface_role_wl_shell_surface_get_type (void) G_GNUC_CONST;
 G_DEFINE_TYPE (MetaWaylandSurfaceRoleWlShellSurface,
                meta_wayland_surface_role_wl_shell_surface,
                META_TYPE_WAYLAND_SURFACE_ROLE);
@@ -127,7 +120,6 @@ struct _MetaWaylandSurfaceRoleDND
   MetaWaylandSurfaceRole parent;
 };
 
-GType meta_wayland_surface_role_dnd_get_type (void) G_GNUC_CONST;
 G_DEFINE_TYPE (MetaWaylandSurfaceRoleDND,
                meta_wayland_surface_role_dnd,
                META_TYPE_WAYLAND_SURFACE_ROLE);
@@ -359,12 +351,6 @@ toplevel_surface_commit (MetaWaylandSurfaceRole  *surface_role,
           return;
         }
     }
-  else if (META_IS_WAYLAND_SURFACE_ROLE_XDG_POPUP (surface->role))
-    {
-      /* Ignore commits if we couldn't grab the pointer */
-      if (!window)
-        return;
-    }
   else
     {
       if (surface->buffer == NULL)
@@ -377,10 +363,11 @@ toplevel_surface_commit (MetaWaylandSurfaceRole  *surface_role,
         }
     }
 
-  g_assert (window != NULL);
-
-  /* We resize X based surfaces according to X events */
-  if (window->client_type == META_WINDOW_CLIENT_TYPE_WAYLAND)
+  /* Update the state of the MetaWindow if we still have one. We might not if
+   * the window was unmanaged (for example popup destroyed, NULL buffer attached to
+   * wl_shell_surface wl_surface, xdg_surface object was destroyed, etc).
+   */
+  if (window && window->client_type == META_WINDOW_CLIENT_TYPE_WAYLAND)
     {
       MetaRectangle geom = { 0 };
 
@@ -936,7 +923,6 @@ set_surface_is_on_output (MetaWaylandSurface *surface,
 
 static void
 surface_handle_output_destroy (MetaWaylandOutput *wayland_output,
-                               GParamSpec *pspec,
                                MetaWaylandSurface *surface)
 {
   set_surface_is_on_output (surface, wayland_output, FALSE);

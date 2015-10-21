@@ -39,8 +39,6 @@
 #include "meta-xwayland-selection-private.h"
 #include "meta-wayland-data-device.h"
 
-GType meta_wayland_data_source_xwayland_get_type (void) G_GNUC_CONST;
-
 #define INCR_CHUNK_SIZE (128 * 1024)
 #define XDND_VERSION 5
 
@@ -88,6 +86,7 @@ struct _MetaWaylandDataSourceXWayland
   MetaWaylandDataSource parent;
 
   MetaSelectionBridge *selection;
+  guint has_utf8_string_atom : 1;
 };
 
 struct _MetaXWaylandSelection {
@@ -162,7 +161,6 @@ xdnd_send_enter (MetaXWaylandSelection *selection_data,
   if (source_mime_types->size <= 3)
     {
       /* The mimetype atoms fit in this same message */
-      gchar **p;
       gint i = 2;
 
       wl_array_for_each (p, source_mime_types)
@@ -412,27 +410,33 @@ x11_data_write_cb (GObject      *object,
   MetaSelectionBridge *selection = user_data;
   X11SelectionData *data = selection->x11_selection;
   GError *error = NULL;
+  gboolean success = TRUE;
 
   g_output_stream_write_finish (G_OUTPUT_STREAM (object), res, &error);
 
-  if (data->incr)
+  if (error)
+    {
+      if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        {
+          g_error_free (error);
+          return;
+        }
+
+      g_warning ("Error writing from X11 selection: %s\n", error->message);
+      g_error_free (error);
+      success = FALSE;
+    }
+
+  if (success && data->incr)
     {
       Display *xdisplay = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
       XDeleteProperty (xdisplay, selection->window,
                        gdk_x11_get_xatom_by_name ("_META_SELECTION"));
     }
-
-  if (error)
+  else
     {
-      if (error->domain != G_IO_ERROR ||
-          error->code != G_IO_ERROR_CANCELLED)
-        g_warning ("Error writing from X11 selection: %s\n", error->message);
-
-      g_error_free (error);
+      x11_selection_data_finish (selection, success);
     }
-
-  if (!data->incr)
-    x11_selection_data_finish (selection, TRUE);
 }
 
 static void
@@ -707,7 +711,8 @@ meta_x11_source_send (MetaWaylandDataSource *source,
   MetaSelectionBridge *selection = source_xwayland->selection;
   Atom type_atom;
 
-  if (strcmp (mime_type, "text/plain;charset=utf-8") == 0)
+  if (source_xwayland->has_utf8_string_atom &&
+      strcmp (mime_type, "text/plain;charset=utf-8") == 0)
     type_atom = gdk_x11_get_xatom_by_name ("UTF8_STRING");
   else
     type_atom = gdk_x11_get_xatom_by_name (mime_type);
@@ -850,6 +855,8 @@ meta_xwayland_data_source_fetch_mimetype_list (MetaWaylandDataSource *source,
                                                Window                 window,
                                                Atom                   prop)
 {
+  MetaWaylandDataSourceXWayland *source_xwayland =
+    META_WAYLAND_DATA_SOURCE_XWAYLAND (source);
   Display *xdisplay = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
   gulong nitems_ret, bytes_after_ret, i;
   Atom *atoms, type_ret, utf8_string;
@@ -883,10 +890,13 @@ meta_xwayland_data_source_fetch_mimetype_list (MetaWaylandDataSource *source,
       const gchar *mime_type;
 
       if (atoms[i] == utf8_string)
-        mime_type = "text/plain;charset=utf-8";
-      else
-        mime_type = gdk_x11_get_xatom_name (atoms[i]);
+        {
+          meta_wayland_data_source_add_mime_type (source,
+                                                  "text/plain;charset=utf-8");
+          source_xwayland->has_utf8_string_atom = TRUE;
+        }
 
+      mime_type = gdk_x11_get_xatom_name (atoms[i]);
       meta_wayland_data_source_add_mime_type (source, mime_type);
     }
 
@@ -1279,6 +1289,9 @@ meta_xwayland_selection_handle_client_message (MetaWaylandCompositor *compositor
     {
       MetaWaylandDragGrab *drag_grab = compositor->seat->data_device.current_grab;
       MetaWaylandSurface *drag_focus = meta_wayland_drag_grab_get_focus (drag_grab);
+
+      if (!drag_focus)
+        return FALSE;
 
       if (event->message_type == xdnd_atoms[ATOM_DND_ENTER])
         {

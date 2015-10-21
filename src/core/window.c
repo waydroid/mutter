@@ -763,10 +763,22 @@ meta_window_update_desc (MetaWindow *window)
 {
   g_clear_pointer (&window->desc, g_free);
 
-  if (window->title)
-    window->desc = g_strdup_printf ("0x%lx (%.10s)", window->xwindow, window->title);
+  if (window->client_type == META_WINDOW_CLIENT_TYPE_X11)
+    {
+      if (window->title)
+        window->desc = g_strdup_printf ("0x%lx (%.10s)", window->xwindow, window->title);
+      else
+        window->desc = g_strdup_printf ("0x%lx", window->xwindow);
+    }
   else
-    window->desc = g_strdup_printf ("0x%lx", window->xwindow);
+    {
+      guint64 small_stamp = window->stamp - G_GUINT64_CONSTANT(0x100000000);
+
+      if (window->title)
+        window->desc = g_strdup_printf ("W%" G_GUINT64_FORMAT " (%.10s)", small_stamp, window->title);
+      else
+        window->desc = g_strdup_printf ("W%" G_GUINT64_FORMAT , small_stamp);
+    }
 }
 
 static void
@@ -3183,12 +3195,23 @@ meta_window_make_fullscreen (MetaWindow  *window)
 
   if (!window->fullscreen)
     {
-      meta_window_make_fullscreen_internal (window);
+      MetaRectangle old_frame_rect, old_buffer_rect;
 
+      meta_window_get_frame_rect (window, &old_frame_rect);
+      meta_window_get_buffer_rect (window, &old_buffer_rect);
+
+      meta_window_make_fullscreen_internal (window);
       meta_window_move_resize_internal (window,
-                                        META_MOVE_RESIZE_MOVE_ACTION | META_MOVE_RESIZE_RESIZE_ACTION | META_MOVE_RESIZE_STATE_CHANGED,
+                                        (META_MOVE_RESIZE_MOVE_ACTION |
+                                         META_MOVE_RESIZE_RESIZE_ACTION |
+                                         META_MOVE_RESIZE_STATE_CHANGED |
+                                         META_MOVE_RESIZE_DONT_SYNC_COMPOSITOR),
                                         NorthWestGravity,
                                         window->unconstrained_rect);
+
+      meta_compositor_size_change_window (window->display->compositor,
+                                          window, META_SIZE_CHANGE_FULLSCREEN,
+                                          &old_frame_rect, &old_buffer_rect);
     }
 }
 
@@ -3199,7 +3222,7 @@ meta_window_unmake_fullscreen (MetaWindow  *window)
 
   if (window->fullscreen)
     {
-      MetaRectangle target_rect;
+      MetaRectangle old_frame_rect, old_buffer_rect, target_rect;
 
       meta_topic (META_DEBUG_WINDOW_OPS,
                   "Unfullscreening %s\n", window->desc);
@@ -3208,6 +3231,8 @@ meta_window_unmake_fullscreen (MetaWindow  *window)
       target_rect = window->saved_rect;
 
       meta_window_frame_size_changed (window);
+      meta_window_get_frame_rect (window, &old_frame_rect);
+      meta_window_get_buffer_rect (window, &old_buffer_rect);
 
       /* Window's size hints may have changed while maximized, making
        * saved_rect invalid.  #329152
@@ -3222,9 +3247,16 @@ meta_window_unmake_fullscreen (MetaWindow  *window)
       set_net_wm_state (window);
 
       meta_window_move_resize_internal (window,
-                                        META_MOVE_RESIZE_MOVE_ACTION | META_MOVE_RESIZE_RESIZE_ACTION | META_MOVE_RESIZE_STATE_CHANGED,
+                                        (META_MOVE_RESIZE_MOVE_ACTION |
+                                         META_MOVE_RESIZE_RESIZE_ACTION |
+                                         META_MOVE_RESIZE_STATE_CHANGED |
+                                         META_MOVE_RESIZE_DONT_SYNC_COMPOSITOR),
                                         NorthWestGravity,
                                         target_rect);
+
+      meta_compositor_size_change_window (window->display->compositor,
+                                          window, META_SIZE_CHANGE_UNFULLSCREEN,
+                                          &old_frame_rect, &old_buffer_rect);
 
       meta_window_update_layer (window);
 
@@ -4312,8 +4344,8 @@ set_workspace_state (MetaWindow    *window,
       GList *l;
       for (l = window->screen->workspaces; l != NULL; l = l->next)
         {
-          MetaWorkspace *workspace = l->data;
-          meta_workspace_remove_window (workspace, window);
+          MetaWorkspace *ws = l->data;
+          meta_workspace_remove_window (ws, window);
         }
     }
 
@@ -4327,8 +4359,8 @@ set_workspace_state (MetaWindow    *window,
       GList *l;
       for (l = window->screen->workspaces; l != NULL; l = l->next)
         {
-          MetaWorkspace *workspace = l->data;
-          meta_workspace_add_window (workspace, window);
+          MetaWorkspace *ws = l->data;
+          meta_workspace_add_window (ws, window);
         }
     }
 
@@ -6272,7 +6304,7 @@ find_ancestor_func (MetaWindow *window,
  * so by traversing the @transient's ancestors until it either locates @window
  * or reaches an ancestor that is not transient.
  *
- * Return Value: (transfer none): %TRUE if window is an ancestor of transient.
+ * Return Value: %TRUE if window is an ancestor of transient.
  */
 gboolean
 meta_window_is_ancestor_of_transient (MetaWindow *window,
@@ -7010,7 +7042,7 @@ meta_window_get_transient_for (MetaWindow *window)
  * Returns pid of the process that created this window, if known (obtained from
  * the _NET_WM_PID property).
  *
- * Return value: (transfer none): the pid, or -1 if not known.
+ * Return value: the pid, or -1 if not known.
  */
 int
 meta_window_get_pid (MetaWindow *window)
