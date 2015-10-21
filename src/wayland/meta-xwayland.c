@@ -45,7 +45,6 @@ struct _MetaWaylandSurfaceRoleXWayland
   MetaWaylandSurfaceRole parent;
 };
 
-GType meta_wayland_surface_role_xwayland_get_type (void) G_GNUC_CONST;
 G_DEFINE_TYPE (MetaWaylandSurfaceRoleXWayland,
                meta_wayland_surface_role_xwayland,
                META_TYPE_WAYLAND_SURFACE_ROLE);
@@ -55,13 +54,6 @@ associate_window_with_surface (MetaWindow         *window,
                                MetaWaylandSurface *surface)
 {
   MetaDisplay *display = window->display;
-
-  /* If the window has an existing surface, like if we're
-   * undecorating or decorating the window, then we need
-   * to detach the window from its old surface.
-   */
-  if (window->surface)
-    window->surface->window = NULL;
 
   if (!meta_wayland_surface_assign_role (surface,
                                          META_TYPE_WAYLAND_SURFACE_ROLE_XWAYLAND))
@@ -88,6 +80,16 @@ associate_window_with_surface_id (MetaXWaylandManager *manager,
                                   guint32              surface_id)
 {
   struct wl_resource *resource;
+
+  /* If the window has an existing surface, like if we're
+   * undecorating or decorating the window, then we need
+   * to detach the window from its old surface.
+   */
+  if (window->surface)
+    {
+      meta_wayland_surface_set_window (window->surface, NULL);
+      window->surface = NULL;
+    }
 
   resource = wl_client_get_object (manager->client, surface_id);
   if (resource)
@@ -170,6 +172,15 @@ meta_xwayland_handle_wl_surface_id (MetaWindow *window,
       g_signal_connect (op->window, "unmanaged",
                         G_CALLBACK (associate_window_with_surface_window_unmanaged), op);
     }
+}
+
+gboolean
+meta_xwayland_is_xwayland_surface (MetaWaylandSurface *surface)
+{
+  MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
+  MetaXWaylandManager *manager = &compositor->xwayland_manager;
+
+  return wl_resource_get_client (surface->resource) == manager->client;
 }
 
 static gboolean

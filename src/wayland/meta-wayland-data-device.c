@@ -57,8 +57,6 @@ typedef struct _MetaWaylandDataSourceWayland
   struct wl_resource *resource;
 } MetaWaylandDataSourceWayland;
 
-GType meta_wayland_data_source_wayland_get_type (void) G_GNUC_CONST;
-
 G_DEFINE_TYPE_WITH_PRIVATE (MetaWaylandDataSource, meta_wayland_data_source,
                             G_TYPE_OBJECT);
 G_DEFINE_TYPE (MetaWaylandDataSourceWayland, meta_wayland_data_source_wayland,
@@ -405,8 +403,8 @@ destroy_data_device_origin (struct wl_listener *listener, void *data)
     wl_container_of (listener, drag_grab, drag_origin_listener);
 
   drag_grab->drag_origin = NULL;
-  data_device_end_drag_grab (drag_grab);
   meta_wayland_data_device_set_dnd_source (&drag_grab->seat->data_device, NULL);
+  data_device_end_drag_grab (drag_grab);
 }
 
 static void
@@ -415,8 +413,8 @@ drag_grab_data_source_destroyed (gpointer data, GObject *where_the_object_was)
   MetaWaylandDragGrab *drag_grab = data;
 
   drag_grab->drag_data_source = NULL;
-  data_device_end_drag_grab (drag_grab);
   meta_wayland_data_device_set_dnd_source (&drag_grab->seat->data_device, NULL);
+  data_device_end_drag_grab (drag_grab);
 }
 
 static void
@@ -745,12 +743,14 @@ meta_wayland_data_device_set_dnd_source (MetaWaylandDataDevice *data_device,
     return;
 
   if (data_device->dnd_data_source)
-    g_object_remove_weak_pointer (G_OBJECT (source),
+    g_object_remove_weak_pointer (G_OBJECT (data_device->dnd_data_source),
                                   (gpointer *)&data_device->dnd_data_source);
 
   data_device->dnd_data_source = source;
-  g_object_add_weak_pointer (G_OBJECT (source),
-                             (gpointer *)&data_device->dnd_data_source);
+
+  if (source)
+    g_object_add_weak_pointer (G_OBJECT (data_device->dnd_data_source),
+                               (gpointer *)&data_device->dnd_data_source);
 
   wl_signal_emit (&data_device->dnd_ownership_signal, source);
 }
@@ -912,6 +912,12 @@ meta_wayland_data_device_set_keyboard_focus (MetaWaylandDataDevice *data_device)
   MetaWaylandDataSource *source;
 
   focus_client = meta_wayland_keyboard_get_focus_client (&seat->keyboard);
+
+  if (focus_client == data_device->focus_client)
+    return;
+
+  data_device->focus_client = focus_client;
+
   if (!focus_client)
     return;
 

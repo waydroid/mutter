@@ -547,7 +547,7 @@ meta_display_open (void)
   guint32 timestamp;
 
   /* A list of all atom names, so that we can intern them in one go. */
-  char *atom_names[] = {
+  const char *atom_names[] = {
 #define item(x) #x,
 #include <x11/atomnames.h>
 #undef item
@@ -605,14 +605,13 @@ meta_display_open (void)
   meta_prefs_add_listener (prefs_changed_callback, display);
 
   meta_verbose ("Creating %d atoms\n", (int) G_N_ELEMENTS (atom_names));
-  XInternAtoms (display->xdisplay, atom_names, G_N_ELEMENTS (atom_names),
+  XInternAtoms (display->xdisplay, (char **)atom_names, G_N_ELEMENTS (atom_names),
                 False, atoms);
-  {
-    int i = 0;
+
+  i = 0;
 #define item(x) display->atom_##x = atoms[i++];
 #include <x11/atomnames.h>
 #undef item
-  }
 
   display->prop_hooks = NULL;
   meta_display_init_window_prop_hooks (display);
@@ -1964,8 +1963,11 @@ meta_display_end_grab_op (MetaDisplay *display,
   meta_topic (META_DEBUG_WINDOW_OPS,
               "Ending grab op %u at time %u\n", grab_op, timestamp);
 
-  if (display->event_route == META_EVENT_ROUTE_NORMAL)
+  if (display->event_route == META_EVENT_ROUTE_NORMAL ||
+      display->event_route == META_EVENT_ROUTE_COMPOSITOR_GRAB)
     return;
+
+  g_assert (grab_window != NULL);
 
   g_signal_emit (display, display_signals[GRAB_OP_END], 0,
                  display->screen, grab_window, grab_op);
