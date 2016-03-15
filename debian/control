@@ -8,7 +8,7 @@ Priority: optional
 Maintainer: Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>
 Uploaders: Andreas Henriksson <andreas@fatal.se>, Emilio Pozuelo Monfort <pochu@debian.org>, Laurent Bigonville <bigon@debian.org>, Michael Biebl <biebl@debian.org>
 Build-Depends: cdbs (>= 0.4.90),
-               debhelper (>= 9),
+               debhelper (>= 9.20160114),
                gnome-pkg-tools (>= 0.10),
                dh-autoreconf,
                intltool (>= 0.41),
@@ -53,7 +53,7 @@ Build-Depends: cdbs (>= 0.4.90),
                libwayland-dev (>= 1.5.90) [linux-any],
                xkb-data,
                zenity
-Standards-Version: 3.9.6
+Standards-Version: 3.9.7
 Vcs-Svn: svn://anonscm.debian.org/pkg-gnome/desktop/unstable/mutter
 Vcs-Browser: https://anonscm.debian.org/viewvc/pkg-gnome/desktop/unstable/mutter
 
@@ -78,24 +78,6 @@ Description: lightweight GTK+ window manager
  Cheerios."
  .
  This package contains the core binaries.
-
-Package: mutter-dbg
-Architecture: any
-Section: debug
-Priority: extra
-Depends: mutter (= ${binary:Version}),
-         libmutter0g (= ${binary:Version}),
-         ${misc:Depends}
-Description: Debugging symbols for the Mutter window manager
- Mutter is a small window manager, using GTK+ and Clutter to do
- everything.
- .
- Mutter is the clutter-based evolution of Metacity, which, as the
- author says, is a "Boring window manager for the adult in you. Many
- window managers are like Marshmallow Froot Loops; Metacity is like
- Cheerios."
- .
- This package contains detached debugging symbols.
 
 Package: libmutter0g
 Section: libs
