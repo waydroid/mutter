@@ -1,3 +1,16 @@
+mutter (3.18.3-2) unstable; urgency=medium
+
+  * Drop mutter-dbg now that we have automatic dbgsym packages.
+  * Ensure proper upgrade from mutter-dbg to new dbgsym packages by using
+    dh_strip --dbgsym-migration. Bump Build-Depends on debhelper accordingly.
+  * Fix dh_makeshlibs args for libmutter0g.
+  * Bump Standards-Version to 3.9.7.
+  * Drop obsolete migration code from pre-wheezy.
+  * Fix disappearing mouse cursor under GNOME Shell with a multi-monitor
+    setup. Patch cherry-picked from upstream Git.
+
+ -- Michael Biebl <biebl@debian.org>  Tue, 15 Mar 2016 07:53:24 +0100
+
 mutter (3.18.3-1) unstable; urgency=medium
 
   * New upstream release.
