@@ -389,7 +389,7 @@ meta_window_apply_session_info (MetaWindow *window,
                   "Restoring minimized state %d for window %s\n",
                   info->minimized, window->desc);
 
-      if (window->has_minimize_func && info->minimized)
+      if (info->minimized)
         meta_window_minimize (window);
     }
 
@@ -860,7 +860,7 @@ meta_window_x11_grab_op_began (MetaWindow *window,
       if (window->sync_request_counter != None)
         meta_window_x11_create_sync_request_alarm (window);
 
-      if (window->size_hints.width_inc > 1 || window->size_hints.height_inc > 1)
+      if (window->size_hints.width_inc > 2 || window->size_hints.height_inc > 2)
         {
           priv->showing_resize_popup = TRUE;
           meta_window_refresh_resize_popup (window);
@@ -1847,6 +1847,12 @@ meta_window_x11_update_shape_region (MetaWindow *window)
        * this is simply the client area.
        */
       cairo_region_intersect_rectangle (region, &client_area);
+
+      /* Some applications might explicitly set their bounding region
+       * to the client area. Detect these cases, and throw out the
+       * bounding region in this case. */
+      if (cairo_region_contains_rectangle (region, &client_area) == CAIRO_REGION_OVERLAP_IN)
+        g_clear_pointer (&region, cairo_region_destroy);
     }
 
   meta_window_set_shape_region (window, region);
@@ -2438,8 +2444,7 @@ meta_window_x11_client_message (MetaWindow *window,
     {
       meta_verbose ("WM_CHANGE_STATE client message, state: %ld\n",
                     event->xclient.data.l[0]);
-      if (event->xclient.data.l[0] == IconicState &&
-          window->has_minimize_func)
+      if (event->xclient.data.l[0] == IconicState)
         meta_window_minimize (window);
 
       return TRUE;

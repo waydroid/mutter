@@ -1579,8 +1579,10 @@ implement_showing (MetaWindow *window,
        * windows we might want to know where they are on the screen,
        * so we should place the window even if we're hiding it rather
        * than showing it.
+       * Force placing windows only when they should be already mapped,
+       * see #751887
        */
-      if (!window->placed)
+      if (!window->placed && client_window_should_be_mapped (window))
         meta_window_force_placement (window);
 
       meta_window_hide (window);
@@ -5300,6 +5302,11 @@ meta_window_recalc_features (MetaWindow *window)
 
   meta_window_recalc_skip_features (window);
 
+  /* To prevent users from losing windows, let's prevent users from
+   * minimizing skip-taskbar windows through the window decorations. */
+  if (window->skip_taskbar)
+    window->has_minimize_func = FALSE;
+
   meta_topic (META_DEBUG_WINDOW_OPS,
               "Window %s decorated = %d border_only = %d has_close = %d has_minimize = %d has_maximize = %d has_move = %d has_shade = %d skip_taskbar = %d skip_pager = %d\n",
               window->desc,
@@ -7381,10 +7388,31 @@ meta_window_set_gtk_dbus_properties (MetaWindow *window,
   g_object_thaw_notify (G_OBJECT (window));
 }
 
+static gboolean
+check_transient_for_loop (MetaWindow *window,
+                          MetaWindow *parent)
+{
+  while (parent)
+    {
+      if (parent->transient_for == window)
+          return TRUE;
+      parent = parent->transient_for;
+    }
+
+  return FALSE;
+}
+
 void
 meta_window_set_transient_for (MetaWindow *window,
                                MetaWindow *parent)
 {
+  if (check_transient_for_loop (window, parent))
+    {
+      meta_warning ("Setting %s transient for %s would create a loop.\n",
+                    window->desc, parent->desc);
+      return;
+    }
+
   if (meta_window_appears_focused (window) && window->transient_for != NULL)
     meta_window_propagate_focus_appearance (window, FALSE);
 
@@ -7410,13 +7438,13 @@ meta_window_set_transient_for (MetaWindow *window,
         }
     }
 
-  /* update stacking constraints */
-  if (!window->override_redirect)
-    meta_stack_update_transient (window->screen->stack, window);
-
   /* We know this won't create a reference cycle because we check for loops */
   g_clear_object (&window->transient_for);
   window->transient_for = parent ? g_object_ref (parent) : NULL;
+
+  /* update stacking constraints */
+  if (!window->override_redirect)
+    meta_stack_update_transient (window->screen->stack, window);
 
   /* possibly change its group. We treat being a window's transient as
    * equivalent to making it your group leader, to work around shortcomings
@@ -7428,7 +7456,7 @@ meta_window_set_transient_for (MetaWindow *window,
     meta_window_group_leader_changed (window);
 
   if (!window->constructing && !window->override_redirect)
-    meta_window_queue (window, META_QUEUE_MOVE_RESIZE);
+    meta_window_queue (window, META_QUEUE_MOVE_RESIZE | META_QUEUE_CALC_SHOWING);
 
   if (meta_window_appears_focused (window) && window->transient_for != NULL)
     meta_window_propagate_focus_appearance (window, TRUE);
@@ -7667,12 +7695,28 @@ meta_window_handle_ungrabbed_event (MetaWindow         *window,
   MetaDisplay *display = window->display;
   gboolean unmodified;
   gboolean is_window_grab;
+  ClutterModifierType grab_mods, event_mods;
+  gfloat x, y;
+  guint button;
 
   if (window->frame && meta_ui_frame_handle_event (window->frame->ui_frame, event))
     return;
 
-  if (event->type != CLUTTER_BUTTON_PRESS)
+  if (event->type != CLUTTER_BUTTON_PRESS &&
+      event->type != CLUTTER_TOUCH_BEGIN)
     return;
+
+  if (event->type == CLUTTER_TOUCH_BEGIN)
+    {
+      ClutterEventSequence *sequence;
+
+      button = 1;
+      sequence = clutter_event_get_event_sequence (event);
+      if (!meta_display_is_pointer_emulating_sequence (window->display, sequence))
+        return;
+    }
+  else
+    button = clutter_event_get_button (event);
 
   if (display->grab_op != META_GRAB_OP_NONE)
     return;
@@ -7683,6 +7727,22 @@ meta_window_handle_ungrabbed_event (MetaWindow         *window,
    */
   if (window->override_redirect)
     return;
+
+  /* Don't focus panels--they must explicitly request focus.
+   * See bug 160470
+   */
+  if (window->type != META_WINDOW_DOCK)
+    {
+      meta_topic (META_DEBUG_FOCUS,
+                  "Focusing %s due to button %u press (display.c)\n",
+                  window->desc, button);
+      meta_window_focus (window, event->any.time);
+    }
+  else
+    /* However, do allow terminals to lose focus due to new
+     * window mappings after the user clicks on a panel.
+     */
+    display->allow_terminal_deactivation = TRUE;
 
   /* We have three passive button grabs:
    * - on any button, without modifiers => focuses and maybe raises the window
@@ -7704,9 +7764,12 @@ meta_window_handle_ungrabbed_event (MetaWindow         *window,
    * care about. Just let the event through.
    */
 
-  ClutterModifierType grab_mods = meta_display_get_window_grab_modifiers (display);
-  unmodified = (event->button.modifier_state & grab_mods) == 0;
-  is_window_grab = (event->button.modifier_state & grab_mods) == grab_mods;
+  grab_mods = meta_display_get_window_grab_modifiers (display);
+  event_mods = clutter_event_get_state (event);
+  unmodified = (event_mods & grab_mods) == 0;
+  is_window_grab = (event_mods & grab_mods) == grab_mods;
+
+  clutter_event_get_coords (event, &x, &y);
 
   if (unmodified)
     {
@@ -7715,27 +7778,8 @@ meta_window_handle_ungrabbed_event (MetaWindow         *window,
       else
         meta_topic (META_DEBUG_FOCUS,
                     "Not raising window on click due to don't-raise-on-click option\n");
-
-      /* Don't focus panels--they must explicitly request focus.
-       * See bug 160470
-       */
-      if (window->type != META_WINDOW_DOCK)
-        {
-          meta_topic (META_DEBUG_FOCUS,
-                      "Focusing %s due to unmodified button %u press (display.c)\n",
-                      window->desc, event->button.button);
-          meta_window_focus (window, event->any.time);
-        }
-      else
-        /* However, do allow terminals to lose focus due to new
-         * window mappings after the user clicks on a panel.
-         */
-        display->allow_terminal_deactivation = TRUE;
-
-      meta_verbose ("Allowing events time %u\n",
-                    (unsigned int)event->button.time);
     }
-  else if (is_window_grab && (int) event->button.button == meta_prefs_get_mouse_button_resize ())
+  else if (is_window_grab && (int) button == meta_prefs_get_mouse_button_resize ())
     {
       if (window->has_resize_func)
         {
@@ -7746,10 +7790,10 @@ meta_window_handle_ungrabbed_event (MetaWindow         *window,
 
           meta_window_get_frame_rect (window, &frame_rect);
 
-          west = event->button.x < (frame_rect.x + 1 * frame_rect.width / 3);
-          east = event->button.x > (frame_rect.x + 2 * frame_rect.width / 3);
-          north = event->button.y < (frame_rect.y + 1 * frame_rect.height / 3);
-          south = event->button.y > (frame_rect.y + 2 * frame_rect.height / 3);
+          west = x < (frame_rect.x + 1 * frame_rect.width / 3);
+          east = x > (frame_rect.x + 2 * frame_rect.width / 3);
+          north = y < (frame_rect.y + 1 * frame_rect.height / 3);
+          south = y > (frame_rect.y + 2 * frame_rect.height / 3);
 
           if (west)
             op |= META_GRAB_OP_WINDOW_DIR_WEST;
@@ -7767,23 +7811,21 @@ meta_window_handle_ungrabbed_event (MetaWindow         *window,
                                         op,
                                         TRUE,
                                         FALSE,
-                                        event->button.button,
+                                        button,
                                         0,
                                         event->any.time,
-                                        event->button.x,
-                                        event->button.y);
+                                        x, y);
         }
     }
-  else if (is_window_grab && (int) event->button.button == meta_prefs_get_mouse_button_menu ())
+  else if (is_window_grab && (int) button == meta_prefs_get_mouse_button_menu ())
     {
       if (meta_prefs_get_raise_on_click ())
         meta_window_raise (window);
       meta_window_show_menu (window,
                              META_WINDOW_MENU_WM,
-                             event->button.x,
-                             event->button.y);
+                             x, y);
     }
-  else if (is_window_grab && (int) event->button.button == 1)
+  else if (is_window_grab && (int) button == 1)
     {
       if (window->has_move_func)
         {
@@ -7793,11 +7835,10 @@ meta_window_handle_ungrabbed_event (MetaWindow         *window,
                                       META_GRAB_OP_MOVING,
                                       TRUE,
                                       FALSE,
-                                      event->button.button,
+                                      button,
                                       0,
                                       event->any.time,
-                                      event->button.x,
-                                      event->button.y);
+                                      x, y);
         }
     }
 }

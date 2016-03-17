@@ -208,8 +208,8 @@ touch_get_relative_coordinates (MetaWaylandTouch   *touch,
                                            &event_x, &event_y);
     }
 
-  *x = event_x;
-  *y = event_y;
+  *x = event_x / surface->scale;
+  *y = event_y / surface->scale;
 }
 
 
@@ -573,6 +573,26 @@ meta_wayland_touch_create_new_resource (MetaWaylandTouch   *touch,
   cr = wl_resource_create (client, &wl_touch_interface, wl_resource_get_version (seat_resource), id);
   wl_resource_set_implementation (cr, &touch_interface, touch, unbind_resource);
   wl_list_insert (&touch->resource_list, wl_resource_get_link (cr));
+}
+
+gboolean
+meta_wayland_touch_can_popup (MetaWaylandTouch *touch,
+                              uint32_t          serial)
+{
+  MetaWaylandTouchInfo *touch_info;
+  GHashTableIter iter;
+
+  if (!touch->touches)
+    return FALSE;
+
+  g_hash_table_iter_init (&iter, touch->touches);
+
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer*) &touch_info))
+    {
+      if (touch_info->slot_serial == serial)
+        return TRUE;
+    }
+  return FALSE;
 }
 
 ClutterEventSequence *

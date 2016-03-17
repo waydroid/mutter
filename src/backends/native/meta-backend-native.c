@@ -36,6 +36,8 @@
 #include "meta-monitor-manager-kms.h"
 #include "meta-cursor-renderer-native.h"
 #include "meta-launcher.h"
+#include "backends/meta-cursor-tracker-private.h"
+#include "backends/meta-pointer-constraint.h"
 
 #include <stdlib.h>
 
@@ -139,6 +141,24 @@ constrain_to_barriers (ClutterInputDevice *device,
                                        new_x, new_y);
 }
 
+static void
+constrain_to_client_constraint (ClutterInputDevice *device,
+                                guint32             time,
+                                float               prev_x,
+                                float               prev_y,
+                                float              *x,
+                                float              *y)
+{
+  MetaBackend *backend = meta_get_backend ();
+  MetaPointerConstraint *constraint = backend->client_pointer_constraint;
+
+  if (!constraint)
+    return;
+
+  meta_pointer_constraint_constrain (constraint, device,
+                                     time, prev_x, prev_y, x, y);
+}
+
 /*
  * The pointer constrain code is mostly a rip-off of the XRandR code from Xorg.
  * (from xserver/randr/rrcrtc.c, RRConstrainCursorHarder)
@@ -193,10 +213,12 @@ constrain_all_screen_monitors (ClutterInputDevice *device,
 
 static void
 pointer_constrain_callback (ClutterInputDevice *device,
-			    guint32             time,
-			    float              *new_x,
-			    float              *new_y,
-			    gpointer            user_data)
+                            guint32             time,
+                            float               prev_x,
+                            float               prev_y,
+                            float              *new_x,
+                            float              *new_y,
+                            gpointer            user_data)
 {
   MetaMonitorManager *monitor_manager;
   MetaMonitorInfo *monitors;
@@ -204,6 +226,9 @@ pointer_constrain_callback (ClutterInputDevice *device,
 
   /* Constrain to barriers */
   constrain_to_barriers (device, time, new_x, new_y);
+
+  /* Constrain to pointer lock */
+  constrain_to_client_constraint (device, time, prev_x, prev_y, new_x, new_y);
 
   monitor_manager = meta_monitor_manager_get ();
   monitors = meta_monitor_manager_get_monitor_infos (monitor_manager, &n_monitors);
@@ -255,11 +280,16 @@ meta_backend_native_warp_pointer (MetaBackend *backend,
 {
   ClutterDeviceManager *manager = clutter_device_manager_get_default ();
   ClutterInputDevice *device = clutter_device_manager_get_core_device (manager, CLUTTER_POINTER_DEVICE);
+  MetaCursorTracker *tracker = meta_cursor_tracker_get_for_screen (NULL);
 
   /* XXX */
   guint32 time_ = 0;
 
+  /* Warp the input device pointer state. */
   clutter_evdev_warp_pointer (device, time_, x, y);
+
+  /* Warp displayed pointer cursor. */
+  meta_cursor_tracker_update_position (tracker, x, y);
 }
 
 static void
@@ -306,6 +336,19 @@ meta_backend_native_lock_layout_group (MetaBackend *backend,
   g_signal_emit_by_name (backend, "keymap-layout-group-changed", idx, 0);
 }
 
+static gboolean
+meta_backend_native_get_relative_motion_deltas (MetaBackend *backend,
+                                                const        ClutterEvent *event,
+                                                double       *dx,
+                                                double       *dy,
+                                                double       *dx_unaccel,
+                                                double       *dy_unaccel)
+{
+  return clutter_evdev_event_get_relative_motion (event,
+                                                  dx, dy,
+                                                  dx_unaccel, dy_unaccel);
+}
+
 static void
 meta_backend_native_class_init (MetaBackendNativeClass *klass)
 {
@@ -323,6 +366,7 @@ meta_backend_native_class_init (MetaBackendNativeClass *klass)
   backend_class->set_keymap = meta_backend_native_set_keymap;
   backend_class->get_keymap = meta_backend_native_get_keymap;
   backend_class->lock_layout_group = meta_backend_native_lock_layout_group;
+  backend_class->get_relative_motion_deltas = meta_backend_native_get_relative_motion_deltas;
 }
 
 static void

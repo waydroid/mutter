@@ -1162,6 +1162,30 @@ process_selection_clear (MetaDisplay   *display,
   return TRUE;
 }
 
+static void
+notify_bell (MetaDisplay *display,
+             XkbAnyEvent *xkb_ev)
+{
+  XkbBellNotifyEvent *xkb_bell_event = (XkbBellNotifyEvent*) xkb_ev;
+  MetaWindow *window;
+
+  window = meta_display_lookup_x_window (display, xkb_bell_event->window);
+  if (!window && display->focus_window && display->focus_window->frame)
+    window = display->focus_window;
+
+  display->last_bell_time = xkb_ev->time;
+  if (!meta_bell_notify (display, window) &&
+      meta_prefs_bell_is_audible ())
+    {
+      /* Force a classic bell if the libcanberra bell failed. */
+      XkbForceDeviceBell (display->xdisplay,
+                          xkb_bell_event->device,
+                          xkb_bell_event->bell_class,
+                          xkb_bell_event->bell_id,
+                          xkb_bell_event->percent);
+    }
+}
+
 static gboolean
 handle_other_xevent (MetaDisplay *display,
                      XEvent      *event)
@@ -1618,8 +1642,7 @@ handle_other_xevent (MetaDisplay *display,
               if (XSERVER_TIME_IS_BEFORE(display->last_bell_time,
                                          xkb_ev->time - 100))
                 {
-                  display->last_bell_time = xkb_ev->time;
-                  meta_bell_notify (display, xkb_ev);
+                  notify_bell (display, xkb_ev);
                 }
               break;
             default:
@@ -1671,13 +1694,12 @@ meta_display_handle_xevent (MetaDisplay *display,
   meta_spew_event_print (display, event);
 #endif
 
-#ifdef HAVE_STARTUP_NOTIFICATION
-  if (sn_display_process_event (display->sn_display, event))
+  if (meta_startup_notification_handle_xevent (display->startup_notification,
+                                               event))
     {
       bypass_gtk = bypass_compositor = TRUE;
       goto out;
     }
-#endif
 
 #ifdef HAVE_WAYLAND
   if (meta_is_wayland_compositor () &&

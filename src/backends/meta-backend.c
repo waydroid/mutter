@@ -64,6 +64,8 @@ struct _MetaBackendPrivate
   MetaInputSettings *input_settings;
 
   ClutterActor *stage;
+
+  guint device_update_idle_id;
 };
 typedef struct _MetaBackendPrivate MetaBackendPrivate;
 
@@ -77,6 +79,9 @@ meta_backend_finalize (GObject *object)
 
   g_clear_object (&priv->monitor_manager);
   g_clear_object (&priv->input_settings);
+
+  if (priv->device_update_idle_id)
+    g_source_remove (priv->device_update_idle_id);
 
   g_hash_table_destroy (backend->device_monitors);
 
@@ -353,6 +358,17 @@ meta_backend_real_select_stage_events (MetaBackend *backend)
   /* Do nothing */
 }
 
+static gboolean
+meta_backend_real_get_relative_motion_deltas (MetaBackend *backend,
+                                             const         ClutterEvent *event,
+                                             double        *dx,
+                                             double        *dy,
+                                             double        *dx_unaccel,
+                                             double        *dy_unaccel)
+{
+  return FALSE;
+}
+
 static void
 meta_backend_class_init (MetaBackendClass *klass)
 {
@@ -366,6 +382,7 @@ meta_backend_class_init (MetaBackendClass *klass)
   klass->ungrab_device = meta_backend_real_ungrab_device;
   klass->update_screen_size = meta_backend_real_update_screen_size;
   klass->select_stage_events = meta_backend_real_select_stage_events;
+  klass->get_relative_motion_deltas = meta_backend_real_get_relative_motion_deltas;
 
   g_signal_new ("keymap-changed",
                 G_TYPE_FROM_CLASS (object_class),
@@ -505,12 +522,44 @@ meta_backend_get_stage (MetaBackend *backend)
   return priv->stage;
 }
 
+static gboolean
+update_last_device (MetaBackend *backend)
+{
+  MetaCursorTracker *cursor_tracker = meta_cursor_tracker_get_for_screen (NULL);
+  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+  ClutterInputDeviceType device_type;
+  ClutterDeviceManager *manager;
+  ClutterInputDevice *device;
+
+  priv->device_update_idle_id = 0;
+  manager = clutter_device_manager_get_default ();
+  device = clutter_device_manager_get_device (manager,
+                                              backend->current_device_id);
+  device_type = clutter_input_device_get_device_type (device);
+
+  g_signal_emit_by_name (backend, "last-device-changed",
+                         backend->current_device_id);
+
+  switch (device_type)
+    {
+    case CLUTTER_KEYBOARD_DEVICE:
+      break;
+    case CLUTTER_TOUCHSCREEN_DEVICE:
+      meta_cursor_tracker_set_pointer_visible (cursor_tracker, FALSE);
+      break;
+    default:
+      meta_cursor_tracker_set_pointer_visible (cursor_tracker, TRUE);
+      break;
+    }
+
+  return G_SOURCE_REMOVE;
+}
+
 void
 meta_backend_update_last_device (MetaBackend *backend,
                                  int          device_id)
 {
-  ClutterInputDeviceType device_type;
-  MetaCursorTracker *cursor_tracker;
+  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
   ClutterDeviceManager *manager;
   ClutterInputDevice *device;
 
@@ -524,24 +573,41 @@ meta_backend_update_last_device (MetaBackend *backend,
       clutter_input_device_get_device_mode (device) == CLUTTER_INPUT_MODE_MASTER)
     return;
 
-  device_type = clutter_input_device_get_device_type (device);
-
-  cursor_tracker = meta_cursor_tracker_get_for_screen (NULL);
   backend->current_device_id = device_id;
-  g_signal_emit_by_name (backend, "last-device-changed", device_id);
 
-  if (device_type == CLUTTER_KEYBOARD_DEVICE)
-    return;
-
-  switch (device_type)
+  if (priv->device_update_idle_id == 0)
     {
-    case CLUTTER_TOUCHSCREEN_DEVICE:
-      meta_cursor_tracker_set_pointer_visible (cursor_tracker, FALSE);
-      break;
-    default:
-      meta_cursor_tracker_set_pointer_visible (cursor_tracker, TRUE);
-      break;
+      priv->device_update_idle_id =
+        g_idle_add ((GSourceFunc) update_last_device, backend);
+      g_source_set_name_by_id (priv->device_update_idle_id,
+                               "[mutter] update_last_device");
     }
+}
+
+gboolean
+meta_backend_get_relative_motion_deltas (MetaBackend *backend,
+                                         const        ClutterEvent *event,
+                                         double       *dx,
+                                         double       *dy,
+                                         double       *dx_unaccel,
+                                         double       *dy_unaccel)
+{
+  MetaBackendClass *klass = META_BACKEND_GET_CLASS (backend);
+  return klass->get_relative_motion_deltas (backend,
+                                            event,
+                                            dx, dy,
+                                            dx_unaccel, dy_unaccel);
+}
+
+void
+meta_backend_set_client_pointer_constraint (MetaBackend           *backend,
+                                            MetaPointerConstraint *constraint)
+{
+  g_assert (!constraint || (constraint && !backend->client_pointer_constraint));
+
+  g_clear_object (&backend->client_pointer_constraint);
+  if (constraint)
+    backend->client_pointer_constraint = g_object_ref (constraint);
 }
 
 static GType

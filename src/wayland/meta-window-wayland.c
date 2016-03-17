@@ -30,6 +30,7 @@
 #include "window-private.h"
 #include "boxes-private.h"
 #include "stack-tracker.h"
+#include "meta-wayland-private.h"
 #include "meta-wayland-surface.h"
 #include "compositor/meta-surface-actor-wayland.h"
 

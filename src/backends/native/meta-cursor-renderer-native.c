@@ -102,9 +102,6 @@ meta_cursor_renderer_native_finalize (GObject *object)
   if (priv->animation_timeout_id)
     g_source_remove (priv->animation_timeout_id);
 
-  if (priv->gbm)
-    gbm_device_destroy (priv->gbm);
-
   G_OBJECT_CLASS (meta_cursor_renderer_native_parent_class)->finalize (object);
 }
 
@@ -258,6 +255,9 @@ has_valid_cursor_sprite_gbm_bo (MetaCursorSprite *cursor_sprite)
   MetaCursorNativePrivate *cursor_priv =
     g_object_get_qdata (G_OBJECT (cursor_sprite), quark_cursor_sprite);
 
+  if (!cursor_priv)
+    return FALSE;
+
   switch (cursor_priv->pending_bo_state)
     {
     case META_CURSOR_GBM_BO_STATE_NONE:
@@ -274,12 +274,41 @@ has_valid_cursor_sprite_gbm_bo (MetaCursorSprite *cursor_sprite)
 }
 
 static gboolean
+cursor_over_transformed_crtc (MetaCursorRenderer *renderer,
+                              MetaCursorSprite   *cursor_sprite)
+{
+  MetaMonitorManager *monitors;
+  MetaCRTC *crtcs;
+  unsigned int i, n_crtcs;
+  MetaRectangle rect;
+
+  monitors = meta_monitor_manager_get ();
+  meta_monitor_manager_get_resources (monitors, NULL, NULL,
+                                      &crtcs, &n_crtcs, NULL, NULL);
+  rect = meta_cursor_renderer_calculate_rect (renderer, cursor_sprite);
+
+  for (i = 0; i < n_crtcs; i++)
+    {
+      if (!meta_rectangle_overlap (&rect, &crtcs[i].rect))
+        continue;
+
+      if (crtcs[i].transform != META_MONITOR_TRANSFORM_NORMAL)
+        return TRUE;
+    }
+
+  return FALSE;
+}
+
+static gboolean
 should_have_hw_cursor (MetaCursorRenderer *renderer,
                        MetaCursorSprite   *cursor_sprite)
 {
   CoglTexture *texture;
 
   if (!cursor_sprite)
+    return FALSE;
+
+  if (cursor_over_transformed_crtc (renderer, cursor_sprite))
     return FALSE;
 
   texture = meta_cursor_sprite_get_cogl_texture (cursor_sprite);
@@ -640,7 +669,7 @@ meta_cursor_renderer_native_init (MetaCursorRendererNative *native)
     {
       CoglRenderer *cogl_renderer = cogl_display_get_renderer (cogl_context_get_display (ctx));
       priv->drm_fd = cogl_kms_renderer_get_kms_fd (cogl_renderer);
-      priv->gbm = gbm_create_device (priv->drm_fd);
+      priv->gbm = cogl_kms_renderer_get_gbm (cogl_renderer);
 
       uint64_t width, height;
       if (drmGetCap (priv->drm_fd, DRM_CAP_CURSOR_WIDTH, &width) == 0 &&
