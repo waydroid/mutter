@@ -56,6 +56,8 @@ struct _MetaWaylandSurfaceRoleClass
   GObjectClass parent_class;
 
   void (*assigned) (MetaWaylandSurfaceRole *surface_role);
+  void (*pre_commit) (MetaWaylandSurfaceRole  *surface_role,
+                      MetaWaylandPendingState *pending);
   void (*commit) (MetaWaylandSurfaceRole  *surface_role,
                   MetaWaylandPendingState *pending);
   gboolean (*is_on_output) (MetaWaylandSurfaceRole *surface_role,
@@ -104,7 +106,7 @@ struct _MetaWaylandPendingState
   /* wl_surface.attach */
   gboolean newly_attached;
   MetaWaylandBuffer *buffer;
-  struct wl_listener buffer_destroy_listener;
+  gulong buffer_destroy_handler_id;
   int32_t dx;
   int32_t dy;
 
@@ -151,8 +153,6 @@ struct _MetaWaylandSurface
   MetaSurfaceActor *surface_actor;
   MetaWaylandSurfaceRole *role;
   MetaWindow *window;
-  MetaWaylandBuffer *buffer;
-  gboolean using_buffer;
   cairo_region_t *input_region;
   cairo_region_t *opaque_region;
   int scale;
@@ -160,10 +160,24 @@ struct _MetaWaylandSurface
   GList *subsurfaces;
   GHashTable *outputs_to_destroy_notify_id;
 
+  /* Buffer reference state. */
+  struct {
+    MetaWaylandBuffer *buffer;
+    unsigned int use_count;
+  } buffer_ref;
+
+  /* Buffer renderer state. */
+  gboolean buffer_held;
+
   /* List of pending frame callbacks that needs to stay queued longer than one
    * commit sequence, such as when it has not yet been assigned a role.
    */
   struct wl_list pending_frame_callback_list;
+
+  /* Intermediate state for when no role has been assigned. */
+  struct {
+    MetaWaylandBuffer *buffer;
+  } unassigned;
 
   struct {
     const MetaWaylandDragDestFuncs *funcs;
@@ -229,6 +243,12 @@ MetaWaylandSurface *meta_wayland_surface_create (MetaWaylandCompositor *composit
 
 gboolean            meta_wayland_surface_assign_role (MetaWaylandSurface *surface,
                                                       GType               role_type);
+
+MetaWaylandBuffer  *meta_wayland_surface_get_buffer (MetaWaylandSurface *surface);
+
+void                meta_wayland_surface_ref_buffer_use_count (MetaWaylandSurface *surface);
+
+void                meta_wayland_surface_unref_buffer_use_count (MetaWaylandSurface *surface);
 
 void                meta_wayland_surface_set_window (MetaWaylandSurface *surface,
                                                      MetaWindow         *window);
