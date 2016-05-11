@@ -913,21 +913,11 @@ key_is_laptop (MetaOutputKey *key)
 {
   /* FIXME: extend with better heuristics */
   return g_str_has_prefix (key->connector, "LVDS") ||
+    g_str_has_prefix (key->connector, "lvds") ||
+    g_str_has_prefix (key->connector, "Lvds") ||
+    g_str_has_prefix (key->connector, "LCD")  || /* some versions of fglrx, sigh */
+    g_str_has_prefix (key->connector, "DSI") ||
     g_str_has_prefix (key->connector, "eDP");
-}
-
-static gboolean
-output_is_laptop (MetaOutput *output)
-{
-  /* FIXME: extend with better heuristics */
-  switch (output->connector_type)
-    {
-    case META_CONNECTOR_TYPE_eDP:
-    case META_CONNECTOR_TYPE_LVDS:
-      return TRUE;
-    default:
-      return FALSE;
-    }
 }
 
 static gboolean
@@ -1052,6 +1042,17 @@ apply_configuration_with_lid (MetaMonitorConfig  *self,
 }
 
 gboolean
+meta_monitor_config_get_is_builtin_display_on (MetaMonitorConfig *self)
+{
+  g_return_val_if_fail (META_IS_MONITOR_CONFIG (self), FALSE);
+
+  if (self->current)
+    return laptop_display_is_on (self->current);
+
+  return FALSE;
+}
+
+gboolean
 meta_monitor_config_apply_stored (MetaMonitorConfig  *self,
 				  MetaMonitorManager *manager)
 {
@@ -1092,7 +1093,7 @@ find_primary_output (MetaOutput *outputs,
 
   for (i = 0; i < n_outputs; i++)
     {
-      if (output_is_laptop (&outputs[i]))
+      if (meta_output_is_laptop (&outputs[i]))
         return i;
     }
 

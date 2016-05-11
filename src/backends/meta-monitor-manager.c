@@ -511,14 +511,8 @@ make_display_name (MetaMonitorManager *manager,
   g_autofree char *inches = NULL;
   g_autofree char *vendor_name = NULL;
 
-  switch (output->connector_type)
-    {
-    case META_CONNECTOR_TYPE_LVDS:
-    case META_CONNECTOR_TYPE_eDP:
+  if (meta_output_is_laptop (output))
       return g_strdup (_("Built-in display"));
-    default:
-      break;
-    }
 
   if (output->width_mm > 0 && output->height_mm > 0)
     {
@@ -1464,6 +1458,21 @@ meta_output_parse_edid (MetaOutput *meta_output,
     meta_output->serial = g_strdup ("unknown");
 }
 
+gboolean
+meta_output_is_laptop (MetaOutput *output)
+{
+  /* FIXME: extend with better heuristics */
+  switch (output->connector_type)
+    {
+    case META_CONNECTOR_TYPE_eDP:
+    case META_CONNECTOR_TYPE_LVDS:
+    case META_CONNECTOR_TYPE_DSI:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+}
+
 void
 meta_monitor_manager_on_hotplug (MetaMonitorManager *manager)
 {
@@ -1589,4 +1598,12 @@ meta_monitor_manager_get_monitor_at_point (MetaMonitorManager *manager,
     }
 
   return -1;
+}
+
+gboolean
+meta_monitor_manager_get_is_builtin_display_on (MetaMonitorManager *manager)
+{
+  g_return_val_if_fail (META_IS_MONITOR_MANAGER (manager), FALSE);
+
+  return meta_monitor_config_get_is_builtin_display_on (manager->config);
 }
