@@ -1,3 +1,29 @@
+mutter (3.20.2-2) unstable; urgency=medium
+
+  * Team upload
+
+  [ Jeremy Bicha ]
+  * Use https for copyright headers
+  * Use https in d/watch and use new "special strings" to help standardize
+    format
+
+  [ Simon McVittie ]
+  * Add all patches from upstream gnome-3-20 branch up to 2016-06-23
+    - fix possible crashes in Wayland and in X11
+    - ensure that Wayland output reconfiguration finishes correctly
+    - implement "force quit" in Wayland using kill(), like in X11
+    - improve UTF-8 correctness
+    - update translations
+    - ensure that all window frames are drawn similarly
+    - avoid redrawing the entire window every frame
+    - make windows that are unmaximized via drag follow the cursor
+  * Backport patch from upstream to introduce XDG_SURFACE_STATE_GNOME_TILED
+    and mark tiled windows with it, allowing GDK versions with a
+    corresponding patch to report GDK_WINDOW_STATE_TILED correctly under
+    Wayland
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 25 Jun 2016 00:19:53 +0100
+
 mutter (3.20.2-1) unstable; urgency=medium
 
   * New upstream release.
