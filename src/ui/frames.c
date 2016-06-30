@@ -1114,6 +1114,7 @@ handle_button_release_event (MetaUIFrame *frame,
 {
   Display *display = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
 
+  frame->frames->current_grab_op = META_GRAB_OP_NONE;
   meta_core_end_grab_op (display, event->time);
 
   /* We only handle the releases we handled the presses for (things
@@ -1292,7 +1293,7 @@ get_visible_frame_border_region (MetaUIFrame *frame)
   MetaFrameFlags flags;
   MetaFrameType type;
   MetaFrameBorders borders;
-  MetaRectangle frame_rect = frame->meta_window->rect;
+  MetaRectangle buffer_rect = frame->meta_window->buffer_rect;
 
   flags = meta_frame_get_flags (frame->meta_window->frame);
   type = meta_window_get_frame_type (frame->meta_window);
@@ -1301,19 +1302,19 @@ get_visible_frame_border_region (MetaUIFrame *frame)
                                 type, frame->text_height, flags,
                                 &borders);
 
-  /* Visible frame rect */
-  area.x = borders.invisible.left;
-  area.y = borders.invisible.top;
-  area.width = frame_rect.width;
-  area.height = frame_rect.height;
+  /* Frame rect */
+  area.x = 0;
+  area.y = 0;
+  area.width = buffer_rect.width;
+  area.height = buffer_rect.height;
 
   frame_border = cairo_region_create_rectangle (&area);
 
   /* Client rect */
-  area.x += borders.visible.left;
-  area.y += borders.visible.top;
-  area.width -= borders.visible.left + borders.visible.right;
-  area.height -= borders.visible.top + borders.visible.bottom;
+  area.x += borders.total.left;
+  area.y += borders.total.top;
+  area.width -= borders.total.left + borders.total.right;
+  area.height -= borders.total.top + borders.total.bottom;
 
   /* Visible frame border */
   cairo_region_subtract_rectangle (frame_border, &area);
@@ -1402,6 +1403,13 @@ meta_frames_draw (GtkWidget *widget,
   region = get_visible_frame_border_region (frame);
   gdk_cairo_region (cr, region);
   cairo_clip (cr);
+
+  /* The target may be cleared to black or transparent, depending
+   * on the frame's visual; we don't want decorations to appear
+   * differently when the theme's decorations aren't fully opaque,
+   * so clear to black first
+   */
+  cairo_paint (cr);
 
   meta_ui_frame_paint (frame, cr);
   cairo_region_destroy (region);
