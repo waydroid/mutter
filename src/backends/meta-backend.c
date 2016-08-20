@@ -26,7 +26,9 @@
 
 #include <stdlib.h>
 
+#include <clutter/clutter-mutter.h>
 #include <meta/meta-backend.h>
+#include <meta/main.h>
 #include "meta-backend-private.h"
 #include "meta-input-settings-private.h"
 
@@ -62,14 +64,22 @@ struct _MetaBackendPrivate
   MetaMonitorManager *monitor_manager;
   MetaCursorRenderer *cursor_renderer;
   MetaInputSettings *input_settings;
+  MetaRenderer *renderer;
 
+  ClutterBackend *clutter_backend;
   ClutterActor *stage;
 
   guint device_update_idle_id;
 };
 typedef struct _MetaBackendPrivate MetaBackendPrivate;
 
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (MetaBackend, meta_backend, G_TYPE_OBJECT);
+static void
+initable_iface_init (GInitableIface *initable_iface);
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (MetaBackend, meta_backend, G_TYPE_OBJECT,
+                                  G_ADD_PRIVATE (MetaBackend)
+                                  G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE,
+                                                         initable_iface_init));
 
 static void
 meta_backend_finalize (GObject *object)
@@ -113,11 +123,11 @@ center_pointer (MetaBackend *backend)
                              primary->rect.y + primary->rect.height / 2);
 }
 
-static void
-on_monitors_changed (MetaMonitorManager *monitors,
-                     gpointer user_data)
+void
+meta_backend_monitors_changed (MetaBackend *backend)
 {
-  MetaBackend *backend = META_BACKEND (user_data);
+  MetaMonitorManager *monitor_manager =
+    meta_backend_get_monitor_manager (backend);
   ClutterDeviceManager *manager = clutter_device_manager_get_default ();
   ClutterInputDevice *device = clutter_device_manager_get_core_device (manager, CLUTTER_POINTER_DEVICE);
   ClutterPoint point;
@@ -127,7 +137,8 @@ on_monitors_changed (MetaMonitorManager *monitors,
   if (clutter_input_device_get_coords (device, NULL, &point))
     {
       /* If we're outside all monitors, warp the pointer back inside */
-      if (meta_monitor_manager_get_monitor_at_point (monitors, point.x, point.y) < 0)
+      if (meta_monitor_manager_get_monitor_at_point (monitor_manager,
+                                                     point.x, point.y) < 0)
         center_pointer (backend);
     }
 }
@@ -275,8 +286,6 @@ meta_backend_real_post_init (MetaBackend *backend)
 
   priv->monitor_manager = create_monitor_manager (backend);
 
-  g_signal_connect (priv->monitor_manager, "monitors-changed",
-                    G_CALLBACK (on_monitors_changed), backend);
   meta_backend_sync_screen_size (backend);
 
   priv->cursor_renderer = META_BACKEND_GET_CLASS (backend)->create_cursor_renderer (backend);
@@ -344,15 +353,6 @@ meta_backend_real_ungrab_device (MetaBackend *backend,
 }
 
 static void
-meta_backend_real_update_screen_size (MetaBackend *backend,
-                                      int width, int height)
-{
-  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
-
-  clutter_actor_set_size (priv->stage, width, height);
-}
-
-static void
 meta_backend_real_select_stage_events (MetaBackend *backend)
 {
   /* Do nothing */
@@ -380,7 +380,6 @@ meta_backend_class_init (MetaBackendClass *klass)
   klass->create_cursor_renderer = meta_backend_real_create_cursor_renderer;
   klass->grab_device = meta_backend_real_grab_device;
   klass->ungrab_device = meta_backend_real_ungrab_device;
-  klass->update_screen_size = meta_backend_real_update_screen_size;
   klass->select_stage_events = meta_backend_real_select_stage_events;
   klass->get_relative_motion_deltas = meta_backend_real_get_relative_motion_deltas;
 
@@ -402,6 +401,32 @@ meta_backend_class_init (MetaBackendClass *klass)
                 0,
                 NULL, NULL, NULL,
                 G_TYPE_NONE, 1, G_TYPE_INT);
+}
+
+static gboolean
+meta_backend_initable_init (GInitable     *initable,
+                            GCancellable  *cancellable,
+                            GError       **error)
+{
+  MetaBackend *backend = META_BACKEND (initable);
+  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+
+  priv->renderer = META_BACKEND_GET_CLASS (backend)->create_renderer (backend);
+  if (!priv->renderer)
+    {
+      g_set_error (error, G_IO_ERROR,
+                   G_IO_ERROR_FAILED,
+                   "Failed to create MetaRenderer");
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+static void
+initable_iface_init (GInitableIface *initable_iface)
+{
+  initable_iface->init = meta_backend_initable_init;
 }
 
 static void
@@ -446,6 +471,16 @@ meta_backend_get_cursor_renderer (MetaBackend *backend)
   MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
 
   return priv->cursor_renderer;
+}
+
+/**
+ * meta_backend_get_renderer: (skip)
+ */
+MetaRenderer * meta_backend_get_renderer (MetaBackend *backend)
+{
+  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+
+  return priv->renderer;
 }
 
 /**
@@ -603,35 +638,11 @@ void
 meta_backend_set_client_pointer_constraint (MetaBackend           *backend,
                                             MetaPointerConstraint *constraint)
 {
-  g_assert (!constraint || (constraint && !backend->client_pointer_constraint));
+  g_assert (!constraint || !backend->client_pointer_constraint);
 
   g_clear_object (&backend->client_pointer_constraint);
   if (constraint)
     backend->client_pointer_constraint = g_object_ref (constraint);
-}
-
-static GType
-get_backend_type (void)
-{
-#if defined(CLUTTER_WINDOWING_X11)
-  if (clutter_check_windowing_backend (CLUTTER_WINDOWING_X11))
-    return META_TYPE_BACKEND_X11;
-#endif
-
-#if defined(CLUTTER_WINDOWING_EGL) && defined(HAVE_NATIVE_BACKEND)
-  if (clutter_check_windowing_backend (CLUTTER_WINDOWING_EGL))
-    return META_TYPE_BACKEND_NATIVE;
-#endif
-
-  g_assert_not_reached ();
-}
-
-static void
-meta_create_backend (void)
-{
-  /* meta_backend_init() above install the backend globally so
-   * so meta_get_backend() works even during initialization. */
-  g_object_new (get_backend_type (), NULL);
 }
 
 /* Mutter is responsible for pulling events off the X queue, so Clutter
@@ -682,6 +693,61 @@ static GSourceFuncs event_funcs = {
   event_dispatch
 };
 
+ClutterBackend *
+meta_backend_get_clutter_backend (MetaBackend *backend)
+{
+  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+
+  if (!priv->clutter_backend)
+    {
+      priv->clutter_backend =
+        META_BACKEND_GET_CLASS (backend)->create_clutter_backend (backend);
+    }
+
+  return priv->clutter_backend;
+}
+
+static ClutterBackend *
+meta_get_clutter_backend (void)
+{
+  MetaBackend *backend = meta_get_backend ();
+
+  return meta_backend_get_clutter_backend (backend);
+}
+
+void
+meta_init_backend (MetaBackendType backend_type)
+{
+  GType type;
+  MetaBackend *backend;
+  GError *error = NULL;
+
+  switch (backend_type)
+    {
+    case META_BACKEND_TYPE_X11:
+      type = META_TYPE_BACKEND_X11;
+      break;
+
+#ifdef HAVE_NATIVE_BACKEND
+    case META_BACKEND_TYPE_NATIVE:
+      type = META_TYPE_BACKEND_NATIVE;
+      break;
+#endif
+
+    default:
+      g_assert_not_reached ();
+    }
+
+  /* meta_backend_init() above install the backend globally so
+   * so meta_get_backend() works even during initialization. */
+  backend = g_object_new (type, NULL);
+  if (!g_initable_init (G_INITABLE (backend), NULL, &error))
+    {
+      g_warning ("Failed to create backend: %s", error->message);
+      meta_exit (META_EXIT_ERROR);
+    }
+}
+
 /**
  * meta_clutter_init: (skip)
  */
@@ -691,7 +757,7 @@ meta_clutter_init (void)
   ClutterSettings *clutter_settings;
   GSource *source;
 
-  meta_create_backend ();
+  clutter_set_custom_backend_func (meta_get_clutter_backend);
 
   if (clutter_init (NULL, NULL) != CLUTTER_INIT_SUCCESS)
     {
@@ -711,4 +777,28 @@ meta_clutter_init (void)
   g_source_unref (source);
 
   meta_backend_post_init (_backend);
+}
+
+gboolean
+meta_is_stage_views_enabled (void)
+{
+  const gchar *mutter_stage_views;
+
+  if (!meta_is_wayland_compositor ())
+    return FALSE;
+
+  mutter_stage_views = g_getenv ("MUTTER_STAGE_VIEWS");
+
+  if (!mutter_stage_views)
+    return FALSE;
+
+  return strcmp (mutter_stage_views, "1") == 0;
+}
+
+MetaInputSettings *
+meta_backend_get_input_settings (MetaBackend *backend)
+{
+  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+
+  return priv->input_settings;
 }

@@ -29,6 +29,7 @@
 
 #include "meta-backend-x11.h"
 
+#include <clutter.h>
 #include <clutter/x11/clutter-x11.h>
 
 #include <X11/extensions/sync.h>
@@ -40,7 +41,10 @@
 #include "meta-idle-monitor-xsync.h"
 #include "meta-monitor-manager-xrandr.h"
 #include "backends/meta-monitor-manager-dummy.h"
+#include "backends/meta-stage.h"
 #include "backends/x11/nested/meta-cursor-renderer-x11-nested.h"
+#include "backends/x11/meta-clutter-backend-x11.h"
+#include "backends/x11/meta-renderer-x11.h"
 #include "meta-cursor-renderer-x11.h"
 #ifdef HAVE_WAYLAND
 #include "wayland/meta-wayland.h"
@@ -499,6 +503,12 @@ meta_backend_x11_post_init (MetaBackend *backend)
   META_BACKEND_CLASS (meta_backend_x11_parent_class)->post_init (backend);
 }
 
+static ClutterBackend *
+meta_backend_x11_create_clutter_backend (MetaBackend *backend)
+{
+  return g_object_new (META_TYPE_CLUTTER_BACKEND_X11, NULL);
+}
+
 static MetaIdleMonitor *
 meta_backend_x11_create_idle_monitor (MetaBackend *backend,
                                       int          device_id)
@@ -542,6 +552,12 @@ meta_backend_x11_create_cursor_renderer (MetaBackend *backend)
     default:
       g_assert_not_reached ();
     }
+}
+
+static MetaRenderer *
+meta_backend_x11_create_renderer (MetaBackend *backend)
+{
+  return g_object_new (META_TYPE_RENDERER_X11, NULL);
 }
 
 static gboolean
@@ -798,10 +814,12 @@ meta_backend_x11_update_screen_size (MetaBackend *backend,
 
   if (priv->mode == META_BACKEND_X11_MODE_NESTED)
     {
-      /* For a nested wayland session, we want to go through Clutter to update the
-       * toplevel window size, rather than doing it directly.
-       */
-      META_BACKEND_CLASS (meta_backend_x11_parent_class)->update_screen_size (backend, width, height);
+      ClutterActor *stage = meta_backend_get_stage (backend);
+      MetaRenderer *renderer = meta_backend_get_renderer (backend);
+
+      if (meta_is_stage_views_enabled ())
+        meta_renderer_rebuild_views (renderer);
+      clutter_actor_set_size (stage, width, height);
     }
   else
     {
@@ -865,10 +883,12 @@ meta_backend_x11_class_init (MetaBackendX11Class *klass)
 {
   MetaBackendClass *backend_class = META_BACKEND_CLASS (klass);
 
+  backend_class->create_clutter_backend = meta_backend_x11_create_clutter_backend;
   backend_class->post_init = meta_backend_x11_post_init;
   backend_class->create_idle_monitor = meta_backend_x11_create_idle_monitor;
   backend_class->create_monitor_manager = meta_backend_x11_create_monitor_manager;
   backend_class->create_cursor_renderer = meta_backend_x11_create_cursor_renderer;
+  backend_class->create_renderer = meta_backend_x11_create_renderer;
   backend_class->grab_device = meta_backend_x11_grab_device;
   backend_class->ungrab_device = meta_backend_x11_ungrab_device;
   backend_class->warp_pointer = meta_backend_x11_warp_pointer;
@@ -883,6 +903,8 @@ static void
 meta_backend_x11_init (MetaBackendX11 *x11)
 {
   MetaBackendX11Private *priv = meta_backend_x11_get_instance_private (x11);
+
+  clutter_x11_request_reset_on_video_memory_purge ();
 
   /* We do X11 event retrieval ourselves */
   clutter_x11_disable_event_retrieval ();

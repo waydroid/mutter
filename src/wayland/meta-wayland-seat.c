@@ -26,6 +26,7 @@
 #include "meta-wayland-private.h"
 #include "meta-wayland-versions.h"
 #include "meta-wayland-data-device.h"
+#include "meta-wayland-tablet-seat.h"
 
 #define CAPABILITY_ENABLED(prev, cur, capability) ((cur & (capability)) && !(prev & (capability)))
 #define CAPABILITY_DISABLED(prev, cur, capability) ((prev & (capability)) && !(cur & (capability)))
@@ -205,7 +206,8 @@ meta_wayland_seat_devices_updated (ClutterDeviceManager *device_manager,
 }
 
 static MetaWaylandSeat *
-meta_wayland_seat_new (struct wl_display *display)
+meta_wayland_seat_new (MetaWaylandCompositor *compositor,
+                       struct wl_display     *display)
 {
   MetaWaylandSeat *seat = g_new0 (MetaWaylandSeat, 1);
   ClutterDeviceManager *device_manager;
@@ -224,13 +226,16 @@ meta_wayland_seat_new (struct wl_display *display)
 
   wl_global_create (display, &wl_seat_interface, META_WL_SEAT_VERSION, seat, bind_seat);
 
+  meta_wayland_tablet_manager_ensure_seat (compositor->tablet_manager, seat);
+
   return seat;
 }
 
 void
 meta_wayland_seat_init (MetaWaylandCompositor *compositor)
 {
-  compositor->seat = meta_wayland_seat_new (compositor->wayland_display);
+  compositor->seat = meta_wayland_seat_new (compositor,
+                                            compositor->wayland_display);
 }
 
 void
@@ -365,11 +370,17 @@ void
 meta_wayland_seat_set_input_focus (MetaWaylandSeat    *seat,
                                    MetaWaylandSurface *surface)
 {
-  if ((seat->capabilities & WL_SEAT_CAPABILITY_KEYBOARD) == 0)
-    return;
+  MetaWaylandTabletSeat *tablet_seat;
+  MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
 
-  meta_wayland_keyboard_set_focus (&seat->keyboard, surface);
-  meta_wayland_data_device_set_keyboard_focus (&seat->data_device);
+  if ((seat->capabilities & WL_SEAT_CAPABILITY_KEYBOARD) != 0)
+    {
+      meta_wayland_keyboard_set_focus (&seat->keyboard, surface);
+      meta_wayland_data_device_set_keyboard_focus (&seat->data_device);
+    }
+
+  tablet_seat = meta_wayland_tablet_manager_ensure_seat (compositor->tablet_manager, seat);
+  meta_wayland_tablet_seat_set_pad_focus (tablet_seat, surface);
 }
 
 gboolean

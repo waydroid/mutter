@@ -39,6 +39,7 @@
 #include "meta-wayland-seat.h"
 #include "meta-wayland-outputs.h"
 #include "meta-wayland-data-device.h"
+#include "meta-wayland-tablet-manager.h"
 
 static MetaWaylandCompositor _meta_wayland_compositor;
 
@@ -167,7 +168,10 @@ void
 meta_wayland_compositor_update (MetaWaylandCompositor *compositor,
                                 const ClutterEvent    *event)
 {
-  meta_wayland_seat_update (compositor->seat, event);
+  if (meta_wayland_tablet_manager_consumes_event (compositor->tablet_manager, event))
+    meta_wayland_tablet_manager_update (compositor->tablet_manager, event);
+  else
+    meta_wayland_seat_update (compositor->seat, event);
 }
 
 void
@@ -196,6 +200,10 @@ gboolean
 meta_wayland_compositor_handle_event (MetaWaylandCompositor *compositor,
                                       const ClutterEvent    *event)
 {
+  if (meta_wayland_tablet_manager_handle_event (compositor->tablet_manager,
+                                                event))
+    return TRUE;
+
   return meta_wayland_seat_handle_event (compositor->seat, event);
 }
 
@@ -327,6 +335,7 @@ meta_wayland_init (void)
   meta_wayland_data_device_manager_init (compositor);
   meta_wayland_shell_init (compositor);
   meta_wayland_pointer_gestures_init (compositor);
+  meta_wayland_tablet_manager_init (compositor);
   meta_wayland_seat_init (compositor);
   meta_wayland_relative_pointer_init (compositor);
   meta_wayland_pointer_constraints_init (compositor);

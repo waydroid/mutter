@@ -270,11 +270,10 @@ make_logical_config (MetaMonitorManager *manager)
       info->outputs[0] = output;
       info->n_outputs = 1;
 
+      info->scale = output->scale;
+
       if (output->is_primary || info->winsys_id == 0)
-        {
-          info->scale = output->scale;
-          info->winsys_id = output->winsys_id;
-        }
+        info->winsys_id = output->winsys_id;
 
       if (info->is_primary)
         manager->primary_monitor_index = info->number;
@@ -590,7 +589,7 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
 
   g_variant_builder_init (&crtc_builder, G_VARIANT_TYPE ("a(uxiiiiiuaua{sv})"));
   g_variant_builder_init (&output_builder, G_VARIANT_TYPE ("a(uxiausauaua{sv})"));
-  g_variant_builder_init (&mode_builder, G_VARIANT_TYPE ("a(uxuud)"));
+  g_variant_builder_init (&mode_builder, G_VARIANT_TYPE ("a(uxuudu)"));
 
   for (i = 0; i < manager->n_crtcs; i++)
     {
@@ -714,12 +713,13 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
     {
       MetaMonitorMode *mode = &manager->modes[i];
 
-      g_variant_builder_add (&mode_builder, "(uxuud)",
+      g_variant_builder_add (&mode_builder, "(uxuudu)",
                              i, /* ID */
                              (gint64)mode->mode_id,
                              (guint32)mode->width,
                              (guint32)mode->height,
-                             (double)mode->refresh_rate);
+                             (double)mode->refresh_rate,
+                             (guint32)mode->flags);
     }
 
   meta_dbus_display_config_complete_get_resources (skeleton,
@@ -1378,6 +1378,7 @@ meta_monitor_manager_read_current_config (MetaMonitorManager *manager)
 void
 meta_monitor_manager_rebuild_derived (MetaMonitorManager *manager)
 {
+  MetaBackend *backend = meta_get_backend ();
   MetaMonitorManagerClass *manager_class = META_MONITOR_MANAGER_GET_CLASS (manager);
   MetaMonitorInfo *old_monitor_infos;
   unsigned old_n_monitor_infos;
@@ -1407,6 +1408,13 @@ meta_monitor_manager_rebuild_derived (MetaMonitorManager *manager)
             manager_class->delete_monitor (manager, old_monitor_infos[i].monitor_winsys_xid);
         }
     }
+
+  /* Tell the backend about that the monitors changed before emitting the
+   * signal, so that the backend can prepare itself before all the signal
+   * consumers.
+   */
+  meta_backend_monitors_changed (backend);
+
   g_signal_emit_by_name (manager, "monitors-changed");
 
   g_free (old_monitor_infos);

@@ -3180,7 +3180,6 @@ meta_window_make_fullscreen_internal (MetaWindow  *window)
       window->fullscreen = TRUE;
 
       meta_stack_freeze (window->screen->stack);
-      meta_window_update_layer (window);
 
       meta_window_raise (window);
       meta_stack_thaw (window->screen->stack);
@@ -3265,7 +3264,7 @@ meta_window_unmake_fullscreen (MetaWindow  *window)
                                           window, META_SIZE_CHANGE_UNFULLSCREEN,
                                           &old_frame_rect, &old_buffer_rect);
 
-      meta_window_update_layer (window);
+      meta_screen_queue_check_fullscreen (window->screen);
 
       g_object_notify_by_pspec (G_OBJECT (window), obj_props[PROP_FULLSCREEN]);
     }
@@ -4783,9 +4782,6 @@ meta_window_set_focused_internal (MetaWindow *window,
       if (window->frame)
         meta_frame_queue_draw (window->frame);
 
-      /* move into FOCUSED_WINDOW layer */
-      meta_window_update_layer (window);
-
       /* Ungrab click to focus button since the sync grab can interfere
        * with some things you might do inside the focused window, by
        * causing the client to get funky enter/leave events.
@@ -4820,9 +4816,6 @@ meta_window_set_focused_internal (MetaWindow *window,
 
       if (!window->attached_focus_window)
         meta_window_appears_focused_changed (window);
-
-      /* move out of FOCUSED_WINDOW layer */
-      meta_window_update_layer (window);
 
       /* Re-grab for click to focus and raise-on-click, if necessary */
       if (meta_prefs_get_focus_mode () == G_DESKTOP_FOCUS_MODE_CLICK ||
@@ -7501,6 +7494,9 @@ mouse_mode_focus (MetaWindow  *window,
                   guint32      timestamp)
 {
   MetaDisplay *display = window->display;
+
+  if (window->override_redirect)
+    return;
 
   if (window->type != META_WINDOW_DESKTOP)
     {

@@ -53,6 +53,7 @@
 #include "backends/native/meta-backend-native.h"
 #include "backends/x11/meta-backend-x11.h"
 #include "backends/meta-stage.h"
+#include "backends/meta-input-settings-private.h"
 #include <clutter/x11/clutter-x11.h>
 
 #ifdef HAVE_RANDR
@@ -75,6 +76,8 @@
 
 #ifdef HAVE_WAYLAND
 #include "wayland/meta-xwayland-private.h"
+#include "wayland/meta-wayland-tablet-seat.h"
+#include "wayland/meta-wayland-tablet-pad.h"
 #endif
 
 /*
@@ -125,6 +128,8 @@ enum
   SHOW_RESTART_MESSAGE,
   RESTART,
   SHOW_RESIZE_POPUP,
+  GL_VIDEO_MEMORY_PURGED,
+  SHOW_PAD_OSD,
   LAST_SIGNAL
 };
 
@@ -342,6 +347,35 @@ meta_display_class_init (MetaDisplayClass *klass)
                   G_TYPE_BOOLEAN, 4,
                   G_TYPE_BOOLEAN, META_TYPE_RECTANGLE, G_TYPE_INT, G_TYPE_INT);
 
+  display_signals[GL_VIDEO_MEMORY_PURGED] =
+    g_signal_new ("gl-video-memory-purged",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL, NULL,
+                  G_TYPE_NONE, 0);
+
+  /**
+   * MetaDisplay::show-pad-osd:
+   * @display: the #MetaDisplay instance
+   * @pad: the pad device
+   * @settings: the pad device settings
+   * @layout_path: path to the layout image
+   * @edition_mode: Whether the OSD should be shown in edition mode
+   * @monitor_idx: Monitor to show the OSD on
+   *
+   * Requests the pad button mapping OSD to be shown.
+   *
+   * Returns: (transfer none) (nullable): The OSD actor
+   */
+  display_signals[SHOW_PAD_OSD] =
+    g_signal_new ("show-pad-osd",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL, NULL,
+                  CLUTTER_TYPE_ACTOR, 5, CLUTTER_TYPE_INPUT_DEVICE,
+                  G_TYPE_SETTINGS, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_INT);
+
   g_object_class_install_property (object_class,
                                    PROP_FOCUS_WINDOW,
                                    g_param_spec_object ("focus-window",
@@ -537,6 +571,7 @@ meta_display_open (void)
   MetaScreen *screen;
   int i;
   guint32 timestamp;
+  Window old_active_xwindow = None;
 
   /* A list of all atom names, so that we can intern them in one go. */
   const char *atom_names[] = {
@@ -885,11 +920,10 @@ meta_display_open (void)
   display->compositor = NULL;
 
   /* Mutter used to manage all X screens of the display in a single process, but
-   * now it always manages exactly one screen as specified by the DISPLAY
-   * environment variable.
+   * now it always manages exactly one screen - the default screen retrieved
+   * from GDK.
    */
-  i = meta_ui_get_screen_number ();
-  screen = meta_screen_new (display, i, timestamp);
+  screen = meta_screen_new (display, timestamp);
 
   if (!screen)
     {
@@ -901,6 +935,11 @@ meta_display_open (void)
     }
 
   display->screen = screen;
+
+  if (!meta_is_wayland_compositor ())
+    meta_prop_get_window (display, display->screen->xroot,
+                          display->atom__NET_ACTIVE_WINDOW,
+                          &old_active_xwindow);
 
   display->startup_notification = meta_startup_notification_get (display);
   g_signal_connect (display->startup_notification, "changed",
@@ -923,43 +962,16 @@ meta_display_open (void)
   if (!meta_is_wayland_compositor ())
     meta_screen_manage_all_windows (screen);
 
-  {
-    Window focus;
-    int ret_to;
-
-    /* kinda bogus because GetInputFocus has no possible errors */
-    meta_error_trap_push (display);
-
-    /* FIXME: This is totally broken; see comment 9 of bug 88194 about this */
-    focus = None;
-    ret_to = RevertToPointerRoot;
-    XGetInputFocus (display->xdisplay, &focus, &ret_to);
-
-    /* Force a new FocusIn (does this work?) */
-
-    /* Use the same timestamp that was passed to meta_screen_new(),
-     * as it is the most recent timestamp.
-     */
-    if (focus == None || focus == PointerRoot)
-      /* Just focus the no_focus_window on the first screen */
-      meta_display_focus_the_no_focus_window (display,
-                                              display->screen,
-                                              timestamp);
-    else
-      {
-        MetaWindow * window;
-        window  = meta_display_lookup_x_window (display, focus);
-        if (window)
-          meta_display_set_input_focus_window (display, window, FALSE, timestamp);
-        else
-          /* Just focus the no_focus_window on the first screen */
-          meta_display_focus_the_no_focus_window (display,
-                                                  display->screen,
-                                                  timestamp);
-      }
-
-    meta_error_trap_pop (display);
-  }
+  if (old_active_xwindow != None)
+    {
+      MetaWindow *old_active_window = meta_display_lookup_x_window (display, old_active_xwindow);
+      if (old_active_window)
+        meta_window_focus (old_active_window, timestamp);
+      else
+        meta_display_focus_the_no_focus_window (display, display->screen, timestamp);
+    }
+  else
+    meta_display_focus_the_no_focus_window (display, display->screen, timestamp);
 
   meta_idle_monitor_init_dbus ();
 
@@ -2053,6 +2065,9 @@ meta_display_update_active_window_hint (MetaDisplay *display)
 {
   gulong data[1];
 
+  if (display->closing)
+    return; /* Leave old value for a replacement */
+
   if (display->focus_window)
     data[0] = display->focus_window->xwindow;
   else
@@ -2624,7 +2639,7 @@ meta_display_unmanage_screen (MetaDisplay *display,
                               guint32      timestamp)
 {
   meta_verbose ("Unmanaging screen %d on display %s\n",
-                screen->number, display->name);
+                meta_ui_get_screen_number (), display->name);
   meta_display_close (display, timestamp);
 }
 
@@ -3078,4 +3093,112 @@ meta_display_set_alarm_filter (MetaDisplay    *display,
 
   display->alarm_filter = filter;
   display->alarm_filter_data = data;
+}
+
+void
+meta_display_request_pad_osd (MetaDisplay        *display,
+                              ClutterInputDevice *pad,
+                              gboolean            edition_mode)
+{
+  MetaInputSettings *input_settings;
+  const gchar *layout_path = NULL;
+  ClutterActor *osd;
+  MetaMonitorInfo *monitor;
+  gint monitor_idx;
+  GSettings *settings;
+#ifdef HAVE_LIBWACOM
+  WacomDevice *wacom_device;
+#endif
+
+  input_settings = meta_backend_get_input_settings (meta_get_backend ());
+
+  if (display->current_pad_osd)
+    {
+      clutter_actor_destroy (display->current_pad_osd);
+      display->current_pad_osd = NULL;
+    }
+
+  if (input_settings)
+    {
+      settings = meta_input_settings_get_tablet_settings (input_settings, pad);
+      monitor = meta_input_settings_get_tablet_monitor_info (input_settings, pad);
+#ifdef HAVE_LIBWACOM
+      wacom_device = meta_input_settings_get_tablet_wacom_device (input_settings,
+                                                                  pad);
+      layout_path = libwacom_get_layout_filename (wacom_device);
+#endif
+    }
+
+  if (!layout_path || !settings)
+    return;
+
+  if (monitor)
+    {
+      monitor_idx = meta_screen_get_monitor_index_for_rect (display->screen,
+                                                            &monitor->rect);
+    }
+  else
+    {
+      monitor_idx = meta_screen_get_current_monitor (display->screen);
+    }
+
+  g_signal_emit (display, display_signals[SHOW_PAD_OSD], 0,
+                 pad, settings, layout_path,
+                 edition_mode, monitor_idx, &osd);
+
+  if (osd)
+    {
+      display->current_pad_osd = osd;
+      g_object_add_weak_pointer (G_OBJECT (display->current_pad_osd),
+                                 (gpointer *) &display->current_pad_osd);
+    }
+
+  g_object_unref (settings);
+}
+
+gchar *
+meta_display_get_pad_action_label (MetaDisplay        *display,
+                                   ClutterInputDevice *pad,
+                                   MetaPadActionType   action_type,
+                                   guint               action_number)
+{
+  gchar *label;
+
+  /* First, lookup the action, as imposed by settings */
+  if (action_type == META_PAD_ACTION_BUTTON)
+    {
+      MetaInputSettings *settings;
+
+      settings = meta_backend_get_input_settings (meta_get_backend ());
+      label = meta_input_settings_get_pad_button_action_label (settings, pad, action_number);
+      if (label)
+        return label;
+    }
+
+#ifdef HAVE_WAYLAND
+  /* Second, if this wayland, lookup the actions set by the clients */
+  if (meta_is_wayland_compositor ())
+    {
+      MetaWaylandCompositor *compositor;
+      MetaWaylandTabletSeat *tablet_seat;
+      MetaWaylandTabletPad *tablet_pad = NULL;
+
+      compositor = meta_wayland_compositor_get_default ();
+      tablet_seat = meta_wayland_tablet_manager_ensure_seat (compositor->tablet_manager,
+                                                             compositor->seat);
+      if (tablet_seat)
+        tablet_pad = meta_wayland_tablet_seat_lookup_pad (tablet_seat, pad);
+
+      if (tablet_pad)
+        {
+          label = meta_wayland_tablet_pad_get_label (tablet_pad, action_type,
+                                                     action_number);
+        }
+
+      if (label)
+        return label;
+    }
+#endif
+
+  return NULL;
 }

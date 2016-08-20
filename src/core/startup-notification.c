@@ -418,7 +418,7 @@ collect_timed_out_foreach (void *element,
   elapsed = ctod->now - timestamp;
 
   meta_topic (META_DEBUG_STARTUP,
-              "Sequence used %ld ms vs. %d max: %s\n",
+              "Sequence used %" G_GINT64_FORMAT " ms vs. %d max: %s\n",
               elapsed, STARTUP_TIMEOUT,
               meta_startup_notification_sequence_get_id (sequence));
 
@@ -675,7 +675,7 @@ meta_startup_notification_constructed (GObject *object)
                                    sn_error_trap_pop);
   sn->sn_context =
     sn_monitor_context_new (sn->sn_display,
-                            sn->display->screen->number,
+                            meta_ui_get_screen_number (),
                             meta_startup_notification_sn_event,
                             sn,
                             NULL);

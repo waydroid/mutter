@@ -219,12 +219,26 @@ meta_display_handle_event (MetaDisplay        *display,
                                        clutter_input_device_get_device_id (source));
     }
 
+#ifdef HAVE_WAYLAND
   if (meta_is_wayland_compositor () && event->type == CLUTTER_MOTION)
     {
-      meta_cursor_tracker_update_position (meta_cursor_tracker_get_for_screen (NULL),
-                                           event->motion.x, event->motion.y);
+      MetaWaylandCompositor *compositor;
+
+      compositor = meta_wayland_compositor_get_default ();
+
+      if (meta_wayland_tablet_manager_consumes_event (compositor->tablet_manager, event))
+        {
+          meta_wayland_tablet_manager_update_cursor_position (compositor->tablet_manager, event);
+        }
+      else
+        {
+          MetaCursorTracker *tracker = meta_cursor_tracker_get_for_screen (NULL);
+          meta_cursor_tracker_update_position (tracker, event->motion.x, event->motion.y);
+        }
+
       display->monitor_cache_invalidated = TRUE;
     }
+#endif
 
   handle_idletime_for_event (event);
 
@@ -281,6 +295,12 @@ meta_display_handle_event (MetaDisplay        *display,
   if (meta_keybindings_process_event (display, window, event))
     {
       bypass_clutter = TRUE;
+      bypass_wayland = TRUE;
+      goto out;
+    }
+
+  if (display->current_pad_osd)
+    {
       bypass_wayland = TRUE;
       goto out;
     }

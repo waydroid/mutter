@@ -38,6 +38,10 @@
 #include "meta-launcher.h"
 #include "backends/meta-cursor-tracker-private.h"
 #include "backends/meta-pointer-constraint.h"
+#include "backends/meta-stage.h"
+#include "backends/native/meta-clutter-backend-native.h"
+#include "backends/native/meta-renderer-native.h"
+#include "backends/native/meta-stage-native.h"
 
 #include <stdlib.h>
 
@@ -241,6 +245,12 @@ pointer_constrain_callback (ClutterInputDevice *device,
   constrain_all_screen_monitors(device, monitors, n_monitors, new_x, new_y);
 }
 
+static ClutterBackend *
+meta_backend_native_create_clutter_backend (MetaBackend *backend)
+{
+  return g_object_new (META_TYPE_CLUTTER_BACKEND_NATIVE, NULL);
+}
+
 static void
 meta_backend_native_post_init (MetaBackend *backend)
 {
@@ -271,6 +281,28 @@ static MetaCursorRenderer *
 meta_backend_native_create_cursor_renderer (MetaBackend *backend)
 {
   return g_object_new (META_TYPE_CURSOR_RENDERER_NATIVE, NULL);
+}
+
+static MetaRenderer *
+meta_backend_native_create_renderer (MetaBackend *backend)
+{
+  MetaBackendNative *native = META_BACKEND_NATIVE (backend);
+  MetaBackendNativePrivate *priv =
+    meta_backend_native_get_instance_private (native);
+  int kms_fd;
+  GError *error;
+  MetaRendererNative *renderer_native;
+
+  kms_fd = meta_launcher_get_kms_fd (priv->launcher);
+  renderer_native = meta_renderer_native_new (kms_fd, &error);
+  if (!renderer_native)
+    {
+      meta_warning ("Failed to create renderer: %s\n", error->message);
+      g_error_free (error);
+      return NULL;
+    }
+
+  return META_RENDERER (renderer_native);
 }
 
 static void
@@ -350,6 +382,23 @@ meta_backend_native_get_relative_motion_deltas (MetaBackend *backend,
 }
 
 static void
+meta_backend_native_update_screen_size (MetaBackend *backend,
+                                        int width, int height)
+{
+  ClutterBackend *clutter_backend = meta_backend_get_clutter_backend (backend);
+  MetaStageNative *stage_native;
+  ClutterActor *stage = meta_backend_get_stage (backend);
+
+  stage_native = meta_clutter_backend_native_get_stage_native (clutter_backend);
+  if (meta_is_stage_views_enabled ())
+    meta_stage_native_rebuild_views (stage_native);
+  else
+    meta_stage_native_legacy_set_size (stage_native, width, height);
+
+  clutter_actor_set_size (stage, width, height);
+}
+
+static void
 meta_backend_native_class_init (MetaBackendNativeClass *klass)
 {
   MetaBackendClass *backend_class = META_BACKEND_CLASS (klass);
@@ -357,16 +406,21 @@ meta_backend_native_class_init (MetaBackendNativeClass *klass)
 
   object_class->finalize = meta_backend_native_finalize;
 
+  backend_class->create_clutter_backend = meta_backend_native_create_clutter_backend;
+
   backend_class->post_init = meta_backend_native_post_init;
+
   backend_class->create_idle_monitor = meta_backend_native_create_idle_monitor;
   backend_class->create_monitor_manager = meta_backend_native_create_monitor_manager;
   backend_class->create_cursor_renderer = meta_backend_native_create_cursor_renderer;
+  backend_class->create_renderer = meta_backend_native_create_renderer;
 
   backend_class->warp_pointer = meta_backend_native_warp_pointer;
   backend_class->set_keymap = meta_backend_native_set_keymap;
   backend_class->get_keymap = meta_backend_native_get_keymap;
   backend_class->lock_layout_group = meta_backend_native_lock_layout_group;
   backend_class->get_relative_motion_deltas = meta_backend_native_get_relative_motion_deltas;
+  backend_class->update_screen_size = meta_backend_native_update_screen_size;
 }
 
 static void
