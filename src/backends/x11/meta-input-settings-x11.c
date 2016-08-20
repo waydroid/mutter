@@ -31,10 +31,28 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
+#ifdef HAVE_LIBGUDEV
+#include <gudev/gudev.h>
+#endif
 
 #include <meta/errors.h>
 
-G_DEFINE_TYPE (MetaInputSettingsX11, meta_input_settings_x11, META_TYPE_INPUT_SETTINGS)
+typedef struct _MetaInputSettingsX11Private
+{
+#ifdef HAVE_LIBGUDEV
+  GUdevClient *udev_client;
+#endif
+} MetaInputSettingsX11Private;
+
+G_DEFINE_TYPE_WITH_PRIVATE (MetaInputSettingsX11, meta_input_settings_x11,
+                            META_TYPE_INPUT_SETTINGS)
+
+enum {
+  SCROLL_METHOD_FIELD_2FG,
+  SCROLL_METHOD_FIELD_EDGE,
+  SCROLL_METHOD_FIELD_BUTTON,
+  SCROLL_METHOD_NUM_FIELDS
+};
 
 static void *
 get_property (ClutterInputDevice *device,
@@ -203,31 +221,79 @@ meta_input_settings_x11_set_edge_scroll (MetaInputSettings            *settings,
                                          ClutterInputDevice           *device,
                                          gboolean                      edge_scroll_enabled)
 {
-  guchar values[3] = { 0 }; /* 2fg, edge, button. The last value is unused */
+  guchar values[SCROLL_METHOD_NUM_FIELDS] = { 0 }; /* 2fg, edge, button. The last value is unused */
+  guchar *defaults;
   guchar *available;
 
   available = get_property (device, "libinput Scroll Methods Available",
-                            XA_INTEGER, 8, 3);
-  if (!available)
-    return;
+                            XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
+  defaults = get_property (device, "libinput Scroll Method Enabled",
+                           XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
+  if (!available || !defaults)
+    goto out;
 
-  if (available[0])
+  memcpy (values, defaults, SCROLL_METHOD_NUM_FIELDS);
+
+  /* Don't set edge scrolling if two-finger scrolling is enabled and available */
+  if (available[SCROLL_METHOD_FIELD_EDGE] &&
+      !(available[SCROLL_METHOD_FIELD_2FG] && values[SCROLL_METHOD_FIELD_2FG]))
     {
-      values[0] = 1;
-    }
-  else if (available[1] && edge_scroll_enabled)
-    {
-      values[1] = 1;
-    }
-  else
-    {
-      /* Disabled */
+      values[1] = !!edge_scroll_enabled;
+      change_property (device, "libinput Scroll Method Enabled",
+                       XA_INTEGER, 8, &values, SCROLL_METHOD_NUM_FIELDS);
     }
 
-  change_property (device, "libinput Scroll Method Enabled",
-                   XA_INTEGER, 8, &values, 3);
+out:
+  if (available)
+    meta_XFree (available);
+  if (defaults)
+    meta_XFree (defaults);
+}
 
-  meta_XFree (available);
+static void
+meta_input_settings_x11_set_two_finger_scroll (MetaInputSettings            *settings,
+                                               ClutterInputDevice           *device,
+                                               gboolean                      two_finger_scroll_enabled)
+{
+  guchar values[SCROLL_METHOD_NUM_FIELDS] = { 0 }; /* 2fg, edge, button. The last value is unused */
+  guchar *defaults;
+  guchar *available;
+  gboolean changed;
+
+  available = get_property (device, "libinput Scroll Methods Available",
+                            XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
+  defaults = get_property (device, "libinput Scroll Method Enabled",
+                           XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
+  if (!available || !defaults)
+    goto out;
+
+  memcpy (values, defaults, SCROLL_METHOD_NUM_FIELDS);
+  changed = FALSE;
+
+  if (available[SCROLL_METHOD_FIELD_2FG])
+    {
+      values[SCROLL_METHOD_FIELD_2FG] = !!two_finger_scroll_enabled;
+      changed = TRUE;
+    }
+
+  /* Disable edge scrolling when two-finger scrolling is enabled */
+  if (values[SCROLL_METHOD_FIELD_2FG] && values[SCROLL_METHOD_FIELD_EDGE])
+    {
+      values[SCROLL_METHOD_FIELD_EDGE] = 0;
+      changed = TRUE;
+    }
+
+  if (changed)
+    {
+      change_property (device, "libinput Scroll Method Enabled",
+                       XA_INTEGER, 8, &values, SCROLL_METHOD_NUM_FIELDS);
+    }
+
+out:
+  if (available)
+    meta_XFree (available);
+  if (defaults)
+    meta_XFree (defaults);
 }
 
 static void
@@ -305,10 +371,181 @@ meta_input_settings_x11_set_keyboard_repeat (MetaInputSettings *settings,
     }
 }
 
+static gboolean
+has_udev_property (MetaInputSettings  *settings,
+                   ClutterInputDevice *device,
+                   const char         *property_name)
+{
+#ifdef HAVE_LIBGUDEV
+  MetaInputSettingsX11 *settings_x11 = META_INPUT_SETTINGS_X11 (settings);
+  MetaInputSettingsX11Private *priv =
+    meta_input_settings_x11_get_instance_private (settings_x11);
+  const char *device_node;
+  GUdevDevice *udev_device = NULL;
+  GUdevDevice *parent_udev_device = NULL;
+
+  device_node = clutter_input_device_get_device_node (device);
+  if (!device_node)
+    return FALSE;
+
+  udev_device = g_udev_client_query_by_device_file (priv->udev_client,
+                                                    device_node);
+  if (!udev_device)
+    return FALSE;
+
+  if (NULL != g_udev_device_get_property (udev_device, property_name))
+    {
+      g_object_unref (udev_device);
+      return TRUE;
+    }
+
+  parent_udev_device = g_udev_device_get_parent (udev_device);
+  g_object_unref (udev_device);
+
+  if (!parent_udev_device)
+    return FALSE;
+
+  if (NULL != g_udev_device_get_property (parent_udev_device, property_name))
+    {
+      g_object_unref (parent_udev_device);
+      return TRUE;
+    }
+
+  g_object_unref (parent_udev_device);
+  return FALSE;
+#else
+  g_warning ("Failed to set acceleration profile: no udev support");
+  return FALSE;
+#endif
+}
+
+static gboolean
+is_mouse (MetaInputSettings  *settings,
+          ClutterInputDevice *device)
+{
+  return (has_udev_property (settings, device, "ID_INPUT_MOUSE") &&
+          !has_udev_property (settings, device, "ID_INPUT_POINTINGSTICK"));
+}
+
+static gboolean
+is_trackball (MetaInputSettings  *settings,
+              ClutterInputDevice *device)
+{
+  return meta_input_device_is_trackball (device);
+}
+
+static void
+set_device_accel_profile (ClutterInputDevice         *device,
+                          GDesktopPointerAccelProfile profile)
+{
+  guchar *defaults, *available;
+  guchar values[2] = { 0 }; /* adaptive, flat */
+
+  defaults = get_property (device, "libinput Accel Profile Enabled Default",
+                           XA_INTEGER, 8, 2);
+  if (!defaults)
+    return;
+
+  available = get_property (device, "libinput Accel Profiles Available",
+                           XA_INTEGER, 8, 2);
+  if (!available)
+    goto err_available;
+
+  switch (profile)
+    {
+    case G_DESKTOP_POINTER_ACCEL_PROFILE_FLAT:
+      values[0] = 0;
+      values[1] = 1;
+      break;
+    case G_DESKTOP_POINTER_ACCEL_PROFILE_ADAPTIVE:
+      values[0] = 1;
+      values[1] = 0;
+      break;
+    default:
+      g_warn_if_reached ();
+    case G_DESKTOP_POINTER_ACCEL_PROFILE_DEFAULT:
+      values[0] = defaults[0];
+      values[1] = defaults[1];
+      break;
+    }
+
+  change_property (device, "libinput Accel Profile Enabled",
+                   XA_INTEGER, 8, &values, 2);
+
+  meta_XFree (available);
+
+err_available:
+  meta_XFree (defaults);
+}
+
+static void
+meta_input_settings_x11_set_mouse_accel_profile (MetaInputSettings          *settings,
+                                                 ClutterInputDevice         *device,
+                                                 GDesktopPointerAccelProfile profile)
+{
+  if (!is_mouse (settings, device))
+    return;
+
+  set_device_accel_profile (device, profile);
+}
+
+static void
+meta_input_settings_x11_set_trackball_accel_profile (MetaInputSettings          *settings,
+                                                     ClutterInputDevice         *device,
+                                                     GDesktopPointerAccelProfile profile)
+{
+  if (!is_trackball (settings, device))
+    return;
+
+  set_device_accel_profile (device, profile);
+}
+
+static void
+meta_input_settings_x11_set_tablet_mapping (MetaInputSettings     *settings,
+                                            ClutterInputDevice    *device,
+                                            GDesktopTabletMapping  mapping)
+{
+}
+
+static void
+meta_input_settings_x11_set_tablet_keep_aspect (MetaInputSettings  *settings,
+                                                ClutterInputDevice *device,
+                                                MetaOutput         *output,
+                                                gboolean            keep_aspect)
+{
+}
+
+static void
+meta_input_settings_x11_set_tablet_area (MetaInputSettings  *settings,
+                                         ClutterInputDevice *device,
+                                         gdouble             padding_left,
+                                         gdouble             padding_right,
+                                         gdouble             padding_top,
+                                         gdouble             padding_bottom)
+{
+}
+
+static void
+meta_input_settings_x11_dispose (GObject *object)
+{
+#ifdef HAVE_LIBGUDEV
+  MetaInputSettingsX11 *settings_x11 = META_INPUT_SETTINGS_X11 (object);
+  MetaInputSettingsX11Private *priv =
+    meta_input_settings_x11_get_instance_private (settings_x11);
+
+  g_clear_object (&priv->udev_client);
+#endif
+
+  G_OBJECT_CLASS (meta_input_settings_x11_parent_class)->dispose (object);
+}
+
 static void
 meta_input_settings_x11_class_init (MetaInputSettingsX11Class *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   MetaInputSettingsClass *input_settings_class = META_INPUT_SETTINGS_CLASS (klass);
+
+  object_class->dispose = meta_input_settings_x11_dispose;
 
   input_settings_class->set_send_events = meta_input_settings_x11_set_send_events;
   input_settings_class->set_matrix = meta_input_settings_x11_set_matrix;
@@ -317,12 +554,27 @@ meta_input_settings_x11_class_init (MetaInputSettingsX11Class *klass)
   input_settings_class->set_tap_enabled = meta_input_settings_x11_set_tap_enabled;
   input_settings_class->set_invert_scroll = meta_input_settings_x11_set_invert_scroll;
   input_settings_class->set_edge_scroll = meta_input_settings_x11_set_edge_scroll;
+  input_settings_class->set_two_finger_scroll = meta_input_settings_x11_set_two_finger_scroll;
   input_settings_class->set_scroll_button = meta_input_settings_x11_set_scroll_button;
   input_settings_class->set_click_method = meta_input_settings_x11_set_click_method;
   input_settings_class->set_keyboard_repeat = meta_input_settings_x11_set_keyboard_repeat;
+
+  input_settings_class->set_tablet_mapping = meta_input_settings_x11_set_tablet_mapping;
+  input_settings_class->set_tablet_keep_aspect = meta_input_settings_x11_set_tablet_keep_aspect;
+  input_settings_class->set_tablet_area = meta_input_settings_x11_set_tablet_area;
+
+  input_settings_class->set_mouse_accel_profile = meta_input_settings_x11_set_mouse_accel_profile;
+  input_settings_class->set_trackball_accel_profile = meta_input_settings_x11_set_trackball_accel_profile;
 }
 
 static void
 meta_input_settings_x11_init (MetaInputSettingsX11 *settings)
 {
+#ifdef HAVE_LIBGUDEV
+  MetaInputSettingsX11Private *priv =
+    meta_input_settings_x11_get_instance_private (settings);
+  const char *subsystems[] = { NULL };
+
+  priv->udev_client = g_udev_client_new (subsystems);
+#endif
 }

@@ -1,35 +1,88 @@
-3.20.3
+3.21.90
+=======
+* Consider XDG_SESSION_TYPE when determining session type [Jouke; #759388]
+* Re-add support for edge scrolling on some touchpads [Bastien; #768245]
+* Support mouse and trackball acceleration profile [Jonas; #769179]
+* Draw monitor contentn to individual framebuffer [Jonas; #768976]
+* Support virtual input devices [Jonas, Carlos; #765009]
+* Set correct output scale on hotplug [Jonas; #769505]
+* Misc. bug fixes and cleanups [Florian, Jonas, Thomas, Bastien, Carlos;
+  #769014, #769024, #769054, #769070, #769036, #769305, #769578, #769800,
+  #769073]
+
+Contributors:
+  Jonas Ådahl, Carlos Garnacho, Thomas Hindoe Paaboel Andersen, Simon McVittie,
+  Alberts Muktupāvels, Florian Müllner, Bastien Nocera, Jouke Witteveen
+
+Translations:
+  Daniel Mustieles [es], Aurimas Černius [lt], Dušan Kazik [sk],
+  Fabio Tomat [fur], Balázs Úr [hu], Yosef Or Boczko [he], Marek Černocký [cs],
+  Matej Urbančič [sl]
+
+3.21.4
 ======
-* Fix grabbing random keys for disabled shortcuts [Rui; #766270]
-* Crash fixes [Marek, Rui; #751847, #767969]
-* Improve multi-monitor handling on wayland [Rui; #766528]
+* Fix missing frame border around GTK+ dialogs [Florian; #745060]
+* Improve X11 <-> wayland copy and paste interaction [Carlos; #768007]
+* Add support for NV_robustness_video_memory_purge extension [Rui; #739178]
+* Fix restoring the old focused window on restart [Owen; #766243]
+* Fix fullscreen windows on other monitors stealing focus after closing
+  a window [Rui; #768221]
+* Draw monitor content to individual framebuffer [Jonas; #768976]
+* Provide screen capture API [Jonas; #768978]
+* Misc. bug fixes and cleanups [Rui, Owen, Luca, Olivier, Jonas, Carlos;
+  #767969, #768243, #762407, #767997, #768039, #768977, #768977]
+
+Contributors:
+  Jonas Ådahl, Luca Bruno, Olivier Fourdan, Carlos Garnacho, Rui Matos,
+  Florian Müllner, Owen W. Taylor
+
+Translations:
+  Andika Triwidada [id]
+
+3.21.3
+======
 * Don't create invalid UTF-8 window description strings [Rui; #765535]
 * Convert window titles and wm_class to UTF-8 [Rui; #752788]
+* Communicate tiled state to GTK+ on wayland [Olivier; #766860]
 * Use kill() to force-quit unresponsive wayland clients [Olivier; #767464]
 * Fix window position when unmaximizing via DND on wayland [Olivier; #764180]
 * Avoid full window redraws when using extended frame sync [Florian; #767798]
-* Fix missing frame border around GTK+ dialogs [Florian; #745060]
-* Improve X11 <-> wayland copy and paste interaction [Carlos; #768007]
 
 Contributors:
-  Marek Chalupa, Olivier Fourdan, Carlos Garnacho, Rui Matos, Florian Müllner
+  Olivier Fourdan, Rui Matos, Florian Müllner
 
 Translations:
-  Kjartan Maraas [nb], Muhammet Kara [tr], Andika Triwidada [id]
+  Cédric Valmary [oc]
 
-3.20.2
+3.21.2
+======
+* Clean up surface <-> shell interaction [Jonas; #763431]
+* Fix grabbing random keys for disabled shortcuts [Rui; #766270]
+* Fix stacking of hidden windows on wayland [Rui; #764844]
+* Misc. bug fixes [Victor, Florian, Marek, Rui; #766306, #766326, #751847,
+  #763832, #766528]
+
+Contributors:
+  Jonas Ådahl, Emmanuele Bassi, Marek Chalupa, Matthias Clasen,
+  Carlos Garnacho, Rui Matos, Florian Müllner, Victor Toso
+
+Translations:
+  Tiago Santos [pt], Cédric Valmary [oc], Muhammet Kara [tr]
+
+3.21.1
 ======
 * Notify clients of pending modifier state changes [Rui; #748526]
 * Add get_is_builtin_display_on() method [Florian; #765267]
 * Fix 2-finger titlebar taps on wayland [Carlos; #764519]
+* Merge clutter and cogl forks into mutter [Rui; #760439]
 * Misc. bug fixes [Florian, Victor, Jonas; #765058, #765252, #765062]
 
 Contributors:
-  Jonas Ådahl, Olivier Fourdan, Carlos Garnacho, Rui Matos, Florian Müllner,
-  Victor Toso
+  Jonas Ådahl, Emmanuele Bassi, Olivier Fourdan, Carlos Garnacho, Rui Matos,
+  Florian Müllner, Victor Toso, Rico Tzschichholz
 
 Translations:
-  GNOME Translation Robot [ja], Tiago Santos [pt]
+  GNOME Translation Robot [ja, gd]
 
 3.20.1
 ======

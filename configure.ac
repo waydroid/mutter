@@ -1,8 +1,8 @@
 AC_PREREQ(2.62)
 
 m4_define([mutter_major_version], [3])
-m4_define([mutter_minor_version], [20])
-m4_define([mutter_micro_version], [3])
+m4_define([mutter_minor_version], [21])
+m4_define([mutter_micro_version], [90])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -16,10 +16,13 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SRCDIR(src/core/display.c)
 AC_CONFIG_HEADERS(config.h)
+AC_CONFIG_SUBDIRS([cogl clutter])
 
 AM_INIT_AUTOMAKE([1.11 foreign no-dist-gzip dist-xz tar-ustar subdir-objects])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],)
 AM_MAINTAINER_MODE([enable])
+
+AC_GNU_SOURCE
 
 MUTTER_MAJOR_VERSION=mutter_major_version
 MUTTER_MINOR_VERSION=mutter_minor_version
@@ -40,9 +43,11 @@ GETTEXT_PACKAGE=mutter
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Name of default gettext domain])
 
+AM_GNU_GETTEXT_VERSION([0.19.6])
+AM_GNU_GETTEXT([external])
+
 LT_PREREQ([2.2.6])
 LT_INIT([disable-static])
-IT_PROG_INTLTOOL([0.41])
 AC_PROG_CC
 AC_PROG_CC_C_O
 AC_PROG_INSTALL
@@ -51,21 +56,20 @@ AC_HEADER_STDC
 PKG_PROG_PKG_CONFIG([0.21])
 
 # Sets GLIB_GENMARSHAL and GLIB_MKENUMS
-AM_PATH_GLIB_2_0()
+AM_PATH_GLIB_2_0([2.49.0])
 
 CANBERRA_GTK=libcanberra-gtk3
 CANBERRA_GTK_VERSION=0.26
 
-CLUTTER_PACKAGE=clutter-1.0
+LIBWACOM_VERSION=0.13
 
 MUTTER_PC_MODULES="
    gtk+-3.0 >= 3.19.8
    gio-unix-2.0 >= 2.35.1
    pango >= 1.2.0
    cairo >= 1.10.0
-   gsettings-desktop-schemas >= 3.19.3
-   $CLUTTER_PACKAGE >= 1.25.6
-   cogl-1.0 >= 1.17.1
+   gsettings-desktop-schemas >= 3.21.4
+   json-glib-1.0
    upower-glib >= 0.99.0
    gnome-desktop-3.0
    xcomposite >= 0.2
@@ -108,6 +112,16 @@ AC_ARG_WITH(libcanberra,
   AC_HELP_STRING([--without-libcanberra],
                  [disable the use of libcanberra for playing sounds]),,
   with_libcanberra=auto)
+
+AC_ARG_WITH(libwacom,
+  AC_HELP_STRING([--without-libwacom],
+                 [disable the use of libwacom for advanced tablet management]),,
+  with_libwacom=auto)
+
+AC_ARG_WITH(gudev,
+  AC_HELP_STRING([--without-gudev],
+                 [disable the use of gudev for device type detection]),,
+  with_gudev=auto)
 
 AC_ARG_WITH([xwayland-path],
             [AS_HELP_STRING([--with-xwayland-path], [Absolute path for an X Wayland server])],
@@ -170,6 +184,42 @@ else
   fi
 fi
 
+have_libwacom=no
+AC_MSG_CHECKING([libwacom])
+if test x$with_libwacom = xno ; then
+  AC_MSG_RESULT([disabled])
+else
+  if $PKG_CONFIG --exists libwacom '>=' $LIBWACOM_VERSION; then
+    have_libwacom=yes
+    AC_MSG_RESULT(yes)
+    MUTTER_PC_MODULES="$MUTTER_PC_MODULES libwacom"
+    AC_DEFINE([HAVE_LIBWACOM], 1, [Building with libwacom for advanced tablet management])
+  else
+    AC_MSG_RESULT(no)
+    if test x$with_libwacom = xyes ; then
+      AC_MSG_ERROR([libwacom forced but not found])
+    fi
+  fi
+fi
+
+have_gudev=no
+AC_MSG_CHECKING([gudev])
+if test x$with_gudev = xno ; then
+  AC_MSG_RESULT([disabled])
+else
+  if $PKG_CONFIG --exists gudev-1.0; then
+    have_gudev=yes
+    AC_MSG_RESULT(yes)
+    MUTTER_PC_MODULES="$MUTTER_PC_MODULES gudev-1.0"
+    AC_DEFINE([HAVE_LIBGUDEV], 1, [Building with gudev for device type detection])
+  else
+    AC_MSG_RESULT(no)
+    if test x$with_gudev = xyes ; then
+      AC_MSG_ERROR([gudev forced but not found])
+    fi
+  fi
+fi
+
 INTROSPECTION_VERSION=0.9.5
 GOBJECT_INTROSPECTION_CHECK([$INTROSPECTION_VERSION])
 
@@ -189,12 +239,13 @@ AC_SUBST(XWAYLAND_PATH)
 
 PKG_CHECK_MODULES(MUTTER, $MUTTER_PC_MODULES)
 
-MUTTER_NATIVE_BACKEND_MODULES="clutter-egl-1.0 libdrm libsystemd libinput gudev-1.0 gbm >= 10.3"
+MUTTER_NATIVE_BACKEND_MODULES="libdrm libsystemd libinput >= 1.4 gudev-1.0 gbm >= 10.3"
 
 AC_ARG_ENABLE(native-backend,
   AS_HELP_STRING([--disable-native-backend], [disable mutter native (KMS) backend]),,
   enable_native_backend=auto
 )
+have_native_backend="no"
 AS_IF([test "$enable_native_backend" = "yes"], [have_native_backend=yes],
       [test "$enable_native_backend" = "auto"], PKG_CHECK_EXISTS([$MUTTER_NATIVE_BACKEND_MODULES], [have_native_backend=yes]))
 
@@ -204,7 +255,7 @@ AS_IF([test "$have_native_backend" = "yes"], [
 ])
 AM_CONDITIONAL([HAVE_NATIVE_BACKEND],[test "$have_native_backend" = "yes"])
 
-MUTTER_WAYLAND_MODULES="clutter-wayland-1.0 clutter-wayland-compositor-1.0 wayland-server >= 1.6.90"
+MUTTER_WAYLAND_MODULES="wayland-server >= 1.6.90"
 
 AC_ARG_ENABLE(wayland,
   AS_HELP_STRING([--disable-wayland], [disable mutter on wayland support]),,
@@ -221,7 +272,7 @@ AS_IF([test "$have_wayland" = "yes"], [
   AC_SUBST([WAYLAND_SCANNER])
   AC_DEFINE([HAVE_WAYLAND],[1],[Define if you want to enable Wayland support])
 
-  PKG_CHECK_MODULES(WAYLAND_PROTOCOLS, [wayland-protocols >= 1.1],
+  PKG_CHECK_MODULES(WAYLAND_PROTOCOLS, [wayland-protocols >= 1.5],
 		    [ac_wayland_protocols_pkgdatadir=`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`])
   AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, $ac_wayland_protocols_pkgdatadir)
 ])
@@ -229,10 +280,6 @@ AM_CONDITIONAL([HAVE_WAYLAND],[test "$have_wayland" = "yes"])
 
 PKG_CHECK_EXISTS([xi >= 1.6.99.1],
                  AC_DEFINE([HAVE_XI23],[1],[Define if you have support for XInput 2.3 or greater]))
-
-# This is used for plugins
-AC_SUBST(CLUTTER_PACKAGE)
-PKG_CHECK_MODULES(CLUTTER, $CLUTTER_PACKAGE)
 
 AC_PATH_XTRA
 
@@ -422,6 +469,8 @@ mutter-$VERSION
 
 	Startup notification:     ${have_startup_notification}
 	libcanberra:              ${have_libcanberra}
+	libwacom:                 ${have_libwacom}
+	gudev                     ${have_gudev}
 	Introspection:            ${found_introspection}
 	Session management:       ${found_sm}
 	Wayland:                  ${have_wayland}

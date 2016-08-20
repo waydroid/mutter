@@ -106,6 +106,8 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	relative-pointer-unstable-v1-server-protocol.h			\
 @HAVE_WAYLAND_TRUE@	pointer-constraints-unstable-v1-protocol.c			\
 @HAVE_WAYLAND_TRUE@	pointer-constraints-unstable-v1-server-protocol.h		\
+@HAVE_WAYLAND_TRUE@	tablet-unstable-v2-protocol.c					\
+@HAVE_WAYLAND_TRUE@	tablet-unstable-v2-server-protocol.h				\
 @HAVE_WAYLAND_TRUE@	$(NULL)
 
 @HAVE_WAYLAND_TRUE@am__append_2 = \
@@ -146,16 +148,40 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-popup.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-seat.c		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-seat.h		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet.c		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet.h		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-manager.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-manager.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-seat.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-seat.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-tool.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-tool.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad-group.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad-group.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad-ring.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad-ring.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad-strip.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad-strip.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-touch.c		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-touch.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface.c		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface.h		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-cursor.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-cursor.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-tablet-cursor.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-tablet-cursor.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-types.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-versions.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-outputs.c		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-outputs.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.c		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.h		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-shell.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-shell.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-wl-shell.c		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-wl-shell.h		\
 @HAVE_WAYLAND_TRUE@	$(NULL)
 
 @HAVE_NATIVE_BACKEND_TRUE@am__append_3 = \
@@ -164,6 +190,8 @@ host_triplet = @host@
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-backend-native-private.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-barrier-native.c		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-barrier-native.h		\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-clutter-backend-native.c	\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-clutter-backend-native.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.c	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-idle-monitor-native.c	\
@@ -174,6 +202,10 @@ host_triplet = @host@
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-monitor-manager-kms.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-launcher.c			\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-launcher.h			\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-renderer-native.c		\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-renderer-native.h		\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-stage-native.c		\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-stage-native.h		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/dbus-utils.c			\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/dbus-utils.h			\
 @HAVE_NATIVE_BACKEND_TRUE@	$(NULL)
@@ -188,10 +220,14 @@ libexec_PROGRAMS = mutter-restart-helper$(EXEEXT)
 @HAVE_WAYLAND_TRUE@am__append_5 = tests/mutter-all.test.in
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/intltool.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
+	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
+	$(top_srcdir)/m4/lib-ld.m4 $(top_srcdir)/m4/lib-link.m4 \
+	$(top_srcdir)/m4/lib-prefix.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/m4/nls.m4 $(top_srcdir)/m4/po.m4 \
+	$(top_srcdir)/m4/progtest.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__dist_stacking_DATA_DIST) \
@@ -236,6 +272,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libmutter_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) \
+	$(top_builddir)/clutter/clutter/libmutter-clutter-1.0.la \
 	$(am__DEPENDENCIES_1)
 am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	meta/meta-backend.h backends/meta-backend-private.h \
@@ -259,11 +297,15 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	backends/meta-monitor-manager-dummy.h \
 	backends/meta-pointer-constraint.c \
 	backends/meta-pointer-constraint.h backends/meta-stage.h \
-	backends/meta-stage.c backends/edid-parse.c backends/edid.h \
-	backends/x11/meta-backend-x11.c \
+	backends/meta-stage.c backends/meta-renderer.c \
+	backends/meta-renderer.h backends/meta-renderer-view.c \
+	backends/meta-renderer-view.h backends/edid-parse.c \
+	backends/edid.h backends/x11/meta-backend-x11.c \
 	backends/x11/meta-backend-x11.h \
 	backends/x11/meta-barrier-x11.c \
 	backends/x11/meta-barrier-x11.h \
+	backends/x11/meta-clutter-backend-x11.c \
+	backends/x11/meta-clutter-backend-x11.h \
 	backends/x11/meta-cursor-renderer-x11.c \
 	backends/x11/meta-cursor-renderer-x11.h \
 	backends/x11/nested/meta-cursor-renderer-x11-nested.c \
@@ -274,9 +316,13 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	backends/x11/meta-input-settings-x11.h \
 	backends/x11/meta-monitor-manager-xrandr.c \
 	backends/x11/meta-monitor-manager-xrandr.h \
-	core/meta-accel-parse.c core/meta-accel-parse.h meta/barrier.h \
-	core/bell.c core/bell.h core/boxes.c core/boxes-private.h \
-	meta/boxes.h core/meta-border.c core/meta-border.h \
+	backends/x11/meta-renderer-x11.c \
+	backends/x11/meta-renderer-x11.h \
+	backends/x11/meta-stage-x11-nested.c \
+	backends/x11/meta-stage-x11-nested.h core/meta-accel-parse.c \
+	core/meta-accel-parse.h meta/barrier.h core/bell.c core/bell.h \
+	core/boxes.c core/boxes-private.h meta/boxes.h \
+	core/meta-border.c core/meta-border.h \
 	compositor/clutter-utils.c compositor/clutter-utils.h \
 	compositor/cogl-utils.c compositor/cogl-utils.h \
 	compositor/compositor.c compositor/compositor-private.h \
@@ -366,16 +412,41 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	wayland/meta-pointer-confinement-wayland.h \
 	wayland/meta-wayland-popup.c wayland/meta-wayland-popup.h \
 	wayland/meta-wayland-seat.c wayland/meta-wayland-seat.h \
+	wayland/meta-wayland-tablet.c wayland/meta-wayland-tablet.h \
+	wayland/meta-wayland-tablet-manager.c \
+	wayland/meta-wayland-tablet-manager.h \
+	wayland/meta-wayland-tablet-seat.c \
+	wayland/meta-wayland-tablet-seat.h \
+	wayland/meta-wayland-tablet-tool.c \
+	wayland/meta-wayland-tablet-tool.h \
+	wayland/meta-wayland-tablet-pad.c \
+	wayland/meta-wayland-tablet-pad.h \
+	wayland/meta-wayland-tablet-pad-group.c \
+	wayland/meta-wayland-tablet-pad-group.h \
+	wayland/meta-wayland-tablet-pad-ring.c \
+	wayland/meta-wayland-tablet-pad-ring.h \
+	wayland/meta-wayland-tablet-pad-strip.c \
+	wayland/meta-wayland-tablet-pad-strip.h \
 	wayland/meta-wayland-touch.c wayland/meta-wayland-touch.h \
 	wayland/meta-wayland-surface.c wayland/meta-wayland-surface.h \
+	wayland/meta-wayland-surface-role-cursor.c \
+	wayland/meta-wayland-surface-role-cursor.h \
+	wayland/meta-wayland-surface-role-tablet-cursor.c \
+	wayland/meta-wayland-surface-role-tablet-cursor.h \
 	wayland/meta-wayland-types.h wayland/meta-wayland-versions.h \
 	wayland/meta-wayland-outputs.c wayland/meta-wayland-outputs.h \
 	wayland/meta-window-wayland.c wayland/meta-window-wayland.h \
+	wayland/meta-wayland-xdg-shell.c \
+	wayland/meta-wayland-xdg-shell.h \
+	wayland/meta-wayland-wl-shell.c \
+	wayland/meta-wayland-wl-shell.h \
 	backends/native/meta-backend-native.c \
 	backends/native/meta-backend-native.h \
 	backends/native/meta-backend-native-private.h \
 	backends/native/meta-barrier-native.c \
 	backends/native/meta-barrier-native.h \
+	backends/native/meta-clutter-backend-native.c \
+	backends/native/meta-clutter-backend-native.h \
 	backends/native/meta-cursor-renderer-native.c \
 	backends/native/meta-cursor-renderer-native.h \
 	backends/native/meta-idle-monitor-native.c \
@@ -385,8 +456,12 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	backends/native/meta-monitor-manager-kms.c \
 	backends/native/meta-monitor-manager-kms.h \
 	backends/native/meta-launcher.c \
-	backends/native/meta-launcher.h backends/native/dbus-utils.c \
-	backends/native/dbus-utils.h
+	backends/native/meta-launcher.h \
+	backends/native/meta-renderer-native.c \
+	backends/native/meta-renderer-native.h \
+	backends/native/meta-stage-native.c \
+	backends/native/meta-stage-native.h \
+	backends/native/dbus-utils.c backends/native/dbus-utils.h
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 =
 @HAVE_WAYLAND_TRUE@am__objects_2 =  \
@@ -407,18 +482,33 @@ am__objects_1 =
 @HAVE_WAYLAND_TRUE@	wayland/meta-pointer-confinement-wayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-popup.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-seat.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-manager.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-seat.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-tool.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad-group.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad-ring.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-tablet-pad-strip.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-touch.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-cursor.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-tablet-cursor.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-outputs.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-shell.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-wl-shell.lo \
 @HAVE_WAYLAND_TRUE@	$(am__objects_1)
 @HAVE_NATIVE_BACKEND_TRUE@am__objects_3 = backends/native/meta-backend-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-barrier-native.lo \
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-clutter-backend-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-idle-monitor-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-input-settings-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-monitor-manager-kms.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-launcher.lo \
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-renderer-native.lo \
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-stage-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/dbus-utils.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	$(am__objects_1)
 am_libmutter_la_OBJECTS = backends/meta-backend.lo \
@@ -431,17 +521,20 @@ am_libmutter_la_OBJECTS = backends/meta-backend.lo \
 	backends/meta-monitor-manager.lo \
 	backends/meta-monitor-manager-dummy.lo \
 	backends/meta-pointer-constraint.lo backends/meta-stage.lo \
+	backends/meta-renderer.lo backends/meta-renderer-view.lo \
 	backends/edid-parse.lo backends/x11/meta-backend-x11.lo \
 	backends/x11/meta-barrier-x11.lo \
+	backends/x11/meta-clutter-backend-x11.lo \
 	backends/x11/meta-cursor-renderer-x11.lo \
 	backends/x11/nested/meta-cursor-renderer-x11-nested.lo \
 	backends/x11/meta-idle-monitor-xsync.lo \
 	backends/x11/meta-input-settings-x11.lo \
 	backends/x11/meta-monitor-manager-xrandr.lo \
-	core/meta-accel-parse.lo core/bell.lo core/boxes.lo \
-	core/meta-border.lo compositor/clutter-utils.lo \
-	compositor/cogl-utils.lo compositor/compositor.lo \
-	compositor/meta-background.lo \
+	backends/x11/meta-renderer-x11.lo \
+	backends/x11/meta-stage-x11-nested.lo core/meta-accel-parse.lo \
+	core/bell.lo core/boxes.lo core/meta-border.lo \
+	compositor/clutter-utils.lo compositor/cogl-utils.lo \
+	compositor/compositor.lo compositor/meta-background.lo \
 	compositor/meta-background-actor.lo \
 	compositor/meta-background-image.lo \
 	compositor/meta-background-group.lo \
@@ -479,6 +572,7 @@ am__objects_6 = meta-dbus-login1.lo
 @HAVE_WAYLAND_TRUE@	xdg-shell-unstable-v5-protocol.lo \
 @HAVE_WAYLAND_TRUE@	relative-pointer-unstable-v1-protocol.lo \
 @HAVE_WAYLAND_TRUE@	pointer-constraints-unstable-v1-protocol.lo \
+@HAVE_WAYLAND_TRUE@	tablet-unstable-v2-protocol.lo \
 @HAVE_WAYLAND_TRUE@	$(am__objects_1)
 am__objects_8 = $(am__objects_4) $(am__objects_5) $(am__objects_6) \
 	meta-enum-types.lo $(am__objects_1) $(am__objects_7)
@@ -649,7 +743,6 @@ am__relativize = \
   reldir="$$dir2"
 ACLOCAL = @ACLOCAL@
 ACLOCAL_AMFLAGS = @ACLOCAL_AMFLAGS@
-ALL_LINGUAS = @ALL_LINGUAS@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AR = @AR@
@@ -660,9 +753,6 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CLUTTER_CFLAGS = @CLUTTER_CFLAGS@
-CLUTTER_LIBS = @CLUTTER_LIBS@
-CLUTTER_PACKAGE = @CLUTTER_PACKAGE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -677,6 +767,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GETTEXT_MACRO_VERSION = @GETTEXT_MACRO_VERSION@
 GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
 GLIB_CFLAGS = @GLIB_CFLAGS@
 GLIB_COMPILE_RESOURCES = @GLIB_COMPILE_RESOURCES@
@@ -685,6 +776,7 @@ GLIB_GENMARSHAL = @GLIB_GENMARSHAL@
 GLIB_LIBS = @GLIB_LIBS@
 GLIB_MKENUMS = @GLIB_MKENUMS@
 GMSGFMT = @GMSGFMT@
+GMSGFMT_015 = @GMSGFMT_015@
 GNOME_KEYBINDINGS_KEYSDIR = @GNOME_KEYBINDINGS_KEYSDIR@
 GOBJECT_QUERY = @GOBJECT_QUERY@
 GREP = @GREP@
@@ -694,14 +786,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-INTLTOOL_EXTRACT = @INTLTOOL_EXTRACT@
-INTLTOOL_MERGE = @INTLTOOL_MERGE@
-INTLTOOL_PERL = @INTLTOOL_PERL@
-INTLTOOL_UPDATE = @INTLTOOL_UPDATE@
-INTLTOOL_V_MERGE = @INTLTOOL_V_MERGE@
-INTLTOOL_V_MERGE_OPTIONS = @INTLTOOL_V_MERGE_OPTIONS@
-INTLTOOL__v_MERGE_ = @INTLTOOL__v_MERGE_@
-INTLTOOL__v_MERGE_0 = @INTLTOOL__v_MERGE_0@
+INTLLIBS = @INTLLIBS@
+INTL_MACOSX_LIBS = @INTL_MACOSX_LIBS@
 INTROSPECTION_CFLAGS = @INTROSPECTION_CFLAGS@
 INTROSPECTION_COMPILER = @INTROSPECTION_COMPILER@
 INTROSPECTION_GENERATE = @INTROSPECTION_GENERATE@
@@ -712,11 +798,15 @@ INTROSPECTION_SCANNER = @INTROSPECTION_SCANNER@
 INTROSPECTION_TYPELIBDIR = @INTROSPECTION_TYPELIBDIR@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBICONV = @LIBICONV@
+LIBINTL = @LIBINTL@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
+LTLIBICONV = @LTLIBICONV@
+LTLIBINTL = @LTLIBINTL@
 LTLIBOBJS = @LTLIBOBJS@
 LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAINT = @MAINT@
@@ -725,6 +815,7 @@ MANIFEST_TOOL = @MANIFEST_TOOL@
 META_GIR = @META_GIR@
 MKDIR_P = @MKDIR_P@
 MSGFMT = @MSGFMT@
+MSGFMT_015 = @MSGFMT_015@
 MSGMERGE = @MSGMERGE@
 MUTTER_CFLAGS = @MUTTER_CFLAGS@
 MUTTER_LIBS = @MUTTER_LIBS@
@@ -754,6 +845,7 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+POSUB = @POSUB@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -766,6 +858,8 @@ WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_PROTOCOLS_LIBS = @WAYLAND_PROTOCOLS_LIBS@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
 XGETTEXT = @XGETTEXT@
+XGETTEXT_015 = @XGETTEXT_015@
+XGETTEXT_EXTRA_OPTIONS = @XGETTEXT_EXTRA_OPTIONS@
 XMKMF = @XMKMF@
 XWAYLAND_PATH = @XWAYLAND_PATH@
 X_CFLAGS = @X_CFLAGS@
@@ -807,8 +901,6 @@ htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
-intltool__v_merge_options_ = @intltool__v_merge_options_@
-intltool__v_merge_options_0 = @intltool__v_merge_options_0@
 libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
@@ -823,6 +915,7 @@ psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
@@ -840,6 +933,7 @@ AM_CPPFLAGS = \
 	-DCLUTTER_ENABLE_EXPERIMENTAL_API				\
 	-DCOGL_ENABLE_EXPERIMENTAL_API					\
 	-DCOGL_ENABLE_EXPERIMENTAL_2_0_API                              \
+	-DCOGL_ENABLE_MUTTER_API					\
 	-DCLUTTER_DISABLE_DEPRECATION_WARNINGS				\
 	-DCOGL_DISABLE_DEPRECATION_WARNINGS				\
 	$(MUTTER_CFLAGS)						\
@@ -850,6 +944,15 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/core						\
 	-I$(srcdir)/ui							\
 	-I$(srcdir)/compositor						\
+	-I$(top_srcdir)/cogl						\
+	-I$(top_srcdir)/cogl/cogl					\
+	-I$(top_srcdir)/cogl/cogl/winsys				\
+	-I$(top_builddir)/cogl/cogl					\
+	-I$(top_builddir)/cogl						\
+	-I$(top_srcdir)/clutter						\
+	-I$(top_srcdir)/clutter/clutter					\
+	-I$(top_builddir)/clutter					\
+	-I$(top_builddir)/clutter/clutter				\
 	-DMUTTER_LIBEXECDIR=\"$(libexecdir)\"				\
 	-DMUTTER_LOCALEDIR=\"$(localedir)\"				\
 	-DMUTTER_PKGDATADIR=\"$(pkgdatadir)\"				\
@@ -892,11 +995,15 @@ libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	backends/meta-monitor-manager-dummy.h \
 	backends/meta-pointer-constraint.c \
 	backends/meta-pointer-constraint.h backends/meta-stage.h \
-	backends/meta-stage.c backends/edid-parse.c backends/edid.h \
-	backends/x11/meta-backend-x11.c \
+	backends/meta-stage.c backends/meta-renderer.c \
+	backends/meta-renderer.h backends/meta-renderer-view.c \
+	backends/meta-renderer-view.h backends/edid-parse.c \
+	backends/edid.h backends/x11/meta-backend-x11.c \
 	backends/x11/meta-backend-x11.h \
 	backends/x11/meta-barrier-x11.c \
 	backends/x11/meta-barrier-x11.h \
+	backends/x11/meta-clutter-backend-x11.c \
+	backends/x11/meta-clutter-backend-x11.h \
 	backends/x11/meta-cursor-renderer-x11.c \
 	backends/x11/meta-cursor-renderer-x11.h \
 	backends/x11/nested/meta-cursor-renderer-x11-nested.c \
@@ -907,9 +1014,13 @@ libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	backends/x11/meta-input-settings-x11.h \
 	backends/x11/meta-monitor-manager-xrandr.c \
 	backends/x11/meta-monitor-manager-xrandr.h \
-	core/meta-accel-parse.c core/meta-accel-parse.h meta/barrier.h \
-	core/bell.c core/bell.h core/boxes.c core/boxes-private.h \
-	meta/boxes.h core/meta-border.c core/meta-border.h \
+	backends/x11/meta-renderer-x11.c \
+	backends/x11/meta-renderer-x11.h \
+	backends/x11/meta-stage-x11-nested.c \
+	backends/x11/meta-stage-x11-nested.h core/meta-accel-parse.c \
+	core/meta-accel-parse.h meta/barrier.h core/bell.c core/bell.h \
+	core/boxes.c core/boxes-private.h meta/boxes.h \
+	core/meta-border.c core/meta-border.h \
 	compositor/clutter-utils.c compositor/clutter-utils.h \
 	compositor/cogl-utils.c compositor/cogl-utils.h \
 	compositor/compositor.c compositor/compositor-private.h \
@@ -973,7 +1084,12 @@ libmutter_la_SOURCES = backends/meta-backend.c meta/meta-backend.h \
 	$(am__append_3)
 nodist_libmutter_la_SOURCES = $(mutter_built_sources)
 libmutter_la_LDFLAGS = -no-undefined -export-symbols-regex "^(meta|ag)_.*"
-libmutter_la_LIBADD = $(MUTTER_LIBS) $(MUTTER_NATIVE_BACKEND_LIBS)
+libmutter_la_LIBADD = \
+	$(MUTTER_LIBS) \
+	$(MUTTER_NATIVE_BACKEND_LIBS)	\
+	$(top_builddir)/clutter/clutter/libmutter-clutter-1.0.la \
+	$(NULL)
+
 
 # Headers installed for plugins; introspected information will
 # be extracted into Mutter-<version>.gir
@@ -1067,6 +1183,8 @@ testboxes_LDADD = $(MUTTER_LIBS) libmutter.la
 @HAVE_INTROSPECTION_TRUE@typelibdir = $(pkglibdir)
 @HAVE_INTROSPECTION_TRUE@typelib_DATA = Meta-$(api_version).typelib
 @HAVE_INTROSPECTION_TRUE@INTROSPECTION_GIRS = Meta-$(api_version).gir
+@HAVE_INTROSPECTION_TRUE@INTROSPECTION_SCANNER_ARGS = --add-include-path=$(top_builddir)/clutter/clutter --add-include-path=$(top_builddir)/cogl/cogl --add-include-path=$(top_builddir)/cogl/cogl-pango
+@HAVE_INTROSPECTION_TRUE@INTROSPECTION_COMPILER_ARGS = --includedir=$(top_builddir)/clutter/clutter --includedir=$(top_builddir)/cogl/cogl --includedir=$(top_builddir)/cogl/cogl-pango
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_INCLUDES = GObject-2.0 GDesktopEnums-3.0 Gdk-3.0 Gtk-3.0 Clutter-1.0 xlib-2.0 xfixes-4.0 Cogl-1.0
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_EXPORT_PACKAGES = libmutter
 @HAVE_INTROSPECTION_TRUE@@META_GIR@_CFLAGS = $(AM_CPPFLAGS)
@@ -1195,6 +1313,10 @@ backends/meta-pointer-constraint.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-stage.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-renderer.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-renderer-view.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
 backends/edid-parse.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/x11/$(am__dirstamp):
@@ -1206,6 +1328,9 @@ backends/x11/$(DEPDIR)/$(am__dirstamp):
 backends/x11/meta-backend-x11.lo: backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
 backends/x11/meta-barrier-x11.lo: backends/x11/$(am__dirstamp) \
+	backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/meta-clutter-backend-x11.lo:  \
+	backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
 backends/x11/meta-cursor-renderer-x11.lo:  \
 	backends/x11/$(am__dirstamp) \
@@ -1225,6 +1350,10 @@ backends/x11/meta-input-settings-x11.lo: backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
 backends/x11/meta-monitor-manager-xrandr.lo:  \
 	backends/x11/$(am__dirstamp) \
+	backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/meta-renderer-x11.lo: backends/x11/$(am__dirstamp) \
+	backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/meta-stage-x11-nested.lo: backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
 core/$(am__dirstamp):
 	@$(MKDIR_P) core
@@ -1382,13 +1511,37 @@ wayland/meta-wayland-popup.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-seat.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-tablet.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-tablet-manager.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-tablet-seat.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-tablet-tool.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-tablet-pad.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-tablet-pad-group.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-tablet-pad-ring.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-tablet-pad-strip.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-touch.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-surface.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-surface-role-cursor.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-surface-role-tablet-cursor.lo:  \
+	wayland/$(am__dirstamp) wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-outputs.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-window-wayland.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-xdg-shell.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-wl-shell.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 backends/native/$(am__dirstamp):
 	@$(MKDIR_P) backends/native
@@ -1400,6 +1553,9 @@ backends/native/meta-backend-native.lo:  \
 	backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/meta-barrier-native.lo:  \
+	backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-clutter-backend-native.lo:  \
 	backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/meta-cursor-renderer-native.lo:  \
@@ -1415,6 +1571,11 @@ backends/native/meta-monitor-manager-kms.lo:  \
 	backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/meta-launcher.lo: backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-renderer-native.lo:  \
+	backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-stage-native.lo: backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/dbus-utils.lo: backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
@@ -1654,6 +1815,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pointer-constraints-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pointer-gestures-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/relative-pointer-unstable-v1-protocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tablet-unstable-v2-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-shell-unstable-v5-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/edid-parse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-backend.Plo@am__quote@
@@ -1668,21 +1830,29 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-manager-dummy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-pointer-constraint.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-renderer-view.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-renderer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-stage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/dbus-utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-backend-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-barrier-native.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-clutter-backend-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-cursor-renderer-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-idle-monitor-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-input-settings-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-launcher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-monitor-manager-kms.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-renderer-native.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-stage-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-backend-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-barrier-x11.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-clutter-backend-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-cursor-renderer-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-idle-monitor-xsync.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-input-settings-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-monitor-manager-xrandr.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-renderer-x11.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-stage-x11-nested.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/nested/$(DEPDIR)/meta-cursor-renderer-x11-nested.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/clutter-utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compositor/$(DEPDIR)/cogl-utils.Plo@am__quote@
@@ -1757,8 +1927,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-popup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-region.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-seat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-surface-role-cursor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-surface-role-tablet-cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-surface.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet-manager.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet-pad-group.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet-pad-ring.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet-pad-strip.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet-pad.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet-seat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet-tool.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-touch.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-wl-shell.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-xdg-shell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-window-wayland.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-xwayland-selection.Plo@am__quote@
@@ -2338,6 +2520,7 @@ $(dbus_display_config_built_sources) : Makefile.am org.gnome.Mutter.DisplayConfi
 		--interface-prefix org.gnome.Mutter					\
 		--c-namespace MetaDBus							\
 		--generate-c-code meta-dbus-display-config				\
+		--c-generate-autocleanup all						\
 		$(srcdir)/org.gnome.Mutter.DisplayConfig.xml
 
 $(dbus_idle_built_sources) : Makefile.am org.gnome.Mutter.IdleMonitor.xml
@@ -2346,6 +2529,7 @@ $(dbus_idle_built_sources) : Makefile.am org.gnome.Mutter.IdleMonitor.xml
 		--c-namespace MetaDBus							\
 		--generate-c-code meta-dbus-idle-monitor				\
 		--c-generate-object-manager						\
+		--c-generate-autocleanup all						\
 		$(srcdir)/org.gnome.Mutter.IdleMonitor.xml
 
 $(dbus_login1_built_sources) : Makefile.am org.freedesktop.login1.xml
@@ -2353,6 +2537,7 @@ $(dbus_login1_built_sources) : Makefile.am org.freedesktop.login1.xml
 		--interface-prefix org.freedesktop.login1				\
 		--c-namespace Login1							\
 		--generate-c-code meta-dbus-login1					\
+		--c-generate-autocleanup all						\
 		$(srcdir)/org.freedesktop.login1.xml
 
 .SECONDEXPANSION:

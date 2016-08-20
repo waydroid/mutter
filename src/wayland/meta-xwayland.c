@@ -299,7 +299,8 @@ create_lock_file (int display, int *display_out)
 }
 
 static int
-bind_to_abstract_socket (int display)
+bind_to_abstract_socket (int       display,
+                         gboolean *fatal)
 {
   struct sockaddr_un addr;
   socklen_t size, name_size;
@@ -307,7 +308,11 @@ bind_to_abstract_socket (int display)
 
   fd = socket (PF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
   if (fd < 0)
-    return -1;
+    {
+      *fatal = TRUE;
+      g_warning ("Failed to create socket: %m");
+      return -1;
+    }
 
   addr.sun_family = AF_LOCAL;
   name_size = snprintf (addr.sun_path, sizeof addr.sun_path,
@@ -315,6 +320,7 @@ bind_to_abstract_socket (int display)
   size = offsetof (struct sockaddr_un, sun_path) + name_size;
   if (bind (fd, (struct sockaddr *) &addr, size) < 0)
     {
+      *fatal = errno != EADDRINUSE;
       g_warning ("failed to bind to @%s: %m", addr.sun_path + 1);
       close (fd);
       return -1;
@@ -322,6 +328,9 @@ bind_to_abstract_socket (int display)
 
   if (listen (fd, 1) < 0)
     {
+      *fatal = errno != EADDRINUSE;
+      g_warning ("Failed to listen on abstract socket @%s: %m",
+                 addr.sun_path + 1);
       close (fd);
       return -1;
     }
@@ -394,6 +403,7 @@ choose_xdisplay (MetaXWaylandManager *manager)
 {
   int display = 0;
   char *lock_file = NULL;
+  gboolean fatal = FALSE;
 
   /* Hack to keep the unused Xwayland instance on
    * the login screen from taking the prime :0 display
@@ -411,22 +421,25 @@ choose_xdisplay (MetaXWaylandManager *manager)
           return FALSE;
         }
 
-      manager->abstract_fd = bind_to_abstract_socket (display);
+      manager->abstract_fd = bind_to_abstract_socket (display, &fatal);
       if (manager->abstract_fd < 0)
         {
           unlink (lock_file);
 
-          if (errno == EADDRINUSE)
+          if (!fatal)
             {
               display++;
               continue;
             }
           else
-            return FALSE;
+            {
+              g_warning ("Failed to bind abstract socket");
+              return FALSE;
+            }
         }
 
       manager->unix_fd = bind_to_unix_socket (display);
-      if (manager->abstract_fd < 0)
+      if (manager->unix_fd < 0)
         {
           unlink (lock_file);
           close (manager->abstract_fd);
@@ -618,6 +631,12 @@ xwayland_surface_commit (MetaWaylandSurfaceRole  *surface_role,
   meta_wayland_surface_queue_pending_state_frame_callbacks (surface, pending);
 }
 
+static MetaWaylandSurface *
+xwayland_surface_get_toplevel (MetaWaylandSurfaceRole *surface_role)
+{
+  return meta_wayland_surface_role_get_surface (surface_role);
+}
+
 static void
 meta_wayland_surface_role_xwayland_init (MetaWaylandSurfaceRoleXWayland *role)
 {
@@ -631,4 +650,5 @@ meta_wayland_surface_role_xwayland_class_init (MetaWaylandSurfaceRoleXWaylandCla
 
   surface_role_class->assigned = xwayland_surface_assigned;
   surface_role_class->commit = xwayland_surface_commit;
+  surface_role_class->get_toplevel = xwayland_surface_get_toplevel;
 }
