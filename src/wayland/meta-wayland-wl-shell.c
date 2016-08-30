@@ -518,7 +518,8 @@ wl_shell_get_shell_surface (struct wl_client   *client,
     }
 
   if (!meta_wayland_surface_assign_role (surface,
-                                         META_TYPE_WAYLAND_WL_SHELL_SURFACE))
+                                         META_TYPE_WAYLAND_WL_SHELL_SURFACE,
+                                         NULL))
     {
       wl_resource_post_error (resource, WL_SHELL_ERROR_ROLE,
                               "wl_surface@%d already has a different role",
@@ -594,7 +595,6 @@ wl_shell_surface_role_commit (MetaWaylandSurfaceRole  *surface_role,
   if (!pending->newly_attached)
     return;
 
-  meta_wayland_surface_apply_window_state (surface, pending);
   meta_wayland_surface_calculate_window_geometry (surface, &geom, 0, 0);
   meta_window_wayland_move_resize (window,
                                    NULL,
@@ -616,6 +616,8 @@ wl_shell_surface_role_get_toplevel (MetaWaylandSurfaceRole *surface_role)
 
 static void
 wl_shell_surface_role_configure (MetaWaylandSurfaceRoleShellSurface *shell_surface_role,
+                                 int                                 new_x,
+                                 int                                 new_y,
                                  int                                 new_width,
                                  int                                 new_height,
                                  MetaWaylandSerial                  *sent_serial)

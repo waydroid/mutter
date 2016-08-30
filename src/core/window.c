@@ -84,8 +84,6 @@ static void     set_net_wm_state          (MetaWindow     *window);
 static void     meta_window_set_above     (MetaWindow     *window,
                                            gboolean        new_value);
 
-static void     meta_window_force_placement (MetaWindow     *window);
-
 static void     meta_window_show          (MetaWindow     *window);
 static void     meta_window_hide          (MetaWindow     *window);
 
@@ -296,6 +294,7 @@ meta_window_finalize (GObject *object)
   g_free (window->gtk_window_object_path);
   g_free (window->gtk_app_menu_object_path);
   g_free (window->gtk_menubar_object_path);
+  g_free (window->placement_rule);
 
   G_OBJECT_CLASS (meta_window_parent_class)->finalize (object);
 }
@@ -2168,7 +2167,7 @@ window_would_be_covered (const MetaWindow *newbie)
   return FALSE; /* none found */
 }
 
-static void
+void
 meta_window_force_placement (MetaWindow *window)
 {
   if (window->placed)
@@ -4300,6 +4299,13 @@ meta_window_focus (MetaWindow  *window,
     }
 
   META_WINDOW_GET_CLASS (window)->focus (window, timestamp);
+
+  if (window->display->event_route == META_EVENT_ROUTE_NORMAL)
+    {
+      MetaBackend *backend = meta_get_backend ();
+      ClutterStage *stage = CLUTTER_STAGE (meta_backend_get_stage (backend));
+      clutter_stage_set_key_focus (stage, NULL);
+    }
 
   if (window->wm_state_demands_attention)
     meta_window_unset_demands_attention(window);
@@ -7416,23 +7422,26 @@ meta_window_set_transient_for (MetaWindow *window,
 
   /* may now be a dialog */
   if (window->client_type == META_WINDOW_CLIENT_TYPE_X11)
-    meta_window_x11_recalc_window_type (window);
-
-  if (!window->constructing)
     {
-      /* If the window attaches, detaches, or changes attached
-       * parents, we need to destroy the MetaWindow and let a new one
-       * be created (which happens as a side effect of
-       * meta_window_unmanage()). The condition below is correct
-       * because we know window->transient_for has changed.
-       */
-      if (window->attached || meta_window_should_attach_to_parent (window))
-        {
-          guint32 timestamp;
+      meta_window_x11_recalc_window_type (window);
 
-          timestamp = meta_display_get_current_time_roundtrip (window->display);
-          meta_window_unmanage (window, timestamp);
-          return;
+      if (!window->constructing)
+        {
+          /* If the window attaches, detaches, or changes attached
+           * parents, we need to destroy the MetaWindow and let a new one
+           * be created (which happens as a side effect of
+           * meta_window_unmanage()). The condition below is correct
+           * because we know window->transient_for has changed.
+           */
+          if (window->attached || meta_window_should_attach_to_parent (window))
+            {
+              guint32 timestamp;
+
+              timestamp =
+                meta_display_get_current_time_roundtrip (window->display);
+              meta_window_unmanage (window, timestamp);
+              return;
+            }
         }
     }
 
@@ -7924,4 +7933,10 @@ void
 meta_window_emit_size_changed (MetaWindow *window)
 {
   g_signal_emit (window, window_signals[SIZE_CHANGED], 0);
+}
+
+MetaPlacementRule *
+meta_window_get_placement_rule (MetaWindow *window)
+{
+  return window->placement_rule;
 }

@@ -46,6 +46,7 @@
 #include <gudev/gudev.h>
 
 #define ALL_TRANSFORMS (META_MONITOR_TRANSFORM_FLIPPED_270 + 1)
+#define ALL_TRANSFORMS_MASK ((1 << ALL_TRANSFORMS) - 1)
 
 typedef struct {
   drmModeConnector *connector;
@@ -77,6 +78,7 @@ typedef struct {
   uint32_t primary_plane_id;
   uint32_t rotation_prop_id;
   uint32_t rotation_map[ALL_TRANSFORMS];
+  uint32_t all_hw_transforms;
 } MetaCRTCKms;
 
 typedef struct
@@ -135,18 +137,33 @@ static char *
 make_output_name (drmModeConnector *connector)
 {
   static const char * const connector_type_names[] = {
-    "unknown", "VGA", "DVII", "DVID", "DVID", "Composite",
-    "SVIDEO", "LVDS", "Component", "9PinDIN", "DisplayPort",
-    "HDMIA", "HDMIB", "TV", "eDP", "Virtual", "DSI"
+    "None",
+    "VGA",
+    "DVI-I",
+    "DVI-D",
+    "DVI-A",
+    "Composite",
+    "SVIDEO",
+    "LVDS",
+    "Component",
+    "DIN",
+    "DP",
+    "HDMI",
+    "HDMI-B",
+    "TV",
+    "eDP",
+    "Virtual",
+    "DSI",
   };
-  const char *connector_type_name;
 
   if (connector->connector_type < G_N_ELEMENTS (connector_type_names))
-    connector_type_name = connector_type_names[connector->connector_type];
+    return g_strdup_printf ("%s-%d",
+                            connector_type_names[connector->connector_type],
+                            connector->connector_type_id);
   else
-    connector_type_name = "unknown";
-
-  return g_strdup_printf ("%s%d", connector_type_name, connector->connector_id);
+    return g_strdup_printf ("Unknown%d-%d",
+                            connector->connector_type,
+                            connector->connector_type_id);
 }
 
 static void
@@ -530,7 +547,7 @@ parse_transforms (MetaMonitorManager *manager,
 
       if (cur != -1)
         {
-          crtc->all_transforms |= 1 << cur;
+          crtc_kms->all_hw_transforms |= 1 << cur;
           crtc_kms->rotation_map[cur] = 1 << prop->enums[i].value;
         }
     }
@@ -606,6 +623,8 @@ init_crtc_rotations (MetaMonitorManager *manager,
       drmModeFreePlane (drm_plane);
     }
 
+  crtc->all_transforms |= crtc_kms->all_hw_transforms;
+
   drmModeFreePlaneResources (planes);
 }
 
@@ -623,8 +642,8 @@ init_crtc (MetaCRTC           *crtc,
   crtc->rect.height = drm_crtc->height;
   crtc->is_dirty = FALSE;
   crtc->transform = META_MONITOR_TRANSFORM_NORMAL;
-  /* FIXME: implement! */
-  crtc->all_transforms = 1 << META_MONITOR_TRANSFORM_NORMAL;
+  crtc->all_transforms = meta_is_stage_views_enabled () ?
+    ALL_TRANSFORMS_MASK : META_MONITOR_TRANSFORM_NORMAL;
 
   if (drm_crtc->mode_valid)
     {
@@ -1184,6 +1203,7 @@ meta_monitor_manager_kms_apply_configuration (MetaMonitorManager *manager,
       MetaCRTCInfo *crtc_info = crtcs[i];
       MetaCRTC *crtc = crtc_info->crtc;
       MetaCRTCKms *crtc_kms = crtc->driver_private;
+      MetaMonitorTransform hw_transform;
 
       crtc->is_dirty = TRUE;
 
@@ -1234,14 +1254,17 @@ meta_monitor_manager_kms_apply_configuration (MetaMonitorManager *manager,
             }
         }
 
-      if (crtc->all_transforms & (1 << crtc->transform))
-        drmModeObjectSetProperty (manager_kms->fd,
-                                  crtc_kms->primary_plane_id,
-                                  DRM_MODE_OBJECT_PLANE,
-                                  crtc_kms->rotation_prop_id,
-                                  crtc_kms->rotation_map[crtc->transform]);
-    }
+      if (crtc_kms->all_hw_transforms & (1 << crtc->transform))
+        hw_transform = crtc->transform;
+      else
+        hw_transform = META_MONITOR_TRANSFORM_NORMAL;
 
+      drmModeObjectSetProperty (manager_kms->fd,
+                                crtc_kms->primary_plane_id,
+                                DRM_MODE_OBJECT_PLANE,
+                                crtc_kms->rotation_prop_id,
+                                crtc_kms->rotation_map[hw_transform]);
+    }
   /* Disable CRTCs not mentioned in the list (they have is_dirty == FALSE,
      because they weren't seen in the first loop) */
   for (i = 0; i < manager->n_crtcs; i++)
@@ -1617,3 +1640,18 @@ meta_monitor_manager_kms_class_init (MetaMonitorManagerKmsClass *klass)
   manager_class->set_crtc_gamma = meta_monitor_manager_kms_set_crtc_gamma;
 }
 
+MetaMonitorTransform
+meta_monitor_manager_kms_get_view_transform (MetaMonitorManagerKms *manager,
+                                             MetaCRTC              *crtc)
+{
+  MetaCRTCKms *crtc_kms;
+
+  crtc_kms = crtc->driver_private;
+  if ((1 << crtc->transform) & crtc_kms->all_hw_transforms)
+    {
+      /* Transform is managed by the hardware, the view is untransformed */
+      return META_MONITOR_TRANSFORM_NORMAL;
+    }
+
+  return crtc->transform;
+}

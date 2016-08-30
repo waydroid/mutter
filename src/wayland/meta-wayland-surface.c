@@ -29,8 +29,8 @@
 #include <clutter/wayland/clutter-wayland-surface.h>
 #include <cogl/cogl-wayland-server.h>
 
+#include <gobject/gvaluecollector.h>
 #include <wayland-server.h>
-#include "gtk-shell-server-protocol.h"
 
 #include "meta-wayland-private.h"
 #include "meta-xwayland-private.h"
@@ -43,12 +43,12 @@
 #include "meta-wayland-outputs.h"
 #include "meta-wayland-xdg-shell.h"
 #include "meta-wayland-wl-shell.h"
+#include "meta-wayland-gtk-shell.h"
 
 #include "meta-cursor-tracker-private.h"
 #include "display-private.h"
 #include "window-private.h"
 #include "meta-window-wayland.h"
-#include "bell.h"
 
 #include "compositor/region-utils.h"
 
@@ -60,6 +60,13 @@ enum {
   PENDING_STATE_SIGNAL_APPLIED,
 
   PENDING_STATE_SIGNAL_LAST_SIGNAL
+};
+
+enum
+{
+  SURFACE_ROLE_PROP_0,
+
+  SURFACE_ROLE_PROP_SURFACE,
 };
 
 static guint pending_state_signals[PENDING_STATE_SIGNAL_LAST_SIGNAL];
@@ -102,7 +109,7 @@ G_DEFINE_TYPE (MetaWaylandPendingState,
 
 struct _MetaWaylandSurfaceRoleSubsurface
 {
-  MetaWaylandSurfaceRole parent;
+  MetaWaylandSurfaceRoleActorSurface parent;
 };
 
 G_DEFINE_TYPE (MetaWaylandSurfaceRoleSubsurface,
@@ -120,6 +127,8 @@ G_DEFINE_TYPE (MetaWaylandSurfaceRoleDND,
 
 enum {
   SURFACE_DESTROY,
+  SURFACE_UNMAPPED,
+  SURFACE_CONFIGURE,
   N_SURFACE_SIGNALS
 };
 
@@ -145,6 +154,8 @@ meta_wayland_surface_role_get_toplevel (MetaWaylandSurfaceRole *surface_role);
 
 static void
 meta_wayland_surface_role_shell_surface_configure (MetaWaylandSurfaceRoleShellSurface *shell_surface_role,
+                                                   int                                 new_x,
+                                                   int                                 new_y,
                                                    int                                 new_width,
                                                    int                                 new_height,
                                                    MetaWaylandSerial                  *sent_serial);
@@ -160,18 +171,92 @@ static void
 meta_wayland_surface_role_shell_surface_managed (MetaWaylandSurfaceRoleShellSurface *shell_surface_role,
                                                  MetaWindow                         *window);
 
+static void
+unset_param_value (GParameter *param)
+{
+  g_value_unset (&param->value);
+}
+
+static GArray *
+role_assignment_valist_to_params (GType       role_type,
+                                  const char *first_property_name,
+                                  va_list     var_args)
+{
+  GObjectClass *object_class;
+  const char *property_name = first_property_name;
+  GArray *params;
+
+  object_class = g_type_class_ref (role_type);
+
+  params = g_array_new (FALSE, FALSE, sizeof (GParameter));
+  g_array_set_clear_func (params, (GDestroyNotify) unset_param_value);
+
+  while (property_name)
+    {
+      GParameter param = {
+        .name = property_name,
+        .value = G_VALUE_INIT
+      };
+      GParamSpec *pspec;
+      GType ptype;
+      gchar *error = NULL;
+
+      pspec = g_object_class_find_property (object_class,
+                                            property_name);
+      g_assert (pspec);
+
+      ptype = G_PARAM_SPEC_VALUE_TYPE (pspec);
+      G_VALUE_COLLECT_INIT (&param.value, ptype, var_args, 0, &error);
+      g_assert (!error);
+
+      g_array_append_val (params, param);
+
+      property_name = va_arg (var_args, const char *);
+    }
+
+  g_type_class_unref (object_class);
+
+  return params;
+}
+
 gboolean
 meta_wayland_surface_assign_role (MetaWaylandSurface *surface,
-                                  GType               role_type)
+                                  GType               role_type,
+                                  const char         *first_property_name,
+                                  ...)
 {
+  va_list var_args;
+
   if (!surface->role)
     {
-      MetaWaylandSurfaceRolePrivate *role_priv;
+      if (first_property_name)
+        {
+          GArray *params;
+          GParameter param;
 
-      surface->role = g_object_new (role_type, NULL);
-      role_priv =
-        meta_wayland_surface_role_get_instance_private (surface->role);
-      role_priv->surface = surface;
+          va_start (var_args, first_property_name);
+          params = role_assignment_valist_to_params (role_type,
+                                                     first_property_name,
+                                                     var_args);
+          va_end (var_args);
+
+          param = (GParameter) {
+            .name = "surface",
+            .value = G_VALUE_INIT
+          };
+          g_value_init (&param.value, META_TYPE_WAYLAND_SURFACE);
+          g_value_set_object (&param.value, surface);
+          g_array_append_val (params, param);
+
+          surface->role = g_object_newv (role_type, params->len,
+                                         (GParameter *) params->data);
+
+          g_array_unref (params);
+        }
+      else
+        {
+          surface->role = g_object_new (role_type, "surface", surface, NULL);
+        }
 
       meta_wayland_surface_role_assigned (surface->role);
 
@@ -190,6 +275,13 @@ meta_wayland_surface_assign_role (MetaWaylandSurface *surface,
     }
   else
     {
+      va_start (var_args, first_property_name);
+      g_object_set_valist (G_OBJECT (surface->role),
+                           first_property_name, var_args);
+      va_end (var_args);
+
+      meta_wayland_surface_role_assigned (surface->role);
+
       return TRUE;
     }
 }
@@ -361,22 +453,6 @@ queue_surface_actor_frame_callbacks (MetaWaylandSurface      *surface,
   wl_list_init (&pending->frame_callback_list);
 }
 
-void
-meta_wayland_surface_apply_window_state (MetaWaylandSurface      *surface,
-                                         MetaWaylandPendingState *pending)
-{
-  MetaSurfaceActorWayland *actor =
-    META_SURFACE_ACTOR_WAYLAND (surface->surface_actor);
-  MetaWindow *window = surface->window;
-  MetaWaylandBuffer *buffer = surface->buffer_ref.buffer;
-  CoglTexture *texture = buffer->texture;
-  double scale;
-
-  scale = meta_surface_actor_wayland_get_scale (actor);
-  window->buffer_rect.width = cogl_texture_get_width (texture) * scale;
-  window->buffer_rect.height = cogl_texture_get_height (texture) * scale;
-}
-
 static void
 pending_buffer_resource_destroyed (MetaWaylandBuffer       *buffer,
                                    MetaWaylandPendingState *pending)
@@ -498,12 +574,15 @@ static void
 subsurface_role_commit (MetaWaylandSurfaceRole  *surface_role,
                         MetaWaylandPendingState *pending)
 {
+  MetaWaylandSurfaceRoleClass *surface_role_class;
   MetaWaylandSurface *surface =
     meta_wayland_surface_role_get_surface (surface_role);
   MetaSurfaceActorWayland *surface_actor =
     META_SURFACE_ACTOR_WAYLAND (surface->surface_actor);
 
-  queue_surface_actor_frame_callbacks (surface, pending);
+  surface_role_class =
+    META_WAYLAND_SURFACE_ROLE_CLASS (meta_wayland_surface_role_subsurface_parent_class);
+  surface_role_class->commit (surface_role, pending);
 
   if (surface->buffer_ref.buffer != NULL)
     clutter_actor_show (CLUTTER_ACTOR (surface_actor));
@@ -518,7 +597,10 @@ subsurface_role_get_toplevel (MetaWaylandSurfaceRole *surface_role)
     meta_wayland_surface_role_get_surface (surface_role);
   MetaWaylandSurface *parent = surface->sub.parent;
 
-  return meta_wayland_surface_role_get_toplevel (parent->role);
+  if (parent->role)
+    return meta_wayland_surface_role_get_toplevel (parent->role);
+  else
+    return NULL;
 }
 
 /* A non-subsurface is always desynchronized.
@@ -653,6 +735,14 @@ apply_pending_state (MetaWaylandSurface      *surface,
           CoglTexture *texture;
 
           texture = meta_wayland_buffer_ensure_texture (pending->buffer);
+          if (!texture)
+            {
+              wl_resource_post_error (surface->resource, WL_DISPLAY_ERROR_NO_MEMORY,
+                              "Failed to create a texture for surface %i",
+                              wl_resource_get_id (surface->resource));
+
+              goto cleanup;
+            }
           meta_surface_actor_wayland_set_texture (surface_actor_wayland,
                                                   texture);
         }
@@ -722,6 +812,7 @@ apply_pending_state (MetaWaylandSurface      *surface,
         }
     }
 
+cleanup:
   /* If we have a buffer that we are not using, decrease the use count so it may
    * be released if no-one else has a use-reference to it.
    */
@@ -1100,9 +1191,14 @@ void
 meta_wayland_surface_set_window (MetaWaylandSurface *surface,
                                  MetaWindow         *window)
 {
+  gboolean was_unmapped = surface->window && !window;
+
   surface->window = window;
   sync_reactive (surface);
   sync_drag_dest_funcs (surface);
+
+  if (was_unmapped)
+    g_signal_emit (surface, surface_signals[SURFACE_UNMAPPED], 0);
 }
 
 static void
@@ -1152,8 +1248,6 @@ wl_surface_destructor (struct wl_resource *resource)
 
   if (surface->wl_subsurface)
     wl_resource_destroy (surface->wl_subsurface);
-  if (surface->gtk_surface)
-    wl_resource_destroy (surface->gtk_surface);
 
   g_object_unref (surface);
 
@@ -1223,172 +1317,6 @@ meta_wayland_surface_begin_grab_op (MetaWaylandSurface *surface,
                                      0, /* modmask */
                                      meta_display_get_current_time_roundtrip (window->display),
                                      x, y);
-}
-
-static void
-gtk_surface_destructor (struct wl_resource *resource)
-{
-  MetaWaylandSurface *surface = wl_resource_get_user_data (resource);
-
-  surface->gtk_surface = NULL;
-}
-
-static void
-gtk_surface_set_dbus_properties (struct wl_client   *client,
-                                 struct wl_resource *resource,
-                                 const char         *application_id,
-                                 const char         *app_menu_path,
-                                 const char         *menubar_path,
-                                 const char         *window_object_path,
-                                 const char         *application_object_path,
-                                 const char         *unique_bus_name)
-{
-  MetaWaylandSurface *surface = wl_resource_get_user_data (resource);
-
-  /* Broken client, let it die instead of us */
-  if (!surface->window)
-    {
-      meta_warning ("meta-wayland-surface: set_dbus_properties called with invalid window!\n");
-      return;
-    }
-
-  meta_window_set_gtk_dbus_properties (surface->window,
-                                       application_id,
-                                       unique_bus_name,
-                                       app_menu_path,
-                                       menubar_path,
-                                       application_object_path,
-                                       window_object_path);
-}
-
-static void
-gtk_surface_set_modal (struct wl_client   *client,
-                       struct wl_resource *resource)
-{
-  MetaWaylandSurface *surface = wl_resource_get_user_data (resource);
-
-  if (surface->is_modal)
-    return;
-
-  surface->is_modal = TRUE;
-  meta_window_set_type (surface->window, META_WINDOW_MODAL_DIALOG);
-}
-
-static void
-gtk_surface_unset_modal (struct wl_client   *client,
-                         struct wl_resource *resource)
-{
-  MetaWaylandSurface *surface = wl_resource_get_user_data (resource);
-
-  if (!surface->is_modal)
-    return;
-
-  surface->is_modal = FALSE;
-  meta_window_set_type (surface->window, META_WINDOW_NORMAL);
-}
-
-static void
-gtk_surface_present (struct wl_client   *client,
-                     struct wl_resource *resource,
-                     uint32_t            timestamp)
-{
-  MetaWaylandSurface *surface = wl_resource_get_user_data (resource);
-  MetaWindow *window = surface->window;
-
-  if (!window)
-    return;
-
-  meta_window_activate_full (window, timestamp,
-                             META_CLIENT_TYPE_APPLICATION, NULL);
-}
-
-static const struct gtk_surface1_interface meta_wayland_gtk_surface_interface = {
-  gtk_surface_set_dbus_properties,
-  gtk_surface_set_modal,
-  gtk_surface_unset_modal,
-  gtk_surface_present,
-};
-
-static void
-gtk_shell_get_gtk_surface (struct wl_client   *client,
-                           struct wl_resource *resource,
-                           guint32             id,
-                           struct wl_resource *surface_resource)
-{
-  MetaWaylandSurface *surface = wl_resource_get_user_data (surface_resource);
-
-  if (surface->gtk_surface != NULL)
-    {
-      wl_resource_post_error (surface_resource,
-                              WL_DISPLAY_ERROR_INVALID_OBJECT,
-                              "gtk_shell::get_gtk_surface already requested");
-      return;
-    }
-
-  surface->gtk_surface = wl_resource_create (client,
-                                             &gtk_surface1_interface,
-                                             wl_resource_get_version (resource),
-                                             id);
-  wl_resource_set_implementation (surface->gtk_surface, &meta_wayland_gtk_surface_interface, surface, gtk_surface_destructor);
-}
-
-static void
-gtk_shell_set_startup_id (struct wl_client   *client,
-                          struct wl_resource *resource,
-                          const char         *startup_id)
-{
-  MetaDisplay *display;
-
-  display = meta_get_display ();
-  meta_startup_notification_remove_sequence (display->startup_notification,
-                                             startup_id);
-}
-
-static void
-gtk_shell_system_bell (struct wl_client   *client,
-                       struct wl_resource *resource,
-                       struct wl_resource *gtk_surface_resource)
-{
-  MetaDisplay *display = meta_get_display ();
-
-  if (gtk_surface_resource)
-    {
-      MetaWaylandSurface *surface =
-        wl_resource_get_user_data (gtk_surface_resource);
-
-      if (!surface->window)
-        return;
-
-      meta_bell_notify (display, surface->window);
-    }
-  else
-    {
-      meta_bell_notify (display, NULL);
-    }
-}
-
-static const struct gtk_shell1_interface meta_wayland_gtk_shell_interface = {
-  gtk_shell_get_gtk_surface,
-  gtk_shell_set_startup_id,
-  gtk_shell_system_bell,
-};
-
-static void
-bind_gtk_shell (struct wl_client *client,
-                void             *data,
-                guint32           version,
-                guint32           id)
-{
-  struct wl_resource *resource;
-  uint32_t capabilities = 0;
-
-  resource = wl_resource_create (client, &gtk_shell1_interface, version, id);
-  wl_resource_set_implementation (resource, &meta_wayland_gtk_shell_interface, data, NULL);
-
-  if (!meta_prefs_get_show_fallback_app_menu ())
-    capabilities = GTK_SHELL1_CAPABILITY_GLOBAL_APP_MENU;
-
-  gtk_shell1_send_capabilities (resource, capabilities);
 }
 
 static void
@@ -1591,7 +1519,8 @@ wl_subcompositor_get_subsurface (struct wl_client *client,
     }
 
   if (!meta_wayland_surface_assign_role (surface,
-                                         META_TYPE_WAYLAND_SURFACE_ROLE_SUBSURFACE))
+                                         META_TYPE_WAYLAND_SURFACE_ROLE_SUBSURFACE,
+                                         NULL))
     {
       /* FIXME: There is no subcompositor "role" error yet, so lets just use something
        * similar until there is.
@@ -1640,12 +1569,7 @@ meta_wayland_shell_init (MetaWaylandCompositor *compositor)
 {
   meta_wayland_xdg_shell_init (compositor);
   meta_wayland_wl_shell_init (compositor);
-
-  if (wl_global_create (compositor->wayland_display,
-                        &gtk_shell1_interface,
-                        META_GTK_SHELL1_VERSION,
-                        compositor, bind_gtk_shell) == NULL)
-    g_error ("Failed to register a global gtk-shell object");
+  meta_wayland_gtk_shell_init (compositor);
 
   if (wl_global_create (compositor->wayland_display,
                         &wl_subcompositor_interface,
@@ -1656,6 +1580,8 @@ meta_wayland_shell_init (MetaWaylandCompositor *compositor)
 
 void
 meta_wayland_surface_configure_notify (MetaWaylandSurface *surface,
+                                       int                 new_x,
+                                       int                 new_y,
                                        int                 new_width,
                                        int                 new_height,
                                        MetaWaylandSerial  *sent_serial)
@@ -1663,7 +1589,10 @@ meta_wayland_surface_configure_notify (MetaWaylandSurface *surface,
   MetaWaylandSurfaceRoleShellSurface *shell_surface_role =
     META_WAYLAND_SURFACE_ROLE_SHELL_SURFACE (surface->role);
 
+  g_signal_emit (surface, surface_signals[SURFACE_CONFIGURE], 0);
+
   meta_wayland_surface_role_shell_surface_configure (shell_surface_role,
+                                                     new_x, new_y,
                                                      new_width, new_height,
                                                      sent_serial);
 }
@@ -1855,6 +1784,64 @@ meta_wayland_surface_class_init (MetaWaylandSurfaceClass *klass)
                   0, NULL, NULL,
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
+
+  surface_signals[SURFACE_UNMAPPED] =
+    g_signal_new ("unmapped",
+                  G_TYPE_FROM_CLASS (object_class),
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+
+  surface_signals[SURFACE_CONFIGURE] =
+    g_signal_new ("configure",
+                  G_TYPE_FROM_CLASS (object_class),
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+}
+
+static void
+meta_wayland_surface_role_set_property (GObject      *object,
+                                        guint         prop_id,
+                                        const GValue *value,
+                                        GParamSpec   *pspec)
+{
+  MetaWaylandSurfaceRole *surface_role = META_WAYLAND_SURFACE_ROLE (object);
+  MetaWaylandSurfaceRolePrivate *priv =
+    meta_wayland_surface_role_get_instance_private (surface_role);
+
+  switch (prop_id)
+    {
+    case SURFACE_ROLE_PROP_SURFACE:
+      priv->surface = g_value_get_object (value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
+}
+
+static void
+meta_wayland_surface_role_get_property (GObject    *object,
+                                        guint       prop_id,
+                                        GValue     *value,
+                                        GParamSpec *pspec)
+{
+  MetaWaylandSurfaceRole *surface_role = META_WAYLAND_SURFACE_ROLE (object);
+  MetaWaylandSurfaceRolePrivate *priv =
+    meta_wayland_surface_role_get_instance_private (surface_role);
+
+  switch (prop_id)
+    {
+    case SURFACE_ROLE_PROP_SURFACE:
+      g_value_set_object (value, priv->surface);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
 }
 
 static void
@@ -1865,6 +1852,20 @@ meta_wayland_surface_role_init (MetaWaylandSurfaceRole *role)
 static void
 meta_wayland_surface_role_class_init (MetaWaylandSurfaceRoleClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->set_property = meta_wayland_surface_role_set_property;
+  object_class->get_property = meta_wayland_surface_role_get_property;
+
+  g_object_class_install_property (object_class,
+                                   SURFACE_ROLE_PROP_SURFACE,
+                                   g_param_spec_object ("surface",
+                                                        "MetaWaylandSurface",
+                                                        "The MetaWaylandSurface instance",
+                                                        META_TYPE_WAYLAND_SURFACE,
+                                                        G_PARAM_READWRITE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -1928,6 +1929,8 @@ meta_wayland_surface_role_get_surface (MetaWaylandSurfaceRole *role)
 
 static void
 meta_wayland_surface_role_shell_surface_configure (MetaWaylandSurfaceRoleShellSurface *shell_surface_role,
+                                                   int                                 new_x,
+                                                   int                                 new_y,
                                                    int                                 new_width,
                                                    int                                 new_height,
                                                    MetaWaylandSerial                  *sent_serial)
@@ -1936,6 +1939,8 @@ meta_wayland_surface_role_shell_surface_configure (MetaWaylandSurfaceRoleShellSu
     META_WAYLAND_SURFACE_ROLE_SHELL_SURFACE_GET_CLASS (shell_surface_role);
 
   shell_surface_role_class->configure (shell_surface_role,
+                                       new_x,
+                                       new_y,
                                        new_width,
                                        new_height,
                                        sent_serial);
@@ -2006,11 +2011,16 @@ actor_surface_commit (MetaWaylandSurfaceRole  *surface_role,
 {
   MetaWaylandSurface *surface =
     meta_wayland_surface_role_get_surface (surface_role);
+  MetaWaylandSurface *toplevel_surface;
+
+  queue_surface_actor_frame_callbacks (surface, pending);
+
+  toplevel_surface = meta_wayland_surface_get_toplevel (surface);
+  if (!toplevel_surface || !toplevel_surface->window)
+    return;
 
   meta_surface_actor_wayland_sync_state (
     META_SURFACE_ACTOR_WAYLAND (surface->surface_actor));
-
-  queue_surface_actor_frame_callbacks (surface, pending);
 }
 
 static void
@@ -2030,6 +2040,39 @@ meta_wayland_surface_role_actor_surface_class_init (MetaWaylandSurfaceRoleActorS
 }
 
 static void
+shell_surface_role_surface_commit (MetaWaylandSurfaceRole  *surface_role,
+                                   MetaWaylandPendingState *pending)
+{
+  MetaWaylandSurface *surface =
+    meta_wayland_surface_role_get_surface (surface_role);
+  MetaWaylandSurfaceRoleClass *surface_role_class;
+  MetaWindow *window;
+  MetaWaylandBuffer *buffer;
+  CoglTexture *texture;
+  MetaSurfaceActorWayland *actor;
+  double scale;
+
+  surface_role_class =
+    META_WAYLAND_SURFACE_ROLE_CLASS (meta_wayland_surface_role_shell_surface_parent_class);
+  surface_role_class->commit (surface_role, pending);
+
+  buffer = surface->buffer_ref.buffer;
+  if (!buffer)
+    return;
+
+  window = surface->window;
+  if (!window)
+    return;
+
+  actor = META_SURFACE_ACTOR_WAYLAND (surface->surface_actor);
+  scale = meta_surface_actor_wayland_get_scale (actor);
+  texture = buffer->texture;
+
+  window->buffer_rect.width = cogl_texture_get_width (texture) * scale;
+  window->buffer_rect.height = cogl_texture_get_height (texture) * scale;
+}
+
+static void
 meta_wayland_surface_role_shell_surface_init (MetaWaylandSurfaceRoleShellSurface *role)
 {
 }
@@ -2037,6 +2080,10 @@ meta_wayland_surface_role_shell_surface_init (MetaWaylandSurfaceRoleShellSurface
 static void
 meta_wayland_surface_role_shell_surface_class_init (MetaWaylandSurfaceRoleShellSurfaceClass *klass)
 {
+  MetaWaylandSurfaceRoleClass *surface_role_class =
+    META_WAYLAND_SURFACE_ROLE_CLASS (klass);
+
+  surface_role_class->commit = shell_surface_role_surface_commit;
 }
 
 static void

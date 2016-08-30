@@ -6,10 +6,10 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: mutter 3.21.4\n"
+"Project-Id-Version: mutter 3.21.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
 "product=mutter&keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2016-07-29 11:32+0200\n"
+"POT-Creation-Date: 2016-08-19 22:39+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -424,30 +424,30 @@ msgstr ""
 msgid "Switch to VT 12"
 msgstr ""
 
-#: src/backends/meta-input-settings.c:1699
+#: src/backends/meta-input-settings.c:1707
 msgid "Switch monitor"
 msgstr ""
 
-#: src/backends/meta-input-settings.c:1701
+#: src/backends/meta-input-settings.c:1709
 msgid "Show on-screen help"
 msgstr ""
 
-#: src/backends/meta-monitor-manager.c:515
+#: src/backends/meta-monitor-manager.c:514
 msgid "Built-in display"
 msgstr ""
 
-#: src/backends/meta-monitor-manager.c:538
+#: src/backends/meta-monitor-manager.c:537
 msgid "Unknown"
 msgstr ""
 
-#: src/backends/meta-monitor-manager.c:540
+#: src/backends/meta-monitor-manager.c:539
 msgid "Unknown Display"
 msgstr ""
 
 #. TRANSLATORS: this is a monitor vendor name, followed by a
 #. * size in inches, like 'Dell 15"'
 #.
-#: src/backends/meta-monitor-manager.c:548
+#: src/backends/meta-monitor-manager.c:547
 #, c-format
 msgid "%s %s"
 msgstr ""
