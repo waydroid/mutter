@@ -92,6 +92,8 @@ struct _MetaWaylandSurfaceRoleShellSurfaceClass
   MetaWaylandSurfaceRoleActorSurfaceClass parent_class;
 
   void (*configure) (MetaWaylandSurfaceRoleShellSurface *shell_surface_role,
+                     int                                 new_x,
+                     int                                 new_y,
                      int                                 new_width,
                      int                                 new_height,
                      MetaWaylandSerial                  *sent_serial);
@@ -174,6 +176,7 @@ struct _MetaWaylandSurface
   int32_t offset_x, offset_y;
   GList *subsurfaces;
   GHashTable *outputs_to_destroy_notify_id;
+  gboolean destroying;
 
   /* Buffer reference state. */
   struct {
@@ -202,12 +205,7 @@ struct _MetaWaylandSurface
   MetaWaylandPendingState *pending;
 
   /* Extension resources. */
-  struct wl_resource *gtk_surface;
   struct wl_resource *wl_subsurface;
-
-  /* gtk_surface stuff */
-  gboolean is_modal;
-  gboolean destroying;
 
   /* wl_subsurface stuff. */
   struct {
@@ -243,7 +241,9 @@ MetaWaylandSurface *meta_wayland_surface_create (MetaWaylandCompositor *composit
                                                  guint32                id);
 
 gboolean            meta_wayland_surface_assign_role (MetaWaylandSurface *surface,
-                                                      GType               role_type);
+                                                      GType               role_type,
+                                                      const char         *first_property_name,
+                                                      ...);
 
 MetaWaylandBuffer  *meta_wayland_surface_get_buffer (MetaWaylandSurface *surface);
 
@@ -255,6 +255,8 @@ void                meta_wayland_surface_set_window (MetaWaylandSurface *surface
                                                      MetaWindow         *window);
 
 void                meta_wayland_surface_configure_notify (MetaWaylandSurface *surface,
+                                                           int                 new_x,
+                                                           int                 new_y,
                                                            int                 width,
                                                            int                 height,
                                                            MetaWaylandSerial  *sent_serial);
@@ -298,9 +300,6 @@ void                meta_wayland_surface_get_absolute_coordinates (MetaWaylandSu
 MetaWaylandSurface * meta_wayland_surface_role_get_surface (MetaWaylandSurfaceRole *role);
 
 cairo_region_t *    meta_wayland_surface_calculate_input_region (MetaWaylandSurface *surface);
-
-void                meta_wayland_surface_apply_window_state (MetaWaylandSurface      *surface,
-                                                             MetaWaylandPendingState *pending);
 
 void                meta_wayland_surface_calculate_window_geometry (MetaWaylandSurface *surface,
                                                                     MetaRectangle      *total_geometry,

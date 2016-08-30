@@ -379,7 +379,7 @@ on_crtc_flipped (GClosure         *closure,
 {
   ClutterStageView *stage_view = CLUTTER_STAGE_VIEW (view);
   CoglFramebuffer *framebuffer =
-    clutter_stage_view_get_framebuffer (stage_view);
+    clutter_stage_view_get_onscreen (stage_view);
   CoglOnscreen *onscreen = COGL_ONSCREEN (framebuffer);
   CoglOnscreenEGL *egl_onscreen =  onscreen->winsys;
   MetaOnscreenNative *onscreen_native = egl_onscreen->platform;
@@ -397,7 +397,7 @@ flip_closure_destroyed (MetaRendererView *view)
 {
   ClutterStageView *stage_view = CLUTTER_STAGE_VIEW (view);
   CoglFramebuffer *framebuffer =
-    clutter_stage_view_get_framebuffer (stage_view);
+    clutter_stage_view_get_onscreen (stage_view);
   CoglOnscreen *onscreen = COGL_ONSCREEN (framebuffer);
   CoglOnscreenEGL *egl_onscreen =  onscreen->winsys;
   MetaOnscreenNative *onscreen_native = egl_onscreen->platform;
@@ -589,8 +589,6 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen *onscreen,
   CoglOnscreenEGL *egl_onscreen = onscreen->winsys;
   MetaOnscreenNative *onscreen_native = egl_onscreen->platform;
   CoglFrameInfo *frame_info;
-  MetaRendererView *view;
-  cairo_rectangle_int_t view_layout;
   uint32_t handle, stride;
 
   frame_info = g_queue_peek_tail (&onscreen->pending_frame_infos);
@@ -599,9 +597,6 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen *onscreen,
   /* If we already have a pending swap then block until it completes */
   while (onscreen_native->next_fb_id != 0)
     meta_monitor_manager_kms_wait_for_flip (monitor_manager_kms);
-
-  view = onscreen_native->view;
-  clutter_stage_view_get_layout (CLUTTER_STAGE_VIEW (view), &view_layout);
 
   parent_vtable->onscreen_swap_buffers_with_damage (onscreen,
                                                     rectangles,
@@ -615,8 +610,8 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen *onscreen,
   handle = gbm_bo_get_handle (onscreen_native->next_bo).u32;
 
   if (drmModeAddFB (renderer_native->kms_fd,
-                    view_layout.width,
-                    view_layout.height,
+                    cogl_framebuffer_get_width (COGL_FRAMEBUFFER (onscreen)),
+                    cogl_framebuffer_get_height (COGL_FRAMEBUFFER (onscreen)),
                     24, /* depth */
                     32, /* bpp */
                     stride,
@@ -751,17 +746,11 @@ meta_renderer_native_init_onscreen (CoglOnscreen *onscreen,
   if (width == 0 || height == 0)
     return TRUE;
 
-  if (!meta_renderer_native_create_surface (renderer_native,
-                                            width, height,
-                                            &onscreen_native->surface,
-                                            &egl_onscreen->egl_surface,
-                                            error))
-    return FALSE;
-
-
-  _cogl_framebuffer_winsys_update_size (framebuffer, width, height);
-
-  return TRUE;
+  return meta_renderer_native_create_surface (renderer_native,
+                                              width, height,
+                                              &onscreen_native->surface,
+                                              &egl_onscreen->egl_surface,
+                                              error);
 }
 
 static void
@@ -834,13 +823,99 @@ meta_renderer_native_queue_modes_reset (MetaRendererNative *renderer_native)
     {
       ClutterStageView *stage_view = l->data;
       CoglFramebuffer *framebuffer =
-        clutter_stage_view_get_framebuffer (stage_view);
+        clutter_stage_view_get_onscreen (stage_view);
       CoglOnscreen *onscreen = COGL_ONSCREEN (framebuffer);
       CoglOnscreenEGL *egl_onscreen = onscreen->winsys;
       MetaOnscreenNative *onscreen_native = egl_onscreen->platform;
 
       onscreen_native->pending_set_crtc = TRUE;
     }
+}
+
+static MetaMonitorTransform
+meta_renderer_native_get_monitor_info_transform (MetaRenderer    *renderer,
+                                                 MetaMonitorInfo *monitor_info)
+{
+  MetaBackend *backend = meta_get_backend ();
+  MetaMonitorManager *monitor_manager =
+    meta_backend_get_monitor_manager (backend);
+  MetaMonitorManagerKms *monitor_manager_kms =
+    META_MONITOR_MANAGER_KMS (monitor_manager);
+
+  g_assert (monitor_info->n_outputs > 0);
+
+  return meta_monitor_manager_kms_get_view_transform (monitor_manager_kms,
+                                                      monitor_info->outputs[0]->crtc);
+}
+
+static CoglOnscreen *
+meta_renderer_native_create_onscreen (MetaRendererNative    *renderer,
+                                      CoglContext           *context,
+                                      MetaMonitorTransform   transform,
+                                      gint                   view_width,
+                                      gint                   view_height)
+{
+  CoglOnscreen *onscreen;
+  gint width, height;
+  GError *error = NULL;
+
+  if (meta_monitor_transform_is_rotated (transform))
+    {
+      width = view_height;
+      height = view_width;
+    }
+  else
+    {
+      width = view_width;
+      height = view_height;
+    }
+
+  onscreen = cogl_onscreen_new (context, width, height);
+  cogl_onscreen_set_swap_throttled (onscreen,
+                                    _clutter_get_sync_to_vblank ());
+
+  if (!cogl_framebuffer_allocate (COGL_FRAMEBUFFER (onscreen), &error))
+    {
+      g_warning ("Could not create onscreen: %s", error->message);
+      cogl_object_unref (onscreen);
+      g_error_free (error);
+      return NULL;
+    }
+
+  return onscreen;
+}
+
+static CoglOffscreen *
+meta_renderer_native_create_offscreen (MetaRendererNative    *renderer,
+                                       CoglContext           *context,
+                                       MetaMonitorTransform   transform,
+                                       gint                   view_width,
+                                       gint                   view_height)
+{
+  CoglOffscreen *fb;
+  CoglTexture2D *tex;
+  GError *error = NULL;
+
+  tex = cogl_texture_2d_new_with_size (context, view_width, view_height);
+  cogl_primitive_texture_set_auto_mipmap (COGL_PRIMITIVE_TEXTURE (tex), FALSE);
+
+  if (!cogl_texture_allocate (COGL_TEXTURE (tex), &error))
+    {
+      cogl_object_unref (tex);
+      return FALSE;
+    }
+
+  fb = cogl_offscreen_new_with_texture (COGL_TEXTURE (tex));
+  cogl_object_unref (tex);
+  if (!cogl_framebuffer_allocate (COGL_FRAMEBUFFER (fb), &error))
+    {
+      g_warning ("Could not create offscreen: %s", error->message);
+      g_error_free (error);
+      cogl_object_unref (fb);
+      return FALSE;
+    }
+
+  return fb;
 }
 
 gboolean
@@ -867,13 +942,14 @@ meta_renderer_native_set_legacy_view_size (MetaRendererNative *renderer_native,
       MetaMonitorManagerKms *monitor_manager_kms =
         META_MONITOR_MANAGER_KMS (monitor_manager);
       CoglFramebuffer *framebuffer =
-        clutter_stage_view_get_framebuffer (stage_view);
+        clutter_stage_view_get_onscreen (stage_view);
       CoglOnscreen *onscreen = COGL_ONSCREEN (framebuffer);
       CoglOnscreenEGL *egl_onscreen = onscreen->winsys;
       MetaOnscreenNative *onscreen_native = egl_onscreen->platform;
       CoglDisplayEGL *egl_display = cogl_display->winsys;
       struct gbm_surface *new_surface;
       EGLSurface new_egl_surface;
+      cairo_rectangle_int_t view_layout;
 
       /*
        * Ensure we don't have any pending flips that will want
@@ -919,6 +995,14 @@ meta_renderer_native_set_legacy_view_size (MetaRendererNative *renderer_native,
                                      egl_onscreen->egl_surface,
                                      egl_onscreen->egl_surface,
                                      egl_display->egl_context);
+
+      view_layout = (cairo_rectangle_int_t) {
+        .width = width,
+        .height = height
+      };
+      g_object_set (G_OBJECT (view),
+                    "layout", &view_layout,
+                    NULL);
 
       _cogl_framebuffer_winsys_update_size (framebuffer, width, height);
     }
@@ -992,13 +1076,11 @@ meta_renderer_native_create_legacy_view (MetaRendererNative *renderer_native)
   MetaBackend *backend = meta_get_backend ();
   MetaMonitorManager *monitor_manager =
     meta_backend_get_monitor_manager (backend);
-  CoglOnscreen *onscreen;
-  CoglFramebuffer *framebuffer;
+  CoglOnscreen *onscreen = NULL;
   ClutterBackend *clutter_backend = meta_backend_get_clutter_backend (backend);
   CoglContext *cogl_context = clutter_backend_get_cogl_context (clutter_backend);
   cairo_rectangle_int_t view_layout = { 0 };
   MetaRendererView *view;
-  GError *error = NULL;
 
   if (!monitor_manager)
     return NULL;
@@ -1007,22 +1089,20 @@ meta_renderer_native_create_legacy_view (MetaRendererNative *renderer_native)
                                         &view_layout.width,
                                         &view_layout.height);
 
-  onscreen = cogl_onscreen_new (cogl_context,
-                                view_layout.width,
-                                view_layout.height);
-  cogl_onscreen_set_swap_throttled (onscreen,
-                                    _clutter_get_sync_to_vblank ());
+  onscreen = meta_renderer_native_create_onscreen (renderer_native,
+                                                   cogl_context,
+                                                   META_MONITOR_TRANSFORM_NORMAL,
+                                                   view_layout.width,
+                                                   view_layout.height);
 
-  framebuffer = COGL_FRAMEBUFFER (onscreen);
-  if (!cogl_framebuffer_allocate (framebuffer, &error))
-    meta_fatal ("Failed to allocate onscreen framebuffer: %s\n",
-                error->message);
+  if (!onscreen)
+    meta_fatal ("Failed to allocate onscreen framebuffer\n");
 
   view = g_object_new (META_TYPE_RENDERER_VIEW,
                        "layout", &view_layout,
-                       "framebuffer", framebuffer,
+                       "framebuffer", onscreen,
                        NULL);
-  cogl_object_unref (framebuffer);
+  cogl_object_unref (onscreen);
 
   meta_onscreen_native_set_view (onscreen, view);
 
@@ -1036,28 +1116,52 @@ meta_renderer_native_create_view (MetaRenderer    *renderer,
   MetaBackend *backend = meta_get_backend ();
   ClutterBackend *clutter_backend = meta_backend_get_clutter_backend (backend);
   CoglContext *cogl_context = clutter_backend_get_cogl_context (clutter_backend);
-  CoglOnscreen *onscreen;
-  CoglFramebuffer *framebuffer;
+  CoglDisplay *cogl_display = cogl_context_get_display (cogl_context);
+  CoglDisplayEGL *egl_display = cogl_display->winsys;
+  CoglOnscreenEGL *egl_onscreen;
+  MetaMonitorTransform transform;
+  CoglOnscreen *onscreen = NULL;
+  CoglOffscreen *offscreen = NULL;
   MetaRendererView *view;
-  GError *error = NULL;
 
-  onscreen = cogl_onscreen_new (cogl_context,
-                                monitor_info->rect.width,
-                                monitor_info->rect.height);
-  cogl_onscreen_set_swap_throttled (onscreen,
-                                    _clutter_get_sync_to_vblank ());
+  transform = meta_renderer_native_get_monitor_info_transform (renderer,
+                                                               monitor_info);
 
-  framebuffer = COGL_FRAMEBUFFER (onscreen);
-  if (!cogl_framebuffer_allocate (framebuffer, &error))
-    meta_fatal ("Failed to allocate onscreen framebuffer: %s\n",
-                error->message);
+  onscreen = meta_renderer_native_create_onscreen (META_RENDERER_NATIVE (renderer),
+                                                   cogl_context,
+                                                   transform,
+                                                   monitor_info->rect.width,
+                                                   monitor_info->rect.height);
+  if (!onscreen)
+    meta_fatal ("Failed to allocate onscreen framebuffer\n");
+
+  /* Ensure we don't point to stale surfaces when creating the offscreen */
+  egl_onscreen = onscreen->winsys;
+  _cogl_winsys_egl_make_current (cogl_display,
+                                 egl_onscreen->egl_surface,
+                                 egl_onscreen->egl_surface,
+                                 egl_display->egl_context);
+
+  if (transform != META_MONITOR_TRANSFORM_NORMAL)
+    {
+      offscreen = meta_renderer_native_create_offscreen (META_RENDERER_NATIVE (renderer),
+                                                         cogl_context,
+                                                         transform,
+                                                         monitor_info->rect.width,
+                                                         monitor_info->rect.height);
+      if (!offscreen)
+        meta_fatal ("Failed to allocate back buffer texture\n");
+    }
 
   view = g_object_new (META_TYPE_RENDERER_VIEW,
                        "layout", &monitor_info->rect,
-                       "framebuffer", framebuffer,
+                       "framebuffer", onscreen,
+                       "offscreen", offscreen,
                        "monitor-info", monitor_info,
+                       "transform", transform,
                        NULL);
-  cogl_object_unref (framebuffer);
+  cogl_object_unref (onscreen);
+  g_clear_pointer (&offscreen, cogl_object_unref);
 
   meta_onscreen_native_set_view (onscreen, view);
 

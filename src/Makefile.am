@@ -61,14 +61,16 @@ mutter_built_sources += \
 	gtk-shell-server-protocol.h		\
 	gtk-primary-selection-protocol.c				\
 	gtk-primary-selection-server-protocol.h				\
-	xdg-shell-unstable-v5-protocol.c				\
-	xdg-shell-unstable-v5-server-protocol.h				\
+	xdg-shell-unstable-v6-protocol.c				\
+	xdg-shell-unstable-v6-server-protocol.h				\
 	relative-pointer-unstable-v1-protocol.c				\
 	relative-pointer-unstable-v1-server-protocol.h			\
 	pointer-constraints-unstable-v1-protocol.c			\
 	pointer-constraints-unstable-v1-server-protocol.h		\
 	tablet-unstable-v2-protocol.c					\
 	tablet-unstable-v2-server-protocol.h				\
+	xdg-foreign-unstable-v1-protocol.c				\
+	xdg-foreign-unstable-v1-server-protocol.h			\
 	$(NULL)
 endif
 
@@ -337,12 +339,16 @@ libmutter_la_SOURCES +=				\
 	wayland/meta-wayland-versions.h		\
 	wayland/meta-wayland-outputs.c		\
 	wayland/meta-wayland-outputs.h		\
+	wayland/meta-wayland-xdg-foreign.c     	\
+	wayland/meta-wayland-xdg-foreign.h     	\
 	wayland/meta-window-wayland.c		\
 	wayland/meta-window-wayland.h		\
 	wayland/meta-wayland-xdg-shell.c	\
 	wayland/meta-wayland-xdg-shell.h	\
 	wayland/meta-wayland-wl-shell.c		\
 	wayland/meta-wayland-wl-shell.h		\
+	wayland/meta-wayland-gtk-shell.c	\
+	wayland/meta-wayland-gtk-shell.h	\
 	$(NULL)
 endif
 
@@ -570,10 +576,10 @@ $(shell echo $1 | sed 's/\([a-z\-]\+\)-[a-z]\+-v[0-9]\+/\1/')
 endef
 
 %-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/$$(call protostability,$$*)/$$(call protoname,$$*)/$$*.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code $< $@
 %-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/$$(call protostability,$$*)/$$(call protoname,$$*)/$$*.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
+	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header $< $@
 %-protocol.c : $(srcdir)/wayland/protocol/%.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code $< $@
 %-server-protocol.h : $(srcdir)/wayland/protocol/%.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
+	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header $< $@
