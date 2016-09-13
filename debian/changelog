@@ -1,3 +1,18 @@
+mutter (3.21.92-1) unstable; urgency=medium
+
+  [ Jeremy Bicha ]
+  * debian/rules:
+    - Explicitly disable kms and wayland to fix build on kfreebsd
+  * Add fix-undef-build-failure.patch:
+    - Git patch needed for build without wayland
+
+  [ Michael Biebl ]
+  * New upstream development release.
+  * Refresh debian/patches/01_Wcast-align.patch.
+  * Bump debhelper compat level to 10.
+
+ -- Michael Biebl <biebl@debian.org>  Tue, 13 Sep 2016 17:43:54 +0200
+
 mutter (3.21.91-2) unstable; urgency=medium
 
   * Bump Build-Depends on libgnome-desktop-3-dev to (>= 3.21.2).

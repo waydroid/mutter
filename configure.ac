@@ -2,7 +2,7 @@ AC_PREREQ(2.62)
 
 m4_define([mutter_major_version], [3])
 m4_define([mutter_minor_version], [21])
-m4_define([mutter_micro_version], [91])
+m4_define([mutter_micro_version], [92])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -375,6 +375,8 @@ AC_CHECK_DECL([GL_EXT_x11_sync_object],
               [],
               [AC_MSG_ERROR([GL_EXT_x11_sync_object definition not found, please update your GL headers])],
               [#include <GL/glx.h>])
+
+AC_PATH_PROG([CVT],[cvt],[])
 
 #### Warnings (last since -Werror can disturb other tests)
 

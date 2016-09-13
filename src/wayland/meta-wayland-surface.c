@@ -479,6 +479,8 @@ pending_state_init (MetaWaylandPendingState *state)
   wl_list_init (&state->frame_callback_list);
 
   state->has_new_geometry = FALSE;
+  state->has_new_min_size = FALSE;
+  state->has_new_max_size = FALSE;
 }
 
 static void
@@ -523,6 +525,12 @@ move_pending_state (MetaWaylandPendingState *from,
   to->opaque_region_set = from->opaque_region_set;
   to->new_geometry = from->new_geometry;
   to->has_new_geometry = from->has_new_geometry;
+  to->has_new_min_size = from->has_new_min_size;
+  to->new_min_width = from->new_min_width;
+  to->new_min_height = from->new_min_height;
+  to->has_new_max_size = from->has_new_max_size;
+  to->new_max_width = from->new_max_width;
+  to->new_max_height = from->new_max_height;
 
   wl_list_init (&to->frame_callback_list);
   wl_list_insert_list (&to->frame_callback_list, &from->frame_callback_list);
@@ -1208,6 +1216,8 @@ wl_surface_destructor (struct wl_resource *resource)
   MetaWaylandCompositor *compositor = surface->compositor;
   MetaWaylandFrameCallback *cb, *next;
 
+  g_signal_emit (surface, surface_signals[SURFACE_DESTROY], 0);
+
   g_clear_object (&surface->role);
 
   /* If we still have a window at the time of destruction, that means that
@@ -1751,20 +1761,6 @@ meta_wayland_surface_get_absolute_coordinates (MetaWaylandSurface *surface,
 }
 
 static void
-meta_wayland_surface_dispose (GObject *object)
-{
-  MetaWaylandSurface *surface = META_WAYLAND_SURFACE (object);
-
-  if (!surface->destroying)
-    {
-      g_signal_emit (object, surface_signals[SURFACE_DESTROY], 0);
-      surface->destroying = TRUE;
-    }
-
-  G_OBJECT_CLASS (meta_wayland_surface_parent_class)->dispose (object);
-}
-
-static void
 meta_wayland_surface_init (MetaWaylandSurface *surface)
 {
   surface->pending = g_object_new (META_TYPE_WAYLAND_PENDING_STATE, NULL);
@@ -1774,8 +1770,6 @@ static void
 meta_wayland_surface_class_init (MetaWaylandSurfaceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  object_class->dispose = meta_wayland_surface_dispose;
 
   surface_signals[SURFACE_DESTROY] =
     g_signal_new ("destroy",
