@@ -200,6 +200,7 @@ host_triplet = @host@
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-clutter-backend-native.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.c	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.h	\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-default-modes.h		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-idle-monitor-native.c	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-idle-monitor-native.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-input-settings-native.c	\
@@ -459,6 +460,7 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	backends/native/meta-clutter-backend-native.h \
 	backends/native/meta-cursor-renderer-native.c \
 	backends/native/meta-cursor-renderer-native.h \
+	backends/native/meta-default-modes.h \
 	backends/native/meta-idle-monitor-native.c \
 	backends/native/meta-idle-monitor-native.h \
 	backends/native/meta-input-settings-native.c \
@@ -768,6 +770,7 @@ CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CVT = @CVT@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -939,7 +942,8 @@ SUBDIRS = compositor/plugins
 EXTRA_DIST = $(am__append_5) $(wayland_protocols) libmutter.pc.in \
 	meta-enum-types.h.in meta-enum-types.c.in \
 	org.freedesktop.login1.xml org.gnome.Mutter.DisplayConfig.xml \
-	org.gnome.Mutter.IdleMonitor.xml $(NULL)
+	org.gnome.Mutter.IdleMonitor.xml \
+	backends/native/gen-default-modes.py $(NULL)
 NULL = 
 AM_CPPFLAGS = \
 	-DCLUTTER_ENABLE_COMPOSITOR_API					\
@@ -2559,6 +2563,12 @@ $(dbus_login1_built_sources) : Makefile.am org.freedesktop.login1.xml
 		--generate-c-code meta-dbus-login1					\
 		--c-generate-autocleanup all						\
 		$(srcdir)/org.freedesktop.login1.xml
+
+backends/native/meta-default-modes.h: backends/native/gen-default-modes.py Makefile.am
+	@if test -n "$(CVT)"; then \
+		if $(AM_V_P); then PS4= set -x; else echo "  GEN      $@"; fi; \
+		python $< > $@; \
+	fi
 
 .SECONDEXPANSION:
 

@@ -142,6 +142,14 @@ struct _MetaWaylandPendingState
 
   MetaRectangle new_geometry;
   gboolean has_new_geometry;
+
+  /* pending min/max size in window geometry coordinates */
+  gboolean has_new_min_size;
+  int new_min_width;
+  int new_min_height;
+  gboolean has_new_max_size;
+  int new_max_width;
+  int new_max_height;
 };
 
 struct _MetaWaylandDragDestFuncs
@@ -176,7 +184,6 @@ struct _MetaWaylandSurface
   int32_t offset_x, offset_y;
   GList *subsurfaces;
   GHashTable *outputs_to_destroy_notify_id;
-  gboolean destroying;
 
   /* Buffer reference state. */
   struct {

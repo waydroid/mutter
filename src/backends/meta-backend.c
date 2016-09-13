@@ -542,6 +542,14 @@ meta_backend_lock_layout_group (MetaBackend *backend,
   META_BACKEND_GET_CLASS (backend)->lock_layout_group (backend, idx);
 }
 
+void
+meta_backend_set_numlock (MetaBackend *backend,
+                          gboolean     numlock_state)
+{
+  META_BACKEND_GET_CLASS (backend)->set_numlock (backend, numlock_state);
+}
+
+
 /**
  * meta_backend_get_stage:
  * @backend: A #MetaBackend
@@ -790,9 +798,9 @@ meta_is_stage_views_enabled (void)
   mutter_stage_views = g_getenv ("MUTTER_STAGE_VIEWS");
 
   if (!mutter_stage_views)
-    return FALSE;
+    return TRUE;
 
-  return strcmp (mutter_stage_views, "1") == 0;
+  return !g_str_equal (mutter_stage_views, "0");
 }
 
 MetaInputSettings *
