@@ -806,7 +806,9 @@ clutter_stage_cogl_get_dirty_pixel (ClutterStageWindow *stage_window,
                                     int                *x,
                                     int                *y)
 {
+  CoglFramebuffer *framebuffer = clutter_stage_view_get_framebuffer (view);
   gboolean has_buffer_age =
+    cogl_is_onscreen (framebuffer) &&
     cogl_clutter_winsys_has_feature (COGL_WINSYS_FEATURE_BUFFER_AGE);
   cairo_rectangle_int_t *rect;
 
@@ -820,10 +822,13 @@ clutter_stage_cogl_get_dirty_pixel (ClutterStageWindow *stage_window,
       ClutterStageViewCogl *view_cogl = CLUTTER_STAGE_VIEW_COGL (view);
       ClutterStageViewCoglPrivate *view_priv =
         clutter_stage_view_cogl_get_instance_private (view_cogl);
+      cairo_rectangle_int_t view_layout;
+
+      clutter_stage_view_get_layout (view, &view_layout);
 
       rect = &view_priv->damage_history[DAMAGE_HISTORY (view_priv->damage_index - 1)];
-      *x = rect->x;
-      *y = rect->y;
+      *x = rect->x - view_layout.x;
+      *y = rect->y - view_layout.y;
     }
 }
 

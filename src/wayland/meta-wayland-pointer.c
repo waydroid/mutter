@@ -83,7 +83,8 @@ enum {
 
 static guint signals[LAST_SIGNAL];
 
-G_DEFINE_TYPE (MetaWaylandPointer, meta_wayland_pointer, G_TYPE_OBJECT);
+G_DEFINE_TYPE (MetaWaylandPointer, meta_wayland_pointer,
+               META_TYPE_WAYLAND_INPUT_DEVICE)
 
 static MetaWaylandPointerClient *
 meta_wayland_pointer_client_new (void)
@@ -455,13 +456,10 @@ meta_wayland_pointer_on_cursor_changed (MetaCursorTracker *cursor_tracker,
 }
 
 void
-meta_wayland_pointer_enable (MetaWaylandPointer *pointer,
-                             MetaWaylandSeat    *seat)
+meta_wayland_pointer_enable (MetaWaylandPointer *pointer)
 {
   MetaCursorTracker *cursor_tracker = meta_cursor_tracker_get_for_screen (NULL);
   ClutterDeviceManager *manager;
-
-  pointer->seat = seat;
 
   pointer->pointer_clients =
     g_hash_table_new_full (NULL, NULL, NULL,
@@ -470,10 +468,6 @@ meta_wayland_pointer_enable (MetaWaylandPointer *pointer,
   pointer->focus_surface_listener.notify = pointer_handle_focus_surface_destroy;
 
   pointer->cursor_surface = NULL;
-
-  pointer->default_grab.interface = &default_pointer_grab_interface;
-  pointer->default_grab.pointer = pointer;
-  pointer->grab = &pointer->default_grab;
 
   manager = clutter_device_manager_get_default ();
   pointer->device = clutter_device_manager_get_core_device (manager, CLUTTER_POINTER_DEVICE);
@@ -499,10 +493,9 @@ meta_wayland_pointer_disable (MetaWaylandPointer *pointer)
                                    pointer->cursor_surface_destroy_id);
     }
 
-  meta_wayland_pointer_set_focus (pointer, NULL);
+  meta_wayland_pointer_end_grab (pointer);
 
   g_clear_pointer (&pointer->pointer_clients, g_hash_table_unref);
-  pointer->seat = NULL;
   pointer->cursor_surface = NULL;
 }
 
@@ -588,7 +581,11 @@ handle_button_event (MetaWaylandPointer *pointer,
   pointer->grab->interface->button (pointer->grab, event);
 
   if (implicit_grab)
-    pointer->grab_serial = wl_display_get_serial (pointer->seat->wl_display);
+    {
+      MetaWaylandSeat *seat = meta_wayland_pointer_get_seat (pointer);
+
+      pointer->grab_serial = wl_display_get_serial (seat->wl_display);
+    }
 }
 
 static void
@@ -795,7 +792,9 @@ void
 meta_wayland_pointer_set_focus (MetaWaylandPointer *pointer,
                                 MetaWaylandSurface *surface)
 {
-  if (pointer->seat == NULL)
+  MetaWaylandSeat *seat = meta_wayland_pointer_get_seat (pointer);
+
+  if (!meta_wayland_seat_has_pointer (seat))
     return;
 
   if (pointer->focus_surface == surface)
@@ -1205,12 +1204,17 @@ meta_wayland_relative_pointer_init (MetaWaylandCompositor *compositor)
 MetaWaylandSeat *
 meta_wayland_pointer_get_seat (MetaWaylandPointer *pointer)
 {
-  return pointer->seat;
+  MetaWaylandInputDevice *input_device = META_WAYLAND_INPUT_DEVICE (pointer);
+
+  return meta_wayland_input_device_get_seat (input_device);
 }
 
 static void
 meta_wayland_pointer_init (MetaWaylandPointer *pointer)
 {
+  pointer->default_grab.interface = &default_pointer_grab_interface;
+  pointer->default_grab.pointer = pointer;
+  pointer->grab = &pointer->default_grab;
 }
 
 static void

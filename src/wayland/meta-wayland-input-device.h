@@ -1,7 +1,7 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
 
 /*
- * Copyright (C) 2014 Red Hat
+ * Copyright (C) 2016 Red Hat
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,31 +19,27 @@
  * 02111-1307, USA.
  *
  * Written by:
- *     Jasper St. Pierre <jstpierre@mecheye.net>
+ *     Jonas Ådahl <jadahl@gmail.com>
  */
 
-#ifndef META_WAYLAND_OUTPUTS_H
-#define META_WAYLAND_OUTPUTS_H
+#ifndef META_WAYLAND_INPUT_DEVICE_H
+#define META_WAYLAND_INPUT_DEVICE_H
 
-#include "backends/meta-monitor-manager-private.h"
-#include "meta-wayland-private.h"
+#include <glib-object.h>
 
-#define META_TYPE_WAYLAND_OUTPUT (meta_wayland_output_get_type ())
-G_DECLARE_FINAL_TYPE (MetaWaylandOutput, meta_wayland_output,
-                      META, WAYLAND_OUTPUT, GObject)
+#include "wayland/meta-wayland-types.h"
 
-struct _MetaWaylandOutput
+#define META_TYPE_WAYLAND_INPUT_DEVICE (meta_wayland_input_device_get_type ())
+G_DECLARE_DERIVABLE_TYPE (MetaWaylandInputDevice,
+                          meta_wayland_input_device,
+                          META, WAYLAND_INPUT_DEVICE,
+                          GObject)
+
+struct _MetaWaylandInputDeviceClass
 {
-  GObject                   parent;
-
-  struct wl_global         *global;
-  MetaMonitorInfo          *monitor_info;
-  guint                     mode_flags;
-  gint                      scale;
-
-  GList                    *resources;
+  GObjectClass parent_class;
 };
 
-void meta_wayland_outputs_init (MetaWaylandCompositor *compositor);
+MetaWaylandSeat * meta_wayland_input_device_get_seat (MetaWaylandInputDevice *input_device);
 
-#endif /* META_WAYLAND_OUTPUTS_H */
+#endif /* META_WAYLAND_INPUT_DEVICE_H */
