@@ -26,6 +26,7 @@
 #include <clutter/clutter.h>
 
 #include "meta-wayland-types.h"
+#include "meta-wayland-input-device.h"
 #include "meta-wayland-pointer.h"
 #include "meta-wayland-keyboard.h"
 #include "meta-wayland-touch.h"
@@ -68,5 +69,11 @@ gboolean meta_wayland_seat_get_grab_info (MetaWaylandSeat    *seat,
                                           gfloat             *y);
 gboolean meta_wayland_seat_can_popup     (MetaWaylandSeat *seat,
                                           uint32_t         serial);
+
+gboolean meta_wayland_seat_has_keyboard (MetaWaylandSeat *seat);
+
+gboolean meta_wayland_seat_has_pointer (MetaWaylandSeat *seat);
+
+gboolean meta_wayland_seat_has_touch (MetaWaylandSeat *seat);
 
 #endif /* META_WAYLAND_SEAT_H */

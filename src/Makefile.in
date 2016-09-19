@@ -130,6 +130,8 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device.c      \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device.h      \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device-private.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-input-device.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-input-device.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gestures.c	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gestures.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gesture-swipe.c	\
@@ -402,6 +404,8 @@ am__libmutter_la_SOURCES_DIST = backends/meta-backend.c \
 	wayland/meta-wayland-data-device.c \
 	wayland/meta-wayland-data-device.h \
 	wayland/meta-wayland-data-device-private.h \
+	wayland/meta-wayland-input-device.c \
+	wayland/meta-wayland-input-device.h \
 	wayland/meta-wayland-pointer-gestures.c \
 	wayland/meta-wayland-pointer-gestures.h \
 	wayland/meta-wayland-pointer-gesture-swipe.c \
@@ -484,6 +488,7 @@ am__objects_1 =
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-buffer.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-region.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-data-device.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-input-device.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gestures.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gesture-swipe.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-pointer-gesture-pinch.lo \
@@ -1508,6 +1513,8 @@ wayland/meta-wayland-region.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-data-device.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-input-device.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-pointer-gestures.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-pointer-gesture-swipe.lo:  \
@@ -1940,6 +1947,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-buffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-data-device.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-gtk-shell.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-input-device.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-keyboard.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-outputs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-pointer-constraints.Plo@am__quote@
