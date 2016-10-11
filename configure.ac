@@ -2,7 +2,7 @@ AC_PREREQ(2.62)
 
 m4_define([mutter_major_version], [3])
 m4_define([mutter_minor_version], [22])
-m4_define([mutter_micro_version], [0])
+m4_define([mutter_micro_version], [1])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -85,6 +85,7 @@ MUTTER_PC_MODULES="
    xrender
    x11-xcb
    xcb-randr
+   xcb-res
 "
 
 GLIB_GSETTINGS
@@ -422,6 +423,11 @@ if test "$enable_compile_warnings" != no ; then
     case " $CFLAGS " in
     *[\ \	]-Wpointer-arith[\ \	]*) ;;
     *) CFLAGS="$CFLAGS -Wpointer-arith" ;;
+    esac
+
+    case " $CFLAGS " in
+    *[\ \	]-Wcast-align[\ \	]*) ;;
+    *) CFLAGS="$CFLAGS -Wcast-align" ;;
     esac
 
     case " $CFLAGS " in
