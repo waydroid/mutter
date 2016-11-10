@@ -86,6 +86,12 @@ static guint signals[LAST_SIGNAL];
 G_DEFINE_TYPE (MetaWaylandPointer, meta_wayland_pointer,
                META_TYPE_WAYLAND_INPUT_DEVICE)
 
+static void
+meta_wayland_pointer_reset_grab (MetaWaylandPointer *pointer);
+
+static void
+meta_wayland_pointer_cancel_grab (MetaWaylandPointer *pointer);
+
 static MetaWaylandPointerClient *
 meta_wayland_pointer_client_new (void)
 {
@@ -358,8 +364,8 @@ meta_wayland_pointer_send_button (MetaWaylandPointer *pointer,
   if (pointer->focus_client &&
       !wl_list_empty (&pointer->focus_client->pointer_resources))
     {
-      struct wl_client *client = wl_resource_get_client (pointer->focus_surface->resource);
-      struct wl_display *display = wl_client_get_display (client);
+      MetaWaylandInputDevice *input_device =
+        META_WAYLAND_INPUT_DEVICE (pointer);
       uint32_t time;
       uint32_t button;
       uint32_t serial;
@@ -395,7 +401,7 @@ meta_wayland_pointer_send_button (MetaWaylandPointer *pointer,
         }
 
       time = clutter_event_get_time (event);
-      serial = wl_display_next_serial (display);
+      serial = meta_wayland_input_device_next_serial (input_device);
 
       wl_resource_for_each (resource, &pointer->focus_client->pointer_resources)
         {
@@ -416,11 +422,27 @@ default_grab_focus (MetaWaylandPointerGrab *grab,
                     MetaWaylandSurface     *surface)
 {
   MetaWaylandPointer *pointer = grab->pointer;
+  MetaWaylandSeat *seat = meta_wayland_pointer_get_seat (pointer);
+  MetaDisplay *display = meta_get_display ();
 
   if (pointer->button_count > 0)
     return;
 
-  meta_wayland_pointer_set_focus (pointer, surface);
+  switch (display->event_route)
+    {
+    case META_EVENT_ROUTE_WINDOW_OP:
+    case META_EVENT_ROUTE_COMPOSITOR_GRAB:
+    case META_EVENT_ROUTE_FRAME_BUTTON:
+      return;
+      break;
+
+    case META_EVENT_ROUTE_NORMAL:
+    case META_EVENT_ROUTE_WAYLAND_POPUP:
+      break;
+    }
+
+  if (meta_wayland_seat_has_pointer (seat))
+    meta_wayland_pointer_set_focus (pointer, surface);
 }
 
 static void
@@ -493,7 +515,8 @@ meta_wayland_pointer_disable (MetaWaylandPointer *pointer)
                                    pointer->cursor_surface_destroy_id);
     }
 
-  meta_wayland_pointer_end_grab (pointer);
+  meta_wayland_pointer_cancel_grab (pointer);
+  meta_wayland_pointer_reset_grab (pointer);
   meta_wayland_pointer_set_focus (pointer, NULL);
 
   g_clear_pointer (&pointer->pointer_clients, g_hash_table_unref);
@@ -534,7 +557,8 @@ repick_for_event (MetaWaylandPointer *pointer,
     actor = clutter_input_device_get_pointer_actor (pointer->device);
 
   if (META_IS_SURFACE_ACTOR_WAYLAND (actor))
-    pointer->current = meta_surface_actor_wayland_get_surface (META_SURFACE_ACTOR_WAYLAND (actor));
+    pointer->current =
+      meta_surface_actor_wayland_get_surface (META_SURFACE_ACTOR_WAYLAND (actor));
   else
     pointer->current = NULL;
 
@@ -793,22 +817,16 @@ void
 meta_wayland_pointer_set_focus (MetaWaylandPointer *pointer,
                                 MetaWaylandSurface *surface)
 {
-  MetaWaylandSeat *seat = meta_wayland_pointer_get_seat (pointer);
-
-  if (!meta_wayland_seat_has_pointer (seat))
-    return;
+  MetaWaylandInputDevice *input_device = META_WAYLAND_INPUT_DEVICE (pointer);
 
   if (pointer->focus_surface == surface)
     return;
 
   if (pointer->focus_surface != NULL)
     {
-      struct wl_client *client =
-        wl_resource_get_client (pointer->focus_surface->resource);
-      struct wl_display *display = wl_client_get_display (client);
       uint32_t serial;
 
-      serial = wl_display_next_serial (display);
+      serial = meta_wayland_input_device_next_serial (input_device);
 
       if (pointer->focus_client)
         {
@@ -825,11 +843,11 @@ meta_wayland_pointer_set_focus (MetaWaylandPointer *pointer,
   if (surface != NULL)
     {
       struct wl_client *client = wl_resource_get_client (surface->resource);
-      struct wl_display *display = wl_client_get_display (client);
       ClutterPoint pos;
 
       pointer->focus_surface = surface;
-      wl_resource_add_destroy_listener (pointer->focus_surface->resource, &pointer->focus_surface_listener);
+      wl_resource_add_destroy_listener (pointer->focus_surface->resource,
+                                        &pointer->focus_surface_listener);
 
       clutter_input_device_get_coords (pointer->device, NULL, &pos);
 
@@ -843,7 +861,8 @@ meta_wayland_pointer_set_focus (MetaWaylandPointer *pointer,
         meta_wayland_pointer_get_pointer_client (pointer, client);
       if (pointer->focus_client)
         {
-          pointer->focus_serial = wl_display_next_serial (display);
+          pointer->focus_serial =
+            meta_wayland_input_device_next_serial (input_device);
           meta_wayland_pointer_broadcast_enter (pointer,
                                                 pointer->focus_serial,
                                                 pointer->focus_surface);
@@ -861,11 +880,19 @@ meta_wayland_pointer_start_grab (MetaWaylandPointer *pointer,
 {
   const MetaWaylandPointerGrabInterface *interface;
 
+  meta_wayland_pointer_cancel_grab (pointer);
+
   pointer->grab = grab;
   interface = pointer->grab->interface;
   grab->pointer = pointer;
 
   interface->focus (pointer->grab, pointer->current);
+}
+
+static void
+meta_wayland_pointer_reset_grab (MetaWaylandPointer *pointer)
+{
+  pointer->grab = &pointer->default_grab;
 }
 
 void
@@ -878,6 +905,13 @@ meta_wayland_pointer_end_grab (MetaWaylandPointer *pointer)
   interface->focus (pointer->grab, pointer->current);
 
   meta_wayland_pointer_update_cursor_surface (pointer);
+}
+
+static void
+meta_wayland_pointer_cancel_grab (MetaWaylandPointer *pointer)
+{
+  if (pointer->grab->interface->cancel)
+    pointer->grab->interface->cancel (pointer->grab);
 }
 
 void
@@ -1059,24 +1093,25 @@ meta_wayland_pointer_create_new_resource (MetaWaylandPointer *pointer,
                                           struct wl_resource *seat_resource,
                                           uint32_t id)
 {
-  struct wl_resource *cr;
+  struct wl_resource *resource;
   MetaWaylandPointerClient *pointer_client;
 
-  cr = wl_resource_create (client, &wl_pointer_interface, wl_resource_get_version (seat_resource), id);
-  wl_resource_set_implementation (cr, &pointer_interface, pointer,
+  resource = wl_resource_create (client, &wl_pointer_interface,
+                                 wl_resource_get_version (seat_resource), id);
+  wl_resource_set_implementation (resource, &pointer_interface, pointer,
                                   meta_wayland_pointer_unbind_pointer_client_resource);
 
   pointer_client = meta_wayland_pointer_ensure_pointer_client (pointer, client);
 
   wl_list_insert (&pointer_client->pointer_resources,
-                  wl_resource_get_link (cr));
+                  wl_resource_get_link (resource));
 
   if (pointer->focus_client == pointer_client)
     {
-      meta_wayland_pointer_send_enter (pointer, cr,
+      meta_wayland_pointer_send_enter (pointer, resource,
                                        pointer->focus_serial,
                                        pointer->focus_surface);
-      meta_wayland_pointer_send_frame (pointer, cr);
+      meta_wayland_pointer_send_frame (pointer, resource);
     }
 }
 
@@ -1127,30 +1162,31 @@ relative_pointer_manager_destroy (struct wl_client *client,
 
 static void
 relative_pointer_manager_get_relative_pointer (struct wl_client   *client,
-                                               struct wl_resource *resource,
+                                               struct wl_resource *manager_resource,
                                                uint32_t            id,
                                                struct wl_resource *pointer_resource)
 {
   MetaWaylandPointer *pointer = wl_resource_get_user_data (pointer_resource);
-  struct wl_resource *cr;
+  struct wl_resource *resource;
   MetaWaylandPointerClient *pointer_client;
 
-  cr = wl_resource_create (client, &zwp_relative_pointer_v1_interface,
-                           wl_resource_get_version (resource), id);
-  if (cr == NULL)
+  resource = wl_resource_create (client, &zwp_relative_pointer_v1_interface,
+                                 wl_resource_get_version (manager_resource),
+                                 id);
+  if (!resource)
     {
       wl_client_post_no_memory (client);
       return;
     }
 
-  wl_resource_set_implementation (cr, &relative_pointer_interface,
+  wl_resource_set_implementation (resource, &relative_pointer_interface,
                                   pointer,
                                   meta_wayland_pointer_unbind_pointer_client_resource);
 
   pointer_client = meta_wayland_pointer_ensure_pointer_client (pointer, client);
 
   wl_list_insert (&pointer_client->relative_pointer_resources,
-                  wl_resource_get_link (cr));
+                  wl_resource_get_link (resource));
 }
 
 static const struct zwp_relative_pointer_manager_v1_interface relative_pointer_manager = {

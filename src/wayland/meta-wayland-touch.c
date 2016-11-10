@@ -202,17 +202,10 @@ touch_get_relative_coordinates (MetaWaylandTouch   *touch,
 
   clutter_event_get_coords (event, &event_x, &event_y);
 
-  if (surface->surface_actor)
-    {
-      clutter_actor_transform_stage_point (CLUTTER_ACTOR (surface->surface_actor),
-                                           event_x, event_y,
-                                           &event_x, &event_y);
-    }
-
-  *x = event_x / surface->scale;
-  *y = event_y / surface->scale;
+  return meta_wayland_surface_get_relative_coordinates (surface,
+                                                        event_x, event_y,
+                                                        x, y);
 }
-
 
 void
 meta_wayland_touch_update (MetaWaylandTouch   *touch,
@@ -249,11 +242,10 @@ meta_wayland_touch_update (MetaWaylandTouch   *touch,
   if (event->type == CLUTTER_TOUCH_BEGIN ||
       event->type == CLUTTER_TOUCH_END)
     {
-      MetaWaylandSurface *surface = touch_info->touch_surface->surface;
-      struct wl_client *client = wl_resource_get_client (surface->resource);
-      struct wl_display *display = wl_client_get_display (client);
+      MetaWaylandInputDevice *input_device = META_WAYLAND_INPUT_DEVICE (touch);
 
-      touch_info->slot_serial = wl_display_get_serial (display);
+      touch_info->slot_serial =
+        meta_wayland_input_device_next_serial (input_device);
     }
 
   touch_get_relative_coordinates (touch, touch_info->touch_surface->surface,

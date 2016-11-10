@@ -41,6 +41,7 @@
 #include "backends/meta-backend-private.h"
 #include "backends/native/meta-backend-native.h"
 #include "backends/meta-pointer-constraint.h"
+#include "core/frame.h"
 
 #include "pointer-constraints-unstable-v1-server-protocol.h"
 
@@ -447,17 +448,10 @@ is_within_constraint_region (MetaWaylandPointerConstraint *constraint,
   return is_within;
 }
 
-static void
-meta_wayland_pointer_constraint_maybe_enable (MetaWaylandPointerConstraint *constraint)
+static gboolean
+should_constraint_be_enabled (MetaWaylandPointerConstraint *constraint)
 {
   MetaWindow *window;
-  wl_fixed_t sx, sy;
-
-  if (constraint->is_enabled)
-    return;
-
-  if (constraint->seat->pointer->focus_surface != constraint->surface)
-    return;
 
   window = constraint->surface->window;
   if (!window)
@@ -467,11 +461,14 @@ meta_wayland_pointer_constraint_maybe_enable (MetaWaylandPointerConstraint *cons
        * associate the X11 Window with the wl_surface.
        */
       g_warn_if_fail (meta_xwayland_is_xwayland_surface (constraint->surface));
-      return;
+      return FALSE;
     }
 
   if (window->unmanaging)
-    return;
+    return FALSE;
+
+  if (constraint->seat->pointer->focus_surface != constraint->surface)
+    return FALSE;
 
   if (meta_xwayland_is_xwayland_surface (constraint->surface))
     {
@@ -493,13 +490,29 @@ meta_wayland_pointer_constraint_maybe_enable (MetaWaylandPointerConstraint *cons
 
       if (display->focus_window &&
           display->focus_window->client_type != META_WINDOW_CLIENT_TYPE_X11)
-        return;
+        return FALSE;
     }
   else
     {
+      MetaWindow *window = constraint->surface->window;
+
       if (!meta_window_appears_focused (window))
-        return;
+        return FALSE;
     }
+
+  return TRUE;
+}
+
+static void
+meta_wayland_pointer_constraint_maybe_enable (MetaWaylandPointerConstraint *constraint)
+{
+  wl_fixed_t sx, sy;
+
+  if (constraint->is_enabled)
+    return;
+
+  if (!should_constraint_be_enabled (constraint))
+    return;
 
   meta_wayland_pointer_get_relative_coordinates (constraint->seat->pointer,
                                                  constraint->surface,
@@ -519,26 +532,9 @@ meta_wayland_pointer_constraint_remove (MetaWaylandPointerConstraint *constraint
   meta_wayland_pointer_constraint_destroy (constraint);
 }
 
-void
-meta_wayland_pointer_constraint_maybe_remove_for_seat (MetaWaylandSeat *seat,
-                                                       MetaWindow      *window)
+static void
+meta_wayland_pointer_constraint_deactivate (MetaWaylandPointerConstraint *constraint)
 {
-  MetaWaylandPointer *pointer = seat->pointer;
-  MetaWaylandPointerConstraint *constraint;
-
-  if ((pointer->grab->interface != &confined_pointer_grab_interface &&
-       pointer->grab->interface != &locked_pointer_grab_interface))
-    return;
-
-  constraint = wl_container_of (pointer->grab, constraint, grab);
-
-  if (constraint->surface != window->surface)
-    return;
-
-  if (meta_window_appears_focused (window) &&
-      pointer->focus_surface == window->surface)
-    return;
-
   switch (constraint->lifetime)
     {
     case ZWP_POINTER_CONSTRAINTS_V1_LIFETIME_ONESHOT:
@@ -552,6 +548,25 @@ meta_wayland_pointer_constraint_maybe_remove_for_seat (MetaWaylandSeat *seat,
     default:
       g_assert_not_reached ();
     }
+}
+
+void
+meta_wayland_pointer_constraint_maybe_remove_for_seat (MetaWaylandSeat *seat,
+                                                       MetaWindow      *window)
+{
+  MetaWaylandPointer *pointer = seat->pointer;
+  MetaWaylandPointerConstraint *constraint;
+
+  if ((pointer->grab->interface != &confined_pointer_grab_interface &&
+       pointer->grab->interface != &locked_pointer_grab_interface))
+    return;
+
+  constraint = wl_container_of (pointer->grab, constraint, grab);
+
+  if (should_constraint_be_enabled (constraint))
+    return;
+
+  meta_wayland_pointer_constraint_deactivate (constraint);
 }
 
 static void
@@ -589,10 +604,31 @@ cairo_region_t *
 meta_wayland_pointer_constraint_calculate_effective_region (MetaWaylandPointerConstraint *constraint)
 {
   cairo_region_t *region;
+  MetaWindow *window;
 
   region = meta_wayland_surface_calculate_input_region (constraint->surface);
   if (constraint->region)
     cairo_region_intersect (region, constraint->region);
+
+  window = constraint->surface->window;
+  if (window && window->frame)
+    {
+      MetaFrame *frame = window->frame;
+      int actual_width, actual_height;
+
+      g_assert (meta_xwayland_is_xwayland_surface (constraint->surface));
+
+      actual_width = window->buffer_rect.width - (frame->child_x +
+                                                  frame->right_width);
+      actual_height = window->buffer_rect.height - (frame->child_y +
+                                                    frame->bottom_height);
+      cairo_region_intersect_rectangle (region, &(cairo_rectangle_int_t) {
+                                          .x = frame->child_x,
+                                          .y = frame->child_y,
+                                          .width = actual_width,
+                                          .height = actual_height
+                                        });
+    }
 
   return region;
 }
@@ -938,10 +974,20 @@ locked_pointer_grab_pointer_button (MetaWaylandPointerGrab *grab,
   meta_wayland_pointer_send_button (grab->pointer, event);
 }
 
+static void
+locked_pointer_grab_pointer_cancel (MetaWaylandPointerGrab *grab)
+{
+  MetaWaylandPointerConstraint *constraint =
+    wl_container_of (grab, constraint, grab);
+
+  meta_wayland_pointer_constraint_deactivate (constraint);
+}
+
 static const MetaWaylandPointerGrabInterface locked_pointer_grab_interface = {
   locked_pointer_grab_pointer_focus,
   locked_pointer_grab_pointer_motion,
   locked_pointer_grab_pointer_button,
+  locked_pointer_grab_pointer_cancel,
 };
 
 static void
@@ -999,10 +1045,20 @@ confined_pointer_grab_pointer_button (MetaWaylandPointerGrab *grab,
   meta_wayland_pointer_send_button (grab->pointer, event);
 }
 
+static void
+confined_pointer_grab_pointer_cancel (MetaWaylandPointerGrab *grab)
+{
+  MetaWaylandPointerConstraint *constraint =
+    wl_container_of (grab, constraint, grab);
+
+  meta_wayland_pointer_constraint_deactivate (constraint);
+}
+
 static const MetaWaylandPointerGrabInterface confined_pointer_grab_interface = {
   confined_pointer_grab_pointer_focus,
   confined_pointer_grab_pointer_motion,
   confined_pointer_grab_pointer_button,
+  confined_pointer_grab_pointer_cancel,
 };
 
 static void

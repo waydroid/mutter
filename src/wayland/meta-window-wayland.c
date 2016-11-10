@@ -117,6 +117,20 @@ static void
 meta_window_wayland_focus (MetaWindow *window,
                            guint32     timestamp)
 {
+  MetaWaylandSurface *surface = window->surface;
+  MetaWaylandSurfaceRoleShellSurface *shell_surface_role =
+     META_WAYLAND_SURFACE_ROLE_SHELL_SURFACE (surface->role);
+
+  /* The keyboard focus semantics for non-grabbing zxdg_shell_v6 popups
+   * is pretty undefined. Same applies for subsurfaces, but in practice,
+   * subsurfaces never receive keyboard focus, so it makes sense to
+   * do the same for non-grabbing popups.
+   *
+   * See https://bugzilla.gnome.org/show_bug.cgi?id=771694#c24
+   */
+  if (META_IS_WAYLAND_XDG_POPUP (shell_surface_role))
+    return;
+
   meta_display_set_input_focus_window (window->display,
                                        window,
                                        FALSE,
@@ -334,18 +348,29 @@ scale_rect_size (MetaRectangle *rect,
 static void
 meta_window_wayland_update_main_monitor (MetaWindow *window)
 {
+  MetaWindow *toplevel_window;
   const MetaMonitorInfo *from;
   const MetaMonitorInfo *to;
   const MetaMonitorInfo *scaled_new;
   float scale;
   MetaRectangle rect;
 
+  from = window->monitor;
+
+  /* If the window is not a toplevel window (i.e. it's a popup window) just use
+   * the monitor of the toplevel. */
+  toplevel_window = meta_wayland_surface_get_toplevel_window (window->surface);
+  if (toplevel_window != window)
+    {
+      window->monitor = toplevel_window->monitor;
+      return;
+    }
+
   /* Require both the current and the new monitor would be the new main monitor,
    * even given the resulting scale the window would end up having. This is
    * needed to avoid jumping back and forth between the new and the old, since
    * changing main monitor may cause the window to be resized so that it no
    * longer have that same new main monitor. */
-  from = window->monitor;
   to = meta_screen_calculate_monitor_for_window (window->screen, window);
 
   if (from == to)

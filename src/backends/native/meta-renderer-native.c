@@ -466,16 +466,19 @@ meta_onscreen_native_set_crtc_modes (MetaOnscreenNative *onscreen_native)
   monitor_info = meta_renderer_view_get_monitor_info (view);
   if (monitor_info)
     {
-      int i;
+      unsigned int i;
 
-      for (i = 0; i < monitor_info->n_outputs; i++)
+      for (i = 0; i < monitor_manager->n_crtcs; i++)
         {
-          MetaOutput *output = monitor_info->outputs[i];
-          int x = output->crtc->rect.x - monitor_info->rect.x;
-          int y = output->crtc->rect.y - monitor_info->rect.y;
+          MetaCRTC *crtc = &monitor_manager->crtcs[i];
+          int x = crtc->rect.x - monitor_info->rect.x;
+          int y = crtc->rect.y - monitor_info->rect.y;
+
+          if (crtc->logical_monitor != monitor_info)
+            continue;
 
           meta_monitor_manager_kms_apply_crtc_mode (monitor_manager_kms,
-                                                    output->crtc,
+                                                    crtc,
                                                     x, y,
                                                     next_fb_id);
         }
@@ -530,16 +533,19 @@ meta_onscreen_native_flip_crtcs (CoglOnscreen *onscreen)
   monitor_info = meta_renderer_view_get_monitor_info (view);
   if (monitor_info)
     {
-      int i;
+      unsigned int i;
 
-      for (i = 0; i < monitor_info->n_outputs; i++)
+      for (i = 0; i < monitor_manager->n_crtcs; i++)
         {
-          MetaOutput *output = monitor_info->outputs[i];
-          int x = output->crtc->rect.x - monitor_info->rect.x;
-          int y = output->crtc->rect.y - monitor_info->rect.y;
+          MetaCRTC *crtc = &monitor_manager->crtcs[i];
+          int x = crtc->rect.x - monitor_info->rect.x;
+          int y = crtc->rect.y - monitor_info->rect.y;
+
+          if (crtc->logical_monitor != monitor_info)
+            continue;
 
           meta_onscreen_native_flip_crtc (onscreen_native, flip_closure,
-                                          output->crtc, x, y,
+                                          crtc, x, y,
                                           &fb_in_use);
         }
     }
@@ -1235,7 +1241,6 @@ meta_renderer_native_initable_init (GInitable     *initable,
                                     GError       **error)
 {
   MetaRendererNative *renderer_native = META_RENDERER_NATIVE (initable);
-  drmModeRes *resources;
 
   renderer_native->gbm = gbm_create_device (renderer_native->kms_fd);
   if (!renderer_native->gbm)
@@ -1243,25 +1248,10 @@ meta_renderer_native_initable_init (GInitable     *initable,
       g_set_error (error, G_IO_ERROR,
                    G_IO_ERROR_FAILED,
                    "Failed to create gbm device");
-      goto err;
-    }
-
-  resources = drmModeGetResources (renderer_native->kms_fd);
-  if (!resources)
-    {
-      g_set_error (error, G_IO_ERROR,
-                   G_IO_ERROR_FAILED,
-                   "drmModeGetResources failed");
-      goto err_resources;
+      return FALSE;
     }
 
   return TRUE;
-
-err_resources:
-  g_clear_pointer (&renderer_native->gbm, gbm_device_destroy);
-
-err:
-  return FALSE;
 }
 
 static void

@@ -1,3 +1,10 @@
+mutter (3.22.2-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Drop patches, all merged upstream.
+
+ -- Michael Biebl <biebl@debian.org>  Thu, 10 Nov 2016 19:17:32 +0100
+
 mutter (3.22.1-2) unstable; urgency=medium
 
   * d/p/wayland-xdg-popup-Always-use-monitor-of-toplevel.patch
