@@ -98,7 +98,7 @@ meta_wayland_tablet_tool_update_cursor_surface (MetaWaylandTabletTool *tool)
         cursor = NULL;
     }
   else if (tool->current_tablet)
-    cursor = meta_cursor_sprite_from_theme (META_CURSOR_CROSSHAIR);
+    cursor = tool->default_sprite;
   else
     cursor = NULL;
 
@@ -380,6 +380,22 @@ tablet_tool_handle_cursor_surface_destroy (struct wl_listener *listener,
   meta_wayland_tablet_tool_set_cursor_surface (tool, NULL);
 }
 
+static void
+tool_cursor_prepare_at (MetaCursorSprite      *cursor_sprite,
+                        int                    x,
+                        int                    y,
+                        MetaWaylandTabletTool *tool)
+{
+  MetaDisplay *display = meta_get_display ();
+  const MetaMonitorInfo *monitor;
+
+  monitor = meta_screen_get_monitor_for_point (display->screen, x, y);
+
+  /* Reload the cursor texture if the scale has changed. */
+  if (monitor)
+    meta_cursor_sprite_set_theme_scale (cursor_sprite, monitor->scale);
+}
+
 MetaWaylandTabletTool *
 meta_wayland_tablet_tool_new (MetaWaylandTabletSeat  *seat,
                               ClutterInputDevice     *device,
@@ -396,6 +412,11 @@ meta_wayland_tablet_tool_new (MetaWaylandTabletSeat  *seat,
 
   tool->focus_surface_destroy_listener.notify = tablet_tool_handle_focus_surface_destroy;
   tool->cursor_surface_destroy_listener.notify = tablet_tool_handle_cursor_surface_destroy;
+
+  tool->default_sprite = meta_cursor_sprite_from_theme (META_CURSOR_CROSSHAIR);
+  tool->prepare_at_signal_id =
+    g_signal_connect (tool->default_sprite, "prepare-at",
+                      G_CALLBACK (tool_cursor_prepare_at), tool);
 
   return tool;
 }
@@ -415,6 +436,9 @@ meta_wayland_tablet_tool_free (MetaWaylandTabletTool *tool)
       wl_list_remove (wl_resource_get_link (resource));
       wl_list_init (wl_resource_get_link (resource));
     }
+
+  g_signal_handler_disconnect (tool->default_sprite, tool->prepare_at_signal_id);
+  g_object_unref (tool->default_sprite);
 
   g_slice_free (MetaWaylandTabletTool, tool);
 }

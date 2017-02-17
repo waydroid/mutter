@@ -1,40 +1,50 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<KeyListEntries wm_name="Mutter" schema="org.gnome.desktop.wm.keybindings" package="mutter" group="system" name="Windows">
+<?xml version="1.0" encoding="UTF-8" ?>
+<KeyListEntries schema="org.gnome.desktop.wm.keybindings"
+                group="system"
+                name="Windows"
+                wm_name="Mutter"
+                package="mutter">
 
-	<KeyListEntry name="activate-window-menu" description="Activate the window menu"></KeyListEntry>
+	<KeyListEntry name="activate-window-menu" description="Activate the window menu"/>
 
-	<KeyListEntry name="toggle-fullscreen" description="Toggle fullscreen mode"></KeyListEntry>
+	<KeyListEntry name="toggle-fullscreen" description="Toggle fullscreen mode"/>
 
-	<KeyListEntry name="toggle-maximized" description="Toggle maximization state"></KeyListEntry>
+	<KeyListEntry name="toggle-maximized" description="Toggle maximization state"/>
 
-	<KeyListEntry name="maximize" description="Maximize window"></KeyListEntry>
+	<KeyListEntry name="maximize" description="Maximize window"/>
 
-	<KeyListEntry name="unmaximize" description="Restore window"></KeyListEntry>
+	<KeyListEntry name="unmaximize" description="Restore window"/>
 
-	<KeyListEntry name="toggle-shaded" description="Toggle shaded state"></KeyListEntry>
+	<KeyListEntry name="toggle-shaded" description="Toggle shaded state"/>
 
-	<KeyListEntry name="close" description="Close window"></KeyListEntry>
+	<KeyListEntry name="close" description="Close window"/>
 
-	<KeyListEntry name="minimize" description="Hide window"></KeyListEntry>
+	<KeyListEntry name="minimize" description="Hide window"/>
 
-	<KeyListEntry name="begin-move" description="Move window"></KeyListEntry>
+	<KeyListEntry name="begin-move" description="Move window"/>
 
-	<KeyListEntry name="begin-resize" description="Resize window"></KeyListEntry>
+	<KeyListEntry name="begin-resize" description="Resize window"/>
 
-	<KeyListEntry name="toggle-on-all-workspaces" description="Toggle window on all workspaces or one"></KeyListEntry>
+	<KeyListEntry name="toggle-on-all-workspaces"
+	              description="Toggle window on all workspaces or one"/>
 
-	<KeyListEntry name="raise-or-lower" description="Raise window if covered, otherwise lower it"></KeyListEntry>
+	<KeyListEntry name="raise-or-lower" description="Raise window if covered, otherwise lower it"/>
 
-	<KeyListEntry name="raise" description="Raise window above other windows"></KeyListEntry>
+	<KeyListEntry name="raise" description="Raise window above other windows"/>
 
-	<KeyListEntry name="lower" description="Lower window below other windows"></KeyListEntry>
+	<KeyListEntry name="lower" description="Lower window below other windows"/>
 
-	<KeyListEntry name="maximize-vertically" description="Maximize window vertically"></KeyListEntry>
+	<KeyListEntry name="maximize-vertically" description="Maximize window vertically"/>
 
-	<KeyListEntry name="maximize-horizontally" description="Maximize window horizontally"></KeyListEntry>
+	<KeyListEntry name="maximize-horizontally" description="Maximize window horizontally"/>
 
-	<KeyListEntry schema="org.gnome.mutter.keybindings" name="toggle-tiled-left" description="View split on left"></KeyListEntry>
+	<KeyListEntry name="toggle-tiled-left"
+                      schema="org.gnome.mutter.keybindings"
+                      description="View split on left"/>
 
-	<KeyListEntry schema="org.gnome.mutter.keybindings" name="toggle-tiled-right" description="View split on right"></KeyListEntry>
+	<KeyListEntry name="toggle-tiled-right"
+                      schema="org.gnome.mutter.keybindings"
+                      description="View split on right"/>
 
 </KeyListEntries>
+

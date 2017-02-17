@@ -1,3 +1,10 @@
+mutter (3.22.3-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Drop patches which have been merged upstream.
+
+ -- Michael Biebl <biebl@debian.org>  Fri, 17 Feb 2017 18:17:07 +0100
+
 mutter (3.22.2-3) unstable; urgency=medium
 
   [ Jeremy Bicha ]
