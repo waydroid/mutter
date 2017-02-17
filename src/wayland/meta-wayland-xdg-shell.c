@@ -227,13 +227,15 @@ xdg_toplevel_show_window_menu (struct wl_client   *client,
 {
   MetaWaylandSeat *seat = wl_resource_get_user_data (seat_resource);
   MetaWaylandSurface *surface = surface_from_xdg_toplevel_resource (resource);
+  int monitor_scale;
 
   if (!meta_wayland_seat_get_grab_info (seat, surface, serial, FALSE, NULL, NULL))
     return;
 
+  monitor_scale = surface->window->monitor->scale;
   meta_window_show_menu (surface->window, META_WINDOW_MENU_WM,
-                         surface->window->buffer_rect.x + x,
-                         surface->window->buffer_rect.y + y);
+                         surface->window->buffer_rect.x + (x * monitor_scale),
+                         surface->window->buffer_rect.y + (y * monitor_scale));
 }
 
 static void
@@ -838,6 +840,17 @@ finish_popup_setup (MetaWaylandXdgPopup *xdg_popup)
         }
 
       xdg_popup->popup = popup;
+    }
+  else
+    {
+      /* The keyboard focus semantics for non-grabbing zxdg_shell_v6 popups
+       * is pretty undefined. Same applies for subsurfaces, but in practice,
+       * subsurfaces never receive keyboard focus, so it makes sense to
+       * do the same for non-grabbing popups.
+       *
+       * See https://bugzilla.gnome.org/show_bug.cgi?id=771694#c24
+       */
+      window->input = FALSE;
     }
 }
 

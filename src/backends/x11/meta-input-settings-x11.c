@@ -222,19 +222,27 @@ meta_input_settings_x11_set_edge_scroll (MetaInputSettings            *settings,
                                          gboolean                      edge_scroll_enabled)
 {
   guchar values[SCROLL_METHOD_NUM_FIELDS] = { 0 }; /* 2fg, edge, button. The last value is unused */
-  guchar *current;
+  guchar *current = NULL;
+  guchar *available = NULL;
+
+  available = get_property (device, "libinput Scroll Methods Available",
+                            XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
+  if (!available || !available[SCROLL_METHOD_FIELD_EDGE])
+    goto out;
 
   current = get_property (device, "libinput Scroll Method Enabled",
                           XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
   if (!current)
-    return;
+    goto out;
 
   memcpy (values, current, SCROLL_METHOD_NUM_FIELDS);
 
   values[SCROLL_METHOD_FIELD_EDGE] = !!edge_scroll_enabled;
   change_property (device, "libinput Scroll Method Enabled",
                    XA_INTEGER, 8, &values, SCROLL_METHOD_NUM_FIELDS);
+ out:
   meta_XFree (current);
+  meta_XFree (available);
 }
 
 static void
@@ -243,19 +251,43 @@ meta_input_settings_x11_set_two_finger_scroll (MetaInputSettings            *set
                                                gboolean                      two_finger_scroll_enabled)
 {
   guchar values[SCROLL_METHOD_NUM_FIELDS] = { 0 }; /* 2fg, edge, button. The last value is unused */
-  guchar *current;
+  guchar *current = NULL;
+  guchar *available = NULL;
+
+  available = get_property (device, "libinput Scroll Methods Available",
+                            XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
+  if (!available || !available[SCROLL_METHOD_FIELD_2FG])
+    goto out;
 
   current = get_property (device, "libinput Scroll Method Enabled",
                           XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
   if (!current)
-    return;
+    goto out;
 
   memcpy (values, current, SCROLL_METHOD_NUM_FIELDS);
 
   values[SCROLL_METHOD_FIELD_2FG] = !!two_finger_scroll_enabled;
   change_property (device, "libinput Scroll Method Enabled",
                    XA_INTEGER, 8, &values, SCROLL_METHOD_NUM_FIELDS);
+ out:
   meta_XFree (current);
+  meta_XFree (available);
+}
+
+static gboolean
+meta_input_settings_x11_has_two_finger_scroll (MetaInputSettings  *settings,
+                                               ClutterInputDevice *device)
+{
+  guchar *available = NULL;
+  gboolean has_two_finger = TRUE;
+
+  available = get_property (device, "libinput Scroll Methods Available",
+                            XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
+  if (!available || !available[SCROLL_METHOD_FIELD_2FG])
+    has_two_finger = FALSE;
+
+  meta_XFree (available);
+  return has_two_finger;
 }
 
 static void
@@ -527,6 +559,8 @@ meta_input_settings_x11_class_init (MetaInputSettingsX11Class *klass)
 
   input_settings_class->set_mouse_accel_profile = meta_input_settings_x11_set_mouse_accel_profile;
   input_settings_class->set_trackball_accel_profile = meta_input_settings_x11_set_trackball_accel_profile;
+
+  input_settings_class->has_two_finger_scroll = meta_input_settings_x11_has_two_finger_scroll;
 }
 
 static void

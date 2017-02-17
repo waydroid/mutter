@@ -73,6 +73,9 @@ typedef struct _MetaOnscreenNative
 
   gboolean pending_set_crtc;
 
+  int64_t pending_queue_swap_notify_frame_count;
+  int64_t pending_swap_notify_frame_count;
+
   MetaRendererView *view;
   int pending_flips;
 } MetaOnscreenNative;
@@ -124,16 +127,19 @@ flush_pending_swap_notify (CoglFramebuffer *framebuffer)
 
       if (onscreen_native->pending_swap_notify)
         {
-          CoglFrameInfo *info =
-            g_queue_pop_head (&onscreen->pending_frame_infos);
+          CoglFrameInfo *info;
 
-          _cogl_onscreen_notify_frame_sync (onscreen, info);
-          _cogl_onscreen_notify_complete (onscreen, info);
+          while ((info = g_queue_peek_head (&onscreen->pending_frame_infos)) &&
+                 info->global_frame_counter <= onscreen_native->pending_swap_notify_frame_count)
+            {
+              _cogl_onscreen_notify_frame_sync (onscreen, info);
+              _cogl_onscreen_notify_complete (onscreen, info);
+              cogl_object_unref (info);
+              g_queue_pop_head (&onscreen->pending_frame_infos);
+            }
 
           onscreen_native->pending_swap_notify = FALSE;
           cogl_object_unref (onscreen);
-
-          cogl_object_unref (info);
         }
     }
 }
@@ -200,6 +206,9 @@ meta_onscreen_native_queue_swap_notify (CoglOnscreen *onscreen)
   CoglRendererEGL *egl_renderer = cogl_renderer->winsys;
   MetaRendererNative *renderer_native = egl_renderer->platform;
 
+  onscreen_native->pending_swap_notify_frame_count =
+    onscreen_native->pending_queue_swap_notify_frame_count;
+
   /* We only want to notify that the swap is complete when the
    * application calls cogl_context_dispatch so instead of
    * immediately notifying we queue an idle callback */
@@ -220,6 +229,39 @@ meta_onscreen_native_queue_swap_notify (CoglOnscreen *onscreen)
    */
   cogl_object_ref (onscreen);
   onscreen_native->pending_swap_notify = TRUE;
+}
+
+static EGLDisplay
+meta_egl_get_display (void *native)
+{
+  EGLDisplay dpy = NULL;
+  const char *client_exts = eglQueryString (NULL, EGL_EXTENSIONS);
+
+  if (g_strstr_len (client_exts, -1, "EGL_KHR_platform_base"))
+    {
+      PFNEGLGETPLATFORMDISPLAYEXTPROC get_platform_display =
+	(void *) eglGetProcAddress ("eglGetPlatformDisplay");
+
+      if (get_platform_display)
+	dpy = get_platform_display (EGL_PLATFORM_GBM_MESA, native, NULL);
+
+      if (dpy)
+	return dpy;
+    }
+
+  if (g_strstr_len (client_exts, -1, "EGL_EXT_platform_base"))
+    {
+      PFNEGLGETPLATFORMDISPLAYEXTPROC get_platform_display =
+	(void *) eglGetProcAddress ("eglGetPlatformDisplayEXT");
+
+      if (get_platform_display)
+	dpy = get_platform_display (EGL_PLATFORM_GBM_MESA, native, NULL);
+
+      if (dpy)
+	return dpy;
+    }
+
+  return eglGetDisplay ((EGLNativeDisplayType) native);
 }
 
 static CoglBool
@@ -246,8 +288,7 @@ meta_renderer_native_connect (CoglRenderer *cogl_renderer,
       goto fail;
     }
 
-  egl_renderer->edpy =
-    eglGetDisplay ((EGLNativeDisplayType) renderer_native->gbm);
+  egl_renderer->edpy = meta_egl_get_display (renderer_native->gbm);
   if (egl_renderer->edpy == EGL_NO_DISPLAY)
     {
       _cogl_set_error (error, COGL_WINSYS_ERROR,
@@ -640,6 +681,7 @@ meta_onscreen_native_swap_buffers_with_damage (CoglOnscreen *onscreen,
       onscreen_native->pending_set_crtc = FALSE;
     }
 
+  onscreen_native->pending_queue_swap_notify_frame_count = renderer_native->frame_counter;
   meta_onscreen_native_flip_crtcs (onscreen);
 }
 

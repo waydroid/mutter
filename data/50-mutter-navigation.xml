@@ -1,78 +1,140 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<KeyListEntries wm_name="Mutter" schema="org.gnome.desktop.wm.keybindings" package="mutter" group="system" name="Navigation">
+<?xml version="1.0" encoding="UTF-8" ?>
+<KeyListEntries schema="org.gnome.desktop.wm.keybindings"
+                group="system"
+                name="Navigation"
+                wm_name="Mutter"
+                package="mutter">
 
-	<KeyListEntry name="move-to-workspace-1" description="Move window to workspace 1"></KeyListEntry>
+	<KeyListEntry name="move-to-workspace-1"
+	              description="Move window to workspace 1" />
 
-	<KeyListEntry name="move-to-workspace-2" description="Move window to workspace 2"></KeyListEntry>
+	<KeyListEntry name="move-to-workspace-2"
+	              description="Move window to workspace 2" />
 
-	<KeyListEntry name="move-to-workspace-3" description="Move window to workspace 3"></KeyListEntry>
+	<KeyListEntry name="move-to-workspace-3"
+	              description="Move window to workspace 3" />
 
-	<KeyListEntry name="move-to-workspace-4" description="Move window to workspace 4"></KeyListEntry>
+	<KeyListEntry name="move-to-workspace-4"
+	              description="Move window to workspace 4" />
 
-        <KeyListEntry name="move-to-workspace-last" description="Move window to last workspace"></KeyListEntry>
+        <KeyListEntry name="move-to-workspace-last"
+                      description="Move window to last workspace" />
 
-	<KeyListEntry name="move-to-workspace-left" description="Move window one workspace to the left"></KeyListEntry>
+	<KeyListEntry name="move-to-workspace-left"
+	              description="Move window one workspace to the left" />
 
-	<KeyListEntry name="move-to-workspace-right" description="Move window one workspace to the right"></KeyListEntry>
+	<KeyListEntry name="move-to-workspace-right"
+	              description="Move window one workspace to the right" />
 
-	<KeyListEntry name="move-to-workspace-up" description="Move window one workspace up"></KeyListEntry>
+	<KeyListEntry name="move-to-workspace-up"
+	              description="Move window one workspace up" />
 
-	<KeyListEntry name="move-to-workspace-down" description="Move window one workspace down"></KeyListEntry>
+	<KeyListEntry name="move-to-workspace-down"
+	              description="Move window one workspace down" />
 
-	<KeyListEntry name="move-to-monitor-left" description="Move window one monitor to the left"></KeyListEntry>
+	<KeyListEntry name="move-to-monitor-left"
+	              description="Move window one monitor to the left" />
 
-	<KeyListEntry name="move-to-monitor-right" description="Move window one monitor to the right"></KeyListEntry>
+	<KeyListEntry name="move-to-monitor-right"
+	              description="Move window one monitor to the right" />
 
-	<KeyListEntry name="move-to-monitor-up" description="Move window one monitor up"></KeyListEntry>
+	<KeyListEntry name="move-to-monitor-up"
+	              description="Move window one monitor up" />
 
-	<KeyListEntry name="move-to-monitor-down" description="Move window one monitor down"></KeyListEntry>
+	<KeyListEntry name="move-to-monitor-down"
+	              description="Move window one monitor down" />
 
-	<KeyListEntry reverse-entry="switch-applications-backward" name="switch-applications" description="Switch applications"></KeyListEntry>
+	<KeyListEntry name="switch-applications"
+	              reverse-entry="switch-applications-backward"
+	              description="Switch applications"/>
 
-	<KeyListEntry reverse-entry="switch-applications" name="switch-applications-backward" hidden="true" description="Switch to previous application"></KeyListEntry>
+	<KeyListEntry name="switch-applications-backward"
+	              reverse-entry="switch-applications"
+	              hidden="true"
+	              description="Switch to previous application"/>
 
-	<KeyListEntry reverse-entry="switch-windows-backward" name="switch-windows" description="Switch windows"></KeyListEntry>
+	<KeyListEntry name="switch-windows"
+	              reverse-entry="switch-windows-backward"
+	              description="Switch windows"/>
 
-	<KeyListEntry reverse-entry="switch-windows" name="switch-windows-backward" hidden="true" description="Switch to previous window"></KeyListEntry>
+	<KeyListEntry name="switch-windows-backward"
+	              reverse-entry="switch-windows"
+	              hidden="true"
+	              description="Switch to previous window"/>
 
-	<KeyListEntry reverse-entry="switch-group-backward" name="switch-group" description="Switch windows of an application"></KeyListEntry>
+	<KeyListEntry name="switch-group"
+	              reverse-entry="switch-group-backward"
+	              description="Switch windows of an application"/>
 
-	<KeyListEntry reverse-entry="switch-group" name="switch-group-backward" hidden="true" description="Switch to previous window of an application"></KeyListEntry>
+	<KeyListEntry name="switch-group-backward"
+	              reverse-entry="switch-group"
+	              hidden="true"
+	              description="Switch to previous window of an application"/>
 
-	<KeyListEntry reverse-entry="switch-panels-backward" name="switch-panels" description="Switch system controls"></KeyListEntry>
+	<KeyListEntry name="switch-panels"
+	              reverse-entry="switch-panels-backward"
+	              description="Switch system controls"/>
 
-	<KeyListEntry reverse-entry="switch-panels" name="switch-panels-backward" hidden="true" description="Switch to previous system control"></KeyListEntry>
+	<KeyListEntry name="switch-panels-backward"
+	              reverse-entry="switch-panels"
+	              hidden="true"
+	              description="Switch to previous system control"/>
 
-	<KeyListEntry reverse-entry="cycle-windows-backward" name="cycle-windows" description="Switch windows directly"></KeyListEntry>
+	<KeyListEntry name="cycle-windows"
+	              reverse-entry="cycle-windows-backward"
+	              description="Switch windows directly"/>
 
-	<KeyListEntry reverse-entry="cycle-windows" name="cycle-windows-backward" hidden="true" description="Switch directly to previous window"></KeyListEntry>
+	<KeyListEntry name="cycle-windows-backward"
+	              reverse-entry="cycle-windows"
+	              hidden="true"
+	              description="Switch directly to previous window"/>
 
-	<KeyListEntry reverse-entry="cycle-group-backward" name="cycle-group" description="Switch windows of an app directly"></KeyListEntry>
+	<KeyListEntry name="cycle-group"
+	              reverse-entry="cycle-group-backward"
+	              description="Switch windows of an app directly"/>
 
-	<KeyListEntry reverse-entry="cycle-group" name="cycle-group-backward" hidden="true" description="Switch directly to previous window of an app"></KeyListEntry>
+	<KeyListEntry name="cycle-group-backward"
+	              reverse-entry="cycle-group"
+	              hidden="true"
+	              description="Switch directly to previous window of an app"/>
 
-	<KeyListEntry reverse-entry="cycle-panels-backward" name="cycle-panels" description="Switch system controls directly"></KeyListEntry>
+	<KeyListEntry name="cycle-panels"
+	              reverse-entry="cycle-panels-backward"
+	              description="Switch system controls directly"/>
 
-	<KeyListEntry reverse-entry="cycle-panels" name="cycle-panels-backward" hidden="true" description="Switch directly to previous system control"></KeyListEntry>
+	<KeyListEntry name="cycle-panels-backward"
+	              reverse-entry="cycle-panels"
+	              hidden="true"
+	              description="Switch directly to previous system control"/>
 
-	<KeyListEntry name="show-desktop" description="Hide all normal windows"></KeyListEntry>
+	<KeyListEntry name="show-desktop"
+	              description="Hide all normal windows"/>
 
-	<KeyListEntry name="switch-to-workspace-1" description="Switch to workspace 1"></KeyListEntry>
+	<KeyListEntry name="switch-to-workspace-1"
+	              description="Switch to workspace 1" />
 
-	<KeyListEntry name="switch-to-workspace-2" description="Switch to workspace 2"></KeyListEntry>
+	<KeyListEntry name="switch-to-workspace-2"
+	              description="Switch to workspace 2" />
 
-	<KeyListEntry name="switch-to-workspace-3" description="Switch to workspace 3"></KeyListEntry>
+	<KeyListEntry name="switch-to-workspace-3"
+	              description="Switch to workspace 3" />
 
-	<KeyListEntry name="switch-to-workspace-4" description="Switch to workspace 4"></KeyListEntry>
+	<KeyListEntry name="switch-to-workspace-4"
+	              description="Switch to workspace 4" />
 
-	<KeyListEntry name="switch-to-workspace-last" description="Switch to last workspace"></KeyListEntry>
+	<KeyListEntry name="switch-to-workspace-last"
+	              description="Switch to last workspace" />
 
-	<KeyListEntry name="switch-to-workspace-left" description="Move to workspace left"></KeyListEntry>
+	<KeyListEntry name="switch-to-workspace-left"
+	              description="Move to workspace left" />
 
-	<KeyListEntry name="switch-to-workspace-right" description="Move to workspace right"></KeyListEntry>
+	<KeyListEntry name="switch-to-workspace-right"
+	              description="Move to workspace right" />
 
-	<KeyListEntry name="switch-to-workspace-up" description="Move to workspace above"></KeyListEntry>
+	<KeyListEntry name="switch-to-workspace-up"
+	              description="Move to workspace above" />
 
-	<KeyListEntry name="switch-to-workspace-down" description="Move to workspace below"></KeyListEntry>
+	<KeyListEntry name="switch-to-workspace-down"
+	              description="Move to workspace below" />
 
 </KeyListEntries>
