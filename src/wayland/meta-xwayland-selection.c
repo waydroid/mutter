@@ -67,6 +67,7 @@ typedef struct {
   Window window;
   Window owner;
   Time timestamp;
+  Time client_message_timestamp;
   MetaWaylandDataSource *source; /* owned by MetaWaylandDataDevice */
   WaylandSelectionData *wayland_selection;
   X11SelectionData *x11_selection;
@@ -386,6 +387,20 @@ meta_xwayland_shutdown_dnd (MetaXWaylandManager *manager)
   XDestroyWindow (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
                   dnd->dnd_window);
   dnd->dnd_window = None;
+}
+
+static void
+meta_xwayland_end_dnd_grab (MetaWaylandDataDevice *data_device)
+{
+  Display *xdisplay = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
+  MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
+  MetaXWaylandManager *manager = &compositor->xwayland_manager;
+  MetaDndBridge *dnd = &manager->selection_data->dnd;
+
+  meta_wayland_data_device_end_drag (data_device);
+
+  XMoveResizeWindow (xdisplay, dnd->dnd_window, -1, -1, 1, 1);
+  XUnmapWindow (xdisplay, dnd->dnd_window);
 }
 
 /* X11/Wayland data bridges */
@@ -820,7 +835,7 @@ meta_x11_source_send (MetaWaylandDataSource *source,
                      selection->selection_atom, type_atom,
                      gdk_x11_get_xatom_by_name ("_META_SELECTION"),
                      selection->window,
-                     CurrentTime);
+                     selection->client_message_timestamp);
   XFlush (xdisplay);
 }
 
@@ -1345,15 +1360,15 @@ repick_drop_surface (MetaWaylandCompositor *compositor,
   MetaWaylandSurface *focus = NULL;
 
   focus = pick_drop_surface (compositor, event);
-  dnd->focus_surface = focus;
-
-  if (meta_wayland_drag_grab_get_focus (drag_grab) == focus)
+  if (dnd->focus_surface == focus)
     return;
+
+  dnd->focus_surface = focus;
 
   if (focus &&
       focus->window->client_type == META_WINDOW_CLIENT_TYPE_WAYLAND)
     {
-      XMapWindow (xdisplay, dnd->dnd_window);
+      XMapRaised (xdisplay, dnd->dnd_window);
       XMoveResizeWindow (xdisplay, dnd->dnd_window,
                          focus->window->rect.x,
                          focus->window->rect.y,
@@ -1400,8 +1415,16 @@ drag_xgrab_button (MetaWaylandPointerGrab *grab,
 {
   MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
   MetaWaylandSeat *seat = compositor->seat;
+  MetaWaylandDataSource *data_source;
 
   meta_wayland_pointer_send_button (seat->pointer, event);
+  data_source = compositor->seat->data_device.dnd_data_source;
+
+  if (seat->pointer->button_count == 0 &&
+      (!meta_wayland_drag_grab_get_focus ((MetaWaylandDragGrab *) grab) ||
+       meta_wayland_data_source_get_current_action (data_source) ==
+       WL_DATA_DEVICE_MANAGER_DND_ACTION_NONE))
+    meta_xwayland_end_dnd_grab (&seat->data_device);
 }
 
 static const MetaWaylandPointerGrabInterface drag_xgrab_interface = {
@@ -1511,6 +1534,8 @@ meta_xwayland_selection_handle_client_message (MetaWaylandCompositor *compositor
           ClutterPoint pos;
           uint32_t action = 0;
 
+          dnd->selection.client_message_timestamp = event->data.l[3];
+
           motion = clutter_event_new (CLUTTER_MOTION);
           clutter_input_device_get_coords (seat->pointer->device, NULL, &pos);
           clutter_event_set_coords (motion, pos.x, pos.y);
@@ -1536,7 +1561,9 @@ meta_xwayland_selection_handle_client_message (MetaWaylandCompositor *compositor
         }
       else if (event->message_type == xdnd_atoms[ATOM_DND_DROP])
         {
+          dnd->selection.client_message_timestamp = event->data.l[2];
           meta_wayland_surface_drag_dest_drop (drag_focus);
+          meta_xwayland_end_dnd_grab (&seat->data_device);
           return TRUE;
         }
     }
@@ -1596,7 +1623,6 @@ meta_xwayland_selection_handle_xfixes_selection_notify (MetaWaylandCompositor *c
   else if (selection->selection_atom == xdnd_atoms[ATOM_DND_SELECTION])
     {
       MetaWaylandDataDevice *data_device = &compositor->seat->data_device;
-      MetaXWaylandSelection *selection_data = compositor->xwayland_manager.selection_data;
       MetaWaylandSurface *focus;
 
       selection->owner = event->owner;
@@ -1605,6 +1631,7 @@ meta_xwayland_selection_handle_xfixes_selection_notify (MetaWaylandCompositor *c
       if (event->owner != None && event->owner != selection->window &&
           focus && meta_xwayland_is_xwayland_surface (focus))
         {
+          selection->client_message_timestamp = CurrentTime;
           selection->source = meta_wayland_data_source_xwayland_new (selection);
           meta_wayland_data_device_set_dnd_source (&compositor->seat->data_device,
                                                    selection->source);
@@ -1617,8 +1644,7 @@ meta_xwayland_selection_handle_xfixes_selection_notify (MetaWaylandCompositor *c
         }
       else if (event->owner == None)
         {
-          meta_wayland_data_device_end_drag (data_device);
-          XUnmapWindow (xdisplay, selection_data->dnd.dnd_window);
+          meta_xwayland_end_dnd_grab (data_device);
         }
     }
 
