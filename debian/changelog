@@ -1,3 +1,10 @@
+mutter (3.22.4-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Drop patches which have been merged upstream.
+
+ -- Michael Biebl <biebl@debian.org>  Tue, 11 Apr 2017 15:56:47 +0200
+
 mutter (3.22.3-2) unstable; urgency=medium
 
   * debian/patches/clutter-clone-Unset-source-when-source-actor-is-dest.patch
