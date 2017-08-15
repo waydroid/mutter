@@ -154,6 +154,15 @@ struct _ClutterInputDeviceClass
                                  guint              *evdev_keycode);
   void (* update_from_tool) (ClutterInputDevice     *device,
                              ClutterInputDeviceTool *tool);
+
+  gboolean (* is_mode_switch_button) (ClutterInputDevice *device,
+                                      guint               group,
+                                      guint               button);
+  gint (* get_group_n_modes) (ClutterInputDevice *device,
+                              gint                group);
+
+  gboolean (* is_grouped) (ClutterInputDevice *device,
+                           ClutterInputDevice *other_device);
 };
 
 /* Platform-dependent interface */

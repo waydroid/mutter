@@ -1,7 +1,7 @@
 # Flag build for parallelism; see https://savannah.gnu.org/patch/?6905
 .AUTOPARALLEL:
 
-lib_LTLIBRARIES = libmutter.la
+lib_LTLIBRARIES = libmutter-@LIBMUTTER_API_VERSION@.la
 
 SUBDIRS=compositor/plugins
 
@@ -71,6 +71,10 @@ mutter_built_sources += \
 	tablet-unstable-v2-server-protocol.h				\
 	xdg-foreign-unstable-v1-protocol.c				\
 	xdg-foreign-unstable-v1-server-protocol.h			\
+	linux-dmabuf-unstable-v1-protocol.c					\
+	linux-dmabuf-unstable-v1-server-protocol.h				\
+	keyboard-shortcuts-inhibit-unstable-v1-protocol.c		\
+	keyboard-shortcuts-inhibit-unstable-v1-server-protocol.h	\
 	$(NULL)
 endif
 
@@ -79,9 +83,10 @@ wayland_protocols =				\
 	wayland/protocol/gtk-primary-selection.xml	\
 	$(NULL)
 
-libmutter_la_SOURCES =				\
+libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =	\
 	backends/meta-backend.c			\
 	meta/meta-backend.h			\
+	meta/meta-settings.h			\
 	backends/meta-backend-private.h		\
 	backends/meta-barrier.c			\
 	backends/meta-barrier-private.h		\
@@ -91,6 +96,10 @@ libmutter_la_SOURCES =				\
 	backends/meta-cursor-tracker-private.h	\
 	backends/meta-cursor-renderer.c		\
 	backends/meta-cursor-renderer.h		\
+	backends/meta-dnd-private.h		\
+	backends/meta-egl.c			\
+	backends/meta-egl.h			\
+	backends/meta-egl-ext.h			\
 	backends/meta-display-config-shared.h	\
 	backends/meta-idle-monitor.c		\
 	backends/meta-idle-monitor-private.h	\
@@ -98,15 +107,27 @@ libmutter_la_SOURCES =				\
 	backends/meta-idle-monitor-dbus.h	\
 	backends/meta-input-settings.c		\
 	backends/meta-input-settings-private.h	\
+	backends/meta-logical-monitor.c		\
+	backends/meta-logical-monitor.h		\
 	backends/meta-monitor-config.c		\
 	backends/meta-monitor-config.h		\
+	backends/meta-monitor-config-manager.c	\
+	backends/meta-monitor-config-manager.h	\
+	backends/meta-monitor-config-store.c	\
+	backends/meta-monitor-config-store.h	\
+	backends/meta-monitor.c			\
+	backends/meta-monitor.h			\
 	backends/meta-monitor-manager.c		\
 	meta/meta-monitor-manager.h		\
 	backends/meta-monitor-manager-private.h	\
 	backends/meta-monitor-manager-dummy.c	\
 	backends/meta-monitor-manager-dummy.h	\
+	backends/meta-orientation-manager.c	\
+	backends/meta-orientation-manager.h	\
 	backends/meta-pointer-constraint.c	\
 	backends/meta-pointer-constraint.h	\
+	backends/meta-settings.c		\
+	backends/meta-settings-private.h	\
 	backends/meta-stage.h			\
 	backends/meta-stage.c			\
 	backends/meta-renderer.c		\
@@ -123,8 +144,16 @@ libmutter_la_SOURCES =				\
 	backends/x11/meta-clutter-backend-x11.h		\
 	backends/x11/meta-cursor-renderer-x11.c		\
 	backends/x11/meta-cursor-renderer-x11.h		\
+	backends/x11/cm/meta-backend-x11-cm.c		\
+	backends/x11/cm/meta-backend-x11-cm.h		\
+	backends/x11/cm/meta-renderer-x11-cm.c		\
+	backends/x11/cm/meta-renderer-x11-cm.h		\
+	backends/x11/nested/meta-backend-x11-nested.c	\
+	backends/x11/nested/meta-backend-x11-nested.h	\
 	backends/x11/nested/meta-cursor-renderer-x11-nested.c		\
 	backends/x11/nested/meta-cursor-renderer-x11-nested.h		\
+	backends/x11/nested/meta-renderer-x11-nested.c	\
+	backends/x11/nested/meta-renderer-x11-nested.h	\
 	backends/x11/meta-idle-monitor-xsync.c		\
 	backends/x11/meta-idle-monitor-xsync.h		\
 	backends/x11/meta-input-settings-x11.c		\
@@ -159,6 +188,7 @@ libmutter_la_SOURCES =				\
 	compositor/meta-background-group.c	\
 	compositor/meta-cullable.c		\
 	compositor/meta-cullable.h		\
+	compositor/meta-dnd.c		\
 	compositor/meta-dnd-actor.c		\
 	compositor/meta-dnd-actor-private.h	\
 	compositor/meta-feedback-actor.c	\
@@ -201,6 +231,14 @@ libmutter_la_SOURCES =				\
 	core/constraints.c			\
 	core/constraints.h			\
 	core/core.c				\
+	core/meta-close-dialog.c		\
+	meta/meta-close-dialog.h		\
+	core/meta-close-dialog-default.c	\
+	core/meta-close-dialog-default-private.h	\
+	core/meta-inhibit-shortcuts-dialog.c	\
+	meta/meta-inhibit-shortcuts-dialog.h	\
+	core/meta-inhibit-shortcuts-dialog-default.c	\
+	core/meta-inhibit-shortcuts-dialog-default-private.h \
 	core/delete.c				\
 	core/display.c				\
 	core/display-private.h			\
@@ -217,6 +255,7 @@ libmutter_la_SOURCES =				\
 	core/meta-gesture-tracker-private.h	\
 	core/keybindings.c			\
 	core/keybindings-private.h		\
+	core/main-private.h			\
 	core/main.c				\
 	core/place.c				\
 	core/place.h				\
@@ -273,7 +312,7 @@ libmutter_la_SOURCES =				\
 	$(NULL)
 
 if HAVE_WAYLAND
-libmutter_la_SOURCES +=				\
+libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES +=	\
 	compositor/meta-surface-actor-wayland.c	\
 	compositor/meta-surface-actor-wayland.h	\
 	wayland/meta-wayland.c			\
@@ -286,11 +325,15 @@ libmutter_la_SOURCES +=				\
 	wayland/meta-xwayland-private.h		\
 	wayland/meta-wayland-buffer.c      	\
 	wayland/meta-wayland-buffer.h      	\
+	wayland/meta-wayland-dma-buf.c      	\
+	wayland/meta-wayland-dma-buf.h      	\
 	wayland/meta-wayland-region.c      	\
 	wayland/meta-wayland-region.h      	\
 	wayland/meta-wayland-data-device.c      \
 	wayland/meta-wayland-data-device.h      \
 	wayland/meta-wayland-data-device-private.h	\
+	wayland/meta-wayland-egl-stream.c	\
+	wayland/meta-wayland-egl-stream.h	\
 	wayland/meta-wayland-input-device.c	\
 	wayland/meta-wayland-input-device.h	\
 	wayland/meta-wayland-pointer-gestures.c	\
@@ -351,11 +394,15 @@ libmutter_la_SOURCES +=				\
 	wayland/meta-wayland-wl-shell.h		\
 	wayland/meta-wayland-gtk-shell.c	\
 	wayland/meta-wayland-gtk-shell.h	\
+	wayland/meta-wayland-inhibit-shortcuts.c \
+	wayland/meta-wayland-inhibit-shortcuts.h \
+	wayland/meta-wayland-inhibit-shortcuts-dialog.c	\
+	wayland/meta-wayland-inhibit-shortcuts-dialog.h	\
 	$(NULL)
 endif
 
 if HAVE_NATIVE_BACKEND
-libmutter_la_SOURCES +=					\
+libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES +=		\
 	backends/native/meta-backend-native.c		\
 	backends/native/meta-backend-native.h		\
 	backends/native/meta-backend-native-private.h	\
@@ -383,13 +430,14 @@ libmutter_la_SOURCES +=					\
 	$(NULL)
 endif
 
-nodist_libmutter_la_SOURCES = $(mutter_built_sources)
+nodist_libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES = $(mutter_built_sources)
 
-libmutter_la_LDFLAGS = -no-undefined -export-symbols-regex "^(meta|ag)_.*"
-libmutter_la_LIBADD  = \
+libmutter_@LIBMUTTER_API_VERSION@_la_LDFLAGS = \
+	-no-undefined -export-symbols-regex "^(meta|ag)_.*"
+libmutter_@LIBMUTTER_API_VERSION@_la_LIBADD  = \
 	$(MUTTER_LIBS) \
 	$(MUTTER_NATIVE_BACKEND_LIBS)	\
-	$(top_builddir)/clutter/clutter/libmutter-clutter-1.0.la \
+	$(top_builddir)/clutter/clutter/libmutter-clutter-$(LIBMUTTER_API_VERSION).la \
 	$(NULL)
 
 # Headers installed for plugins; introspected information will
@@ -410,10 +458,14 @@ libmutterinclude_headers =			\
 	meta/meta-background-actor.h		\
 	meta/meta-background-image.h		\
 	meta/meta-background-group.h		\
+	meta/meta-close-dialog.h		\
+	meta/meta-inhibit-shortcuts-dialog.h	\
 	meta/meta-cursor-tracker.h		\
+	meta/meta-dnd.h			\
 	meta/meta-idle-monitor.h		\
 	meta/meta-plugin.h			\
 	meta/meta-monitor-manager.h		\
+	meta/meta-settings.h			\
 	meta/meta-shaped-texture.h		\
 	meta/meta-shadow-factory.h		\
 	meta/meta-window-actor.h		\
@@ -448,7 +500,7 @@ bin_PROGRAMS=mutter
 noinst_PROGRAMS=
 
 mutter_SOURCES = core/mutter.c
-mutter_LDADD = $(MUTTER_LIBS) libmutter.la
+mutter_LDADD = $(MUTTER_LIBS) libmutter-@LIBMUTTER_API_VERSION@.la
 
 libexec_PROGRAMS = mutter-restart-helper
 mutter_restart_helper_SOURCES = core/restart-helper.c
@@ -457,36 +509,51 @@ mutter_restart_helper_LDADD = $(MUTTER_LIBS)
 include Makefile-tests.am
 
 if HAVE_INTROSPECTION
-include $(INTROSPECTION_MAKEFILE)
 
-# Since we don't make any guarantees about stability and we don't support
-# parallel install, there's no real reason to change directories, filenames,
-# etc. as we change the Mutter tarball version.
-#api_version = $(MUTTER_MAJOR_VERSION).$(MUTTER_MINOR_VERSION)
-api_version = 3.0
+include $(INTROSPECTION_MAKEFILE)
 
 # These files are in package-private directories, even though they may be used
 # by plugins.  If you're writing a plugin, use g-ir-compiler --add-include-path
 # and g-ir-compiler --includedir.
 girdir = $(pkglibdir)
-gir_DATA = Meta-$(api_version).gir
+gir_DATA = Meta-$(LIBMUTTER_API_VERSION).gir
 
 typelibdir = $(pkglibdir)
-typelib_DATA = Meta-$(api_version).typelib
+typelib_DATA = Meta-$(LIBMUTTER_API_VERSION).typelib
 
-INTROSPECTION_GIRS = Meta-$(api_version).gir
-INTROSPECTION_SCANNER_ARGS = --add-include-path=$(top_builddir)/clutter/clutter --add-include-path=$(top_builddir)/cogl/cogl --add-include-path=$(top_builddir)/cogl/cogl-pango
-INTROSPECTION_COMPILER_ARGS = --includedir=$(top_builddir)/clutter/clutter --includedir=$(top_builddir)/cogl/cogl --includedir=$(top_builddir)/cogl/cogl-pango
+INTROSPECTION_GIRS = Meta-$(LIBMUTTER_API_VERSION).gir
+INTROSPECTION_SCANNER_ARGS =					\
+	--add-include-path=$(top_builddir)/clutter/clutter	\
+	--add-include-path=$(top_builddir)/cogl/cogl		\
+	--add-include-path=$(top_builddir)/cogl/cogl-pango	\
+	$(NULL)
+INTROSPECTION_COMPILER_ARGS =					\
+	--includedir=$(top_builddir)/clutter/clutter		\
+	--includedir=$(top_builddir)/cogl/cogl			\
+	--includedir=$(top_builddir)/cogl/cogl-pango		\
+	$(NULL)
+INTROSPECTION_SCANNER_ENV = \
+	PKG_CONFIG_PATH=$(top_builddir)/clutter/clutter/:$(top_builddir)/cogl/cogl/:$(top_builddir)/cogl/cogl-pango/:$${PKG_CONFIG_PATH}
 
-Meta-$(api_version).gir: libmutter.la
-@META_GIR@_INCLUDES = GObject-2.0 GDesktopEnums-3.0 Gdk-3.0 Gtk-3.0 Clutter-1.0 xlib-2.0 xfixes-4.0 Cogl-1.0
-@META_GIR@_EXPORT_PACKAGES = libmutter
-@META_GIR@_CFLAGS = $(AM_CPPFLAGS)
-@META_GIR@_LIBS = libmutter.la
-@META_GIR@_FILES =				\
-	$(libmutterinclude_base_headers)	\
-	$(filter %.c,$(libmutter_la_SOURCES) $(nodist_libmutter_la_SOURCES))
-@META_GIR@_SCANNERFLAGS = --warn-all --warn-error
+Meta-@LIBMUTTER_API_VERSION@.gir: libmutter-$(LIBMUTTER_API_VERSION).la
+Meta_@LIBMUTTER_API_VERSION@_gir_VERSION = $(LIBMUTTER_API_VERSION)
+Meta_@LIBMUTTER_API_VERSION@_gir_INCLUDES =	\
+	GObject-2.0				\
+	GDesktopEnums-3.0			\
+	Gdk-3.0					\
+	Gtk-3.0					\
+	Cogl-$(LIBMUTTER_API_VERSION)		\
+	Clutter-$(LIBMUTTER_API_VERSION)	\
+	xlib-2.0				\
+	xfixes-4.0				\
+	$(NULL)
+Meta_@LIBMUTTER_API_VERSION@_gir_EXPORT_PACKAGES = libmutter-$(LIBMUTTER_API_VERSION)
+Meta_@LIBMUTTER_API_VERSION@_gir_CFLAGS = $(AM_CPPFLAGS)
+Meta_@LIBMUTTER_API_VERSION@_gir_LIBS = libmutter-$(LIBMUTTER_API_VERSION).la
+Meta_@LIBMUTTER_API_VERSION@_gir_FILES =			\
+	$(libmutterinclude_base_headers)			\
+	$(filter %.c,$(libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES) $(nodist_libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES))
+Meta_@LIBMUTTER_API_VERSION@_SCANNERFLAGS = --warn-all --warn-error
 
 endif
 
@@ -498,10 +565,11 @@ CLEANFILES =					\
 	$(gir_DATA)
 
 DISTCLEANFILES = 				\
-	$(libmutterinclude_built_headers)
+	$(libmutterinclude_built_headers)	\
+	$(pkgconfig_DATA)
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libmutter.pc
+pkgconfig_DATA = libmutter-$(LIBMUTTER_API_VERSION).pc
 
 EXTRA_DIST +=					\
 	$(wayland_protocols)			\
@@ -527,7 +595,7 @@ stamp-meta-enum-types.h: $(libmutterinclude_headers) meta-enum-types.h.in
 	$(AM_V_GEN) ( cd $(srcdir) && \
 	  $(GLIB_MKENUMS) \
 	    --template meta-enum-types.h.in \
-	  $(libmutterinclude_base_headers) ) >> xgen-teth && \
+	  $(libmutterinclude_headers) ) > xgen-teth && \
 	(cmp -s xgen-teth meta/meta-enum-types.h || cp xgen-teth meta/meta-enum-types.h) && \
 	rm -f xgen-teth && \
 	echo timestamp > $(@F)
@@ -536,7 +604,7 @@ meta-enum-types.c: stamp-meta-enum-types.h meta-enum-types.c.in
 	  $(AM_V_GEN) ( cd $(srcdir) && \
 	  $(GLIB_MKENUMS) \
 	    --template meta-enum-types.c.in \
-	  $(libmutterinclude_base_headers) ) >> xgen-tetc && \
+	  $(libmutterinclude_headers) ) > xgen-tetc && \
 	cp xgen-tetc meta-enum-types.c && \
 	rm -f xgen-tetc
 
@@ -593,3 +661,7 @@ endef
 	$(AM_V_GEN)$(WAYLAND_SCANNER) code $< $@
 %-server-protocol.h : $(srcdir)/wayland/protocol/%.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header $< $@
+keyboard-shortcuts-inhibit-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+keyboard-shortcuts-inhibit-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@

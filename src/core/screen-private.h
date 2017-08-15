@@ -75,13 +75,7 @@ struct _MetaScreen
   Atom wm_sn_atom;
   guint32 wm_sn_timestamp;
 
-  MetaMonitorInfo *monitor_infos;
-  int n_monitor_infos;
-  int primary_monitor_index;
   gboolean has_xinerama_indices;
-
-  /* Cache the current monitor */
-  int last_monitor_index;
 
   GSList *startup_sequences;
 
@@ -135,27 +129,6 @@ void          meta_screen_hide_tile_preview            (MetaScreen    *screen);
 
 MetaWindow*   meta_screen_get_mouse_window     (MetaScreen                 *screen,
                                                 MetaWindow                 *not_this_one);
-
-const MetaMonitorInfo* meta_screen_get_current_monitor_info   (MetaScreen    *screen);
-const MetaMonitorInfo* meta_screen_get_current_monitor_info_for_pos   (MetaScreen    *screen,
-                                                                       int x,
-                                                                       int y);
-const MetaMonitorInfo* meta_screen_get_monitor_for_rect   (MetaScreen    *screen,
-                                                           MetaRectangle *rect);
-const MetaMonitorInfo* meta_screen_calculate_monitor_for_window (MetaScreen    *screen,
-                                                                 MetaWindow    *window);
-
-const MetaMonitorInfo* meta_screen_get_monitor_for_point (MetaScreen    *screen,
-                                                          int            x,
-                                                          int            y);
-
-
-const MetaMonitorInfo* meta_screen_get_monitor_neighbor (MetaScreen *screen,
-                                                         int         which_monitor,
-                                                         MetaScreenDirection dir);
-void          meta_screen_get_natural_monitor_list (MetaScreen *screen,
-                                                    int**       monitors_list,
-                                                    int*        n_monitors);
 
 void          meta_screen_update_workspace_layout (MetaScreen             *screen);
 void          meta_screen_update_workspace_names  (MetaScreen             *screen);
@@ -212,9 +185,10 @@ void meta_screen_create_guard_window (MetaScreen *screen);
 gboolean meta_screen_handle_xevent (MetaScreen *screen,
                                     XEvent     *xevent);
 
-int meta_screen_xinerama_index_to_monitor_index (MetaScreen *screen,
-                                                 int         index);
-int meta_screen_monitor_index_to_xinerama_index (MetaScreen *screen,
-                                                 int         index);
+MetaLogicalMonitor * meta_screen_xinerama_index_to_logical_monitor (MetaScreen *screen,
+                                                                    int         index);
+
+int meta_screen_logical_monitor_to_xinerama_index (MetaScreen         *screen,
+                                                   MetaLogicalMonitor *logical_monitor);
 
 #endif

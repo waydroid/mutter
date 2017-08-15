@@ -35,7 +35,7 @@
 /* #define META_WL_BUFFER_VERSION     1 */
 
 /* Global/master objects (version exported by wl_registry and negotiated through bind) */
-#define META_WL_COMPOSITOR_VERSION          3
+#define META_WL_COMPOSITOR_VERSION          4
 #define META_WL_DATA_DEVICE_MANAGER_VERSION 3
 #define META_XDG_SHELL_VERSION              1
 #define META_WL_SHELL_VERSION               1
@@ -47,5 +47,7 @@
 #define META_ZWP_POINTER_GESTURES_V1_VERSION    1
 #define META_ZXDG_EXPORTER_V1_VERSION       1
 #define META_ZXDG_IMPORTER_V1_VERSION       1
+#define META_ZWP_LINUX_DMABUF_V1_VERSION    3
+#define META_ZWP_KEYBOARD_SHORTCUTS_INHIBIT_V1_VERSION 1
 
 #endif

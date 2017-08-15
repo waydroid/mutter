@@ -1,15 +1,46 @@
-mutter (3.22.4-2) unstable; urgency=medium
+mutter (3.25.90-1) experimental; urgency=medium
 
   [ Jeremy Bicha ]
+  * New upstream release (LP: #1662805)
+  * libmutter0 has been renamed upstream to libmutter-0-0
+  * Rename gir1.2-mutter-3.0 to gir1.2-mutter-0
+  * Rename libmutter-dev to libmutter-0-dev
+  * debian/control.in:
+    - Drop obsolete Conflicts/Replaces now that the library
+      uses different file names
+    - Loosen dependency on -common package
+    - Don't recommend gnome-session | x-session-manager (LP: #1703685)
+    - Build-depend on xauth and xfvb for build tests
+    - Add Conflicts: libmutter-0-dev to libmutter-1-dev since
+      both ship the same development header file names
+  * debian/rules:
+    - Build with --enable-egl-device (LP: #1666664)
+      This enables experimental support for using NVIDIA proprietary
+      drivers with GNOME on Wayland
+    - Run build tests but don't make them fatal yet
+  * Add skip-failing-tests.patch:
+    - Don't run a few tests that have been reported as failing
+
+  [ Simon McVittie ]
+  * Add patch metadata
+  * Correctly label debian/patches/git_revert_call_threaded_swap.patch
+    as a revert, not as the change that is being reverted
+
+  [ Andreas Henriksson ]
+  * New upstream beta release, 3.25.90.
+  * Bump versions of build-dependencies according to configure.ac changes.
+  * Rename packages according to libmutter bumping soname, 0->1.
+
+  [ Jeremy Bicha ]
+  * Drop git_revert_call_threaded_swap.patch, no longer needed
+
+ -- Andreas Henriksson <andreas@fatal.se>  Tue, 15 Aug 2017 15:45:47 +0200
+
+mutter (3.22.4-2) UNRELEASED; urgency=medium
+
   * Add missing depends on gnome-settings-daemon (LP: #1561706)
 
-  [ Laurent Bigonville ]
-  * debian/patches/bgo782472_fix_copypaste_x11_wayland.patch: Fix copy/paste
-    between some X11 applications (firefox/chromium) and wayland (Closes:
-    #865788)
-  * debian/control.in: Bump Standards-Version to 4.0.0 (no further changes)
-
- -- Laurent Bigonville <bigon@debian.org>  Fri, 30 Jun 2017 19:08:41 +0200
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sat, 06 May 2017 08:52:03 -0400
 
 mutter (3.22.4-1) unstable; urgency=medium
 

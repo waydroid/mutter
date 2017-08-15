@@ -48,6 +48,7 @@
 
 #include "cogl-texture-pixmap-x11-private.h"
 #include "cogl-texture-2d-private.h"
+#include "cogl-texture-2d.h"
 #include "cogl-error-private.h"
 #include "cogl-poll-private.h"
 
@@ -320,6 +321,19 @@ _cogl_winsys_renderer_connect (CoglRenderer *renderer,
 error:
   _cogl_winsys_renderer_disconnect (renderer);
   return FALSE;
+}
+
+static int
+_cogl_winsys_egl_add_config_attributes (CoglDisplay *display,
+                                        CoglFramebufferConfig *config,
+                                        EGLint *attributes)
+{
+  int i = 0;
+
+  attributes[i++] = EGL_SURFACE_TYPE;
+  attributes[i++] = EGL_WINDOW_BIT;
+
+  return i;
 }
 
 static CoglBool
@@ -760,12 +774,12 @@ _cogl_winsys_texture_pixmap_x11_create (CoglTexturePixmapX11 *tex_pixmap)
                     COGL_PIXEL_FORMAT_RGB_888);
 
   egl_tex_pixmap->texture = COGL_TEXTURE (
-    _cogl_egl_texture_2d_new_from_image (ctx,
-                                         tex->width,
-                                         tex->height,
-                                         texture_format,
-                                         egl_tex_pixmap->image,
-                                         NULL));
+    cogl_egl_texture_2d_new_from_image (ctx,
+                                        tex->width,
+                                        tex->height,
+                                        texture_format,
+                                        egl_tex_pixmap->image,
+                                        NULL));
 
   tex_pixmap->winsys = egl_tex_pixmap;
 
@@ -826,6 +840,7 @@ _cogl_winsys_texture_pixmap_x11_get_texture (CoglTexturePixmapX11 *tex_pixmap,
 static const CoglWinsysEGLVtable
 _cogl_winsys_egl_vtable =
   {
+    .add_config_attributes = _cogl_winsys_egl_add_config_attributes,
     .display_setup = _cogl_winsys_egl_display_setup,
     .display_destroy = _cogl_winsys_egl_display_destroy,
     .context_created = _cogl_winsys_egl_context_created,

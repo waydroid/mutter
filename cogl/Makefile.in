@@ -175,7 +175,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/cogl-config.h.in \
 	$(top_srcdir)/build/config.sub $(top_srcdir)/build/install-sh \
 	$(top_srcdir)/build/ltmain.sh $(top_srcdir)/build/missing \
 	build/compile build/config.guess build/config.sub \
-	build/depcomp build/install-sh build/ltmain.sh build/missing
+	build/install-sh build/ltmain.sh build/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -313,6 +313,7 @@ INTROSPECTION_TYPELIBDIR = @INTROSPECTION_TYPELIBDIR@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBM = @LIBM@
+LIBMUTTER_API_VERSION = @LIBMUTTER_API_VERSION@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -324,6 +325,7 @@ MAINTAINER_CFLAGS = @MAINTAINER_CFLAGS@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
+MUTTER_VERSION = @MUTTER_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@

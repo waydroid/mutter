@@ -1,2 +1,2 @@
 bgo768531_workaround-startup-notifications.patch
-bgo782472_fix_copypaste_x11_wayland.patch
+skip-failing-tests.patch

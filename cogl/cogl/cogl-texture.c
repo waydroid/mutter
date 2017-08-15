@@ -160,6 +160,7 @@ _cogl_texture_free_loader (CoglTexture *texture)
         case COGL_TEXTURE_SOURCE_TYPE_SIZED:
         case COGL_TEXTURE_SOURCE_TYPE_EGL_IMAGE:
         case COGL_TEXTURE_SOURCE_TYPE_GL_FOREIGN:
+        case COGL_TEXTURE_SOURCE_TYPE_EGL_IMAGE_EXTERNAL:
           break;
         case COGL_TEXTURE_SOURCE_TYPE_BITMAP:
           cogl_object_unref (loader->src.bitmap.bitmap);
@@ -1058,6 +1059,7 @@ cogl_texture_get_data (CoglTexture *texture,
 
   closest_format =
     ctx->texture_driver->find_best_gl_get_data_format (ctx,
+                                                       texture_format,
                                                        format,
                                                        &closest_gl_format,
                                                        &closest_gl_type);

@@ -29,6 +29,7 @@
 #include "meta-window-actor-private.h"
 #include "meta-texture-rectangle.h"
 #include "region-utils.h"
+#include "backends/meta-logical-monitor.h"
 #include "meta-monitor-manager-private.h"
 #include "meta-cullable.h"
 
@@ -592,6 +593,7 @@ meta_window_actor_get_shadow_class (MetaWindowActor *self)
       switch (window_type)
         {
         case META_WINDOW_DROPDOWN_MENU:
+        case META_WINDOW_COMBO:
           return "dropdown-menu";
         case META_WINDOW_POPUP_MENU:
           return "popup-menu";

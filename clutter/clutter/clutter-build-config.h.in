@@ -69,6 +69,9 @@
 /* Define to use XKB extension */
 #undef HAVE_XKB
 
+/* Define to 1 if we have the XTest X extension */
+#undef HAVE_XTEST
+
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 

@@ -1,9 +1,9 @@
 # Swedish messages for mutter.
-# Copyright © 2001-2016 Free Software Foundation, Inc.
+# Copyright © 2001-2017 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2001, 2002, 2003, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2006, 2007, 2008, 2009, 2010, 2011, 2012.
 # Mattias Eriksson <snaggen@gmail.com>, 2014.
-# Anders Jonsson <anders.jonsson@norsjovallen.se>, 2015, 2016.
+# Anders Jonsson <anders.jonsson@norsjovallen.se>, 2015, 2016, 2017.
 # Sebastian Rasmussen <sebras@gmail.com>, 2016.
 #
 msgid ""
@@ -11,15 +11,15 @@ msgstr ""
 "Project-Id-Version: mutter\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
 "product=mutter&keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2016-09-07 09:27+0000\n"
-"PO-Revision-Date: 2016-09-07 11:54+0200\n"
+"POT-Creation-Date: 2017-02-16 21:09+0000\n"
+"PO-Revision-Date: 2017-02-21 01:20+0100\n"
 "Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.8\n"
+"X-Generator: Poedit 1.8.11\n"
 
 #: data/50-mutter-navigation.xml:6
 msgid "Navigation"
@@ -271,15 +271,15 @@ msgstr "Modifierare att använda för utökade fönsterhanteringsåtgärder"
 
 #: data/org.gnome.mutter.gschema.xml.in:8
 msgid ""
-"This key will initiate the \"overlay\", which is a combination window "
-"overview and application launching system. The default is intended to be the "
-"\"Windows key\" on PC hardware. It's expected that this binding either the "
-"default or set to the empty string."
+"This key will initiate the “overlay”, which is a combination window overview "
+"and application launching system. The default is intended to be the “Windows "
+"key” on PC hardware. It’s expected that this binding either the default or "
+"set to the empty string."
 msgstr ""
-"Denna nyckel kommer att initiera \"overlay\", som är en kombinerad "
-"fönsteröversikt och programstartare. Standard är tänkt att vara \"Windows-"
-"tangenten\" på PC-maskinvara. Det är förväntat att denna bindning antingen "
-"är standard eller inställd till en tom sträng."
+"Denna nyckel kommer att initiera ”overlay”, som är en kombinerad "
+"fönsteröversikt och programstartare. Standard är tänkt att vara ”Windows-"
+"tangenten” på PC-maskinvara. Det är förväntat att denna bindning antingen är "
+"standard eller inställd till en tom sträng."
 
 #: data/org.gnome.mutter.gschema.xml.in:20
 msgid "Attach modal dialogs"
@@ -315,7 +315,7 @@ msgstr "Arbetsytor hanteras dynamiskt"
 
 #: data/org.gnome.mutter.gschema.xml.in:41
 msgid ""
-"Determines whether workspaces are managed dynamically or whether there's a "
+"Determines whether workspaces are managed dynamically or whether there’s a "
 "static number of workspaces (determined by the num-workspaces key in org."
 "gnome.desktop.wm.preferences)."
 msgstr ""
@@ -353,11 +353,11 @@ msgstr "Fördröj fokusändringar till muspekaren hålls still"
 
 #: data/org.gnome.mutter.gschema.xml.in:69
 msgid ""
-"If set to true, and the focus mode is either \"sloppy\" or \"mouse\" then "
-"the focus will not be changed immediately when entering a window, but only "
-"after the pointer stops moving."
+"If set to true, and the focus mode is either “sloppy” or “mouse” then the "
+"focus will not be changed immediately when entering a window, but only after "
+"the pointer stops moving."
 msgstr ""
-"Om satt till \"true\", och fokusläget är antingen \"sloppy\" eller \"mouse\" "
+"Om satt till true (sant), och fokusläget är antingen ”sloppy” eller ”mouse” "
 "kommer fokus inte att ändras omedelbart när muspekaren går in över ett "
 "fönster, utan först efter att muspekaren slutar röra sig."
 
@@ -367,7 +367,7 @@ msgstr "Dragbar rambredd"
 
 #: data/org.gnome.mutter.gschema.xml.in:80
 msgid ""
-"The amount of total draggable borders. If the theme's visible borders are "
+"The amount of total draggable borders. If the theme’s visible borders are "
 "not enough, invisible borders will be added to meet this value."
 msgstr ""
 "Mängd av totalt dragbara ramar. Om temats synliga ramar inte är tillräckliga "
@@ -453,47 +453,58 @@ msgstr "Växla till VT 11"
 msgid "Switch to VT 12"
 msgstr "Växla till VT 12"
 
-#: src/backends/meta-input-settings.c:1707
+#. TRANSLATORS: This string refers to a button that switches between
+#. * different modes.
+#.
+#: src/backends/meta-input-settings.c:1800
+#, c-format
+msgid "Mode Switch (Group %d)"
+msgstr "Lägesväxel (grupp %d)"
+
+#. TRANSLATORS: This string refers to an action, cycles drawing tablets'
+#. * mapping through the available outputs.
+#.
+#: src/backends/meta-input-settings.c:1822
 msgid "Switch monitor"
 msgstr "Växla skärm"
 
-#: src/backends/meta-input-settings.c:1709
+#: src/backends/meta-input-settings.c:1824
 msgid "Show on-screen help"
 msgstr "Visa hjälp på skärmen"
 
-#: src/backends/meta-monitor-manager.c:514
+#: src/backends/meta-monitor-manager.c:675
 msgid "Built-in display"
 msgstr "Inbyggd display"
 
-#: src/backends/meta-monitor-manager.c:537
+#: src/backends/meta-monitor-manager.c:698
 msgid "Unknown"
 msgstr "Okänd"
 
-#: src/backends/meta-monitor-manager.c:539
+#: src/backends/meta-monitor-manager.c:700
 msgid "Unknown Display"
 msgstr "Okänd display"
 
 #. TRANSLATORS: this is a monitor vendor name, followed by a
 #. * size in inches, like 'Dell 15"'
 #.
-#: src/backends/meta-monitor-manager.c:547
+#: src/backends/meta-monitor-manager.c:708
 #, c-format
 msgid "%s %s"
 msgstr "%s %s"
 
 #. This probably means that a non-WM compositor like xcompmgr is running;
 #. * we have no way to get it to exit
-#: src/compositor/compositor.c:463
+#: src/compositor/compositor.c:471
 #, c-format
 msgid ""
-"Another compositing manager is already running on screen %i on display \"%s"
-"\"."
+"Another compositing manager is already running on screen %i on display “%s”."
 msgstr "En annan kompositionshanterare körs redan på skärm %i på display ”%s”."
 
 #: src/core/bell.c:194
 msgid "Bell event"
 msgstr "Ljudsignalhändelse"
 
+#. Translators: %s is a window title
 #: src/core/delete.c:127
 #, c-format
 msgid "“%s” is not responding."
@@ -512,51 +523,51 @@ msgstr ""
 "programmet att helt avslutas."
 
 #: src/core/delete.c:141
-msgid "_Wait"
-msgstr "_Vänta"
-
-#: src/core/delete.c:141
 msgid "_Force Quit"
 msgstr "_Tvinga avslut"
 
-#: src/core/display.c:590
+#: src/core/delete.c:141
+msgid "_Wait"
+msgstr "_Vänta"
+
+#: src/core/display.c:608
 #, c-format
-msgid "Failed to open X Window System display '%s'\n"
+msgid "Failed to open X Window System display “%s”\n"
 msgstr "Misslyckades med att öppna X Window System-displayen ”%s”\n"
 
-#: src/core/main.c:182
+#: src/core/main.c:189
 msgid "Disable connection to session manager"
 msgstr "Inaktivera anslutning till sessionshanteraren"
 
-#: src/core/main.c:188
+#: src/core/main.c:195
 msgid "Replace the running window manager"
 msgstr "Ersätt körande fönsterhanteraren"
 
-#: src/core/main.c:194
+#: src/core/main.c:201
 msgid "Specify session management ID"
 msgstr "Ange sessionshanteringsid"
 
-#: src/core/main.c:199
+#: src/core/main.c:206
 msgid "X Display to use"
 msgstr "X-display att använda"
 
-#: src/core/main.c:205
+#: src/core/main.c:212
 msgid "Initialize session from savefile"
 msgstr "Initiera session från sparandefil"
 
-#: src/core/main.c:211
+#: src/core/main.c:218
 msgid "Make X calls synchronous"
 msgstr "Gör X-anrop synkrona"
 
-#: src/core/main.c:218
+#: src/core/main.c:225
 msgid "Run as a wayland compositor"
 msgstr "Kör som en wayland-kompositionshanterare"
 
-#: src/core/main.c:224
+#: src/core/main.c:231
 msgid "Run as a nested compositor"
 msgstr "Kör som en nästlad kompositionshanterare"
 
-#: src/core/main.c:232
+#: src/core/main.c:239
 msgid "Run as a full display server, rather than nested"
 msgstr "Kör som en full display-tjänst, i stället för nästlad"
 
@@ -564,7 +575,7 @@ msgstr "Kör som en full display-tjänst, i stället för nästlad"
 #, c-format
 msgid ""
 "mutter %s\n"
-"Copyright (C) 2001-%d Havoc Pennington, Red Hat, Inc., and others\n"
+"Copyright © 2001-%d Havoc Pennington, Red Hat, Inc., and others\n"
 "This is free software; see the source for copying conditions.\n"
 "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A "
 "PARTICULAR PURPOSE.\n"
@@ -588,38 +599,38 @@ msgstr "Mutter-insticksmodul att använda"
 msgid "Workspace %d"
 msgstr "Arbetsyta %d"
 
-#: src/core/screen.c:521
+#: src/core/screen.c:580
 #, c-format
 msgid ""
-"Display \"%s\" already has a window manager; try using the --replace option "
-"to replace the current window manager."
+"Display “%s” already has a window manager; try using the --replace option to "
+"replace the current window manager."
 msgstr ""
 "Display ”%s” har redan en fönsterhanterare; försök med flaggan --replace för "
 "att ersätta den aktuella fönsterhanteraren."
 
-#: src/core/screen.c:606
+#: src/core/screen.c:665
 #, c-format
-msgid "Screen %d on display '%s' is invalid\n"
+msgid "Screen %d on display “%s” is invalid\n"
 msgstr "Skärm %d på display ”%s” är ogiltig\n"
 
 #: src/core/util.c:120
 msgid "Mutter was compiled without support for verbose mode\n"
 msgstr "Mutter kompilerades utan stöd för utförligt läge\n"
 
-#: src/wayland/meta-wayland-tablet-pad.c:595
+#: src/wayland/meta-wayland-tablet-pad.c:563
 #, c-format
 msgid "Mode Switch: Mode %d"
 msgstr "Lägesväxel: Läge %d"
 
 #: src/x11/session.c:1815
 msgid ""
-"These windows do not support &quot;save current setup&quot; and will have to "
-"be restarted manually next time you log in."
+"These windows do not support “save current setup” and will have to be "
+"restarted manually next time you log in."
 msgstr ""
-"Dessa fönster saknar stöd för &quot;spara nuvarande inställningar&quot; och "
-"kommer att behöva startas om manuellt nästa gång du loggar in."
+"Dessa fönster saknar stöd för ”spara nuvarande inställningar” och kommer att "
+"behöva startas om manuellt nästa gång du loggar in."
 
-#: src/x11/window-props.c:548
+#: src/x11/window-props.c:559
 #, c-format
 msgid "%s (on %s)"
 msgstr "%s (på %s)"
