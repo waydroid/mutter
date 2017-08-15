@@ -60,8 +60,8 @@ struct _MetaWaylandSurfaceRoleClass
                       MetaWaylandPendingState *pending);
   void (*commit) (MetaWaylandSurfaceRole  *surface_role,
                   MetaWaylandPendingState *pending);
-  gboolean (*is_on_output) (MetaWaylandSurfaceRole *surface_role,
-                            MetaMonitorInfo        *monitor);
+  gboolean (*is_on_logical_monitor) (MetaWaylandSurfaceRole *surface_role,
+                                     MetaLogicalMonitor     *logical_monitor);
   MetaWaylandSurface * (*get_toplevel) (MetaWaylandSurfaceRole *surface_role);
 };
 
@@ -130,7 +130,9 @@ struct _MetaWaylandPendingState
   int scale;
 
   /* wl_surface.damage */
-  cairo_region_t *damage;
+  cairo_region_t *surface_damage;
+  /* wl_surface.damage_buffer */
+  cairo_region_t *buffer_damage;
 
   cairo_region_t *input_region;
   gboolean input_region_set;
@@ -238,6 +240,9 @@ struct _MetaWaylandSurface
     gboolean pending_pos;
     GSList *pending_placement_ops;
   } sub;
+
+  /* table of seats for which shortcuts are inhibited */
+  GHashTable *shortcut_inhibited_seats;
 };
 
 void                meta_wayland_shell_init     (MetaWaylandCompositor *compositor);
@@ -323,5 +328,14 @@ gboolean            meta_wayland_surface_begin_grab_op (MetaWaylandSurface *surf
 
 void                meta_wayland_surface_window_managed (MetaWaylandSurface *surface,
                                                          MetaWindow         *window);
+
+void                meta_wayland_surface_inhibit_shortcuts (MetaWaylandSurface *surface,
+                                                            MetaWaylandSeat    *seat);
+
+void                meta_wayland_surface_restore_shortcuts (MetaWaylandSurface *surface,
+                                                            MetaWaylandSeat    *seat);
+
+gboolean            meta_wayland_surface_is_shortcuts_inhibited (MetaWaylandSurface *surface,
+                                                                 MetaWaylandSeat    *seat);
 
 #endif

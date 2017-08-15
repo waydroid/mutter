@@ -25,16 +25,11 @@
 
 #include "meta-monitor-manager-private.h"
 
-#define META_TYPE_MONITOR_CONFIG            (meta_monitor_config_get_type ())
-#define META_MONITOR_CONFIG(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), META_TYPE_MONITOR_CONFIG, MetaMonitorConfig))
-#define META_MONITOR_CONFIG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  META_TYPE_MONITOR_CONFIG, MetaMonitorConfigClass))
-#define META_IS_MONITOR_CONFIG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), META_TYPE_MONITOR_CONFIG))
-#define META_IS_MONITOR_CONFIG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  META_TYPE_MONITOR_CONFIG))
-#define META_MONITOR_CONFIG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  META_TYPE_MONITOR_CONFIG, MetaMonitorConfigClass))
+#define META_TYPE_MONITOR_CONFIG (meta_monitor_config_get_type ())
+G_DECLARE_FINAL_TYPE (MetaMonitorConfig, meta_monitor_config,
+                      META, MONITOR_CONFIG, GObject)
 
-GType meta_monitor_config_get_type (void) G_GNUC_CONST;
-
-MetaMonitorConfig *meta_monitor_config_new (void);
+MetaMonitorConfig *meta_monitor_config_new (MetaMonitorManager *manager);
 
 gboolean           meta_monitor_config_apply_stored (MetaMonitorConfig  *config,
                                                      MetaMonitorManager *manager);
@@ -50,5 +45,16 @@ void               meta_monitor_config_restore_previous (MetaMonitorConfig  *con
                                                          MetaMonitorManager *manager);
 
 gboolean           meta_monitor_config_get_is_builtin_display_on (MetaMonitorConfig *config);
+
+void               meta_monitor_config_lid_is_closed_changed (MetaMonitorConfig  *self,
+                                                              MetaMonitorManager *manager);
+
+void               meta_monitor_config_orientation_changed (MetaMonitorConfig    *self,
+                                                            MetaMonitorTransform  transform);
+
+void               meta_monitor_config_rotate_monitor (MetaMonitorConfig *self);
+
+gboolean           meta_monitor_config_switch_config (MetaMonitorConfig           *self,
+                                                      MetaMonitorSwitchConfigType  config_type);
 
 #endif /* META_MONITOR_CONFIG_H */

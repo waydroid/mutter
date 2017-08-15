@@ -44,6 +44,7 @@ struct _ClutterInputDeviceXI2
   ClutterInputDevice device;
 
   gint device_id;
+  ClutterInputDeviceTool *current_tool;
 };
 
 #define N_BUTTONS       5
@@ -79,6 +80,13 @@ clutter_input_device_xi2_keycode_to_evdev (ClutterInputDevice *device,
   return TRUE;
 }
 
+static gboolean
+clutter_input_device_xi2_is_grouped (ClutterInputDevice *device,
+                                     ClutterInputDevice *other_device)
+{
+  return FALSE;
+}
+
 static void
 clutter_input_device_xi2_class_init (ClutterInputDeviceXI2Class *klass)
 {
@@ -88,6 +96,7 @@ clutter_input_device_xi2_class_init (ClutterInputDeviceXI2Class *klass)
   gobject_class->constructed = clutter_input_device_xi2_constructed;
 
   device_class->keycode_to_evdev = clutter_input_device_xi2_keycode_to_evdev;
+  device_class->is_grouped = clutter_input_device_xi2_is_grouped;
 }
 
 static void
@@ -171,4 +180,19 @@ _clutter_input_device_xi2_translate_state (ClutterEvent    *event,
     effective |= (group_state->effective) << 13;
 
   _clutter_event_set_state_full (event, button, base, latched, locked, effective);
+}
+
+void
+clutter_input_device_xi2_update_tool (ClutterInputDevice     *device,
+                                      ClutterInputDeviceTool *tool)
+{
+  ClutterInputDeviceXI2 *device_xi2 = CLUTTER_INPUT_DEVICE_XI2 (device);
+  g_set_object (&device_xi2->current_tool, tool);
+}
+
+ClutterInputDeviceTool *
+clutter_input_device_xi2_get_current_tool (ClutterInputDevice *device)
+{
+  ClutterInputDeviceXI2 *device_xi2 = CLUTTER_INPUT_DEVICE_XI2 (device);
+  return device_xi2->current_tool;
 }

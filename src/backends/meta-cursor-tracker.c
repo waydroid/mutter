@@ -73,7 +73,11 @@ get_displayed_cursor (MetaCursorTracker *tracker)
 static void
 update_displayed_cursor (MetaCursorTracker *tracker)
 {
-  meta_cursor_renderer_set_cursor (tracker->renderer, tracker->displayed_cursor);
+  MetaBackend *backend = meta_get_backend ();
+  MetaCursorRenderer *cursor_renderer =
+    meta_backend_get_cursor_renderer (backend);
+
+  meta_cursor_renderer_set_cursor (cursor_renderer, tracker->displayed_cursor);
 }
 
 static void
@@ -95,9 +99,6 @@ sync_cursor (MetaCursorTracker *tracker)
 static void
 meta_cursor_tracker_init (MetaCursorTracker *self)
 {
-  MetaBackend *backend = meta_get_backend ();
-
-  self->renderer = meta_backend_get_cursor_renderer (backend);
   self->is_showing = TRUE;
 }
 
@@ -129,14 +130,6 @@ meta_cursor_tracker_class_init (MetaCursorTrackerClass *klass)
                                           G_TYPE_NONE, 0);
 }
 
-static MetaCursorTracker *
-meta_cursor_tracker_new (void)
-{
-  return g_object_new (META_TYPE_CURSOR_TRACKER, NULL);
-}
-
-static MetaCursorTracker *_cursor_tracker;
-
 /**
  * meta_cursor_tracker_get_for_screen:
  * @screen: the #MetaScreen
@@ -148,10 +141,12 @@ static MetaCursorTracker *_cursor_tracker;
 MetaCursorTracker *
 meta_cursor_tracker_get_for_screen (MetaScreen *screen)
 {
-  if (!_cursor_tracker)
-    _cursor_tracker = meta_cursor_tracker_new ();
+  MetaBackend *backend = meta_get_backend ();
+  MetaCursorTracker *tracker = meta_backend_get_cursor_tracker (backend);
 
-  return _cursor_tracker;
+  g_assert (tracker);
+
+  return tracker;
 }
 
 static void
@@ -355,12 +350,16 @@ meta_cursor_tracker_set_root_cursor (MetaCursorTracker *tracker,
 
 void
 meta_cursor_tracker_update_position (MetaCursorTracker *tracker,
-                                     int                new_x,
-                                     int                new_y)
+                                     float              new_x,
+                                     float              new_y)
 {
+  MetaBackend *backend = meta_get_backend ();
+  MetaCursorRenderer *cursor_renderer =
+    meta_backend_get_cursor_renderer (backend);
+
   g_assert (meta_is_wayland_compositor ());
 
-  meta_cursor_renderer_set_position (tracker->renderer, new_x, new_y);
+  meta_cursor_renderer_set_position (cursor_renderer, new_x, new_y);
 }
 
 static void

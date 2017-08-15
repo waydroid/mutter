@@ -32,6 +32,7 @@
 
 #include "clutter-event-private.h"
 #include "clutter-input-device-evdev.h"
+#include "clutter-input-device-tool-evdev.h"
 #include "clutter-main.h"
 
 /* Try to keep the pointer inside the stage. Hopefully no one is using
@@ -404,6 +405,13 @@ clutter_seat_evdev_notify_relative_motion (ClutterSeatEvdev   *seat,
   if (!_clutter_input_device_get_stage (input_device))
     return;
 
+  _clutter_device_manager_evdev_filter_relative_motion (seat->manager_evdev,
+                                                        input_device,
+                                                        seat->pointer_x,
+                                                        seat->pointer_y,
+                                                        &dx,
+                                                        &dy);
+
   new_x = seat->pointer_x + dx;
   new_y = seat->pointer_y + dy;
   event = new_absolute_motion_event (seat, input_device,
@@ -437,6 +445,7 @@ clutter_seat_evdev_notify_button (ClutterSeatEvdev   *seat,
                                   uint32_t            button,
                                   uint32_t            state)
 {
+  ClutterInputDeviceEvdev *device_evdev = (ClutterInputDeviceEvdev *) input_device;
   ClutterStage *stage;
   ClutterEvent *event = NULL;
   gint button_nr;
@@ -532,13 +541,21 @@ clutter_seat_evdev_notify_button (ClutterSeatEvdev   *seat,
   clutter_event_set_device (event, seat->core_pointer);
   clutter_event_set_source_device (event, input_device);
 
+  if (device_evdev->last_tool)
+    {
+      /* Apply the button event code as per the tool mapping */
+      guint mapped_button;
+
+      mapped_button = clutter_input_device_tool_evdev_get_button_code (device_evdev->last_tool,
+                                                                       button_nr);
+      if (mapped_button != 0)
+        button = mapped_button;
+    }
+
   _clutter_evdev_event_set_event_code (event, button);
 
   if (clutter_input_device_get_device_type (input_device) == CLUTTER_TABLET_DEVICE)
     {
-      ClutterInputDeviceEvdev *device_evdev =
-        CLUTTER_INPUT_DEVICE_EVDEV (input_device);
-
       clutter_event_set_device_tool (event, device_evdev->last_tool);
       clutter_event_set_device (event, input_device);
     }

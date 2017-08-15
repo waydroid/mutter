@@ -25,8 +25,10 @@
 
 #include "wayland/meta-wayland-xdg-shell.h"
 
+#include "backends/meta-logical-monitor.h"
 #include "core/window-private.h"
 #include "wayland/meta-wayland.h"
+#include "wayland/meta-wayland-outputs.h"
 #include "wayland/meta-wayland-popup.h"
 #include "wayland/meta-wayland-private.h"
 #include "wayland/meta-wayland-seat.h"
@@ -346,6 +348,7 @@ xdg_toplevel_set_maximized (struct wl_client   *client,
 {
   MetaWaylandSurface *surface = surface_from_xdg_toplevel_resource (resource);
 
+  meta_window_force_placement (surface->window);
   meta_window_maximize (surface->window, META_MAXIMIZE_BOTH);
 }
 
@@ -364,6 +367,13 @@ xdg_toplevel_set_fullscreen (struct wl_client   *client,
                              struct wl_resource *output_resource)
 {
   MetaWaylandSurface *surface = surface_from_xdg_toplevel_resource (resource);
+
+  if (output_resource)
+    {
+      MetaWaylandOutput *output = wl_resource_get_user_data (output_resource);
+      if (output)
+        meta_window_move_to_monitor (surface->window, output->logical_monitor->number);
+    }
 
   meta_window_make_fullscreen (surface->window);
 }
@@ -615,20 +625,18 @@ xdg_toplevel_role_commit (MetaWaylandSurfaceRole  *surface_role,
   if (!window)
     return;
 
-  if (!pending->has_new_geometry)
+  if (pending->has_new_geometry)
     {
-      if (pending->dx != 0 || pending->dx != 0)
-        {
-          g_warning ("XXX: Attach-initiated move without a new geometry. This is unimplemented right now.");
-        }
-      return;
+      window_geometry = meta_wayland_xdg_surface_get_window_geometry (xdg_surface);
+      meta_window_wayland_move_resize (window,
+                                       &xdg_surface_priv->acked_configure_serial,
+                                       window_geometry,
+                                       pending->dx, pending->dy);
     }
-
-  window_geometry = meta_wayland_xdg_surface_get_window_geometry (xdg_surface);
-  meta_window_wayland_move_resize (window,
-                                   &xdg_surface_priv->acked_configure_serial,
-                                   window_geometry,
-                                   pending->dx, pending->dy);
+  else if (pending->dx != 0 || pending->dx != 0)
+    {
+      g_warning ("XXX: Attach-initiated move without a new geometry. This is unimplemented right now.");
+    }
 
   /* When we get to this point, we ought to have valid size hints */
   if (pending->has_new_min_size || pending->has_new_max_size)
@@ -769,16 +777,18 @@ static void
 scale_placement_rule (MetaPlacementRule  *placement_rule,
                       MetaWaylandSurface *surface)
 {
-  int monitor_scale = surface->window->monitor->scale;
+  int geometry_scale;
 
-  placement_rule->anchor_rect.x *= monitor_scale;
-  placement_rule->anchor_rect.y *= monitor_scale;
-  placement_rule->anchor_rect.width *= monitor_scale;
-  placement_rule->anchor_rect.height *= monitor_scale;
-  placement_rule->offset_x *= monitor_scale;
-  placement_rule->offset_y *= monitor_scale;
-  placement_rule->width *= monitor_scale;
-  placement_rule->height *= monitor_scale;
+  geometry_scale = meta_window_wayland_get_geometry_scale (surface->window);
+
+  placement_rule->anchor_rect.x *= geometry_scale;
+  placement_rule->anchor_rect.y *= geometry_scale;
+  placement_rule->anchor_rect.width *= geometry_scale;
+  placement_rule->anchor_rect.height *= geometry_scale;
+  placement_rule->offset_x *= geometry_scale;
+  placement_rule->offset_y *= geometry_scale;
+  placement_rule->width *= geometry_scale;
+  placement_rule->height *= geometry_scale;
 }
 
 static void
@@ -911,7 +921,7 @@ xdg_popup_role_configure (MetaWaylandSurfaceRoleShellSurface *shell_surface_role
   MetaWaylandXdgPopup *xdg_popup = META_WAYLAND_XDG_POPUP (shell_surface_role);
   MetaWaylandXdgSurface *xdg_surface = META_WAYLAND_XDG_SURFACE (xdg_popup);
   MetaWindow *parent_window = xdg_popup->parent_surface->window;
-  int monitor_scale;
+  int geometry_scale;
   int x, y;
 
   /* If the parent surface was destroyed, its window will be destroyed
@@ -925,9 +935,9 @@ xdg_popup_role_configure (MetaWaylandSurfaceRoleShellSurface *shell_surface_role
   if (!parent_window)
     return;
 
-  monitor_scale = meta_window_wayland_get_main_monitor_scale (parent_window);
-  x = (new_x - parent_window->rect.x) / monitor_scale;
-  y = (new_y - parent_window->rect.y) / monitor_scale;
+  geometry_scale = meta_window_wayland_get_geometry_scale (parent_window);
+  x = (new_x - parent_window->rect.x) / geometry_scale;
+  y = (new_y - parent_window->rect.y) / geometry_scale;
   zxdg_popup_v6_send_configure (xdg_popup->resource,
                                 x, y, new_width, new_height);
   meta_wayland_xdg_surface_send_configure (xdg_surface);
@@ -1263,11 +1273,19 @@ xdg_surface_role_commit (MetaWaylandSurfaceRole  *surface_role,
     }
   else if (!priv->has_set_geometry)
     {
+      MetaRectangle new_geometry = { 0 };
+
       /* If the surface has never set any geometry, calculate
        * a default one unioning the surface and all subsurfaces together. */
+
       meta_wayland_surface_calculate_window_geometry (surface,
-                                                      &priv->geometry,
+                                                      &new_geometry,
                                                       0, 0);
+      if (!meta_rectangle_equal (&new_geometry, &priv->geometry))
+        {
+          pending->has_new_geometry = TRUE;
+          priv->geometry = new_geometry;
+        }
     }
 }
 
