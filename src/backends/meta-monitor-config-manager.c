@@ -23,9 +23,12 @@
 
 #include "backends/meta-monitor-config-manager.h"
 
+#include "backends/meta-monitor-config-migration.h"
 #include "backends/meta-monitor-config-store.h"
 #include "backends/meta-monitor-manager-private.h"
 #include "core/boxes-private.h"
+
+#define CONFIG_HISTORY_MAX_SIZE 3
 
 struct _MetaMonitorConfigManager
 {
@@ -36,7 +39,7 @@ struct _MetaMonitorConfigManager
   MetaMonitorConfigStore *config_store;
 
   MetaMonitorsConfig *current_config;
-  MetaMonitorsConfig *previous_config;
+  GQueue config_history;
 };
 
 G_DEFINE_TYPE (MetaMonitorConfigManager, meta_monitor_config_manager,
@@ -44,6 +47,12 @@ G_DEFINE_TYPE (MetaMonitorConfigManager, meta_monitor_config_manager,
 
 G_DEFINE_TYPE (MetaMonitorsConfig, meta_monitors_config,
                G_TYPE_OBJECT)
+
+static void
+meta_crtc_info_free (MetaCrtcInfo *info);
+
+static void
+meta_output_info_free (MetaOutputInfo *info);
 
 MetaMonitorConfigManager *
 meta_monitor_config_manager_new (MetaMonitorManager *monitor_manager)
@@ -355,16 +364,34 @@ create_key_for_current_state (MetaMonitorManager *monitor_manager)
 MetaMonitorsConfig *
 meta_monitor_config_manager_get_stored (MetaMonitorConfigManager *config_manager)
 {
+  MetaMonitorManager *monitor_manager = config_manager->monitor_manager;
   MetaMonitorsConfigKey *config_key;
   MetaMonitorsConfig *config;
+  GError *error = NULL;
 
-  config_key = create_key_for_current_state (config_manager->monitor_manager);
+  config_key = create_key_for_current_state (monitor_manager);
   if (!config_key)
     return NULL;
 
   config = meta_monitor_config_store_lookup (config_manager->config_store,
                                              config_key);
   meta_monitors_config_key_free (config_key);
+
+  if (!config)
+    return NULL;
+
+  if (config->flags & META_MONITORS_CONFIG_FLAG_MIGRATED)
+    {
+      if (!meta_finish_monitors_config_migration (monitor_manager, config,
+                                                  &error))
+        {
+          g_warning ("Failed to finish monitors config migration: %s",
+                     error->message);
+          g_error_free (error);
+          meta_monitor_config_store_remove (config_manager->config_store, config);
+          return NULL;
+        }
+    }
 
   return config;
 }
@@ -585,7 +612,8 @@ meta_monitor_config_manager_create_linear (MetaMonitorConfigManager *config_mana
       x += logical_monitor_config->layout.width;
     }
 
-  return meta_monitors_config_new (logical_monitor_configs, layout_mode);
+  return meta_monitors_config_new (logical_monitor_configs, layout_mode,
+                                   META_MONITORS_CONFIG_FLAG_NONE);
 }
 
 MetaMonitorsConfig *
@@ -613,7 +641,8 @@ meta_monitor_config_manager_create_fallback (MetaMonitorConfigManager *config_ma
   logical_monitor_configs = g_list_append (NULL,
                                            primary_logical_monitor_config);
 
-  return meta_monitors_config_new (logical_monitor_configs, layout_mode);
+  return meta_monitors_config_new (logical_monitor_configs, layout_mode,
+                                   META_MONITORS_CONFIG_FLAG_NONE);
 }
 
 MetaMonitorsConfig *
@@ -688,7 +717,8 @@ meta_monitor_config_manager_create_suggested (MetaMonitorConfigManager *config_m
   if (!logical_monitor_configs)
     return NULL;
 
-  return meta_monitors_config_new (logical_monitor_configs, layout_mode);
+  return meta_monitors_config_new (logical_monitor_configs, layout_mode,
+                                   META_MONITORS_CONFIG_FLAG_NONE);
 }
 
 static MetaMonitorsConfig *
@@ -735,7 +765,8 @@ create_for_builtin_display_rotation (MetaMonitorConfigManager *config_manager,
   logical_monitor_config->transform = transform;
 
   return meta_monitors_config_new (g_list_append (NULL, logical_monitor_config),
-                                   config_manager->current_config->layout_mode);
+                                   config_manager->current_config->layout_mode,
+                                   META_MONITORS_CONFIG_FLAG_NONE);
 }
 
 MetaMonitorsConfig *
@@ -755,6 +786,7 @@ static MetaMonitorsConfig *
 create_for_switch_config_all_mirror (MetaMonitorConfigManager *config_manager)
 {
   MetaMonitorManager *monitor_manager = config_manager->monitor_manager;
+  MetaLogicalMonitorLayoutMode layout_mode;
   MetaLogicalMonitorConfig *logical_monitor_config = NULL;
   GList *monitor_configs = NULL;
   gint common_mode_w = 0, common_mode_h = 0;
@@ -853,8 +885,10 @@ create_for_switch_config_all_mirror (MetaMonitorConfigManager *config_manager)
     .monitor_configs = monitor_configs
   };
 
+  layout_mode = meta_monitor_manager_get_default_layout_mode (monitor_manager);
   return meta_monitors_config_new (g_list_append (NULL, logical_monitor_config),
-                                   meta_monitor_manager_get_default_layout_mode (monitor_manager));
+                                   layout_mode,
+                                   META_MONITORS_CONFIG_FLAG_NONE);
 }
 
 static MetaMonitorsConfig *
@@ -893,7 +927,8 @@ create_for_switch_config_external (MetaMonitorConfigManager *config_manager)
       x += logical_monitor_config->layout.width;
     }
 
-  return meta_monitors_config_new (logical_monitor_configs, layout_mode);
+  return meta_monitors_config_new (logical_monitor_configs, layout_mode,
+                                   META_MONITORS_CONFIG_FLAG_NONE);
 }
 
 static MetaMonitorsConfig *
@@ -921,7 +956,8 @@ create_for_switch_config_builtin (MetaMonitorConfigManager *config_manager)
   logical_monitor_configs = g_list_append (NULL,
                                            primary_logical_monitor_config);
 
-  return meta_monitors_config_new (logical_monitor_configs, layout_mode);
+  return meta_monitors_config_new (logical_monitor_configs, layout_mode,
+                                   META_MONITORS_CONFIG_FLAG_NONE);
 }
 
 MetaMonitorsConfig *
@@ -954,8 +990,15 @@ void
 meta_monitor_config_manager_set_current (MetaMonitorConfigManager *config_manager,
                                          MetaMonitorsConfig       *config)
 {
-  g_set_object (&config_manager->previous_config,
-                config_manager->current_config);
+  if (config_manager->current_config)
+    {
+      g_queue_push_head (&config_manager->config_history,
+                         g_object_ref (config_manager->current_config));
+      if (g_queue_get_length (&config_manager->config_history) >
+          CONFIG_HISTORY_MAX_SIZE)
+        g_object_unref (g_queue_pop_tail (&config_manager->config_history));
+    }
+
   g_set_object (&config_manager->current_config, config);
 }
 
@@ -975,9 +1018,22 @@ meta_monitor_config_manager_get_current (MetaMonitorConfigManager *config_manage
 }
 
 MetaMonitorsConfig *
+meta_monitor_config_manager_pop_previous (MetaMonitorConfigManager *config_manager)
+{
+  return g_queue_pop_head (&config_manager->config_history);
+}
+
+MetaMonitorsConfig *
 meta_monitor_config_manager_get_previous (MetaMonitorConfigManager *config_manager)
 {
-  return config_manager->previous_config;
+  return g_queue_peek_head (&config_manager->config_history);
+}
+
+void
+meta_monitor_config_manager_clear_history (MetaMonitorConfigManager *config_manager)
+{
+  g_queue_foreach (&config_manager->config_history, (GFunc) g_object_unref, NULL);
+  g_queue_clear (&config_manager->config_history);
 }
 
 static void
@@ -987,7 +1043,7 @@ meta_monitor_config_manager_dispose (GObject *object)
     META_MONITOR_CONFIG_MANAGER (object);
 
   g_clear_object (&config_manager->current_config);
-  g_clear_object (&config_manager->previous_config);
+  meta_monitor_config_manager_clear_history (config_manager);
 
   G_OBJECT_CLASS (meta_monitor_config_manager_parent_class)->dispose (object);
 }
@@ -995,6 +1051,7 @@ meta_monitor_config_manager_dispose (GObject *object)
 static void
 meta_monitor_config_manager_init (MetaMonitorConfigManager *config_manager)
 {
+  g_queue_init (&config_manager->config_history);
 }
 
 static void
@@ -1111,7 +1168,8 @@ meta_monitors_config_key_equal (gconstpointer data_a,
 
 MetaMonitorsConfig *
 meta_monitors_config_new (GList                       *logical_monitor_configs,
-                          MetaLogicalMonitorLayoutMode layout_mode)
+                          MetaLogicalMonitorLayoutMode layout_mode,
+                          MetaMonitorsConfigFlag       flags)
 {
   MetaMonitorsConfig *config;
 
@@ -1119,6 +1177,7 @@ meta_monitors_config_new (GList                       *logical_monitor_configs,
   config->logical_monitor_configs = logical_monitor_configs;
   config->key = meta_monitors_config_key_new (logical_monitor_configs);
   config->layout_mode = layout_mode;
+  config->flags = flags;
 
   return config;
 }
@@ -1144,6 +1203,19 @@ meta_monitors_config_class_init (MetaMonitorsConfigClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = meta_monitors_config_finalize;
+}
+
+static void
+meta_crtc_info_free (MetaCrtcInfo *info)
+{
+  g_ptr_array_free (info->outputs, TRUE);
+  g_slice_free (MetaCrtcInfo, info);
+}
+
+static void
+meta_output_info_free (MetaOutputInfo *info)
+{
+  g_slice_free (MetaOutputInfo, info);
 }
 
 gboolean

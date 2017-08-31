@@ -29,6 +29,7 @@
 #include "core/boxes-private.h"
 #include "core/main-private.h"
 #include "tests/meta-backend-test.h"
+#include "tests/monitor-config-migration-unit-tests.h"
 #include "tests/monitor-unit-tests.h"
 #include "tests/monitor-store-unit-tests.h"
 #include "wayland/meta-wayland.h"
@@ -220,15 +221,9 @@ run_tests (gpointer data)
 
   meta_settings_override_experimental_features (settings);
 
-  if (g_strcmp0 (g_getenv ("MUTTER_USE_CONFIG_MANAGER"), "1") == 0)
-    {
-      meta_settings_enable_experimental_feature (
-        settings,
-        META_EXPERIMENTAL_FEATURE_MONITOR_CONFIG_MANAGER);
-      meta_settings_enable_experimental_feature (
-        settings,
-        META_EXPERIMENTAL_FEATURE_SCALE_MONITOR_FRAMEBUFFER);
-    }
+  meta_settings_enable_experimental_feature (
+    settings,
+    META_EXPERIMENTAL_FEATURE_SCALE_MONITOR_FRAMEBUFFER);
 
   ret = g_test_run ();
 
@@ -250,6 +245,7 @@ init_tests (int argc, char **argv)
   g_test_add_func ("/core/boxes/adjecent-to", meta_test_adjecent_to);
 
   init_monitor_store_tests ();
+  init_monitor_config_migration_tests ();
   init_monitor_tests ();
 }
 

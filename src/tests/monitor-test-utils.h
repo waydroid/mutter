@@ -26,4 +26,6 @@ gboolean is_using_monitor_config_manager (void);
 
 void set_custom_monitor_config (const char *filename);
 
+char * read_file (const char *file_path);
+
 #endif /* MONITOR_TEST_UTILS_H */

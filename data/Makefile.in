@@ -636,7 +636,7 @@ uninstall-am: uninstall-convertDATA uninstall-desktopfilesDATA \
 	$(AM_V_GET) $(MSGFMT) --desktop --template $< -d $(top_srcdir)/po -o $@
 
 %.gschema.xml: %.gschema.xml.in Makefile
-	$(AM_V_GEN) sed -e 's|@GETTEXT_DOMAIN[@]|$(GETTEXT_DOMAIN)|g' \
+	$(AM_V_GEN) sed -e 's|@GETTEXT_DOMAIN[@]|$(GETTEXT_PACKAGE)|g' \
 	$< > $@ || rm $@
 
 @GSETTINGS_RULES@
