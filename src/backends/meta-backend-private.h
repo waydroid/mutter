@@ -83,6 +83,8 @@ struct _MetaBackendClass
 
   struct xkb_keymap * (* get_keymap) (MetaBackend *backend);
 
+  xkb_layout_index_t (* get_keymap_layout_group) (MetaBackend *backend);
+
   void (* lock_layout_group) (MetaBackend *backend,
                               guint        idx);
 
@@ -101,8 +103,6 @@ struct _MetaBackendClass
 };
 
 void meta_init_backend (GType backend_gtype);
-
-void meta_backend_x11_display_opened (MetaBackend *backend);
 
 ClutterBackend * meta_backend_get_clutter_backend (MetaBackend *backend);
 
@@ -134,6 +134,8 @@ void meta_backend_warp_pointer (MetaBackend *backend,
 MetaLogicalMonitor * meta_backend_get_current_logical_monitor (MetaBackend *backend);
 
 struct xkb_keymap * meta_backend_get_keymap (MetaBackend *backend);
+
+xkb_layout_index_t meta_backend_get_keymap_layout_group (MetaBackend *backend);
 
 void meta_backend_update_last_device (MetaBackend *backend,
                                       int          device_id);

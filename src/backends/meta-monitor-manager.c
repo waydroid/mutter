@@ -36,7 +36,6 @@
 #include "util-private.h"
 #include <meta/errors.h>
 #include "edid.h"
-#include "meta-monitor-config.h"
 #include "backends/meta-logical-monitor.h"
 #include "backends/meta-monitor.h"
 #include "backends/meta-monitor-config-manager.h"
@@ -72,20 +71,13 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (MetaMonitorManager, meta_monitor_manager, META
 
 static void initialize_dbus_interface (MetaMonitorManager *manager);
 
+static gboolean
+meta_monitor_manager_is_config_complete (MetaMonitorManager *manager,
+                                         MetaMonitorsConfig *config);
+
 static void
 meta_monitor_manager_init (MetaMonitorManager *manager)
 {
-}
-
-gboolean
-meta_is_monitor_config_manager_enabled (void)
-{
-  MetaBackend *backend = meta_get_backend ();
-  MetaSettings *settings = meta_backend_get_settings (backend);
-
-  return meta_settings_is_experimental_feature_enabled (
-    settings,
-    META_EXPERIMENTAL_FEATURE_MONITOR_CONFIG_MANAGER);
 }
 
 static void
@@ -332,10 +324,7 @@ power_save_mode_changed (MetaMonitorManager *manager,
 void
 meta_monitor_manager_lid_is_closed_changed (MetaMonitorManager *manager)
 {
-  if (meta_is_monitor_config_manager_enabled ())
-    meta_monitor_manager_ensure_configured (manager);
-  else
-    meta_monitor_config_lid_is_closed_changed (manager->legacy_config, manager);
+  meta_monitor_manager_ensure_configured (manager);
 }
 
 static void
@@ -444,6 +433,9 @@ meta_monitor_manager_apply_monitors_config (MetaMonitorManager      *manager,
   MetaMonitorManagerClass *manager_class =
     META_MONITOR_MANAGER_GET_CLASS (manager);
 
+  g_assert (!config ||
+            !(config->flags & META_MONITORS_CONFIG_FLAG_MIGRATED));
+
   if (!manager_class->apply_monitors_config (manager, config, method, error))
     return FALSE;
 
@@ -483,13 +475,6 @@ should_use_stored_config (MetaMonitorManager *manager)
           !meta_monitor_manager_has_hotplug_mode_update (manager));
 }
 
-static void
-legacy_ensure_configured (MetaMonitorManager *manager)
-{
-  if (!meta_monitor_config_apply_stored (manager->legacy_config, manager))
-    meta_monitor_config_make_default (manager->legacy_config, manager);
-}
-
 MetaMonitorsConfig *
 meta_monitor_manager_ensure_configured (MetaMonitorManager *manager)
 {
@@ -499,12 +484,6 @@ meta_monitor_manager_ensure_configured (MetaMonitorManager *manager)
   MetaMonitorsConfigMethod method;
   MetaMonitorsConfigMethod fallback_method =
     META_MONITORS_CONFIG_METHOD_TEMPORARY;
-
-  if (!meta_is_monitor_config_manager_enabled ())
-    {
-      legacy_ensure_configured (manager);
-      return NULL;
-    }
 
   use_stored_config = should_use_stored_config (manager);
   if (use_stored_config)
@@ -552,6 +531,31 @@ meta_monitor_manager_ensure_configured (MetaMonitorManager *manager)
         {
           goto done;
         }
+    }
+
+  config = meta_monitor_config_manager_get_previous (manager->config_manager);
+  if (config)
+    {
+      config = g_object_ref (config);
+
+      if (meta_monitor_manager_is_config_complete (manager, config))
+        {
+          if (!meta_monitor_manager_apply_monitors_config (manager,
+                                                           config,
+                                                           method,
+                                                           &error))
+            {
+              g_warning ("Failed to use suggested monitor configuration: %s",
+                         error->message);
+              g_clear_error (&error);
+            }
+          else
+            {
+              goto done;
+            }
+        }
+
+      g_clear_object (&config);
     }
 
   config = meta_monitor_config_manager_create_linear (manager->config_manager);
@@ -612,6 +616,8 @@ orientation_changed (MetaOrientationManager *orientation_manager,
                      MetaMonitorManager     *manager)
 {
   MetaMonitorTransform transform;
+  GError *error = NULL;
+  MetaMonitorsConfig *config;
 
   switch (meta_orientation_manager_get_orientation (orientation_manager))
     {
@@ -633,30 +639,22 @@ orientation_changed (MetaOrientationManager *orientation_manager,
       return;
     }
 
-  if (!meta_is_monitor_config_manager_enabled ())
-    {
-      meta_monitor_config_orientation_changed (manager->legacy_config, transform);
-    }
-  else
-    {
-      GError *error = NULL;
-      MetaMonitorsConfig *config =
-        meta_monitor_config_manager_create_for_orientation (manager->config_manager,
-                                                            transform);
-      if (!config)
-        return;
+  config =
+    meta_monitor_config_manager_create_for_orientation (manager->config_manager,
+                                                        transform);
+  if (!config)
+    return;
 
-      if (!meta_monitor_manager_apply_monitors_config (manager,
-                                                       config,
-                                                       META_MONITORS_CONFIG_METHOD_TEMPORARY,
-                                                       &error))
-        {
-          g_warning ("Failed to use orientation monitor configuration: %s",
-                     error->message);
-          g_error_free (error);
-        }
-      g_object_unref (config);
+  if (!meta_monitor_manager_apply_monitors_config (manager,
+                                                   config,
+                                                   META_MONITORS_CONFIG_METHOD_TEMPORARY,
+                                                   &error))
+    {
+      g_warning ("Failed to use orientation monitor configuration: %s",
+                 error->message);
+      g_error_free (error);
     }
+  g_object_unref (config);
 }
 
 static void
@@ -664,20 +662,9 @@ experimental_features_changed (MetaSettings           *settings,
                                MetaExperimentalFeature old_experimental_features,
                                MetaMonitorManager     *manager)
 {
-  MetaDBusDisplayConfig *skeleton = META_DBUS_DISPLAY_CONFIG (manager);
-  gboolean was_config_manager_enabled;
   gboolean was_stage_views_scaled;
-  gboolean is_config_manager_enabled;
   gboolean is_stage_views_scaled;
   gboolean should_reconfigure = FALSE;
-
-  is_config_manager_enabled = meta_is_monitor_config_manager_enabled ();
-  was_config_manager_enabled =
-    meta_dbus_display_config_get_is_experimental_api_enabled (skeleton);
-
-  if (was_config_manager_enabled != is_config_manager_enabled)
-    meta_dbus_display_config_set_is_experimental_api_enabled (
-      skeleton, is_config_manager_enabled);
 
   was_stage_views_scaled =
     !!(old_experimental_features &
@@ -687,8 +674,7 @@ experimental_features_changed (MetaSettings           *settings,
       settings,
       META_EXPERIMENTAL_FEATURE_SCALE_MONITOR_FRAMEBUFFER);
 
-  if (is_config_manager_enabled != was_config_manager_enabled ||
-      is_stage_views_scaled != was_stage_views_scaled)
+  if (is_stage_views_scaled != was_stage_views_scaled)
     should_reconfigure = TRUE;
 
   if (should_reconfigure)
@@ -701,7 +687,6 @@ static void
 meta_monitor_manager_constructed (GObject *object)
 {
   MetaMonitorManager *manager = META_MONITOR_MANAGER (object);
-  MetaDBusDisplayConfig *skeleton = META_DBUS_DISPLAY_CONFIG (manager);
   MetaMonitorManagerClass *manager_class =
     META_MONITOR_MANAGER_GET_CLASS (manager);
   MetaBackend *backend = meta_get_backend ();
@@ -723,10 +708,6 @@ meta_monitor_manager_constructed (GObject *object)
   g_signal_connect_object (manager, "notify::power-save-mode",
                            G_CALLBACK (power_save_mode_changed), manager, 0);
 
-  meta_dbus_display_config_set_is_experimental_api_enabled (
-    skeleton,
-    meta_is_monitor_config_manager_enabled ());
-
   g_signal_connect_object (meta_backend_get_orientation_manager (backend),
                            "orientation-changed",
                            G_CALLBACK (orientation_changed),
@@ -735,12 +716,7 @@ meta_monitor_manager_constructed (GObject *object)
   manager->current_switch_config = META_MONITOR_SWITCH_CONFIG_UNKNOWN;
   manager->in_init = TRUE;
 
-  /*
-   * MetaMonitorConfigManager will only be used if the corresponding
-   * experimental feature is enabled.
-   */
   manager->config_manager = meta_monitor_config_manager_new (manager);
-  manager->legacy_config = meta_monitor_config_new (manager);
 
   meta_monitor_manager_read_current_state (manager);
 
@@ -1157,61 +1133,6 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
   return TRUE;
 }
 
-static gboolean
-output_can_config (MetaOutput   *output,
-                   MetaCrtc     *crtc,
-                   MetaCrtcMode *mode)
-{
-  unsigned int i;
-  gboolean ok = FALSE;
-
-  for (i = 0; i < output->n_possible_crtcs && !ok; i++)
-    ok = output->possible_crtcs[i] == crtc;
-
-  if (!ok)
-    return FALSE;
-
-  if (mode == NULL)
-    return TRUE;
-
-  ok = FALSE;
-  for (i = 0; i < output->n_modes && !ok; i++)
-    ok = output->modes[i] == mode;
-
-  return ok;
-}
-
-static gboolean
-output_can_clone (MetaOutput *output,
-                  MetaOutput *clone)
-{
-  unsigned int i;
-  gboolean ok = FALSE;
-
-  for (i = 0; i < output->n_possible_clones && !ok; i++)
-    ok = output->possible_clones[i] == clone;
-
-  return ok;
-}
-
-void
-meta_monitor_manager_apply_configuration (MetaMonitorManager *manager,
-                                          MetaCrtcInfo       **crtcs,
-                                          unsigned int         n_crtcs,
-                                          MetaOutputInfo     **outputs,
-                                          unsigned int         n_outputs)
-{
-  META_MONITOR_MANAGER_GET_CLASS (manager)->apply_configuration (manager,
-                                                                 crtcs, n_crtcs,
-                                                                 outputs, n_outputs);
-}
-
-static void
-legacy_restore_previous_config (MetaMonitorManager *manager)
-{
-  meta_monitor_config_restore_previous (manager->legacy_config, manager);
-}
-
 static void
 restore_previous_config (MetaMonitorManager *manager)
 {
@@ -1219,14 +1140,13 @@ restore_previous_config (MetaMonitorManager *manager)
   GError *error = NULL;
 
   previous_config =
-    meta_monitor_config_manager_get_previous (manager->config_manager);
+    meta_monitor_config_manager_pop_previous (manager->config_manager);
 
   if (previous_config)
     {
       MetaMonitorsConfigMethod method;
 
       method = META_MONITORS_CONFIG_METHOD_TEMPORARY;
-      g_object_ref (previous_config);
       if (meta_monitor_manager_apply_monitors_config (manager,
                                                       previous_config,
                                                       method,
@@ -1258,17 +1178,9 @@ save_config_timeout (gpointer user_data)
 {
   MetaMonitorManager *manager = user_data;
 
-  switch (manager->pending_persistent_system)
-    {
-    case META_MONITOR_CONFIG_SYSTEM_LEGACY:
-      legacy_restore_previous_config (manager);
-      break;
-    case META_MONITOR_CONFIG_SYSTEM_MANAGER:
-      restore_previous_config (manager);
-      break;
-    }
-
+  restore_previous_config (manager);
   manager->persistent_timeout_id = 0;
+
   return G_SOURCE_REMOVE;
 }
 
@@ -1280,10 +1192,8 @@ cancel_persistent_confirmation (MetaMonitorManager *manager)
 }
 
 static void
-request_persistent_confirmation (MetaMonitorManager     *manager,
-                                 MetaMonitorConfigSystem system)
+request_persistent_confirmation (MetaMonitorManager *manager)
 {
-  manager->pending_persistent_system = system;
   manager->persistent_timeout_id = g_timeout_add_seconds (meta_monitor_manager_get_display_configuration_timeout (),
                                                           save_config_timeout,
                                                           manager);
@@ -1291,250 +1201,6 @@ request_persistent_confirmation (MetaMonitorManager     *manager,
                            "[mutter] save_config_timeout");
 
   g_signal_emit (manager, signals[CONFIRM_DISPLAY_CHANGE], 0);
-}
-
-static gboolean
-meta_monitor_manager_legacy_handle_apply_configuration  (MetaDBusDisplayConfig *skeleton,
-                                                         GDBusMethodInvocation *invocation,
-                                                         guint                  serial,
-                                                         gboolean               persistent,
-                                                         GVariant              *crtcs,
-                                                         GVariant              *outputs)
-{
-  MetaMonitorManager *manager = META_MONITOR_MANAGER (skeleton);
-  GVariantIter crtc_iter, output_iter, *nested_outputs;
-  GVariant *properties;
-  guint crtc_id;
-  int new_mode, x, y;
-  int new_screen_width, new_screen_height;
-  guint transform;
-  guint output_index;
-  GPtrArray *crtc_infos, *output_infos;
-
-  if (meta_monitor_config_manager_get_current (manager->config_manager))
-    meta_monitor_config_manager_set_current (manager->config_manager, NULL);
-
-  if (serial != manager->serial)
-    {
-      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                             G_DBUS_ERROR_ACCESS_DENIED,
-                                             "The requested configuration is based on stale information");
-      return TRUE;
-    }
-
-  crtc_infos = g_ptr_array_new_full (g_variant_n_children (crtcs),
-                                     (GDestroyNotify) meta_crtc_info_free);
-  output_infos = g_ptr_array_new_full (g_variant_n_children (outputs),
-                                       (GDestroyNotify) meta_output_info_free);
-
-  /* Validate all arguments */
-  new_screen_width = 0; new_screen_height = 0;
-  g_variant_iter_init (&crtc_iter, crtcs);
-  while (g_variant_iter_loop (&crtc_iter, "(uiiiuaua{sv})",
-                              &crtc_id, &new_mode, &x, &y, &transform,
-                              &nested_outputs, NULL))
-    {
-      MetaCrtcInfo *crtc_info;
-      MetaOutput *first_output;
-      MetaCrtc *crtc;
-      MetaCrtcMode *mode;
-
-      crtc_info = g_slice_new (MetaCrtcInfo);
-      crtc_info->outputs = g_ptr_array_new ();
-
-      if (crtc_id >= manager->n_crtcs)
-        {
-          g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                 G_DBUS_ERROR_INVALID_ARGS,
-                                                 "Invalid CRTC id");
-          return TRUE;
-        }
-      crtc = &manager->crtcs[crtc_id];
-      crtc_info->crtc = crtc;
-
-      if (new_mode != -1 && (new_mode < 0 || (unsigned)new_mode >= manager->n_modes))
-        {
-          g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                 G_DBUS_ERROR_INVALID_ARGS,
-                                                 "Invalid mode id");
-          return TRUE;
-        }
-      mode = new_mode != -1 ? &manager->modes[new_mode] : NULL;
-      crtc_info->mode = mode;
-
-      if (mode)
-        {
-          int width, height;
-          int max_screen_width, max_screen_height;
-
-          if (meta_monitor_transform_is_rotated (transform))
-            {
-              width = mode->height;
-              height = mode->width;
-            }
-          else
-            {
-              width = mode->width;
-              height = mode->height;
-            }
-
-          if (x < 0 || y < 0)
-            {
-              g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                     G_DBUS_ERROR_INVALID_ARGS,
-                                                     "Invalid CRTC geometry");
-              return TRUE;
-            }
-
-          if (meta_monitor_manager_get_max_screen_size (manager,
-                                                        &max_screen_width,
-                                                        &max_screen_height))
-            {
-              if (x + width > max_screen_width ||
-                  y + height > max_screen_height)
-                {
-                  g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                         G_DBUS_ERROR_INVALID_ARGS,
-                                                         "Invalid CRTC geometry");
-                  return TRUE;
-                }
-            }
-
-          new_screen_width = MAX (new_screen_width, x + width);
-          new_screen_height = MAX (new_screen_height, y + height);
-          crtc_info->x = x;
-          crtc_info->y = y;
-        }
-      else
-        {
-          crtc_info->x = 0;
-          crtc_info->y = 0;
-        }
-
-      if (transform > META_MONITOR_TRANSFORM_FLIPPED_270 ||
-          ((crtc->all_transforms & (1 << transform)) == 0))
-        {
-          g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                 G_DBUS_ERROR_INVALID_ARGS,
-                                                 "Invalid transform");
-          return TRUE;
-        }
-      crtc_info->transform = transform;
-
-      first_output = NULL;
-      while (g_variant_iter_loop (nested_outputs, "u", &output_index))
-        {
-          MetaOutput *output;
-
-          if (output_index >= manager->n_outputs)
-            {
-              g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                     G_DBUS_ERROR_INVALID_ARGS,
-                                                     "Invalid output id");
-              return TRUE;
-            }
-          output = &manager->outputs[output_index];
-
-          if (!output_can_config (output, crtc, mode))
-            {
-              g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                     G_DBUS_ERROR_INVALID_ARGS,
-                                                     "Output cannot be assigned to this CRTC or mode");
-              return TRUE;
-            }
-          g_ptr_array_add (crtc_info->outputs, output);
-
-          if (first_output)
-            {
-              if (!output_can_clone (output, first_output))
-                {
-                  g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                         G_DBUS_ERROR_INVALID_ARGS,
-                                                         "Outputs cannot be cloned");
-                  return TRUE;
-                }
-            }
-          else
-            first_output = output;
-        }
-
-      if (!first_output && mode)
-        {
-          g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                 G_DBUS_ERROR_INVALID_ARGS,
-                                                 "Mode specified without outputs?");
-          return TRUE;
-        }
-
-      g_ptr_array_add (crtc_infos, crtc_info);
-    }
-
-  if (new_screen_width == 0 || new_screen_height == 0)
-    {
-      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                             G_DBUS_ERROR_INVALID_ARGS,
-                                             "Refusing to disable all outputs");
-      return TRUE;
-    }
-
-  g_variant_iter_init (&output_iter, outputs);
-  while (g_variant_iter_loop (&output_iter, "(u@a{sv})", &output_index, &properties))
-    {
-      MetaOutputInfo *output_info;
-      gboolean primary, presentation, underscanning;
-
-      if (output_index >= manager->n_outputs)
-        {
-          g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                                 G_DBUS_ERROR_INVALID_ARGS,
-                                                 "Invalid output id");
-          return TRUE;
-        }
-
-      output_info = g_slice_new0 (MetaOutputInfo);
-      output_info->output = &manager->outputs[output_index];
-
-      if (g_variant_lookup (properties, "primary", "b", &primary))
-        output_info->is_primary = primary;
-
-      if (g_variant_lookup (properties, "presentation", "b", &presentation))
-        output_info->is_presentation = presentation;
-
-      if (g_variant_lookup (properties, "underscanning", "b", &underscanning))
-        output_info->is_underscanning = underscanning;
-
-      g_ptr_array_add (output_infos, output_info);
-    }
-
-  /* If we were in progress of making a persistent change and we see a
-     new request, it's likely that the old one failed in some way, so
-     don't save it, but also don't queue for restoring it.
-  */
-  if (manager->persistent_timeout_id && persistent)
-    cancel_persistent_confirmation (manager);
-
-  meta_monitor_manager_apply_configuration (manager,
-                                            (MetaCrtcInfo**)crtc_infos->pdata,
-                                            crtc_infos->len,
-                                            (MetaOutputInfo**)output_infos->pdata,
-                                            output_infos->len);
-
-  g_ptr_array_unref (crtc_infos);
-  g_ptr_array_unref (output_infos);
-
-  /* Update MetaMonitorConfig data structures immediately so that we
-     don't revert the change at the next XRandR event, then ask the plugin
-     manager (through MetaScreen) to confirm the display change with the
-     appropriate UI. Then wait 20 seconds and if not confirmed, revert the
-     configuration.
-  */
-  meta_monitor_config_update_current (manager->legacy_config, manager);
-  if (persistent)
-    request_persistent_confirmation (manager,
-                                     META_MONITOR_CONFIG_SYSTEM_LEGACY);
-
-  meta_dbus_display_config_complete_apply_configuration (skeleton, invocation);
-  return TRUE;
 }
 
 #define META_DISPLAY_CONFIG_MODE_FLAGS_PREFERRED (1 << 0)
@@ -1562,14 +1228,6 @@ meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
   int i;
   MetaMonitorManagerCapability capabilities;
   int max_screen_width, max_screen_height;
-
-  if (!meta_is_monitor_config_manager_enabled ())
-    {
-      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                             G_DBUS_ERROR_ACCESS_DENIED,
-                                             "This experimental API is currently not enabled");
-      return TRUE;
-    }
 
   g_variant_builder_init (&monitors_builder,
                           G_VARIANT_TYPE (MONITORS_FORMAT));
@@ -1863,6 +1521,44 @@ meta_monitor_manager_is_config_applicable (MetaMonitorManager *manager,
     }
 
   return TRUE;
+}
+
+static gboolean
+meta_monitor_manager_is_config_complete (MetaMonitorManager *manager,
+                                         MetaMonitorsConfig *config)
+{
+  GList *l;
+  unsigned int configured_monitor_count = 0;
+  unsigned int expected_monitor_count = 0;
+
+  for (l = config->logical_monitor_configs; l; l = l->next)
+    {
+      MetaLogicalMonitorConfig *logical_monitor_config = l->data;
+      GList *k;
+
+      for (k = logical_monitor_config->monitor_configs; k; k = k->next)
+        configured_monitor_count++;
+    }
+
+  for (l = manager->monitors; l; l = l->next)
+    {
+      MetaMonitor *monitor = l->data;
+
+      if (meta_monitor_is_laptop_panel (monitor))
+        {
+          if (!meta_monitor_manager_is_lid_closed (manager))
+            expected_monitor_count++;
+        }
+      else
+        {
+          expected_monitor_count++;
+        }
+    }
+
+  if (configured_monitor_count != expected_monitor_count)
+    return FALSE;
+
+  return meta_monitor_manager_is_config_applicable (manager, config, NULL);
 }
 
 static MetaMonitor *
@@ -2175,14 +1871,6 @@ meta_monitor_manager_handle_apply_monitors_config (MetaDBusDisplayConfig *skelet
   GList *logical_monitor_configs = NULL;
   GError *error = NULL;
 
-  if (!meta_is_monitor_config_manager_enabled ())
-    {
-      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
-                                             G_DBUS_ERROR_ACCESS_DENIED,
-                                             "This experimental API is currently not enabled");
-      return TRUE;
-    }
-
   if (serial != manager->serial)
     {
       g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
@@ -2255,7 +1943,8 @@ meta_monitor_manager_handle_apply_monitors_config (MetaDBusDisplayConfig *skelet
                                                logical_monitor_config);
     }
 
-  config = meta_monitors_config_new (logical_monitor_configs, layout_mode);
+  config = meta_monitors_config_new (logical_monitor_configs, layout_mode,
+                                     META_MONITORS_CONFIG_FLAG_NONE);
   if (!meta_verify_monitors_config (config, manager, &error))
     {
       g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
@@ -2276,7 +1965,8 @@ meta_monitor_manager_handle_apply_monitors_config (MetaDBusDisplayConfig *skelet
       return TRUE;
     }
 
-  if (manager->persistent_timeout_id)
+  if (manager->persistent_timeout_id &&
+      method != META_MONITORS_CONFIG_METHOD_VERIFY)
     cancel_persistent_confirmation (manager);
 
   if (!meta_monitor_manager_apply_monitors_config (manager,
@@ -2293,9 +1983,7 @@ meta_monitor_manager_handle_apply_monitors_config (MetaDBusDisplayConfig *skelet
     }
 
   if (method == META_MONITORS_CONFIG_METHOD_PERSISTENT)
-    request_persistent_confirmation (manager,
-                                     META_MONITOR_CONFIG_SYSTEM_MANAGER);
-
+    request_persistent_confirmation (manager);
 
   meta_dbus_display_config_complete_apply_monitors_config (skeleton, invocation);
 
@@ -2306,16 +1994,6 @@ meta_monitor_manager_handle_apply_monitors_config (MetaDBusDisplayConfig *skelet
 #undef MONITOR_CONFIG_FORMAT
 #undef MONITOR_CONFIGS_FORMAT
 #undef LOGICAL_MONITOR_CONFIG_FORMAT
-
-static void
-legacy_confirm_configuration (MetaMonitorManager *manager,
-                              gboolean            confirmed)
-{
-  if (confirmed)
-    meta_monitor_config_make_persistent (manager->legacy_config);
-  else
-    meta_monitor_config_restore_previous (manager->legacy_config, manager);
-}
 
 static void
 confirm_configuration (MetaMonitorManager *manager,
@@ -2338,15 +2016,7 @@ meta_monitor_manager_confirm_configuration (MetaMonitorManager *manager,
     }
 
   cancel_persistent_confirmation (manager);
-  switch (manager->pending_persistent_system)
-    {
-    case META_MONITOR_CONFIG_SYSTEM_LEGACY:
-      legacy_confirm_configuration (manager, ok);
-      break;
-    case META_MONITOR_CONFIG_SYSTEM_MANAGER:
-      confirm_configuration (manager, ok);
-      break;
-    }
+  confirm_configuration (manager, ok);
 }
 
 static gboolean
@@ -2506,7 +2176,6 @@ meta_monitor_manager_handle_set_crtc_gamma  (MetaDBusDisplayConfig *skeleton,
   klass = META_MONITOR_MANAGER_GET_CLASS (manager);
   if (klass->set_crtc_gamma)
     klass->set_crtc_gamma (manager, crtc, size, red, green, blue);
-
   meta_dbus_display_config_complete_set_crtc_gamma (skeleton, invocation);
 
   g_bytes_unref (red_bytes);
@@ -2520,7 +2189,6 @@ static void
 meta_monitor_manager_display_config_init (MetaDBusDisplayConfigIface *iface)
 {
   iface->handle_get_resources = meta_monitor_manager_handle_get_resources;
-  iface->handle_apply_configuration = meta_monitor_manager_legacy_handle_apply_configuration;
   iface->handle_change_backlight = meta_monitor_manager_handle_change_backlight;
   iface->handle_get_crtc_gamma = meta_monitor_manager_handle_get_crtc_gamma;
   iface->handle_set_crtc_gamma = meta_monitor_manager_handle_set_crtc_gamma;
@@ -3019,7 +2687,7 @@ meta_monitor_manager_rebuild_derived (MetaMonitorManager          *manager,
 }
 
 void
-meta_output_parse_edid (MetaOutput *meta_output,
+meta_output_parse_edid (MetaOutput *output,
                         GBytes     *edid)
 {
   MonitorInfo *parsed_edid;
@@ -3032,36 +2700,36 @@ meta_output_parse_edid (MetaOutput *meta_output,
 
   if (parsed_edid)
     {
-      meta_output->vendor = g_strndup (parsed_edid->manufacturer_code, 4);
-      if (!g_utf8_validate (meta_output->vendor, -1, NULL))
-        g_clear_pointer (&meta_output->vendor, g_free);
+      output->vendor = g_strndup (parsed_edid->manufacturer_code, 4);
+      if (!g_utf8_validate (output->vendor, -1, NULL))
+        g_clear_pointer (&output->vendor, g_free);
 
-      meta_output->product = g_strndup (parsed_edid->dsc_product_name, 14);
-      if (!g_utf8_validate (meta_output->product, -1, NULL) ||
-          meta_output->product[0] == '\0')
+      output->product = g_strndup (parsed_edid->dsc_product_name, 14);
+      if (!g_utf8_validate (output->product, -1, NULL) ||
+          output->product[0] == '\0')
         {
-          g_clear_pointer (&meta_output->product, g_free);
-          meta_output->product = g_strdup_printf ("0x%04x", (unsigned) parsed_edid->product_code);
+          g_clear_pointer (&output->product, g_free);
+          output->product = g_strdup_printf ("0x%04x", (unsigned) parsed_edid->product_code);
         }
 
-      meta_output->serial = g_strndup (parsed_edid->dsc_serial_number, 14);
-      if (!g_utf8_validate (meta_output->serial, -1, NULL) ||
-          meta_output->serial[0] == '\0')
+      output->serial = g_strndup (parsed_edid->dsc_serial_number, 14);
+      if (!g_utf8_validate (output->serial, -1, NULL) ||
+          output->serial[0] == '\0')
         {
-          g_clear_pointer (&meta_output->serial, g_free);
-          meta_output->serial = g_strdup_printf ("0x%08x", parsed_edid->serial_number);
+          g_clear_pointer (&output->serial, g_free);
+          output->serial = g_strdup_printf ("0x%08x", parsed_edid->serial_number);
         }
 
       g_free (parsed_edid);
     }
 
  out:
-  if (!meta_output->vendor)
-    meta_output->vendor = g_strdup ("unknown");
-  if (!meta_output->product)
-    meta_output->product = g_strdup ("unknown");
-  if (!meta_output->serial)
-    meta_output->serial = g_strdup ("unknown");
+  if (!output->vendor)
+    output->vendor = g_strdup ("unknown");
+  if (!output->product)
+    output->product = g_strdup ("unknown");
+  if (!output->serial)
+    output->serial = g_strdup ("unknown");
 }
 
 gboolean
@@ -3079,35 +2747,9 @@ meta_output_is_laptop (MetaOutput *output)
     }
 }
 
-static void
-legacy_on_hotplug (MetaMonitorManager *manager)
-{
-  gboolean applied_config = FALSE;
-
-  /* If the monitor has hotplug_mode_update (which is used by VMs), don't bother
-   * applying our stored configuration, because it's likely the user just resizing
-   * the window.
-   */
-  if (!meta_monitor_manager_has_hotplug_mode_update (manager))
-    {
-      if (meta_monitor_config_apply_stored (manager->legacy_config, manager))
-        applied_config = TRUE;
-    }
-
-  /* If we haven't applied any configuration, apply the default configuration. */
-  if (!applied_config)
-    meta_monitor_config_make_default (manager->legacy_config, manager);
-}
-
 void
 meta_monitor_manager_on_hotplug (MetaMonitorManager *manager)
 {
-  if (!meta_is_monitor_config_manager_enabled ())
-    {
-      legacy_on_hotplug (manager);
-      return;
-    }
-
   meta_monitor_manager_ensure_configured (manager);
 }
 
@@ -3244,67 +2886,54 @@ meta_monitor_manager_get_is_builtin_display_on (MetaMonitorManager *manager)
 void
 meta_monitor_manager_rotate_monitor (MetaMonitorManager *manager)
 {
-  if (!meta_is_monitor_config_manager_enabled ())
-    {
-      meta_monitor_config_rotate_monitor (manager->legacy_config);
-    }
-  else
-    {
-      GError *error = NULL;
-      MetaMonitorsConfig *config =
-        meta_monitor_config_manager_create_for_rotate_monitor (manager->config_manager);
+  GError *error = NULL;
+  MetaMonitorsConfig *config =
+    meta_monitor_config_manager_create_for_rotate_monitor (manager->config_manager);
 
-      if (!config)
-        return;
+  if (!config)
+    return;
 
-      if (!meta_monitor_manager_apply_monitors_config (manager,
-                                                       config,
-                                                       META_MONITORS_CONFIG_METHOD_TEMPORARY,
-                                                       &error))
-        {
-          g_warning ("Failed to use rotate monitor configuration: %s",
-                     error->message);
-          g_error_free (error);
-        }
-      g_object_unref (config);
+  if (!meta_monitor_manager_apply_monitors_config (manager,
+                                                   config,
+                                                   META_MONITORS_CONFIG_METHOD_TEMPORARY,
+                                                   &error))
+    {
+      g_warning ("Failed to use rotate monitor configuration: %s",
+                 error->message);
+      g_error_free (error);
     }
+  g_object_unref (config);
 }
 
 void
 meta_monitor_manager_switch_config (MetaMonitorManager          *manager,
                                     MetaMonitorSwitchConfigType  config_type)
 {
+  GError *error = NULL;
+  MetaMonitorsConfig *config;
+
   g_return_if_fail (config_type != META_MONITOR_SWITCH_CONFIG_UNKNOWN);
 
-  if (!meta_is_monitor_config_manager_enabled ())
+  config =
+    meta_monitor_config_manager_create_for_switch_config (manager->config_manager,
+                                                          config_type);
+  if (!config)
+    return;
+
+  if (!meta_monitor_manager_apply_monitors_config (manager,
+                                                   config,
+                                                   META_MONITORS_CONFIG_METHOD_TEMPORARY,
+                                                   &error))
     {
-      if (meta_monitor_config_switch_config (manager->legacy_config, config_type))
-        manager->current_switch_config = config_type;
+      g_warning ("Failed to use switch monitor configuration: %s",
+                 error->message);
+      g_error_free (error);
     }
   else
     {
-      GError *error = NULL;
-      MetaMonitorsConfig *config =
-        meta_monitor_config_manager_create_for_switch_config (manager->config_manager,
-                                                              config_type);
-      if (!config)
-        return;
-
-      if (!meta_monitor_manager_apply_monitors_config (manager,
-                                                       config,
-                                                       META_MONITORS_CONFIG_METHOD_TEMPORARY,
-                                                       &error))
-        {
-          g_warning ("Failed to use switch monitor configuration: %s",
-                     error->message);
-          g_error_free (error);
-        }
-      else
-        {
-          manager->current_switch_config = config_type;
-        }
-      g_object_unref (config);
+      manager->current_switch_config = config_type;
     }
+  g_object_unref (config);
 }
 
 gboolean

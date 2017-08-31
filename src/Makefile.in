@@ -316,10 +316,11 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	backends/meta-input-settings.c \
 	backends/meta-input-settings-private.h \
 	backends/meta-logical-monitor.c \
-	backends/meta-logical-monitor.h backends/meta-monitor-config.c \
-	backends/meta-monitor-config.h \
+	backends/meta-logical-monitor.h \
 	backends/meta-monitor-config-manager.c \
 	backends/meta-monitor-config-manager.h \
+	backends/meta-monitor-config-migration.c \
+	backends/meta-monitor-config-migration.h \
 	backends/meta-monitor-config-store.c \
 	backends/meta-monitor-config-store.h backends/meta-monitor.c \
 	backends/meta-monitor.h backends/meta-monitor-manager.c \
@@ -590,8 +591,8 @@ am_libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS =  \
 	backends/meta-idle-monitor-dbus.lo \
 	backends/meta-input-settings.lo \
 	backends/meta-logical-monitor.lo \
-	backends/meta-monitor-config.lo \
 	backends/meta-monitor-config-manager.lo \
+	backends/meta-monitor-config-migration.lo \
 	backends/meta-monitor-config-store.lo backends/meta-monitor.lo \
 	backends/meta-monitor-manager.lo \
 	backends/meta-monitor-manager-dummy.lo \
@@ -708,6 +709,8 @@ am__mutter_test_unit_tests_SOURCES_DIST = tests/unit-tests.c \
 	tests/meta-backend-test.c tests/meta-backend-test.h \
 	tests/meta-monitor-manager-test.c \
 	tests/meta-monitor-manager-test.h \
+	tests/monitor-config-migration-unit-tests.c \
+	tests/monitor-config-migration-unit-tests.h \
 	tests/monitor-store-unit-tests.c \
 	tests/monitor-store-unit-tests.h tests/monitor-test-utils.c \
 	tests/monitor-test-utils.h tests/monitor-unit-tests.c \
@@ -716,6 +719,7 @@ am__mutter_test_unit_tests_SOURCES_DIST = tests/unit-tests.c \
 @HAVE_WAYLAND_TRUE@	tests/unit-tests.$(OBJEXT) \
 @HAVE_WAYLAND_TRUE@	tests/meta-backend-test.$(OBJEXT) \
 @HAVE_WAYLAND_TRUE@	tests/meta-monitor-manager-test.$(OBJEXT) \
+@HAVE_WAYLAND_TRUE@	tests/monitor-config-migration-unit-tests.$(OBJEXT) \
 @HAVE_WAYLAND_TRUE@	tests/monitor-store-unit-tests.$(OBJEXT) \
 @HAVE_WAYLAND_TRUE@	tests/monitor-test-utils.$(OBJEXT) \
 @HAVE_WAYLAND_TRUE@	tests/monitor-unit-tests.$(OBJEXT) \
@@ -1107,10 +1111,11 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =  \
 	backends/meta-input-settings.c \
 	backends/meta-input-settings-private.h \
 	backends/meta-logical-monitor.c \
-	backends/meta-logical-monitor.h backends/meta-monitor-config.c \
-	backends/meta-monitor-config.h \
+	backends/meta-logical-monitor.h \
 	backends/meta-monitor-config-manager.c \
 	backends/meta-monitor-config-manager.h \
+	backends/meta-monitor-config-migration.c \
+	backends/meta-monitor-config-migration.h \
 	backends/meta-monitor-config-store.c \
 	backends/meta-monitor-config-store.h backends/meta-monitor.c \
 	backends/meta-monitor.h backends/meta-monitor-manager.c \
@@ -1317,6 +1322,8 @@ mutter_restart_helper_LDADD = $(MUTTER_LIBS)
 @HAVE_WAYLAND_TRUE@	tests/meta-backend-test.h \
 @HAVE_WAYLAND_TRUE@	tests/meta-monitor-manager-test.c \
 @HAVE_WAYLAND_TRUE@	tests/meta-monitor-manager-test.h \
+@HAVE_WAYLAND_TRUE@	tests/monitor-config-migration-unit-tests.c \
+@HAVE_WAYLAND_TRUE@	tests/monitor-config-migration-unit-tests.h \
 @HAVE_WAYLAND_TRUE@	tests/monitor-store-unit-tests.c \
 @HAVE_WAYLAND_TRUE@	tests/monitor-store-unit-tests.h \
 @HAVE_WAYLAND_TRUE@	tests/monitor-test-utils.c \
@@ -1486,9 +1493,9 @@ backends/meta-input-settings.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-logical-monitor.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
-backends/meta-monitor-config.lo: backends/$(am__dirstamp) \
-	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-monitor-config-manager.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-monitor-config-migration.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-monitor-config-store.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
@@ -2009,6 +2016,8 @@ tests/meta-backend-test.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/meta-monitor-manager-test.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
+tests/monitor-config-migration-unit-tests.$(OBJEXT):  \
+	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
 tests/monitor-store-unit-tests.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/monitor-test-utils.$(OBJEXT): tests/$(am__dirstamp) \
@@ -2079,8 +2088,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-input-settings.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-logical-monitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-config-manager.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-config-migration.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-config-store.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-config.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-manager-dummy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor.Plo@am__quote@
@@ -2175,6 +2184,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/workspace.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/meta-backend-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/meta-monitor-manager-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/monitor-config-migration-unit-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/monitor-store-unit-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/monitor-test-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/monitor-unit-tests.Po@am__quote@

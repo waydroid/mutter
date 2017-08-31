@@ -30,6 +30,8 @@ typedef struct _InhibitShortcutsData
   MetaWaylandSurface                *surface;
   MetaWaylandSeat                   *seat;
   MetaInhibitShortcutsDialog        *dialog;
+  gulong                             response_handler_id;
+  gboolean                           has_last_response;
   MetaInhibitShortcutsDialogResponse last_response;
 } InhibitShortcutsData;
 
@@ -50,21 +52,29 @@ surface_inhibit_shortcuts_data_set (MetaWaylandSurface   *surface,
 }
 
 static void
-surface_inhibit_shortcuts_data_free (MetaWaylandSurface   *surface,
-                                     InhibitShortcutsData *data)
+surface_inhibit_shortcuts_data_destroy_dialog (InhibitShortcutsData *data)
 {
+  g_signal_handler_disconnect (data->dialog, data->response_handler_id);
   meta_inhibit_shortcuts_dialog_hide (data->dialog);
+  g_clear_object (&data->dialog);
+}
 
+static void
+surface_inhibit_shortcuts_data_free (InhibitShortcutsData *data)
+{
+  if (data->dialog)
+    surface_inhibit_shortcuts_data_destroy_dialog (data);
   g_free (data);
 }
 
 static void
-surface_inhibit_shortcuts_dialog_free (gpointer  ptr,
-                                       GClosure *closure)
+on_surface_destroyed (MetaWaylandSurface   *surface,
+                      InhibitShortcutsData *data)
 {
-  InhibitShortcutsData *data = ptr;
-
-  meta_wayland_surface_hide_inhibit_shortcuts_dialog (data->surface);
+  surface_inhibit_shortcuts_data_free (data);
+  g_object_set_qdata (G_OBJECT (surface),
+                      quark_surface_inhibit_shortcuts_data,
+                      NULL);
 }
 
 static void
@@ -82,8 +92,11 @@ inhibit_shortcuts_dialog_response_cb (MetaInhibitShortcutsDialog        *dialog,
                                       InhibitShortcutsData              *data)
 {
   data->last_response = response;
+  data->has_last_response = TRUE;
   inhibit_shortcuts_dialog_response_apply (data);
-  meta_wayland_surface_hide_inhibit_shortcuts_dialog (data->surface);
+
+  meta_inhibit_shortcuts_dialog_hide (data->dialog);
+  surface_inhibit_shortcuts_data_destroy_dialog (data);
 }
 
 static InhibitShortcutsData *
@@ -96,14 +109,14 @@ meta_wayland_surface_ensure_inhibit_shortcuts_dialog (MetaWaylandSurface *surfac
   MetaInhibitShortcutsDialog *dialog;
 
   data = surface_inhibit_shortcuts_data_get (surface);
-  if (data == NULL)
-    {
-      data = g_new (InhibitShortcutsData, 1);
-      surface_inhibit_shortcuts_data_set (surface, data);
-    }
-  else if (data->dialog != NULL)
-     /* There is a dialog already created, nothing to do */
+  if (data)
     return data;
+
+  data = g_new (InhibitShortcutsData, 1);
+  surface_inhibit_shortcuts_data_set (surface, data);
+  g_signal_connect (surface, "destroy",
+                    G_CALLBACK (on_surface_destroyed),
+                    data);
 
   window = meta_wayland_surface_get_toplevel_window (surface);
   display = window->display;
@@ -114,15 +127,10 @@ meta_wayland_surface_ensure_inhibit_shortcuts_dialog (MetaWaylandSurface *surfac
   data->surface = surface;
   data->seat = seat;
   data->dialog = dialog;
-
-  g_signal_connect_data (dialog, "response",
-                         G_CALLBACK (inhibit_shortcuts_dialog_response_cb),
-                         data, surface_inhibit_shortcuts_dialog_free,
-                         0);
-
-  g_signal_connect (surface, "destroy",
-                    G_CALLBACK (surface_inhibit_shortcuts_data_free),
-                    data);
+  data->response_handler_id =
+    g_signal_connect (dialog, "response",
+                      G_CALLBACK (inhibit_shortcuts_dialog_response_cb),
+                      data);
 
   return data;
 }
@@ -136,7 +144,7 @@ meta_wayland_surface_show_inhibit_shortcuts_dialog (MetaWaylandSurface *surface,
   g_return_if_fail (META_IS_WAYLAND_SURFACE (surface));
 
   data = surface_inhibit_shortcuts_data_get (surface);
-  if (data != NULL)
+  if (data && data->has_last_response)
     {
       /* The dialog was shown before for this surface but is not showing
        * anymore, reuse the last user response.
@@ -158,7 +166,10 @@ meta_wayland_surface_hide_inhibit_shortcuts_dialog (MetaWaylandSurface *surface)
 
   /* The closure notify will take care of actually hiding the dialog */
   data = surface_inhibit_shortcuts_data_get (surface);
-  g_signal_handlers_disconnect_by_data (surface, data);
+  g_return_if_fail (data);
+
+  if (data->dialog)
+    meta_inhibit_shortcuts_dialog_hide (data->dialog);
 }
 
 void

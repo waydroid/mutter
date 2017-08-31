@@ -507,11 +507,24 @@ meta_backend_native_get_keymap (MetaBackend *backend)
   return clutter_evdev_get_keyboard_map (manager);
 }
 
+static xkb_layout_index_t
+meta_backend_native_get_keymap_layout_group (MetaBackend *backend)
+{
+  ClutterDeviceManager *manager = clutter_device_manager_get_default ();
+
+  return clutter_evdev_get_keyboard_layout_index (manager);
+}
+
 static void
 meta_backend_native_lock_layout_group (MetaBackend *backend,
                                        guint        idx)
 {
   ClutterDeviceManager *manager = clutter_device_manager_get_default ();
+  xkb_layout_index_t old_idx;
+
+  old_idx = meta_backend_native_get_keymap_layout_group (backend);
+  if (old_idx == idx)
+    return;
 
   clutter_evdev_set_keyboard_layout_index (manager, idx);
   meta_backend_notify_keymap_layout_group_changed (backend, idx);
@@ -579,6 +592,7 @@ meta_backend_native_class_init (MetaBackendNativeClass *klass)
 
   backend_class->set_keymap = meta_backend_native_set_keymap;
   backend_class->get_keymap = meta_backend_native_get_keymap;
+  backend_class->get_keymap_layout_group = meta_backend_native_get_keymap_layout_group;
   backend_class->lock_layout_group = meta_backend_native_lock_layout_group;
   backend_class->get_relative_motion_deltas = meta_backend_native_get_relative_motion_deltas;
   backend_class->update_screen_size = meta_backend_native_update_screen_size;
@@ -668,11 +682,14 @@ meta_backend_native_pause (MetaBackendNative *native)
     meta_backend_get_monitor_manager (backend);
   MetaMonitorManagerKms *monitor_manager_kms =
     META_MONITOR_MANAGER_KMS (monitor_manager);
+  MetaRendererNative *renderer_native =
+    META_RENDERER_NATIVE (meta_backend_get_renderer (backend));
 
   clutter_evdev_release_devices ();
   clutter_egl_freeze_master_clock ();
 
   meta_monitor_manager_kms_pause (monitor_manager_kms);
+  meta_renderer_native_pause (renderer_native);
 }
 
 void meta_backend_native_resume (MetaBackendNative *native)
