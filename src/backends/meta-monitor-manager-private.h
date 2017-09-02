@@ -67,6 +67,9 @@ typedef struct _MetaCrtcInfo MetaCrtcInfo;
 typedef struct _MetaOutputInfo MetaOutputInfo;
 typedef struct _MetaTileInfo MetaTileInfo;
 
+#define META_MONITOR_MANAGER_MIN_SCREEN_WIDTH 640
+#define META_MONITOR_MANAGER_MIN_SCREEN_HEIGHT 480
+
 typedef enum _MetaMonitorManagerCapability
 {
   META_MONITOR_MANAGER_CAPABILITY_NONE = 0,
@@ -448,6 +451,9 @@ MetaMonitor *       meta_monitor_manager_get_laptop_panel (MetaMonitorManager *m
 
 MetaMonitor *       meta_monitor_manager_get_monitor_from_spec (MetaMonitorManager *manager,
                                                                 MetaMonitorSpec    *monitor_spec);
+
+MetaMonitor *       meta_monitor_manager_get_monitor_from_connector (MetaMonitorManager *manager,
+                                                                     const char         *connector);
 
 GList *             meta_monitor_manager_get_monitors      (MetaMonitorManager *manager);
 

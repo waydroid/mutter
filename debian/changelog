@@ -1,3 +1,15 @@
+mutter (3.25.91+20170902~ce515c5-1) experimental; urgency=medium
+
+  * New upstream git snapshot (LP: #1714330)
+  * Drop git_fix-wayland-color-inversion.patch: Applied
+  * debian/control.in:
+    - Bump minimum libgudev-dev to >= 232
+    - Drop Build-Depends on libgl1-mesa-dri
+  * debian/rules:
+    - Ignore test failures on Debian. See bug 874077.
+
+ -- Jeremy Bicha <jbicha@debian.org>  Sat, 02 Sep 2017 15:46:15 -0400
+
 mutter (3.25.91-2) experimental; urgency=medium
 
   * Build-Depend on libgl1-mesa-dri for build tests since
