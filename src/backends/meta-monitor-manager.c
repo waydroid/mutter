@@ -355,7 +355,7 @@ meta_monitor_manager_is_lid_closed (MetaMonitorManager *manager)
 gboolean
 meta_monitor_manager_is_headless (MetaMonitorManager *manager)
 {
-  return !manager->monitors;
+  return !manager->logical_monitors;
 }
 
 float
@@ -2311,6 +2311,24 @@ MetaMonitor *
 meta_monitor_manager_get_laptop_panel (MetaMonitorManager *manager)
 {
   return find_monitor (manager, meta_monitor_is_laptop_panel);
+}
+
+MetaMonitor *
+meta_monitor_manager_get_monitor_from_connector (MetaMonitorManager *manager,
+                                                 const char         *connector)
+{
+  GList *l;
+
+  for (l = manager->monitors; l; l = l->next)
+    {
+      MetaMonitor *monitor = l->data;
+
+      if (g_str_equal (meta_monitor_get_connector (monitor),
+                       connector))
+        return monitor;
+    }
+
+  return NULL;
 }
 
 MetaMonitor *

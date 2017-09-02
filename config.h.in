@@ -55,6 +55,9 @@
 /* Have the Xrandr extension library */
 #undef HAVE_RANDR
 
+/* Defined if EGLDevice support is enabled */
+#undef HAVE_REMOTE_DESKTOP
+
 /* Building with SM support */
 #undef HAVE_SM
 

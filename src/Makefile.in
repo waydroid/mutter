@@ -93,7 +93,12 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@HAVE_WAYLAND_TRUE@am__append_1 = \
+@HAVE_REMOTE_DESKTOP_TRUE@am__append_1 = \
+@HAVE_REMOTE_DESKTOP_TRUE@	$(dbus_remote_desktop_built_sources)	\
+@HAVE_REMOTE_DESKTOP_TRUE@	$(dbus_screen_cast_built_sources)	\
+@HAVE_REMOTE_DESKTOP_TRUE@	$(NULL)
+
+@HAVE_WAYLAND_TRUE@am__append_2 = \
 @HAVE_WAYLAND_TRUE@	pointer-gestures-unstable-v1-protocol.c				\
 @HAVE_WAYLAND_TRUE@	pointer-gestures-unstable-v1-server-protocol.h			\
 @HAVE_WAYLAND_TRUE@	gtk-shell-protocol.c			\
@@ -116,7 +121,28 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	keyboard-shortcuts-inhibit-unstable-v1-server-protocol.h	\
 @HAVE_WAYLAND_TRUE@	$(NULL)
 
-@HAVE_WAYLAND_TRUE@am__append_2 = \
+@HAVE_REMOTE_DESKTOP_TRUE@am__append_3 = \
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-dbus-session-watcher.c	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-dbus-session-watcher.h	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-remote-desktop.c		\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-remote-desktop.h		\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-remote-desktop-session.c	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-remote-desktop-session.h	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast.c		\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast.h		\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-monitor-stream.c	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-monitor-stream.h	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-monitor-stream-src.c	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-monitor-stream-src.h	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-session.c	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-session.h	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-stream.c	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-stream.h	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-stream-src.c	\
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-stream-src.h	\
+@HAVE_REMOTE_DESKTOP_TRUE@	$(NULL)
+
+@HAVE_WAYLAND_TRUE@am__append_4 = \
 @HAVE_WAYLAND_TRUE@	compositor/meta-surface-actor-wayland.c	\
 @HAVE_WAYLAND_TRUE@	compositor/meta-surface-actor-wayland.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland.c			\
@@ -204,7 +230,7 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-inhibit-shortcuts-dialog.h	\
 @HAVE_WAYLAND_TRUE@	$(NULL)
 
-@HAVE_NATIVE_BACKEND_TRUE@am__append_3 = \
+@HAVE_NATIVE_BACKEND_TRUE@am__append_5 = \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-backend-native.c		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-backend-native.h		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-backend-native-private.h	\
@@ -232,13 +258,11 @@ host_triplet = @host@
 @HAVE_NATIVE_BACKEND_TRUE@	$(NULL)
 
 bin_PROGRAMS = mutter$(EXEEXT)
-noinst_PROGRAMS = $(am__EXEEXT_1) testboxes$(EXEEXT)
+noinst_PROGRAMS = $(am__EXEEXT_3) testboxes$(EXEEXT)
 libexec_PROGRAMS = mutter-restart-helper$(EXEEXT)
-@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@installedtestsbin_PROGRAMS = mutter-test-client$(EXEEXT) \
-@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	mutter-test-runner$(EXEEXT) \
-@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	mutter-test-unit-tests$(EXEEXT)
-@BUILDOPT_INSTALL_TESTS_FALSE@@HAVE_WAYLAND_TRUE@am__append_4 = mutter-test-client mutter-test-runner mutter-test-unit-tests
-@HAVE_WAYLAND_TRUE@am__append_5 = tests/mutter-all.test.in
+@BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@installedtestsbin_PROGRAMS = $(am__EXEEXT_2)
+@BUILDOPT_INSTALL_TESTS_FALSE@@HAVE_WAYLAND_TRUE@am__append_6 = $(test_programs)
+@HAVE_WAYLAND_TRUE@am__append_7 = tests/mutter-all.test.in
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
@@ -366,11 +390,11 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	backends/x11/meta-stage-x11-nested.h core/meta-accel-parse.c \
 	core/meta-accel-parse.h meta/barrier.h core/bell.c core/bell.h \
 	core/boxes.c core/boxes-private.h meta/boxes.h \
-	core/meta-border.c core/meta-border.h \
-	compositor/clutter-utils.c compositor/clutter-utils.h \
-	compositor/cogl-utils.c compositor/cogl-utils.h \
-	compositor/compositor.c compositor/compositor-private.h \
-	compositor/meta-background.c \
+	core/meta-border.c core/meta-border.h core/meta-fraction.c \
+	core/meta-fraction.h compositor/clutter-utils.c \
+	compositor/clutter-utils.h compositor/cogl-utils.c \
+	compositor/cogl-utils.h compositor/compositor.c \
+	compositor/compositor-private.h compositor/meta-background.c \
 	compositor/meta-background-private.h \
 	compositor/meta-background-actor.c \
 	compositor/meta-background-actor-private.h \
@@ -434,6 +458,22 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	x11/window-props.c x11/window-props.h x11/window-x11.c \
 	x11/window-x11.h x11/window-x11-private.h x11/xprops.c \
 	x11/xprops.h x11/mutter-Xatomtype.h \
+	backends/meta-dbus-session-watcher.c \
+	backends/meta-dbus-session-watcher.h \
+	backends/meta-remote-desktop.c backends/meta-remote-desktop.h \
+	backends/meta-remote-desktop-session.c \
+	backends/meta-remote-desktop-session.h \
+	backends/meta-screen-cast.c backends/meta-screen-cast.h \
+	backends/meta-screen-cast-monitor-stream.c \
+	backends/meta-screen-cast-monitor-stream.h \
+	backends/meta-screen-cast-monitor-stream-src.c \
+	backends/meta-screen-cast-monitor-stream-src.h \
+	backends/meta-screen-cast-session.c \
+	backends/meta-screen-cast-session.h \
+	backends/meta-screen-cast-stream.c \
+	backends/meta-screen-cast-stream.h \
+	backends/meta-screen-cast-stream-src.c \
+	backends/meta-screen-cast-stream-src.h \
 	compositor/meta-surface-actor-wayland.c \
 	compositor/meta-surface-actor-wayland.h wayland/meta-wayland.c \
 	wayland/meta-wayland.h wayland/meta-wayland-private.h \
@@ -529,7 +569,17 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	backends/native/dbus-utils.c backends/native/dbus-utils.h
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 =
-@HAVE_WAYLAND_TRUE@am__objects_2 =  \
+@HAVE_REMOTE_DESKTOP_TRUE@am__objects_2 = backends/meta-dbus-session-watcher.lo \
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-remote-desktop.lo \
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-remote-desktop-session.lo \
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast.lo \
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-monitor-stream.lo \
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-monitor-stream-src.lo \
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-session.lo \
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-stream.lo \
+@HAVE_REMOTE_DESKTOP_TRUE@	backends/meta-screen-cast-stream-src.lo \
+@HAVE_REMOTE_DESKTOP_TRUE@	$(am__objects_1)
+@HAVE_WAYLAND_TRUE@am__objects_3 =  \
 @HAVE_WAYLAND_TRUE@	compositor/meta-surface-actor-wayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-xwayland.lo \
@@ -571,7 +621,7 @@ am__objects_1 =
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-inhibit-shortcuts.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-inhibit-shortcuts-dialog.lo \
 @HAVE_WAYLAND_TRUE@	$(am__objects_1)
-@HAVE_NATIVE_BACKEND_TRUE@am__objects_3 = backends/native/meta-backend-native.lo \
+@HAVE_NATIVE_BACKEND_TRUE@am__objects_4 = backends/native/meta-backend-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-barrier-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-clutter-backend-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.lo \
@@ -615,8 +665,9 @@ am_libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS =  \
 	backends/x11/meta-renderer-x11.lo \
 	backends/x11/meta-stage-x11-nested.lo core/meta-accel-parse.lo \
 	core/bell.lo core/boxes.lo core/meta-border.lo \
-	compositor/clutter-utils.lo compositor/cogl-utils.lo \
-	compositor/compositor.lo compositor/meta-background.lo \
+	core/meta-fraction.lo compositor/clutter-utils.lo \
+	compositor/cogl-utils.lo compositor/compositor.lo \
+	compositor/meta-background.lo \
 	compositor/meta-background-actor.lo \
 	compositor/meta-background-image.lo \
 	compositor/meta-background-group.lo \
@@ -647,11 +698,15 @@ am_libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS =  \
 	ui/ui.lo x11/events.lo x11/group-props.lo x11/group.lo \
 	x11/iconcache.lo x11/session.lo x11/window-props.lo \
 	x11/window-x11.lo x11/xprops.lo $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3)
-am__objects_4 = meta-dbus-idle-monitor.lo
-am__objects_5 = meta-dbus-display-config.lo
-am__objects_6 = meta-dbus-login1.lo
-@HAVE_WAYLAND_TRUE@am__objects_7 =  \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4)
+am__objects_5 = meta-dbus-idle-monitor.lo
+am__objects_6 = meta-dbus-display-config.lo
+am__objects_7 = meta-dbus-login1.lo
+@HAVE_REMOTE_DESKTOP_TRUE@am__objects_8 = meta-dbus-remote-desktop.lo
+@HAVE_REMOTE_DESKTOP_TRUE@am__objects_9 = meta-dbus-screen-cast.lo
+@HAVE_REMOTE_DESKTOP_TRUE@am__objects_10 = $(am__objects_8) \
+@HAVE_REMOTE_DESKTOP_TRUE@	$(am__objects_9) $(am__objects_1)
+@HAVE_WAYLAND_TRUE@am__objects_11 =  \
 @HAVE_WAYLAND_TRUE@	pointer-gestures-unstable-v1-protocol.lo \
 @HAVE_WAYLAND_TRUE@	gtk-shell-protocol.lo \
 @HAVE_WAYLAND_TRUE@	gtk-primary-selection-protocol.lo \
@@ -663,10 +718,11 @@ am__objects_6 = meta-dbus-login1.lo
 @HAVE_WAYLAND_TRUE@	linux-dmabuf-unstable-v1-protocol.lo \
 @HAVE_WAYLAND_TRUE@	keyboard-shortcuts-inhibit-unstable-v1-protocol.lo \
 @HAVE_WAYLAND_TRUE@	$(am__objects_1)
-am__objects_8 = $(am__objects_4) $(am__objects_5) $(am__objects_6) \
-	meta-enum-types.lo $(am__objects_1) $(am__objects_7)
+am__objects_12 = $(am__objects_5) $(am__objects_6) $(am__objects_7) \
+	meta-enum-types.lo $(am__objects_1) $(am__objects_10) \
+	$(am__objects_11)
 nodist_libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS =  \
-	$(am__objects_8)
+	$(am__objects_12)
 libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS =  \
 	$(am_libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS) \
 	$(nodist_libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS)
@@ -679,9 +735,13 @@ libmutter_@LIBMUTTER_API_VERSION@_la_LINK = $(LIBTOOL) $(AM_V_lt) \
 	$(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libmutter_@LIBMUTTER_API_VERSION@_la_LDFLAGS) $(LDFLAGS) -o \
 	$@
-@BUILDOPT_INSTALL_TESTS_FALSE@@HAVE_WAYLAND_TRUE@am__EXEEXT_1 = mutter-test-client$(EXEEXT) \
-@BUILDOPT_INSTALL_TESTS_FALSE@@HAVE_WAYLAND_TRUE@	mutter-test-runner$(EXEEXT) \
-@BUILDOPT_INSTALL_TESTS_FALSE@@HAVE_WAYLAND_TRUE@	mutter-test-unit-tests$(EXEEXT)
+am__EXEEXT_1 =
+@HAVE_WAYLAND_TRUE@am__EXEEXT_2 = mutter-test-client$(EXEEXT) \
+@HAVE_WAYLAND_TRUE@	mutter-test-runner$(EXEEXT) \
+@HAVE_WAYLAND_TRUE@	mutter-test-unit-tests$(EXEEXT) \
+@HAVE_WAYLAND_TRUE@	mutter-test-headless-start-test$(EXEEXT) \
+@HAVE_WAYLAND_TRUE@	$(am__EXEEXT_1)
+@BUILDOPT_INSTALL_TESTS_FALSE@@HAVE_WAYLAND_TRUE@am__EXEEXT_3 = $(am__EXEEXT_2)
 PROGRAMS = $(bin_PROGRAMS) $(installedtestsbin_PROGRAMS) \
 	$(libexec_PROGRAMS) $(noinst_PROGRAMS)
 am_mutter_OBJECTS = core/mutter.$(OBJEXT)
@@ -698,14 +758,31 @@ mutter_test_client_OBJECTS = $(am_mutter_test_client_OBJECTS)
 @HAVE_WAYLAND_TRUE@mutter_test_client_DEPENDENCIES =  \
 @HAVE_WAYLAND_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_WAYLAND_TRUE@	libmutter-$(LIBMUTTER_API_VERSION).la
-am__mutter_test_runner_SOURCES_DIST = tests/test-runner.c
+am__mutter_test_headless_start_test_SOURCES_DIST =  \
+	tests/headless-start-test.c tests/meta-backend-test.c \
+	tests/meta-backend-test.h tests/meta-monitor-manager-test.c \
+	tests/meta-monitor-manager-test.h
+@HAVE_WAYLAND_TRUE@am_mutter_test_headless_start_test_OBJECTS =  \
+@HAVE_WAYLAND_TRUE@	tests/headless-start-test.$(OBJEXT) \
+@HAVE_WAYLAND_TRUE@	tests/meta-backend-test.$(OBJEXT) \
+@HAVE_WAYLAND_TRUE@	tests/meta-monitor-manager-test.$(OBJEXT) \
+@HAVE_WAYLAND_TRUE@	$(am__objects_1)
+mutter_test_headless_start_test_OBJECTS =  \
+	$(am_mutter_test_headless_start_test_OBJECTS)
+@HAVE_WAYLAND_TRUE@mutter_test_headless_start_test_DEPENDENCIES =  \
+@HAVE_WAYLAND_TRUE@	$(am__DEPENDENCIES_1) \
+@HAVE_WAYLAND_TRUE@	libmutter-$(LIBMUTTER_API_VERSION).la
+am__mutter_test_runner_SOURCES_DIST = tests/test-utils.c \
+	tests/test-utils.h tests/test-runner.c
 @HAVE_WAYLAND_TRUE@am_mutter_test_runner_OBJECTS =  \
+@HAVE_WAYLAND_TRUE@	tests/test-utils.$(OBJEXT) \
 @HAVE_WAYLAND_TRUE@	tests/test-runner.$(OBJEXT)
 mutter_test_runner_OBJECTS = $(am_mutter_test_runner_OBJECTS)
 @HAVE_WAYLAND_TRUE@mutter_test_runner_DEPENDENCIES =  \
 @HAVE_WAYLAND_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_WAYLAND_TRUE@	libmutter-$(LIBMUTTER_API_VERSION).la
-am__mutter_test_unit_tests_SOURCES_DIST = tests/unit-tests.c \
+am__mutter_test_unit_tests_SOURCES_DIST = tests/test-utils.c \
+	tests/test-utils.h tests/unit-tests.c \
 	tests/meta-backend-test.c tests/meta-backend-test.h \
 	tests/meta-monitor-manager-test.c \
 	tests/meta-monitor-manager-test.h \
@@ -716,6 +793,7 @@ am__mutter_test_unit_tests_SOURCES_DIST = tests/unit-tests.c \
 	tests/monitor-test-utils.h tests/monitor-unit-tests.c \
 	tests/monitor-unit-tests.h
 @HAVE_WAYLAND_TRUE@am_mutter_test_unit_tests_OBJECTS =  \
+@HAVE_WAYLAND_TRUE@	tests/test-utils.$(OBJEXT) \
 @HAVE_WAYLAND_TRUE@	tests/unit-tests.$(OBJEXT) \
 @HAVE_WAYLAND_TRUE@	tests/meta-backend-test.$(OBJEXT) \
 @HAVE_WAYLAND_TRUE@	tests/meta-monitor-manager-test.$(OBJEXT) \
@@ -769,12 +847,15 @@ am__v_CCLD_1 =
 SOURCES = $(libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES) \
 	$(nodist_libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES) \
 	$(mutter_SOURCES) $(mutter_restart_helper_SOURCES) \
-	$(mutter_test_client_SOURCES) $(mutter_test_runner_SOURCES) \
+	$(mutter_test_client_SOURCES) \
+	$(mutter_test_headless_start_test_SOURCES) \
+	$(mutter_test_runner_SOURCES) \
 	$(mutter_test_unit_tests_SOURCES) $(testboxes_SOURCES)
 DIST_SOURCES =  \
 	$(am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST) \
 	$(mutter_SOURCES) $(mutter_restart_helper_SOURCES) \
 	$(am__mutter_test_client_SOURCES_DIST) \
+	$(am__mutter_test_headless_start_test_SOURCES_DIST) \
 	$(am__mutter_test_runner_SOURCES_DIST) \
 	$(am__mutter_test_unit_tests_SOURCES_DIST) \
 	$(testboxes_SOURCES)
@@ -1030,6 +1111,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -1041,10 +1123,12 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libmutter-@LIBMUTTER_API_VERSION@.la
 SUBDIRS = compositor/plugins
-EXTRA_DIST = $(am__append_5) $(wayland_protocols) libmutter.pc.in \
+EXTRA_DIST = $(am__append_7) $(wayland_protocols) libmutter.pc.in \
 	meta-enum-types.h.in meta-enum-types.c.in \
 	org.freedesktop.login1.xml org.gnome.Mutter.DisplayConfig.xml \
 	org.gnome.Mutter.IdleMonitor.xml \
+	org.gnome.Mutter.RemoteDesktop.xml \
+	org.gnome.Mutter.ScreenCast.xml \
 	backends/native/gen-default-modes.py $(NULL)
 NULL = 
 AM_CPPFLAGS = \
@@ -1087,7 +1171,7 @@ AM_CPPFLAGS = \
 mutter_built_sources = $(dbus_idle_built_sources) \
 	$(dbus_display_config_built_sources) \
 	$(dbus_login1_built_sources) meta/meta-enum-types.h \
-	meta-enum-types.c $(NULL) $(am__append_1)
+	meta-enum-types.c $(NULL) $(am__append_1) $(am__append_2)
 wayland_protocols = \
 	wayland/protocol/gtk-shell.xml		\
 	wayland/protocol/gtk-primary-selection.xml	\
@@ -1161,11 +1245,11 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =  \
 	backends/x11/meta-stage-x11-nested.h core/meta-accel-parse.c \
 	core/meta-accel-parse.h meta/barrier.h core/bell.c core/bell.h \
 	core/boxes.c core/boxes-private.h meta/boxes.h \
-	core/meta-border.c core/meta-border.h \
-	compositor/clutter-utils.c compositor/clutter-utils.h \
-	compositor/cogl-utils.c compositor/cogl-utils.h \
-	compositor/compositor.c compositor/compositor-private.h \
-	compositor/meta-background.c \
+	core/meta-border.c core/meta-border.h core/meta-fraction.c \
+	core/meta-fraction.h compositor/clutter-utils.c \
+	compositor/clutter-utils.h compositor/cogl-utils.c \
+	compositor/cogl-utils.h compositor/compositor.c \
+	compositor/compositor-private.h compositor/meta-background.c \
 	compositor/meta-background-private.h \
 	compositor/meta-background-actor.c \
 	compositor/meta-background-actor-private.h \
@@ -1228,8 +1312,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =  \
 	x11/iconcache.c x11/iconcache.h x11/session.c x11/session.h \
 	x11/window-props.c x11/window-props.h x11/window-x11.c \
 	x11/window-x11.h x11/window-x11-private.h x11/xprops.c \
-	x11/xprops.h x11/mutter-Xatomtype.h $(NULL) $(am__append_2) \
-	$(am__append_3)
+	x11/xprops.h x11/mutter-Xatomtype.h $(NULL) $(am__append_3) \
+	$(am__append_4) $(am__append_5)
 nodist_libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES = $(mutter_built_sources)
 libmutter_@LIBMUTTER_API_VERSION@_la_LDFLAGS = \
 	-no-undefined -export-symbols-regex "^(meta|ag)_.*"
@@ -1300,6 +1384,13 @@ mutter_SOURCES = core/mutter.c
 mutter_LDADD = $(MUTTER_LIBS) libmutter-@LIBMUTTER_API_VERSION@.la
 mutter_restart_helper_SOURCES = core/restart-helper.c
 mutter_restart_helper_LDADD = $(MUTTER_LIBS)
+@HAVE_WAYLAND_TRUE@test_programs = \
+@HAVE_WAYLAND_TRUE@	mutter-test-client \
+@HAVE_WAYLAND_TRUE@	mutter-test-runner \
+@HAVE_WAYLAND_TRUE@	mutter-test-unit-tests \
+@HAVE_WAYLAND_TRUE@	mutter-test-headless-start-test \
+@HAVE_WAYLAND_TRUE@	$(NULL)
+
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@stackingdir = $(pkgdatadir)/tests/stacking
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@dist_stacking_DATA = \
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	tests/stacking/basic-x11.metatest	\
@@ -1314,9 +1405,15 @@ mutter_restart_helper_LDADD = $(MUTTER_LIBS)
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@installedtestsbindir = $(libexecdir)/installed-tests/mutter
 @HAVE_WAYLAND_TRUE@mutter_test_client_SOURCES = tests/test-client.c
 @HAVE_WAYLAND_TRUE@mutter_test_client_LDADD = $(MUTTER_LIBS) libmutter-$(LIBMUTTER_API_VERSION).la
-@HAVE_WAYLAND_TRUE@mutter_test_runner_SOURCES = tests/test-runner.c
+@HAVE_WAYLAND_TRUE@mutter_test_runner_SOURCES = \
+@HAVE_WAYLAND_TRUE@	tests/test-utils.c \
+@HAVE_WAYLAND_TRUE@	tests/test-utils.h \
+@HAVE_WAYLAND_TRUE@	tests/test-runner.c
+
 @HAVE_WAYLAND_TRUE@mutter_test_runner_LDADD = $(MUTTER_LIBS) libmutter-$(LIBMUTTER_API_VERSION).la
 @HAVE_WAYLAND_TRUE@mutter_test_unit_tests_SOURCES = \
+@HAVE_WAYLAND_TRUE@	tests/test-utils.c \
+@HAVE_WAYLAND_TRUE@	tests/test-utils.h \
 @HAVE_WAYLAND_TRUE@	tests/unit-tests.c \
 @HAVE_WAYLAND_TRUE@	tests/meta-backend-test.c \
 @HAVE_WAYLAND_TRUE@	tests/meta-backend-test.h \
@@ -1333,6 +1430,15 @@ mutter_restart_helper_LDADD = $(MUTTER_LIBS)
 @HAVE_WAYLAND_TRUE@	$(NULL)
 
 @HAVE_WAYLAND_TRUE@mutter_test_unit_tests_LDADD = $(MUTTER_LIBS) libmutter-$(LIBMUTTER_API_VERSION).la
+@HAVE_WAYLAND_TRUE@mutter_test_headless_start_test_SOURCES = \
+@HAVE_WAYLAND_TRUE@	tests/headless-start-test.c \
+@HAVE_WAYLAND_TRUE@	tests/meta-backend-test.c \
+@HAVE_WAYLAND_TRUE@	tests/meta-backend-test.h \
+@HAVE_WAYLAND_TRUE@	tests/meta-monitor-manager-test.c \
+@HAVE_WAYLAND_TRUE@	tests/meta-monitor-manager-test.h \
+@HAVE_WAYLAND_TRUE@	$(NULL)
+
+@HAVE_WAYLAND_TRUE@mutter_test_headless_start_test_LDADD = $(MUTTER_LIBS) libmutter-$(LIBMUTTER_API_VERSION).la
 
 # Some random test programs for bits of the code
 testboxes_SOURCES = core/testboxes.c
@@ -1396,6 +1502,8 @@ BUILT_SOURCES = \
 
 MUTTER_STAMP_FILES = stamp-meta-enum-types.h
 dbus_display_config_built_sources = meta-dbus-display-config.c meta-dbus-display-config.h
+@HAVE_REMOTE_DESKTOP_TRUE@dbus_remote_desktop_built_sources = meta-dbus-remote-desktop.c meta-dbus-remote-desktop.h
+@HAVE_REMOTE_DESKTOP_TRUE@dbus_screen_cast_built_sources = meta-dbus-screen-cast.c meta-dbus-screen-cast.h
 dbus_login1_built_sources = meta-dbus-login1.c meta-dbus-login1.h
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -1585,6 +1693,8 @@ core/bell.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
 core/boxes.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
 core/meta-border.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
+core/meta-fraction.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
 compositor/$(am__dirstamp):
 	@$(MKDIR_P) compositor
 	@: > compositor/$(am__dirstamp)
@@ -1699,6 +1809,24 @@ x11/session.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
 x11/window-props.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
 x11/window-x11.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
 x11/xprops.lo: x11/$(am__dirstamp) x11/$(DEPDIR)/$(am__dirstamp)
+backends/meta-dbus-session-watcher.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-remote-desktop.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-remote-desktop-session.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-screen-cast.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-screen-cast-monitor-stream.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-screen-cast-monitor-stream-src.lo:  \
+	backends/$(am__dirstamp) backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-screen-cast-session.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-screen-cast-stream.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-screen-cast-stream-src.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
 compositor/meta-surface-actor-wayland.lo: compositor/$(am__dirstamp) \
 	compositor/$(DEPDIR)/$(am__dirstamp)
 wayland/$(am__dirstamp):
@@ -2004,6 +2132,18 @@ tests/test-client.$(OBJEXT): tests/$(am__dirstamp) \
 mutter-test-client$(EXEEXT): $(mutter_test_client_OBJECTS) $(mutter_test_client_DEPENDENCIES) $(EXTRA_mutter_test_client_DEPENDENCIES) 
 	@rm -f mutter-test-client$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mutter_test_client_OBJECTS) $(mutter_test_client_LDADD) $(LIBS)
+tests/headless-start-test.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/meta-backend-test.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+tests/meta-monitor-manager-test.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+mutter-test-headless-start-test$(EXEEXT): $(mutter_test_headless_start_test_OBJECTS) $(mutter_test_headless_start_test_DEPENDENCIES) $(EXTRA_mutter_test_headless_start_test_DEPENDENCIES) 
+	@rm -f mutter-test-headless-start-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(mutter_test_headless_start_test_OBJECTS) $(mutter_test_headless_start_test_LDADD) $(LIBS)
+tests/test-utils.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
 tests/test-runner.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -2011,10 +2151,6 @@ mutter-test-runner$(EXEEXT): $(mutter_test_runner_OBJECTS) $(mutter_test_runner_
 	@rm -f mutter-test-runner$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mutter_test_runner_OBJECTS) $(mutter_test_runner_LDADD) $(LIBS)
 tests/unit-tests.$(OBJEXT): tests/$(am__dirstamp) \
-	tests/$(DEPDIR)/$(am__dirstamp)
-tests/meta-backend-test.$(OBJEXT): tests/$(am__dirstamp) \
-	tests/$(DEPDIR)/$(am__dirstamp)
-tests/meta-monitor-manager-test.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 tests/monitor-config-migration-unit-tests.$(OBJEXT):  \
 	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
@@ -2069,6 +2205,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-display-config.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-idle-monitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-login1.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-remote-desktop.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-screen-cast.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-enum-types.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pointer-constraints-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pointer-gestures-unstable-v1-protocol.Plo@am__quote@
@@ -2082,6 +2220,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-cursor-renderer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-cursor-tracker.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-cursor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-dbus-session-watcher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-egl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-idle-monitor-dbus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-idle-monitor.Plo@am__quote@
@@ -2095,8 +2234,16 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-orientation-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-pointer-constraint.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-remote-desktop-session.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-remote-desktop.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-renderer-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-renderer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-screen-cast-monitor-stream-src.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-screen-cast-monitor-stream.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-screen-cast-session.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-screen-cast-stream-src.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-screen-cast-stream.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-screen-cast.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-settings.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-stage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/dbus-utils.Plo@am__quote@
@@ -2166,6 +2313,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/meta-border.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/meta-close-dialog-default.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/meta-close-dialog.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/meta-fraction.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/meta-gesture-tracker.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/meta-inhibit-shortcuts-dialog-default.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/meta-inhibit-shortcuts-dialog.Plo@am__quote@
@@ -2182,6 +2330,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/util.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/window.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@core/$(DEPDIR)/workspace.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/headless-start-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/meta-backend-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/meta-monitor-manager-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/monitor-config-migration-unit-tests.Po@am__quote@
@@ -2190,6 +2339,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/monitor-unit-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test-client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test-runner.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/unit-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/frames.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/theme.Plo@am__quote@
@@ -2773,7 +2923,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_stackingDATA \
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@mutter-all.test: tests/mutter-all.test.in
 @BUILDOPT_INSTALL_TESTS_TRUE@@HAVE_WAYLAND_TRUE@	$(AM_V_GEN) sed  -e "s|@libexecdir[@]|$(libexecdir)|g"  $< > $@.tmp && mv $@.tmp $@
 
-@HAVE_WAYLAND_TRUE@.PHONY: run-tests run-test-runner-tests run-unit-tests
+@HAVE_WAYLAND_TRUE@.PHONY: run-tests run-test-runner-tests run-unit-tests run-headless-start-test
 
 @HAVE_WAYLAND_TRUE@run-test-runner-tests: mutter-test-client mutter-test-runner
 @HAVE_WAYLAND_TRUE@	./mutter-test-runner $(dist_stacking_DATA)
@@ -2781,7 +2931,10 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_stackingDATA \
 @HAVE_WAYLAND_TRUE@run-unit-tests: mutter-test-unit-tests
 @HAVE_WAYLAND_TRUE@	./mutter-test-unit-tests
 
-@HAVE_WAYLAND_TRUE@run-tests: run-test-runner-tests run-unit-tests
+@HAVE_WAYLAND_TRUE@run-headless-start-test: mutter-test-headless-start-test
+@HAVE_WAYLAND_TRUE@	./mutter-test-headless-start-test
+
+@HAVE_WAYLAND_TRUE@run-tests: run-test-runner-tests run-unit-tests run-headless-start-test
 
 @HAVE_INTROSPECTION_TRUE@include $(INTROSPECTION_MAKEFILE)
 
@@ -2822,6 +2975,20 @@ $(dbus_idle_built_sources) : Makefile.am org.gnome.Mutter.IdleMonitor.xml
 		--c-generate-object-manager						\
 		--c-generate-autocleanup all						\
 		$(srcdir)/org.gnome.Mutter.IdleMonitor.xml
+
+@HAVE_REMOTE_DESKTOP_TRUE@$(dbus_remote_desktop_built_sources) : Makefile.am org.gnome.Mutter.RemoteDesktop.xml
+@HAVE_REMOTE_DESKTOP_TRUE@	$(AM_V_GEN)gdbus-codegen							\
+@HAVE_REMOTE_DESKTOP_TRUE@		--interface-prefix org.gnome.Mutter					\
+@HAVE_REMOTE_DESKTOP_TRUE@		--c-namespace MetaDBus							\
+@HAVE_REMOTE_DESKTOP_TRUE@		--generate-c-code meta-dbus-remote-desktop				\
+@HAVE_REMOTE_DESKTOP_TRUE@		$(srcdir)/org.gnome.Mutter.RemoteDesktop.xml
+
+@HAVE_REMOTE_DESKTOP_TRUE@$(dbus_screen_cast_built_sources) : Makefile.am org.gnome.Mutter.ScreenCast.xml
+@HAVE_REMOTE_DESKTOP_TRUE@	$(AM_V_GEN)gdbus-codegen							\
+@HAVE_REMOTE_DESKTOP_TRUE@		--interface-prefix org.gnome.Mutter					\
+@HAVE_REMOTE_DESKTOP_TRUE@		--c-namespace MetaDBus							\
+@HAVE_REMOTE_DESKTOP_TRUE@		--generate-c-code meta-dbus-screen-cast					\
+@HAVE_REMOTE_DESKTOP_TRUE@		$(srcdir)/org.gnome.Mutter.ScreenCast.xml
 
 $(dbus_login1_built_sources) : Makefile.am org.freedesktop.login1.xml
 	$(AM_V_GEN)gdbus-codegen							\
