@@ -41,15 +41,14 @@ struct _MetaWaylandKeyboardShotscutsInhibit
 };
 
 static void
-zwp_keyboard_shortcuts_inhibit_destroy (struct wl_client   *client,
-                                        struct wl_resource *resource)
+zwp_keyboard_shortcuts_inhibit_destructor (struct wl_resource *resource)
 {
   MetaWaylandKeyboardShotscutsInhibit *shortcut_inhibit;
 
   shortcut_inhibit = wl_resource_get_user_data (resource);
   if (shortcut_inhibit->surface)
     {
-      meta_wayland_surface_hide_inhibit_shortcuts_dialog (shortcut_inhibit->surface);
+      meta_wayland_surface_cancel_inhibit_shortcuts_dialog (shortcut_inhibit->surface);
 
       g_signal_handler_disconnect (shortcut_inhibit->surface,
                                    shortcut_inhibit->surface_destroyed_handler);
@@ -64,6 +63,12 @@ zwp_keyboard_shortcuts_inhibit_destroy (struct wl_client   *client,
                                               shortcut_inhibit->seat);
     }
   g_free (shortcut_inhibit);
+}
+
+static void
+zwp_keyboard_shortcuts_inhibit_destroy (struct wl_client   *client,
+                                        struct wl_resource *resource)
+{
   wl_resource_destroy (resource);
 }
 
@@ -148,7 +153,7 @@ zwp_keyboard_shortcuts_inhibit_manager_inhibit_shortcuts (struct wl_client   *cl
   wl_resource_set_implementation (keyboard_shortcuts_inhibit_resource,
                                   &meta_keyboard_shortcuts_inhibit_interface,
                                   shortcut_inhibit,
-                                  NULL);
+                                  zwp_keyboard_shortcuts_inhibit_destructor);
 }
 
 static const struct zwp_keyboard_shortcuts_inhibit_manager_v1_interface

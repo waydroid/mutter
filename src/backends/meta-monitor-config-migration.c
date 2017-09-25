@@ -652,6 +652,7 @@ load_config_file (GFile   *file,
         g_array_free (parser.output_array, TRUE);
 
       free_output_key (&parser.key);
+      g_free (parser.output_field);
       g_hash_table_destroy (parser.configs);
 
       return NULL;
@@ -949,7 +950,6 @@ derive_logical_monitor_configs (MetaLegacyMonitorsConfig *config,
                                 GError                  **error)
 {
   GList *logical_monitor_configs = NULL;
-  GList *monitor_configs = NULL;
   unsigned int i;
 
   for (i = 0; i < config->n_outputs; i++)
@@ -994,8 +994,8 @@ derive_logical_monitor_configs (MetaLegacyMonitorsConfig *config,
                 }
               else
                 {
-                  g_list_free_full (monitor_configs,
-                                    (GDestroyNotify) meta_monitor_config_free);
+                  g_list_free_full (logical_monitor_configs,
+                                    (GDestroyNotify) meta_logical_monitor_config_free);
                   return NULL;
                 }
             }
@@ -1008,8 +1008,8 @@ derive_logical_monitor_configs (MetaLegacyMonitorsConfig *config,
 
       if (!monitor_config)
         {
-          g_list_free_full (monitor_configs,
-                            (GDestroyNotify) meta_monitor_config_free);
+          g_list_free_full (logical_monitor_configs,
+                            (GDestroyNotify) meta_logical_monitor_config_free);
           return NULL;
         }
 
@@ -1112,7 +1112,6 @@ meta_migrate_old_monitors_config (MetaMonitorConfigStore *config_store,
     return FALSE;
 
   g_hash_table_foreach (configs, migrate_config, config_store);
-  g_hash_table_destroy (configs);
 
   return TRUE;
 }

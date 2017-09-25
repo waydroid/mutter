@@ -32,6 +32,7 @@
 #define MAXIMUM_SCALE_FACTOR 4.0f
 #define MINIMUM_LOGICAL_WIDTH 800
 #define MINIMUM_LOGICAL_HEIGHT 600
+#define MAXIMUM_REFRESH_RATE_DIFF 0.001
 
 #define HANDLED_CRTC_MODE_FLAGS (META_CRTC_MODE_FLAG_INTERLACE)
 
@@ -354,6 +355,8 @@ meta_monitor_finalize (GObject *object)
   g_list_free_full (priv->modes, (GDestroyNotify) meta_monitor_mode_free);
   g_clear_pointer (&priv->outputs, g_list_free);
   meta_monitor_spec_free (priv->spec);
+
+  G_OBJECT_CLASS (meta_monitor_parent_class)->finalize (object);
 }
 
 static void
@@ -1189,6 +1192,8 @@ meta_monitor_tiled_finalize (GObject *object)
 
   meta_monitor_manager_tiled_monitor_removed (monitor_priv->monitor_manager,
                                               monitor);
+
+  G_OBJECT_CLASS (meta_monitor_tiled_parent_class)->finalize (object);
 }
 
 static void
@@ -1252,8 +1257,8 @@ meta_monitor_mode_spec_equals (MetaMonitorModeSpec *monitor_mode_spec,
 {
   return (monitor_mode_spec->width == other_monitor_mode_spec->width &&
           monitor_mode_spec->height == other_monitor_mode_spec->height &&
-          (monitor_mode_spec->refresh_rate ==
-           other_monitor_mode_spec->refresh_rate) &&
+          ABS (monitor_mode_spec->refresh_rate -
+               other_monitor_mode_spec->refresh_rate) < MAXIMUM_REFRESH_RATE_DIFF &&
           monitor_mode_spec->flags == other_monitor_mode_spec->flags);
 }
 
@@ -1543,6 +1548,14 @@ meta_monitor_calculate_supported_scales (MetaMonitor                *monitor,
           if (scale > 0.0f)
             g_array_append_val (supported_scales, scale);
         }
+    }
+
+  if (supported_scales->len == 0)
+    {
+      float fallback_scale;
+
+      fallback_scale = 1.0;
+      g_array_append_val (supported_scales, fallback_scale);
     }
 
   *n_supported_scales = supported_scales->len;
