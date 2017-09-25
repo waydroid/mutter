@@ -89,10 +89,19 @@ typedef struct
   gboolean      builtin:1;
 } MetaKeyPref;
 
+typedef struct _MetaKeyBindingKeyboardLayout
+{
+  struct xkb_keymap *keymap;
+  xkb_layout_index_t index;
+  xkb_level_index_t n_levels;
+} MetaKeyBindingKeyboardLayout;
+
 typedef struct
 {
-  GHashTable     *key_bindings;
-  GHashTable     *key_bindings_index;
+  MetaBackend *backend;
+
+  GHashTable *key_bindings;
+  GHashTable *key_bindings_index;
   xkb_mod_mask_t ignored_modifier_mask;
   xkb_mod_mask_t hyper_mask;
   xkb_mod_mask_t virtual_hyper_mask;
@@ -106,7 +115,11 @@ typedef struct
   MetaResolvedKeyCombo iso_next_group_combo[2];
   int n_iso_next_group_combos;
 
-  xkb_level_index_t keymap_num_levels;
+  /*
+   * A primary layout, and an optional secondary layout for when the
+   * primary layout does not use the latin alphabet.
+   */
+  MetaKeyBindingKeyboardLayout active_layouts[2];
 
   /* Alt+click button grabs */
   ClutterModifierType window_grab_modifiers;

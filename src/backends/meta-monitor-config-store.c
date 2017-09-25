@@ -1230,9 +1230,10 @@ saved_cb (GObject      *object,
   if (!g_file_replace_contents_finish (G_FILE (object), result, NULL, &error))
     {
       if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-        g_warning ("Saving monitor configuration failed: %s\n", error->message);
-      else
-        g_clear_object (&data->config_store->save_cancellable);
+        {
+          g_warning ("Saving monitor configuration failed: %s\n", error->message);
+          g_clear_object (&data->config_store->save_cancellable);
+        }
 
       g_error_free (error);
     }
@@ -1247,6 +1248,37 @@ saved_cb (GObject      *object,
 }
 
 static void
+meta_monitor_config_store_save_sync (MetaMonitorConfigStore *config_store)
+{
+  GError *error = NULL;
+  GFile *file;
+  GString *buffer;
+
+  if (config_store->custom_write_file)
+    file = config_store->custom_write_file;
+  else
+    file = config_store->user_file;
+
+  buffer = generate_config_xml (config_store);
+
+  if (!g_file_replace_contents (file,
+                                buffer->str, buffer->len,
+                                NULL,
+                                FALSE,
+                                G_FILE_CREATE_REPLACE_DESTINATION,
+                                NULL,
+                                NULL,
+                                &error))
+    {
+      g_warning ("Saving monitor configuration failed: %s\n",
+                 error->message);
+      g_error_free (error);
+    }
+
+  g_string_free (buffer, TRUE);
+}
+
+static void
 meta_monitor_config_store_save (MetaMonitorConfigStore *config_store)
 {
   GString *buffer;
@@ -1258,6 +1290,17 @@ meta_monitor_config_store_save (MetaMonitorConfigStore *config_store)
       g_clear_object (&config_store->save_cancellable);
     }
 
+  /*
+   * Custom write file is only ever used by the test suite, and the test suite
+   * will want to have be able to read back the content immediately, so for
+   * custom write files, do the content replacement synchronously.
+   */
+  if (config_store->custom_write_file)
+    {
+      meta_monitor_config_store_save_sync (config_store);
+      return;
+    }
+
   config_store->save_cancellable = g_cancellable_new ();
 
   buffer = generate_config_xml (config_store);
@@ -1267,31 +1310,6 @@ meta_monitor_config_store_save (MetaMonitorConfigStore *config_store)
     .config_store = g_object_ref (config_store),
     .buffer = buffer
   };
-
-  /*
-   * Custom write file is only ever used by the test suite, and the test suite
-   * will want to have be able to read back the content immediately, so for
-   * custom write files, do the content replacement synchronously.
-   */
-  if (config_store->custom_write_file)
-    {
-      GError *error = NULL;
-
-      if (!g_file_replace_contents (config_store->custom_write_file,
-                                    buffer->str, buffer->len,
-                                    NULL,
-                                    FALSE,
-                                    G_FILE_CREATE_REPLACE_DESTINATION,
-                                    NULL,
-                                    NULL,
-                                    &error))
-        {
-          g_warning ("Saving monitor configuration failed: %s\n",
-                     error->message);
-          g_error_free (error);
-        }
-      return;
-    }
 
   g_file_replace_contents_async (config_store->user_file,
                                  buffer->str, buffer->len,
@@ -1407,12 +1425,22 @@ meta_monitor_config_store_constructed (GObject *object)
     }
 
   g_free (user_file_path);
+
+  G_OBJECT_CLASS (meta_monitor_config_store_parent_class)->constructed (object);
 }
 
 static void
 meta_monitor_config_store_dispose (GObject *object)
 {
   MetaMonitorConfigStore *config_store = META_MONITOR_CONFIG_STORE (object);
+
+  if (config_store->save_cancellable)
+    {
+      g_cancellable_cancel (config_store->save_cancellable);
+      g_clear_object (&config_store->save_cancellable);
+
+      meta_monitor_config_store_save_sync (config_store);
+    }
 
   g_clear_pointer (&config_store->configs, g_hash_table_destroy);
 

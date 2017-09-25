@@ -1,3 +1,9 @@
+mutter (3.26.0+20170925~ea214fb-1) experimental; urgency=medium
+
+  * New upstream git snapshot (LP: #1717272)
+
+ -- Jeremy Bicha <jbicha@debian.org>  Mon, 25 Sep 2017 18:26:10 -0400
+
 mutter (3.26.0-2) experimental; urgency=medium
 
   * debian/patches/src-core-screen.c-Set-_NET_NUMBER_OF_DESKTOPS-in-met.patch:
