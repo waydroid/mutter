@@ -72,8 +72,6 @@ static void prefs_changed_callback (MetaPreference pref,
 
 static void set_desktop_geometry_hint (MetaScreen *screen);
 static void set_desktop_viewport_hint (MetaScreen *screen);
-static void set_number_of_spaces_hint (MetaScreen *screen,
-                                       int         n_spaces);
 
 static void on_monitors_changed (MetaMonitorManager *manager,
                                  MetaScreen         *screen);
@@ -310,6 +308,7 @@ set_supported_hint (MetaScreen *screen)
 
     screen->display->atom__GTK_FRAME_EXTENTS,
     screen->display->atom__GTK_SHOW_WINDOW_MENU,
+    screen->display->atom__GTK_EDGE_CONSTRAINTS,
   };
 
   XChangeProperty (screen->display->xdisplay, screen->xroot,
@@ -773,7 +772,6 @@ meta_screen_new (MetaDisplay *display,
    * so create that required workspace.
    */
   meta_workspace_new (screen);
-  set_number_of_spaces_hint (screen, g_list_length (screen->workspaces));
 
   screen->keys_grabbed = FALSE;
   meta_screen_grab_keys (screen);
@@ -1218,7 +1216,11 @@ update_num_workspaces (MetaScreen *screen,
   g_assert (new_num > 0);
 
   if (g_list_length (screen->workspaces) == (guint) new_num)
-    return;
+    {
+      if (screen->display->display_opening)
+        set_number_of_spaces_hint (screen, new_num);
+      return;
+    }
 
   last_remaining = NULL;
   extras = NULL;
@@ -1413,7 +1415,7 @@ meta_screen_update_tile_preview_timeout (gpointer data)
 
   if (window)
     {
-      switch (window->tile_mode)
+      switch (screen->preview_tile_mode)
         {
           case META_TILE_LEFT:
           case META_TILE_RIGHT:
@@ -1438,7 +1440,7 @@ meta_screen_update_tile_preview_timeout (gpointer data)
       int monitor;
 
       monitor = meta_window_get_current_tile_monitor_number (window);
-      meta_window_get_current_tile_area (window, &tile_rect);
+      meta_window_get_tile_area (window, screen->preview_tile_mode, &tile_rect);
       meta_compositor_show_tile_preview (screen->display->compositor,
                                          window, &tile_rect, monitor);
     }
@@ -1480,7 +1482,9 @@ meta_screen_hide_tile_preview (MetaScreen *screen)
 {
   if (screen->tile_preview_timeout_id > 0)
     g_source_remove (screen->tile_preview_timeout_id);
+  screen->tile_preview_timeout_id = 0;
 
+  screen->preview_tile_mode = META_TILE_NONE;
   meta_compositor_hide_tile_preview (screen->display->compositor);
 }
 

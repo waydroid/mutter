@@ -6,10 +6,10 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: mutter 3.26.0\n"
+"Project-Id-Version: mutter 3.24.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?"
 "product=mutter&keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2017-09-25 18:05-0400\n"
+"POT-Creation-Date: 2017-07-19 21:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -368,39 +368,12 @@ msgid ""
 "screen of the monitor."
 msgstr ""
 
-#: data/org.gnome.mutter.gschema.xml.in:107
-msgid "Enable experimental features"
-msgstr ""
-
-#: data/org.gnome.mutter.gschema.xml.in:108
-msgid ""
-"To enable experimental features, add the feature keyword to the list. "
-"Whether the feature requires restarting the compositor depends on the given "
-"feature. Any experimental feature is not required to still be available, or "
-"configurable. Don’t expect adding anything in this setting to be future "
-"proof. Currently possible keywords: • “scale-monitor-framebuffer” — makes "
-"mutter default to layout logical monitors in a logical pixel coordinate "
-"space, while scaling monitor framebuffers instead of window content, to "
-"manage HiDPI monitors. Does not require a restart. • “remote-desktop” — "
-"enables remote desktop support. To support remote desktop with screen "
-"sharing, “screen-cast” must also be enabled. • “screen-cast” — enables "
-"screen cast support."
-msgstr ""
-
-#: data/org.gnome.mutter.gschema.xml.in:145
+#: data/org.gnome.mutter.gschema.xml.in:120
 msgid "Select window from tab popup"
 msgstr ""
 
-#: data/org.gnome.mutter.gschema.xml.in:150
+#: data/org.gnome.mutter.gschema.xml.in:125
 msgid "Cancel tab popup"
-msgstr ""
-
-#: data/org.gnome.mutter.gschema.xml.in:155
-msgid "Switch monitor configurations"
-msgstr ""
-
-#: data/org.gnome.mutter.gschema.xml.in:160
-msgid "Rotates the built-in monitor configuration"
 msgstr ""
 
 #: data/org.gnome.mutter.wayland.gschema.xml.in:6
@@ -451,14 +424,10 @@ msgstr ""
 msgid "Switch to VT 12"
 msgstr ""
 
-#: data/org.gnome.mutter.wayland.gschema.xml.in:54
-msgid "Re-enable shortcuts"
-msgstr ""
-
 #. TRANSLATORS: This string refers to a button that switches between
 #. * different modes.
 #.
-#: src/backends/meta-input-settings.c:2157
+#: src/backends/meta-input-settings.c:2141
 #, c-format
 msgid "Mode Switch (Group %d)"
 msgstr ""
@@ -466,30 +435,30 @@ msgstr ""
 #. TRANSLATORS: This string refers to an action, cycles drawing tablets'
 #. * mapping through the available outputs.
 #.
-#: src/backends/meta-input-settings.c:2180
+#: src/backends/meta-input-settings.c:2164
 msgid "Switch monitor"
 msgstr ""
 
-#: src/backends/meta-input-settings.c:2182
+#: src/backends/meta-input-settings.c:2166
 msgid "Show on-screen help"
 msgstr ""
 
-#: src/backends/meta-monitor-manager.c:894
+#: src/backends/meta-monitor-manager.c:620
 msgid "Built-in display"
 msgstr ""
 
-#: src/backends/meta-monitor-manager.c:917
+#: src/backends/meta-monitor-manager.c:643
 msgid "Unknown"
 msgstr ""
 
-#: src/backends/meta-monitor-manager.c:919
+#: src/backends/meta-monitor-manager.c:645
 msgid "Unknown Display"
 msgstr ""
 
 #. TRANSLATORS: this is a monitor vendor name, followed by a
 #. * size in inches, like 'Dell 15"'
 #.
-#: src/backends/meta-monitor-manager.c:927
+#: src/backends/meta-monitor-manager.c:653
 #, c-format
 msgid "%s %s"
 msgstr ""
@@ -504,6 +473,30 @@ msgstr ""
 
 #: src/core/bell.c:194
 msgid "Bell event"
+msgstr ""
+
+#. Translators: %s is a window title
+#: src/core/delete.c:127
+#, c-format
+msgid "“%s” is not responding."
+msgstr ""
+
+#: src/core/delete.c:129
+msgid "Application is not responding."
+msgstr ""
+
+#: src/core/delete.c:134
+msgid ""
+"You may choose to wait a short while for it to continue or force the "
+"application to quit entirely."
+msgstr ""
+
+#: src/core/delete.c:141
+msgid "_Force Quit"
+msgstr ""
+
+#: src/core/delete.c:141
+msgid "_Wait"
 msgstr ""
 
 #: src/core/display.c:608
@@ -547,30 +540,6 @@ msgstr ""
 msgid "Run as a full display server, rather than nested"
 msgstr ""
 
-#. Translators: %s is a window title
-#: src/core/meta-close-dialog-default.c:147
-#, c-format
-msgid "“%s” is not responding."
-msgstr ""
-
-#: src/core/meta-close-dialog-default.c:149
-msgid "Application is not responding."
-msgstr ""
-
-#: src/core/meta-close-dialog-default.c:154
-msgid ""
-"You may choose to wait a short while for it to continue or force the "
-"application to quit entirely."
-msgstr ""
-
-#: src/core/meta-close-dialog-default.c:161
-msgid "_Force Quit"
-msgstr ""
-
-#: src/core/meta-close-dialog-default.c:161
-msgid "_Wait"
-msgstr ""
-
 #: src/core/mutter.c:39
 #, c-format
 msgid ""
@@ -594,14 +563,14 @@ msgstr ""
 msgid "Workspace %d"
 msgstr ""
 
-#: src/core/screen.c:582
+#: src/core/screen.c:580
 #, c-format
 msgid ""
 "Display “%s” already has a window manager; try using the --replace option to "
 "replace the current window manager."
 msgstr ""
 
-#: src/core/screen.c:667
+#: src/core/screen.c:665
 #, c-format
 msgid "Screen %d on display “%s” is invalid\n"
 msgstr ""

@@ -1,3 +1,10 @@
+mutter (3.26.1-1) experimental; urgency=medium
+
+  * New upstream release
+  * Bump Standards-Version to 4.1.1
+
+ -- Jeremy Bicha <jbicha@debian.org>  Wed, 04 Oct 2017 17:42:30 -0400
+
 mutter (3.26.0+20170925~ea214fb-1) experimental; urgency=medium
 
   * New upstream git snapshot (LP: #1717272)

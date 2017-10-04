@@ -902,6 +902,31 @@ update_net_frame_extents (MetaWindow *window)
   meta_error_trap_pop (window->display);
 }
 
+static void
+update_gtk_edge_constraints (MetaWindow *window)
+{
+  MetaEdgeConstraint *constraints = window->edge_constraints;
+  unsigned long data[1];
+
+  /* Edge constraints */
+  data[0] = (constraints[0] != META_EDGE_CONSTRAINT_NONE ? 1 : 0)    << 0 |
+            (constraints[0] != META_EDGE_CONSTRAINT_MONITOR ? 1 : 0) << 1 |
+            (constraints[1] != META_EDGE_CONSTRAINT_NONE ? 1 : 0)    << 2 |
+            (constraints[1] != META_EDGE_CONSTRAINT_MONITOR ? 1 : 0) << 3 |
+            (constraints[2] != META_EDGE_CONSTRAINT_NONE ? 1 : 0)    << 4 |
+            (constraints[2] != META_EDGE_CONSTRAINT_MONITOR ? 1 : 0) << 5 |
+            (constraints[3] != META_EDGE_CONSTRAINT_NONE ? 1 : 0)    << 6 |
+            (constraints[3] != META_EDGE_CONSTRAINT_MONITOR ? 1 : 0) << 7;
+
+  meta_verbose ("Setting _GTK_EDGE_CONSTRAINTS to %lu\n", data[0]);
+
+  XChangeProperty (window->display->xdisplay,
+                   window->xwindow,
+                   window->display->atom__GTK_EDGE_CONSTRAINTS,
+                   XA_CARDINAL, 32, PropModeReplace,
+                   (guchar*) data, 1);
+}
+
 static gboolean
 sync_request_timeout (gpointer data)
 {
@@ -1259,6 +1284,8 @@ meta_window_x11_move_resize_internal (MetaWindow                *window,
     *result |= META_MOVE_RESIZE_RESULT_MOVED;
   if (need_resize_client || need_resize_frame)
     *result |= META_MOVE_RESIZE_RESULT_RESIZED;
+
+  update_gtk_edge_constraints (window);
 }
 
 static gboolean
@@ -1670,6 +1697,9 @@ meta_window_x11_set_net_wm_state (MetaWindow *window)
           meta_error_trap_pop (window->display);
         }
     }
+
+  /* Edge constraints */
+  update_gtk_edge_constraints (window);
 }
 
 static cairo_region_t *
@@ -2092,6 +2122,32 @@ meta_window_move_resize_request (MetaWindow *window,
     }
 }
 
+static void
+restack_window (MetaWindow *window,
+                MetaWindow *sibling,
+                int         direction)
+{
+ switch (direction)
+   {
+   case Above:
+     if (sibling)
+       meta_window_stack_just_above (window, sibling);
+     else
+       meta_window_raise (window);
+     break;
+   case Below:
+     if (sibling)
+       meta_window_stack_just_below (window, sibling);
+     else
+       meta_window_lower (window);
+     break;
+   case TopIf:
+   case BottomIf:
+   case Opposite:
+     break;
+   }
+}
+
 gboolean
 meta_window_x11_configure_request (MetaWindow *window,
                                    XEvent     *event)
@@ -2125,10 +2181,7 @@ meta_window_x11_configure_request (MetaWindow *window,
    * the stack looks).
    *
    * I'm pretty sure no interesting client uses TopIf, BottomIf, or
-   * Opposite anyway, so the only possible missing thing is
-   * Above/Below with a sibling set. For now we just pretend there's
-   * never a sibling set and always do the full raise/lower instead of
-   * the raise-just-above/below-sibling.
+   * Opposite anyway.
    */
   if (event->xconfigurerequest.value_mask & CWStackMode)
     {
@@ -2160,19 +2213,23 @@ meta_window_x11_configure_request (MetaWindow *window,
         }
       else
         {
-          switch (event->xconfigurerequest.detail)
+          MetaWindow *sibling = NULL;
+          /* Handle Above/Below with a sibling set */
+          if (event->xconfigurerequest.above != None)
             {
-            case Above:
-              meta_window_raise (window);
-              break;
-            case Below:
-              meta_window_lower (window);
-              break;
-            case TopIf:
-            case BottomIf:
-            case Opposite:
-              break;
+              MetaDisplay *display;
+
+              display = meta_window_get_display (window);
+              sibling = meta_display_lookup_x_window (display,
+                                                      event->xconfigurerequest.above);
+              if (sibling == NULL)
+                return TRUE;
+
+              meta_topic (META_DEBUG_STACK,
+                      "xconfigure stacking request from window %s sibling %s stackmode %d\n",
+                      window->desc, sibling->desc, event->xconfigurerequest.detail);
             }
+          restack_window (window, sibling, event->xconfigurerequest.detail);
         }
     }
 
@@ -2243,6 +2300,30 @@ query_pressed_buttons (MetaWindow *window)
     button |= 1 << 3;
 
   return button;
+}
+
+static void
+handle_net_restack_window (MetaDisplay *display,
+                           XEvent      *event)
+{
+  MetaWindow *window, *sibling = NULL;
+
+  /* Ignore if this does not come from a pager, see the WM spec
+   */
+  if (event->xclient.data.l[0] != 2)
+    return;
+
+  window = meta_display_lookup_x_window (display,
+                                         event->xclient.window);
+
+  if (window)
+    {
+      if (event->xclient.data.l[1])
+        sibling = meta_display_lookup_x_window (display,
+                                                event->xclient.data.l[1]);
+
+      restack_window (window, sibling, event->xclient.data.l[2]);
+    }
 }
 
 gboolean
@@ -2727,6 +2808,11 @@ meta_window_x11_client_message (MetaWindow *window,
       y = event->xclient.data.l[2];
 
       meta_window_show_menu (window, META_WINDOW_MENU_WM, x, y);
+    }
+  else if (event->xclient.message_type ==
+           display->atom__NET_RESTACK_WINDOW)
+    {
+      handle_net_restack_window (display, event);
     }
 
   return FALSE;
