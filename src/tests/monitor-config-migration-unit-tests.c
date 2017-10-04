@@ -106,6 +106,18 @@ meta_test_monitor_config_migration_first_rotated (void)
   test_migration ("first-rotated-old.xml", "first-rotated-new.xml");
 }
 
+static void
+meta_test_monitor_config_migration_oneoff (void)
+{
+  test_migration ("oneoff-old.xml", "oneoff-new.xml");
+}
+
+static void
+meta_test_monitor_config_migration_wiggle (void)
+{
+  test_migration ("wiggle-old.xml", "wiggle-new.xml");
+}
+
 void
 init_monitor_config_migration_tests (void)
 {
@@ -117,4 +129,8 @@ init_monitor_config_migration_tests (void)
                    meta_test_monitor_config_migration_tiled);
   g_test_add_func ("/backends/monitor-config-migration/first-rotated",
                    meta_test_monitor_config_migration_first_rotated);
+  g_test_add_func ("/backends/monitor-config-migration/oneoff",
+                   meta_test_monitor_config_migration_oneoff);
+  g_test_add_func ("/backends/monitor-config-migration/wiggle",
+                   meta_test_monitor_config_migration_wiggle);
 }

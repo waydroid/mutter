@@ -129,6 +129,13 @@ typedef struct _MetaPlacementRule
   int height;
 } MetaPlacementRule;
 
+typedef enum
+{
+  META_EDGE_CONSTRAINT_NONE    = 0,
+  META_EDGE_CONSTRAINT_WINDOW  = 1,
+  META_EDGE_CONSTRAINT_MONITOR = 2,
+} MetaEdgeConstraint;
+
 struct _MetaWindow
 {
   GObject parent_instance;
@@ -164,7 +171,7 @@ struct _MetaWindow
 
   char *startup_id;
   char *mutter_hints;
-  char *flatpak_id;
+  char *sandboxed_app_id;
   char *gtk_theme_variant;
   char *gtk_application_id;
   char *gtk_unique_bus_name;
@@ -199,14 +206,21 @@ struct _MetaWindow
   guint maximize_vertically_after_placement : 1;
   guint minimize_after_placement : 1;
 
-  /* The current or requested tile mode. If maximized_vertically is true,
-   * this is the current mode. If not, it is the mode which will be
-   * requested after the window grab is released */
+  /* The current tile mode */
   guint tile_mode : 2;
   /* The last "full" maximized/unmaximized state. We need to keep track of
    * that to toggle between normal/tiled or maximized/tiled states. */
   guint saved_maximize : 1;
   int tile_monitor_number;
+
+  /* 0 - top
+   * 1 - right
+   * 2 - bottom
+   * 3 - left */
+  MetaEdgeConstraint edge_constraints[4];
+
+  double tile_hfraction;
+
   int preferred_output_winsys_id;
 
   /* Whether we're shaded */
@@ -559,7 +573,7 @@ struct _MetaWindowClass
 #define META_WINDOW_TILED_MAXIMIZED(w)(META_WINDOW_MAXIMIZED(w) && \
                                        (w)->tile_mode == META_TILE_MAXIMIZED)
 #define META_WINDOW_ALLOWS_MOVE(w)     ((w)->has_move_func && !(w)->fullscreen)
-#define META_WINDOW_ALLOWS_RESIZE_EXCEPT_HINTS(w)   ((w)->has_resize_func && !META_WINDOW_MAXIMIZED (w) && !META_WINDOW_TILED_SIDE_BY_SIDE(w) && !(w)->fullscreen && !(w)->shaded)
+#define META_WINDOW_ALLOWS_RESIZE_EXCEPT_HINTS(w)   ((w)->has_resize_func && !META_WINDOW_MAXIMIZED (w) && !(w)->fullscreen && !(w)->shaded)
 #define META_WINDOW_ALLOWS_RESIZE(w)   (META_WINDOW_ALLOWS_RESIZE_EXCEPT_HINTS (w) &&                \
                                         (((w)->size_hints.min_width < (w)->size_hints.max_width) ||  \
                                          ((w)->size_hints.min_height < (w)->size_hints.max_height)))
@@ -579,7 +593,12 @@ void        meta_window_unmanage           (MetaWindow  *window,
                                             guint32      timestamp);
 void        meta_window_queue              (MetaWindow  *window,
                                             guint queuebits);
-void        meta_window_tile               (MetaWindow        *window);
+void        meta_window_tile               (MetaWindow        *window,
+                                            MetaTileMode       mode);
+void        meta_window_restore_tile       (MetaWindow        *window,
+                                            MetaTileMode       mode,
+                                            int                width,
+                                            int                height);
 void        meta_window_maximize_internal  (MetaWindow        *window,
                                             MetaMaximizeFlags  directions,
                                             MetaRectangle     *saved_rect);
@@ -648,8 +667,9 @@ void meta_window_get_work_area_for_logical_monitor (MetaWindow         *window,
                                                     MetaRectangle      *area);
 
 int meta_window_get_current_tile_monitor_number (MetaWindow *window);
-void meta_window_get_current_tile_area         (MetaWindow    *window,
-                                                MetaRectangle *tile_area);
+void meta_window_get_tile_area                  (MetaWindow    *window,
+                                                 MetaTileMode   mode,
+                                                 MetaRectangle *tile_area);
 
 
 gboolean meta_window_same_application (MetaWindow *window,
@@ -681,6 +701,9 @@ void meta_window_frame_size_changed (MetaWindow *window);
 
 void meta_window_stack_just_below (MetaWindow *window,
                                    MetaWindow *below_this_one);
+
+void meta_window_stack_just_above (MetaWindow *window,
+                                   MetaWindow *above_this_one);
 
 void meta_window_set_user_time (MetaWindow *window,
                                 guint32     timestamp);
