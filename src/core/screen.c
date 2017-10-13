@@ -73,8 +73,10 @@ static void prefs_changed_callback (MetaPreference pref,
 static void set_desktop_geometry_hint (MetaScreen *screen);
 static void set_desktop_viewport_hint (MetaScreen *screen);
 
-static void on_monitors_changed (MetaMonitorManager *manager,
-                                 MetaScreen         *screen);
+static void on_monitors_changed_internal (MetaMonitorManager *manager,
+                                          MetaScreen         *screen);
+static void on_monitors_changed          (MetaMonitorManager *manager,
+                                          MetaScreen         *screen);
 
 enum
 {
@@ -710,6 +712,8 @@ meta_screen_new (MetaDisplay *display,
   screen->rect.x = screen->rect.y = 0;
 
   manager = meta_monitor_manager_get ();
+  g_signal_connect (manager, "monitors-changed-internal",
+                    G_CALLBACK (on_monitors_changed_internal), screen);
   g_signal_connect (manager, "monitors-changed",
                     G_CALLBACK (on_monitors_changed), screen);
 
@@ -2266,12 +2270,9 @@ meta_screen_resize_func (MetaWindow *window,
 }
 
 static void
-on_monitors_changed (MetaMonitorManager *manager,
-                     MetaScreen         *screen)
+on_monitors_changed_internal (MetaMonitorManager *manager,
+                              MetaScreen         *screen)
 {
-  MetaBackend *backend;
-  MetaCursorRenderer *cursor_renderer;
-
   meta_monitor_manager_get_screen_size (manager,
                                         &screen->rect.width,
                                         &screen->rect.height);
@@ -2302,11 +2303,13 @@ on_monitors_changed (MetaMonitorManager *manager,
   meta_screen_foreach_window (screen, META_LIST_DEFAULT, meta_screen_resize_func, 0);
 
   meta_screen_queue_check_fullscreen (screen);
+}
 
-  backend = meta_get_backend ();
-  cursor_renderer = meta_backend_get_cursor_renderer (backend);
-  meta_cursor_renderer_force_update (cursor_renderer);
-
+static void
+on_monitors_changed (MetaMonitorManager *manager,
+                     MetaScreen         *screen)
+{
+  /* Inform the external world about what has happened */
   g_signal_emit (screen, screen_signals[MONITORS_CHANGED], 0);
 }
 

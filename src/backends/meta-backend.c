@@ -197,7 +197,7 @@ meta_backend_monitors_changed (MetaBackend *backend)
         }
     }
 
-  meta_settings_update_ui_scaling_factor (priv->settings);
+  meta_cursor_renderer_force_update (priv->cursor_renderer);
 }
 
 void
