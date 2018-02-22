@@ -26,6 +26,7 @@
 #include "backends/meta-monitor-config-migration.h"
 #include "backends/meta-monitor-config-store.h"
 #include "backends/meta-monitor-manager-private.h"
+#include "backends/meta-output.h"
 #include "core/boxes-private.h"
 
 #define CONFIG_HISTORY_MAX_SIZE 3
@@ -151,11 +152,10 @@ assign_monitor_crtc (MetaMonitor         *monitor,
     }
 
   transform = data->logical_monitor_config->transform;
-  if (meta_monitor_manager_is_transform_handled (data->monitor_manager,
-                                                 crtc,
-                                                 transform))
-    crtc_transform = transform;
-  else
+  crtc_transform = meta_monitor_logical_to_crtc_transform (monitor, transform);
+  if (!meta_monitor_manager_is_transform_handled (data->monitor_manager,
+                                                  crtc,
+                                                  crtc_transform))
     crtc_transform = META_MONITOR_TRANSFORM_NORMAL;
 
   meta_monitor_calculate_crtc_pos (monitor, mode, output, crtc_transform,
@@ -326,8 +326,8 @@ meta_monitor_config_manager_assign (MetaMonitorManager *manager,
   return TRUE;
 }
 
-static MetaMonitorsConfigKey *
-create_key_for_current_state (MetaMonitorManager *monitor_manager)
+MetaMonitorsConfigKey *
+meta_create_monitors_config_key_for_current_state (MetaMonitorManager *monitor_manager)
 {
   MetaMonitorsConfigKey *config_key;
   GList *l;
@@ -369,7 +369,8 @@ meta_monitor_config_manager_get_stored (MetaMonitorConfigManager *config_manager
   MetaMonitorsConfig *config;
   GError *error = NULL;
 
-  config_key = create_key_for_current_state (monitor_manager);
+  config_key =
+    meta_create_monitors_config_key_for_current_state (monitor_manager);
   if (!config_key)
     return NULL;
 
@@ -753,6 +754,20 @@ create_for_builtin_display_rotation (MetaMonitorConfigManager *config_manager,
 
   if (rotate)
     transform = (current_logical_monitor_config->transform + 1) % META_MONITOR_TRANSFORM_FLIPPED;
+  else
+    {
+      /*
+       * The transform coming from the accelerometer should be applied to
+       * the crtc as is, without taking panel-orientation into account, this
+       * is done so that non panel-orientation aware desktop environments do the
+       * right thing. Mutter corrects for panel-orientation when applying the
+       * transform from a logical-monitor-config, so we must convert here.
+       */
+      MetaMonitor *panel =
+        meta_monitor_manager_get_laptop_panel (config_manager->monitor_manager);
+
+      transform = meta_monitor_crtc_to_logical_transform (panel, transform);
+    }
 
   if (current_logical_monitor_config->transform == transform)
     return NULL;
@@ -1236,6 +1251,10 @@ meta_monitors_config_new (MetaMonitorManager           *monitor_manager,
     {
       MetaMonitor *monitor = l->data;
       MetaMonitorSpec *monitor_spec;
+
+      if (meta_monitor_manager_is_lid_closed (monitor_manager) &&
+          meta_monitor_is_laptop_panel (monitor))
+        continue;
 
       monitor_spec = meta_monitor_get_spec (monitor);
       if (meta_logical_monitor_configs_have_monitor (logical_monitor_configs,

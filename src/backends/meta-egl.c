@@ -160,11 +160,11 @@ set_egl_error (GError **error)
                        error_str);
 }
 
-static gboolean
-extensions_string_has_extensions_valist (const char *extensions_str,
-                                         char     ***missing_extensions,
-                                         char       *first_extension,
-                                         va_list     var_args)
+gboolean
+meta_extensions_string_has_extensions_valist (const char *extensions_str,
+                                              char     ***missing_extensions,
+                                              char       *first_extension,
+                                              va_list     var_args)
 {
   char **extensions;
   char *extension;
@@ -222,10 +222,11 @@ meta_egl_has_extensions (MetaEgl   *egl,
     }
 
   va_start (var_args, first_extension);
-  has_extensions = extensions_string_has_extensions_valist (extensions_str,
-                                                            missing_extensions,
-                                                            first_extension,
-                                                            var_args);
+  has_extensions =
+    meta_extensions_string_has_extensions_valist (extensions_str,
+                                                  missing_extensions,
+                                                  first_extension,
+                                                  var_args);
   va_end (var_args);
 
   return has_extensions;
@@ -243,6 +244,25 @@ meta_egl_initialize (MetaEgl   *egl,
     }
 
   return TRUE;
+}
+
+gpointer
+meta_egl_get_proc_address (MetaEgl    *egl,
+                           const char *procname,
+                           GError    **error)
+{
+  gpointer func;
+
+  func = (gpointer) eglGetProcAddress (procname);
+  if (!func)
+    {
+      g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                   "Could not load symbol '%s': Not found",
+                   procname);
+      return NULL;
+    }
+
+  return func;
 }
 
 gboolean
@@ -290,6 +310,27 @@ meta_egl_choose_config (MetaEgl      *egl,
 }
 
 EGLSurface
+meta_egl_create_window_surface (MetaEgl            *egl,
+                                EGLDisplay          display,
+                                EGLConfig           config,
+                                EGLNativeWindowType native_window_type,
+                                const EGLint       *attrib_list,
+                                GError            **error)
+{
+  EGLSurface surface;
+
+  surface = eglCreateWindowSurface (display, config,
+                                    native_window_type, attrib_list);
+  if (surface == EGL_NO_SURFACE)
+    {
+      set_egl_error (error);
+      return EGL_NO_SURFACE;
+    }
+
+  return surface;
+}
+
+EGLSurface
 meta_egl_create_pbuffer_surface (MetaEgl      *egl,
                                  EGLDisplay    display,
                                  EGLConfig     config,
@@ -306,6 +347,21 @@ meta_egl_create_pbuffer_surface (MetaEgl      *egl,
     }
 
   return surface;
+}
+
+gboolean
+meta_egl_destroy_surface (MetaEgl   *egl,
+                          EGLDisplay display,
+                          EGLSurface surface,
+                          GError   **error)
+{
+  if (!eglDestroySurface (display, surface))
+    {
+      set_egl_error (error);
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 static gboolean
@@ -352,6 +408,55 @@ meta_egl_get_platform_display (MetaEgl      *egl,
   return display;
 }
 
+gboolean
+meta_egl_terminate (MetaEgl   *egl,
+                    EGLDisplay display,
+                    GError   **error)
+{
+  if (!eglTerminate (display))
+    {
+      set_egl_error (error);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+EGLContext
+meta_egl_create_context (MetaEgl      *egl,
+                         EGLDisplay    display,
+                         EGLConfig     config,
+                         EGLContext    share_context,
+                         const EGLint *attrib_list,
+                         GError      **error)
+{
+  EGLContext context;
+
+  context = eglCreateContext (display, config, share_context, attrib_list);
+  if (context == EGL_NO_CONTEXT)
+    {
+      set_egl_error (error);
+      return EGL_NO_CONTEXT;
+    }
+
+  return context;
+}
+
+gboolean
+meta_egl_destroy_context (MetaEgl   *egl,
+                          EGLDisplay display,
+                          EGLContext context,
+                          GError   **error)
+{
+  if (!eglDestroyContext (display, context))
+    {
+      set_egl_error (error);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
 EGLImageKHR
 meta_egl_create_image (MetaEgl        *egl,
                        EGLDisplay      display,
@@ -387,6 +492,38 @@ meta_egl_destroy_image (MetaEgl    *egl,
     return FALSE;
 
   if (!egl->eglDestroyImageKHR (display, image))
+    {
+      set_egl_error (error);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+gboolean
+meta_egl_make_current (MetaEgl   *egl,
+                       EGLDisplay display,
+                       EGLSurface draw,
+                       EGLSurface read,
+                       EGLContext context,
+                       GError   **error)
+{
+  if (!eglMakeCurrent (display, draw, read, context))
+    {
+      set_egl_error (error);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+gboolean
+meta_egl_swap_buffers (MetaEgl   *egl,
+                       EGLDisplay display,
+                       EGLSurface surface,
+                       GError   **error)
+{
+  if (!eglSwapBuffers (display, surface))
     {
       set_egl_error (error);
       return FALSE;
@@ -479,10 +616,11 @@ meta_egl_egl_device_has_extensions (MetaEgl     *egl,
     }
 
   va_start (var_args, first_extension);
-  has_extensions = extensions_string_has_extensions_valist (extensions_str,
-                                                            missing_extensions,
-                                                            first_extension,
-                                                            var_args);
+  has_extensions =
+    meta_extensions_string_has_extensions_valist (extensions_str,
+                                                  missing_extensions,
+                                                  first_extension,
+                                                  var_args);
   va_end (var_args);
 
   return has_extensions;

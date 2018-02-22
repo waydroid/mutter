@@ -88,6 +88,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@HAVE_WAYLAND_TRUE@am__append_1 = \
+@HAVE_WAYLAND_TRUE@        50-mutter-wayland.xml
+
 subdir = data
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
@@ -281,6 +284,7 @@ XGETTEXT = @XGETTEXT@
 XGETTEXT_015 = @XGETTEXT_015@
 XGETTEXT_EXTRA_OPTIONS = @XGETTEXT_EXTRA_OPTIONS@
 XMKMF = @XMKMF@
+XWAYLAND_GRAB_DEFAULT_ACCESS_RULES = @XWAYLAND_GRAB_DEFAULT_ACCESS_RULES@
 XWAYLAND_PATH = @XWAYLAND_PATH@
 X_CFLAGS = @X_CFLAGS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
@@ -347,11 +351,8 @@ desktopfiles_in_files = \
 desktopfilesdir = $(datadir)/applications
 desktopfiles_DATA = $(desktopfiles_in_files:.desktop.in=.desktop)
 xmldir = $(GNOME_KEYBINDINGS_KEYSDIR)
-xml_DATA = \
-        50-mutter-navigation.xml \
-        50-mutter-system.xml \
-        50-mutter-windows.xml
-
+xml_DATA = 50-mutter-navigation.xml 50-mutter-system.xml \
+	50-mutter-windows.xml $(am__append_1)
 gschema_in_files = \
 	org.gnome.mutter.gschema.xml.in	\
 	org.gnome.mutter.wayland.gschema.xml.in
@@ -637,6 +638,7 @@ uninstall-am: uninstall-convertDATA uninstall-desktopfilesDATA \
 
 %.gschema.xml: %.gschema.xml.in Makefile
 	$(AM_V_GEN) sed -e 's|@GETTEXT_DOMAIN[@]|$(GETTEXT_PACKAGE)|g' \
+	                -e 's|@XWAYLAND_GRAB_DEFAULT_ACCESS_RULES[@]|$(XWAYLAND_GRAB_DEFAULT_ACCESS_RULES)|g' \
 	$< > $@ || rm $@
 
 @GSETTINGS_RULES@

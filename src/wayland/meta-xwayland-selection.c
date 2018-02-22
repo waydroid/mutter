@@ -689,9 +689,8 @@ wayland_data_read_cb (GObject      *object,
   GError *error = NULL;
   gsize bytes_read;
 
-  bytes_read = g_input_stream_read_finish (G_INPUT_STREAM (object),
-                                           res, &error);
-  if (error)
+  if (!g_input_stream_read_all_finish (G_INPUT_STREAM (object),
+                                       res, &bytes_read, &error))
     {
       if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
         {
@@ -762,10 +761,10 @@ wayland_selection_data_read (MetaSelectionBridge *selection)
 {
   WaylandSelectionData *data = selection->wayland_selection;
 
-  g_input_stream_read_async (data->stream, data->buffer,
-                             INCR_CHUNK_SIZE, G_PRIORITY_DEFAULT,
-                             data->cancellable,
-                             wayland_data_read_cb, selection);
+  g_input_stream_read_all_async (data->stream, data->buffer,
+                                 INCR_CHUNK_SIZE, G_PRIORITY_DEFAULT,
+                                 data->cancellable,
+                                 wayland_data_read_cb, selection);
 }
 
 static void
@@ -1239,7 +1238,7 @@ handle_incr_chunk (MetaWaylandCompositor *compositor,
 {
   if (selection->x11_selection &&
       selection->x11_selection->incr &&
-      event->window == selection->owner &&
+      event->window == selection->window &&
       event->state == PropertyNewValue &&
       event->atom == gdk_x11_get_xatom_by_name ("_META_SELECTION"))
     {
@@ -1249,8 +1248,8 @@ handle_incr_chunk (MetaWaylandCompositor *compositor,
     }
   else if (selection->wayland_selection &&
            selection->wayland_selection->incr &&
-           event->window == selection->window &&
            event->state == PropertyDelete &&
+           event->window == selection->wayland_selection->request_event.requestor &&
            event->atom == selection->wayland_selection->request_event.property)
     {
       /* Wayland to X11 */

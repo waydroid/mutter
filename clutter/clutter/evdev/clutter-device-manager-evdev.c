@@ -432,7 +432,7 @@ notify_touch_event (ClutterInputDevice *input_device,
                                                     &event->touch.y);
 
   /* "NULL" sequences are special cased in clutter */
-  event->touch.sequence = GINT_TO_POINTER (slot + 1);
+  event->touch.sequence = GINT_TO_POINTER (MAX (1, slot + 1));
   _clutter_xkb_translate_state (event, seat->xkb, seat->button_state);
 
   if (evtype == CLUTTER_TOUCH_BEGIN ||
@@ -1459,6 +1459,8 @@ process_device_event (ClutterDeviceManagerEvdev *manager_evdev,
         slot = libinput_event_touch_get_slot (touch_event);
         time_us = libinput_event_touch_get_time_usec (touch_event);
         touch_state = clutter_seat_evdev_get_touch (seat, slot);
+        if (!touch_state)
+          break;
 
         notify_touch_event (device, CLUTTER_TOUCH_END, time_us, slot,
 			    touch_state->coords.x, touch_state->coords.y);
@@ -1497,6 +1499,9 @@ process_device_event (ClutterDeviceManagerEvdev *manager_evdev,
                                                     stage_height);
 
         touch_state = clutter_seat_evdev_get_touch (seat, slot);
+        if (!touch_state)
+          break;
+
         touch_state->coords.x = x;
         touch_state->coords.y = y;
 
@@ -1923,6 +1928,18 @@ clutter_device_manager_evdev_compress_motion (ClutterDeviceManager *device_mange
                                             dy_unaccel + dst_dy_unaccel);
 }
 
+static void
+clutter_device_manager_evdev_apply_kbd_a11y_settings (ClutterDeviceManager   *device_manager,
+                                                      ClutterKbdA11ySettings *settings)
+{
+  ClutterInputDevice *device;
+
+  device = clutter_device_manager_evdev_get_core_device (device_manager, CLUTTER_KEYBOARD_DEVICE);
+  if (device)
+    clutter_input_device_evdev_apply_kbd_a11y_settings (CLUTTER_INPUT_DEVICE_EVDEV (device),
+                                                        settings);
+}
+
 /*
  * GObject implementation
  */
@@ -2065,6 +2082,7 @@ clutter_device_manager_evdev_class_init (ClutterDeviceManagerEvdevClass *klass)
   manager_class->get_device = clutter_device_manager_evdev_get_device;
   manager_class->create_virtual_device = clutter_device_manager_evdev_create_virtual_device;
   manager_class->compress_motion = clutter_device_manager_evdev_compress_motion;
+  manager_class->apply_kbd_a11y_settings = clutter_device_manager_evdev_apply_kbd_a11y_settings;
 }
 
 static void
@@ -2185,7 +2203,7 @@ _clutter_device_manager_evdev_acquire_device_id (ClutterDeviceManagerEvdev *mana
 
   first = g_list_first (priv->free_device_ids);
   next_id = GPOINTER_TO_INT (first->data);
-  priv->free_device_ids = g_list_remove_link (priv->free_device_ids, first);
+  priv->free_device_ids = g_list_delete_link (priv->free_device_ids, first);
 
   return next_id;
 }
@@ -2304,7 +2322,7 @@ clutter_evdev_update_xkb_state (ClutterDeviceManagerEvdev *manager_evdev)
                              0, /* depressed */
                              latched_mods,
                              locked_mods,
-                             0, 0, 0);
+                             0, 0, seat->layout_idx);
 
       seat->caps_lock_led = xkb_keymap_led_get_index (priv->keymap, XKB_LED_NAME_CAPS);
       seat->num_lock_led = xkb_keymap_led_get_index (priv->keymap, XKB_LED_NAME_NUM);
@@ -2452,6 +2470,7 @@ clutter_evdev_set_keyboard_layout_index (ClutterDeviceManager *evdev,
   xkb_mod_mask_t latched_mods;
   xkb_mod_mask_t locked_mods;
   struct xkb_state *state;
+  GSList *l;
 
   g_return_if_fail (CLUTTER_IS_DEVICE_MANAGER_EVDEV (evdev));
 
@@ -2463,6 +2482,12 @@ clutter_evdev_set_keyboard_layout_index (ClutterDeviceManager *evdev,
   locked_mods = xkb_state_serialize_mods (state, XKB_STATE_MODS_LOCKED);
 
   xkb_state_update_mask (state, depressed_mods, latched_mods, locked_mods, 0, 0, idx);
+  for (l = manager_evdev->priv->seats; l; l = l->next)
+    {
+      ClutterSeatEvdev *seat = l->data;
+
+      seat->layout_idx = idx;
+    }
 }
 
 /**
@@ -2472,12 +2497,9 @@ xkb_layout_index_t
 clutter_evdev_get_keyboard_layout_index (ClutterDeviceManager *evdev)
 {
   ClutterDeviceManagerEvdev *manager_evdev;
-  struct xkb_state *state;
 
   manager_evdev = CLUTTER_DEVICE_MANAGER_EVDEV (evdev);
-  state = manager_evdev->priv->main_seat->xkb;
-
-  return xkb_state_serialize_layout (state, XKB_STATE_LAYOUT_LOCKED);
+  return manager_evdev->priv->main_seat->layout_idx;
 }
 
 /**

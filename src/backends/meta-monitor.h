@@ -24,7 +24,9 @@
 
 #include <glib-object.h>
 
+#include "backends/meta-crtc.h"
 #include "backends/meta-monitor-manager-private.h"
+#include "backends/meta-output.h"
 
 typedef struct _MetaMonitorSpec
 {
@@ -93,13 +95,15 @@ G_DECLARE_FINAL_TYPE (MetaMonitorTiled, meta_monitor_tiled,
                       META, MONITOR_TILED,
                       MetaMonitor)
 
-MetaMonitorTiled * meta_monitor_tiled_new (MetaMonitorManager *monitor_manager,
-                                           MetaOutput         *main_output);
+MetaMonitorTiled * meta_monitor_tiled_new (MetaGpu    *gpu,
+                                           MetaOutput *output);
 
-MetaMonitorNormal * meta_monitor_normal_new (MetaMonitorManager *monitor_manager,
-                                             MetaOutput         *output);
+MetaMonitorNormal * meta_monitor_normal_new (MetaGpu    *gpu,
+                                             MetaOutput *output);
 
 MetaMonitorSpec * meta_monitor_get_spec (MetaMonitor *monitor);
+
+MetaGpu * meta_monitor_get_gpu (MetaMonitor *monitor);
 
 gboolean meta_monitor_is_active (MetaMonitor *monitor);
 
@@ -140,6 +144,16 @@ const char * meta_monitor_get_product (MetaMonitor *monitor);
 const char * meta_monitor_get_serial (MetaMonitor *monitor);
 
 MetaConnectorType meta_monitor_get_connector_type (MetaMonitor *monitor);
+
+/* This function returns the transform corrected for the panel orientation */
+MetaMonitorTransform meta_monitor_logical_to_crtc_transform (MetaMonitor          *monitor,
+                                                             MetaMonitorTransform  transform);
+/*
+ * This function converts a transform corrected for the panel orientation
+ * to its logical (user-visible) transform.
+ */
+MetaMonitorTransform meta_monitor_crtc_to_logical_transform (MetaMonitor          *monitor,
+                                                             MetaMonitorTransform  transform);
 
 uint32_t meta_monitor_tiled_get_tile_group_id (MetaMonitorTiled *monitor_tiled);
 

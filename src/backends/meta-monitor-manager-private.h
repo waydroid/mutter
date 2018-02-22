@@ -60,6 +60,8 @@ typedef struct _MetaLogicalMonitor MetaLogicalMonitor;
 
 typedef struct _MetaMonitorMode MetaMonitorMode;
 
+typedef struct _MetaGpu MetaGpu;
+
 typedef struct _MetaCrtc MetaCrtc;
 typedef struct _MetaOutput MetaOutput;
 typedef struct _MetaCrtcMode MetaCrtcMode;
@@ -105,156 +107,6 @@ typedef enum
   META_MONITOR_TRANSFORM_FLIPPED_270,
 } MetaMonitorTransform;
 
-/* This matches the values in drm_mode.h */
-typedef enum
-{
-  META_CONNECTOR_TYPE_Unknown = 0,
-  META_CONNECTOR_TYPE_VGA = 1,
-  META_CONNECTOR_TYPE_DVII = 2,
-  META_CONNECTOR_TYPE_DVID = 3,
-  META_CONNECTOR_TYPE_DVIA = 4,
-  META_CONNECTOR_TYPE_Composite = 5,
-  META_CONNECTOR_TYPE_SVIDEO = 6,
-  META_CONNECTOR_TYPE_LVDS = 7,
-  META_CONNECTOR_TYPE_Component = 8,
-  META_CONNECTOR_TYPE_9PinDIN = 9,
-  META_CONNECTOR_TYPE_DisplayPort = 10,
-  META_CONNECTOR_TYPE_HDMIA = 11,
-  META_CONNECTOR_TYPE_HDMIB = 12,
-  META_CONNECTOR_TYPE_TV = 13,
-  META_CONNECTOR_TYPE_eDP = 14,
-  META_CONNECTOR_TYPE_VIRTUAL = 15,
-  META_CONNECTOR_TYPE_DSI = 16,
-} MetaConnectorType;
-
-/* Same as KMS mode flags and X11 randr flags */
-typedef enum
-{
-  META_CRTC_MODE_FLAG_NONE = 0,
-  META_CRTC_MODE_FLAG_PHSYNC = (1 << 0),
-  META_CRTC_MODE_FLAG_NHSYNC = (1 << 1),
-  META_CRTC_MODE_FLAG_PVSYNC = (1 << 2),
-  META_CRTC_MODE_FLAG_NVSYNC = (1 << 3),
-  META_CRTC_MODE_FLAG_INTERLACE = (1 << 4),
-  META_CRTC_MODE_FLAG_DBLSCAN = (1 << 5),
-  META_CRTC_MODE_FLAG_CSYNC = (1 << 6),
-  META_CRTC_MODE_FLAG_PCSYNC = (1 << 7),
-  META_CRTC_MODE_FLAG_NCSYNC = (1 << 8),
-  META_CRTC_MODE_FLAG_HSKEW = (1 << 9),
-  META_CRTC_MODE_FLAG_BCAST = (1 << 10),
-  META_CRTC_MODE_FLAG_PIXMUX = (1 << 11),
-  META_CRTC_MODE_FLAG_DBLCLK = (1 << 12),
-  META_CRTC_MODE_FLAG_CLKDIV2 = (1 << 13),
-
-  META_CRTC_MODE_FLAG_MASK = 0x3fff
-} MetaCrtcModeFlag;
-
-struct _MetaTileInfo
-{
-  guint32 group_id;
-  guint32 flags;
-  guint32 max_h_tiles;
-  guint32 max_v_tiles;
-  guint32 loc_h_tile;
-  guint32 loc_v_tile;
-  guint32 tile_w;
-  guint32 tile_h;
-};
-
-struct _MetaOutput
-{
-  /* The CRTC driving this output, NULL if the output is not enabled */
-  MetaCrtc *crtc;
-  /* The low-level ID of this output, used to apply back configuration */
-  glong winsys_id;
-  char *name;
-  char *vendor;
-  char *product;
-  char *serial;
-  int width_mm;
-  int height_mm;
-  CoglSubpixelOrder subpixel_order;
-
-  MetaConnectorType connector_type;
-
-  MetaCrtcMode *preferred_mode;
-  MetaCrtcMode **modes;
-  unsigned int n_modes;
-
-  MetaCrtc **possible_crtcs;
-  unsigned int n_possible_crtcs;
-
-  MetaOutput **possible_clones;
-  unsigned int n_possible_clones;
-
-  int backlight;
-  int backlight_min;
-  int backlight_max;
-
-  /* Used when changing configuration */
-  gboolean is_dirty;
-
-  /* The low-level bits used to build the high-level info
-     in MetaLogicalMonitor
-
-     XXX: flags maybe?
-     There is a lot of code that uses MonitorInfo->is_primary,
-     but nobody uses MetaOutput yet
-  */
-  gboolean is_primary;
-  gboolean is_presentation;
-  gboolean is_underscanning;
-  gboolean supports_underscanning;
-
-  gpointer driver_private;
-  GDestroyNotify driver_notify;
-
-  /* get a new preferred mode on hotplug events, to handle dynamic guest resizing */
-  gboolean hotplug_mode_update;
-  gint suggested_x;
-  gint suggested_y;
-
-  MetaTileInfo tile_info;
-};
-
-struct _MetaCrtc
-{
-  glong crtc_id;
-  MetaRectangle rect;
-  MetaCrtcMode *current_mode;
-  MetaMonitorTransform transform;
-  unsigned int all_transforms;
-
-  /* Only used to build the logical configuration
-     from the HW one
-  */
-  MetaLogicalMonitor *logical_monitor;
-
-  /* Used when changing configuration */
-  gboolean is_dirty;
-
-  /* Used by cursor renderer backend */
-  void *cursor_renderer_private;
-
-  gpointer driver_private;
-  GDestroyNotify driver_notify;
-};
-
-struct _MetaCrtcMode
-{
-  /* The low-level ID of this mode, used to apply back configuration */
-  glong mode_id;
-  char *name;
-
-  int width;
-  int height;
-  float refresh_rate;
-  MetaCrtcModeFlag flags;
-
-  gpointer driver_private;
-  GDestroyNotify driver_notify;
-};
-
 /*
  * MetaCrtcInfo:
  *
@@ -298,6 +150,8 @@ struct _MetaMonitorManager
 {
   MetaDBusDisplayConfigSkeleton parent_instance;
 
+  MetaBackend *backend;
+
   /* XXX: this structure is very badly
      packed, but I like the logical organization
      of fields */
@@ -312,34 +166,9 @@ struct _MetaMonitorManager
   int screen_width;
   int screen_height;
 
-  /* Outputs refer to physical screens,
-     CRTCs refer to stuff that can drive outputs
-     (like encoders, but less tied to the HW),
-     while logical_monitors refer to logical ones.
-  */
-  MetaOutput *outputs;
-  unsigned int n_outputs;
-
-  MetaCrtcMode *modes;
-  unsigned int n_modes;
-
-  MetaCrtc *crtcs;
-  unsigned int n_crtcs;
+  GList *gpus;
 
   GList *monitors;
-
-  struct {
-    MetaOutput *outputs;
-    unsigned int n_outputs;
-
-    MetaCrtcMode *modes;
-    unsigned int n_modes;
-
-    MetaCrtc *crtcs;
-    unsigned int n_crtcs;
-
-    GList *monitors;
-  } pending_cleanup;
 
   GList *logical_monitors;
   MetaLogicalMonitor *primary_logical_monitor;
@@ -361,8 +190,6 @@ struct _MetaMonitorManager
 struct _MetaMonitorManagerClass
 {
   MetaDBusDisplayConfigSkeletonClass parent_class;
-
-  void (*read_current) (MetaMonitorManager *);
 
   char* (*get_edid_file) (MetaMonitorManager *,
                           MetaOutput         *);
@@ -427,6 +254,10 @@ struct _MetaMonitorManagerClass
   MetaLogicalMonitorLayoutMode (*get_default_layout_mode) (MetaMonitorManager *);
 };
 
+MetaBackend *       meta_monitor_manager_get_backend (MetaMonitorManager *manager);
+
+void                meta_monitor_manager_setup (MetaMonitorManager *manager);
+
 void                meta_monitor_manager_rebuild (MetaMonitorManager *manager,
                                                   MetaMonitorsConfig *config);
 void                meta_monitor_manager_rebuild_derived (MetaMonitorManager *manager,
@@ -464,16 +295,10 @@ MetaMonitor *       meta_monitor_manager_get_monitor_from_connector (MetaMonitor
 
 GList *             meta_monitor_manager_get_monitors      (MetaMonitorManager *manager);
 
-MetaOutput         *meta_monitor_manager_get_outputs       (MetaMonitorManager *manager,
-							    unsigned int       *n_outputs);
+void                meta_monitor_manager_add_gpu (MetaMonitorManager *manager,
+                                                  MetaGpu            *gpu);
 
-void                meta_monitor_manager_get_resources     (MetaMonitorManager  *manager,
-                                                            MetaCrtcMode       **modes,
-                                                            unsigned int        *n_modes,
-                                                            MetaCrtc           **crtcs,
-                                                            unsigned int        *n_crtcs,
-                                                            MetaOutput         **outputs,
-                                                            unsigned int        *n_outputs);
+GList *             meta_monitor_manager_get_gpus (MetaMonitorManager *manager);
 
 void                meta_monitor_manager_get_screen_size   (MetaMonitorManager *manager,
                                                             int                *width,
@@ -491,6 +316,7 @@ void               meta_monitor_manager_read_current_state (MetaMonitorManager *
 void               meta_monitor_manager_on_hotplug (MetaMonitorManager *manager);
 
 gboolean           meta_monitor_manager_get_monitor_matrix (MetaMonitorManager *manager,
+                                                            MetaMonitor        *monitor,
                                                             MetaLogicalMonitor *logical_monitor,
                                                             gfloat              matrix[6]);
 
@@ -557,6 +383,13 @@ static inline gboolean
 meta_monitor_transform_is_rotated (MetaMonitorTransform transform)
 {
   return (transform % 2);
+}
+
+/* Returns true if transform involves flipping */
+static inline gboolean
+meta_monitor_transform_is_flipped (MetaMonitorTransform transform)
+{
+  return (transform >= META_MONITOR_TRANSFORM_FLIPPED);
 }
 
 #endif /* META_MONITOR_MANAGER_PRIVATE_H */

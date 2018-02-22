@@ -36,6 +36,12 @@ G_DECLARE_FINAL_TYPE (MetaEgl, meta_egl, META, EGL, GObject)
 
 GQuark meta_egl_error_quark (void);
 
+gboolean
+meta_extensions_string_has_extensions_valist (const char *extensions_str,
+                                              char     ***missing_extensions,
+                                              char       *first_extension,
+                                              va_list     var_args);
+
 gboolean meta_egl_has_extensions (MetaEgl   *egl,
                                   EGLDisplay display,
                                   char    ***missing_extensions,
@@ -46,11 +52,27 @@ gboolean meta_egl_initialize (MetaEgl   *egl,
                               EGLDisplay display,
                               GError   **error);
 
+gpointer meta_egl_get_proc_address (MetaEgl    *egl,
+                                    const char *procname,
+                                    GError    **error);
+
 gboolean meta_egl_choose_config (MetaEgl      *egl,
                                  EGLDisplay    display,
                                  const EGLint *attrib_list,
                                  EGLConfig    *chosen_config,
                                  GError      **error);
+
+EGLContext meta_egl_create_context (MetaEgl      *egl,
+                                    EGLDisplay    display,
+                                    EGLConfig     config,
+                                    EGLContext    share_context,
+                                    const EGLint *attrib_list,
+                                    GError      **error);
+
+gboolean meta_egl_destroy_context (MetaEgl   *egl,
+                                   EGLDisplay display,
+                                   EGLContext context,
+                                   GError   **error);
 
 EGLImageKHR meta_egl_create_image (MetaEgl        *egl,
                                    EGLDisplay      display,
@@ -65,17 +87,45 @@ gboolean meta_egl_destroy_image (MetaEgl    *egl,
                                  EGLImageKHR image,
                                  GError    **error);
 
+EGLSurface meta_egl_create_window_surface (MetaEgl            *egl,
+                                           EGLDisplay          display,
+                                           EGLConfig           config,
+                                           EGLNativeWindowType native_window_type,
+                                           const EGLint       *attrib_list,
+                                           GError            **error);
+
 EGLSurface meta_egl_create_pbuffer_surface (MetaEgl      *egl,
                                             EGLDisplay    display,
                                             EGLConfig     config,
                                             const EGLint *attrib_list,
                                             GError      **error);
 
+gboolean meta_egl_destroy_surface (MetaEgl   *egl,
+                                   EGLDisplay display,
+                                   EGLSurface surface,
+                                   GError   **error);
+
 EGLDisplay meta_egl_get_platform_display (MetaEgl      *egl,
                                           EGLenum       platform,
                                           void         *native_display,
                                           const EGLint *attrib_list,
                                           GError      **error);
+
+gboolean meta_egl_terminate (MetaEgl   *egl,
+                             EGLDisplay display,
+                             GError   **error);
+
+gboolean meta_egl_make_current (MetaEgl   *egl,
+                                EGLDisplay display,
+                                EGLSurface draw,
+                                EGLSurface read,
+                                EGLContext context,
+                                GError   **error);
+
+gboolean meta_egl_swap_buffers (MetaEgl   *egl,
+                                EGLDisplay display,
+                                EGLSurface surface,
+                                GError   **error);
 
 gboolean meta_egl_query_wayland_buffer (MetaEgl            *egl,
                                         EGLDisplay          display,

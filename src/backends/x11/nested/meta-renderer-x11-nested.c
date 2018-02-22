@@ -29,6 +29,7 @@
 #include "clutter/x11/clutter-x11.h"
 #include "backends/meta-backend-private.h"
 #include "backends/meta-logical-monitor.h"
+#include "backends/meta-output.h"
 #include "backends/meta-renderer.h"
 #include "backends/meta-renderer-view.h"
 #include "core/boxes-private.h"
@@ -49,8 +50,12 @@ calculate_view_transform (MetaMonitorManager *monitor_manager,
 {
   MetaMonitor *main_monitor;
   MetaOutput *main_output;
+  MetaMonitorTransform crtc_transform;
   main_monitor = meta_logical_monitor_get_monitors (logical_monitor)->data;
   main_output = meta_monitor_get_main_output (main_monitor);
+  crtc_transform =
+    meta_monitor_logical_to_crtc_transform (main_monitor,
+                                            logical_monitor->transform);
 
   /*
    * Pick any monitor and output and check; all CRTCs of a logical monitor will
@@ -59,10 +64,10 @@ calculate_view_transform (MetaMonitorManager *monitor_manager,
 
   if (meta_monitor_manager_is_transform_handled (monitor_manager,
                                                  main_output->crtc,
-                                                 logical_monitor->transform))
+                                                 crtc_transform))
     return META_MONITOR_TRANSFORM_NORMAL;
   else
-    return logical_monitor->transform;
+    return crtc_transform;
 }
 
 static MetaRendererView *

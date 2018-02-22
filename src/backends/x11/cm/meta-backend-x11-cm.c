@@ -92,15 +92,19 @@ meta_backend_x11_cm_post_init (MetaBackend *backend)
 }
 
 static MetaRenderer *
-meta_backend_x11_cm_create_renderer (MetaBackend *backend)
+meta_backend_x11_cm_create_renderer (MetaBackend *backend,
+                                     GError     **error)
 {
   return g_object_new (META_TYPE_RENDERER_X11_CM, NULL);
 }
 
 static MetaMonitorManager *
-meta_backend_x11_cm_create_monitor_manager (MetaBackend *backend)
+meta_backend_x11_cm_create_monitor_manager (MetaBackend *backend,
+                                            GError     **error)
 {
-  return g_object_new (META_TYPE_MONITOR_MANAGER_XRANDR, NULL);
+  return g_object_new (META_TYPE_MONITOR_MANAGER_XRANDR,
+                       "backend", backend,
+                       NULL);
 }
 
 static MetaCursorRenderer *

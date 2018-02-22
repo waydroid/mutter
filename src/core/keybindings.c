@@ -44,6 +44,7 @@
 #define KEY_GRAVE 0x29 /* assume the use of xf86-input-keyboard */
 #endif
 
+#include "backends/meta-backend-private.h"
 #include "backends/meta-monitor-manager-private.h"
 #include "backends/meta-logical-monitor.h"
 #include "backends/x11/meta-backend-x11.h"
@@ -349,7 +350,9 @@ add_keysym_keycodes_from_layout (int                           keysym,
 {
   xkb_level_index_t layout_level;
 
-  for (layout_level = 0; layout_level < layout->n_levels; layout_level++)
+  for (layout_level = 0;
+       layout_level < layout->n_levels && keycodes->len == 0;
+       layout_level++)
     {
       FindKeysymData search_data = (FindKeysymData) {
         .keycodes = keycodes,
@@ -1945,6 +1948,15 @@ process_overlay_key (MetaDisplay *display,
   MetaKeyBindingManager *keys = &display->key_binding_manager;
   MetaBackend *backend = keys->backend;
   Display *xdisplay;
+
+  if (display->focus_window && !keys->overlay_key_only_pressed)
+    {
+      ClutterInputDevice *source;
+
+      source = clutter_event_get_source_device ((ClutterEvent *) event);
+      if (meta_window_shortcuts_inhibited (display->focus_window, source))
+        return FALSE;
+    }
 
   if (META_IS_BACKEND_X11 (backend))
     xdisplay = meta_backend_x11_get_xdisplay (META_BACKEND_X11 (backend));

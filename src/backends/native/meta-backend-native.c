@@ -67,7 +67,15 @@ struct _MetaBackendNativePrivate
 };
 typedef struct _MetaBackendNativePrivate MetaBackendNativePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (MetaBackendNative, meta_backend_native, META_TYPE_BACKEND);
+static GInitableIface *initable_parent_iface;
+
+static void
+initable_iface_init (GInitableIface *initable_iface);
+
+G_DEFINE_TYPE_WITH_CODE (MetaBackendNative, meta_backend_native, META_TYPE_BACKEND,
+                         G_ADD_PRIVATE (MetaBackendNative)
+                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE,
+                                                initable_iface_init))
 
 static void
 meta_backend_native_finalize (GObject *object)
@@ -400,37 +408,33 @@ meta_backend_native_create_idle_monitor (MetaBackend *backend,
 }
 
 static MetaMonitorManager *
-meta_backend_native_create_monitor_manager (MetaBackend *backend)
+meta_backend_native_create_monitor_manager (MetaBackend *backend,
+                                            GError     **error)
 {
-  return g_object_new (META_TYPE_MONITOR_MANAGER_KMS, NULL);
+  return g_initable_new (META_TYPE_MONITOR_MANAGER_KMS, NULL, error,
+                         "backend", backend,
+                         NULL);
 }
 
 static MetaCursorRenderer *
 meta_backend_native_create_cursor_renderer (MetaBackend *backend)
 {
-  return g_object_new (META_TYPE_CURSOR_RENDERER_NATIVE, NULL);
+  return META_CURSOR_RENDERER (meta_cursor_renderer_native_new (backend));
 }
 
 static MetaRenderer *
-meta_backend_native_create_renderer (MetaBackend *backend)
+meta_backend_native_create_renderer (MetaBackend *backend,
+                                     GError     **error)
 {
-  MetaBackendNative *native = META_BACKEND_NATIVE (backend);
-  MetaBackendNativePrivate *priv =
-    meta_backend_native_get_instance_private (native);
-  int kms_fd;
-  const char *kms_file_path;
-  GError *error = NULL;
+  MetaMonitorManager *monitor_manager =
+    meta_backend_get_monitor_manager (backend);
+  MetaMonitorManagerKms *monitor_manager_kms =
+    META_MONITOR_MANAGER_KMS (monitor_manager);
   MetaRendererNative *renderer_native;
 
-  kms_fd = meta_launcher_get_kms_fd (priv->launcher);
-  kms_file_path = meta_launcher_get_kms_file_path (priv->launcher);
-  renderer_native = meta_renderer_native_new (kms_fd, kms_file_path, &error);
+  renderer_native = meta_renderer_native_new (monitor_manager_kms, error);
   if (!renderer_native)
-    {
-      meta_warning ("Failed to create renderer: %s\n", error->message);
-      g_error_free (error);
-      return NULL;
-    }
+    return NULL;
 
   return META_RENDERER (renderer_native);
 }
@@ -560,12 +564,32 @@ meta_backend_native_update_screen_size (MetaBackend *backend,
   ClutterActor *stage = meta_backend_get_stage (backend);
 
   stage_native = meta_clutter_backend_native_get_stage_native (clutter_backend);
-  if (meta_is_stage_views_enabled ())
-    meta_stage_native_rebuild_views (stage_native);
-  else
-    meta_stage_native_legacy_set_size (stage_native, width, height);
+  meta_stage_native_rebuild_views (stage_native);
 
   clutter_actor_set_size (stage, width, height);
+}
+
+static gboolean
+meta_backend_native_initable_init (GInitable     *initable,
+                                   GCancellable  *cancellable,
+                                   GError       **error)
+{
+  if (!meta_is_stage_views_enabled ())
+    {
+      g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                   "The native backend requires stage views");
+      return FALSE;
+    }
+
+  return initable_parent_iface->init (initable, cancellable, error);
+}
+
+static void
+initable_iface_init (GInitableIface *initable_iface)
+{
+  initable_parent_iface = g_type_interface_peek_parent (initable_iface);
+
+  initable_iface->init = meta_backend_native_initable_init;
 }
 
 static void
@@ -625,14 +649,23 @@ meta_backend_native_init (MetaBackendNative *native)
              native);
 }
 
+MetaLauncher *
+meta_backend_native_get_launcher (MetaBackendNative *native)
+{
+  MetaBackendNativePrivate *priv =
+    meta_backend_native_get_instance_private (native);
+
+  return priv->launcher;
+}
+
 gboolean
 meta_activate_vt (int vt, GError **error)
 {
   MetaBackend *backend = meta_get_backend ();
   MetaBackendNative *native = META_BACKEND_NATIVE (backend);
-  MetaBackendNativePrivate *priv = meta_backend_native_get_instance_private (native);
+  MetaLauncher *launcher = meta_backend_native_get_launcher (native);
 
-  return meta_launcher_activate_vt (priv->launcher, vt, error);
+  return meta_launcher_activate_vt (launcher, vt, error);
 }
 
 MetaBarrierManagerNative *

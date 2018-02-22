@@ -1,15 +1,15 @@
 AC_PREREQ(2.62)
 
 m4_define([mutter_major_version], [3])
-m4_define([mutter_minor_version], [26])
-m4_define([mutter_micro_version], [2])
+m4_define([mutter_minor_version], [27])
+m4_define([mutter_micro_version], [91])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
 
 m4_define([mutter_plugin_api_version], [3])
 
-m4_define([libmutter_api_version], [1])
+m4_define([libmutter_api_version], [2])
 
 AC_INIT([mutter], [mutter_version],
         [http://bugzilla.gnome.org/enter_bug.cgi?product=mutter])
@@ -80,6 +80,7 @@ CANBERRA_GTK_VERSION=0.26
 LIBWACOM_VERSION=0.13
 
 MUTTER_PC_MODULES="
+   gl
    egl
    gtk+-3.0 >= 3.19.8
    gio-unix-2.0 >= 2.35.1
@@ -104,6 +105,7 @@ MUTTER_PC_MODULES="
    xcb-randr
    xcb-res
 "
+XWAYLAND_GRAB_DEFAULT_ACCESS_RULES="gnome-boxes,remote-viewer,virt-viewer,virt-manager,vinagre,vncviewer,Xephyr"
 
 GLIB_GSETTINGS
 
@@ -239,16 +241,11 @@ else
 fi
 
 AC_ARG_ENABLE(remote-desktop,
-  AS_HELP_STRING([--enable-remote-desktop], [enable support for remote desktop and screen cast]),
-  enable_remote_desktop=yes,
+  AS_HELP_STRING([--enable-remote-desktop], [enable support for remote desktop and screen cast]),,
   enable_remote_desktop=no
 )
 AS_IF([test "$enable_remote_desktop" = "yes"], [
-  MUTTER_PC_MODULES="$MUTTER_PC_MODULES libpipewire-0.1 >= 0.1.4"
-  PKG_CHECK_EXISTS([libpipewire-0.1], [
-    pw_micro=`$PKG_CONFIG --modversion libpipewire-0.1 | cut -d. -f3`
-    AC_DEFINE_UNQUOTED([PIPEWIRE_VERSION_MICRO],[$pw_micro], [Pipewire micro version used])
-  ])
+  MUTTER_PC_MODULES="$MUTTER_PC_MODULES libpipewire-0.1 >= 0.1.8"
   AC_DEFINE([HAVE_REMOTE_DESKTOP],[1], [Defined if screen cast and remote desktop support is enabled])
 ])
 AM_CONDITIONAL([HAVE_REMOTE_DESKTOP],[test "$enable_remote_desktop" = "yes"])
@@ -265,7 +262,7 @@ AC_SUBST(XWAYLAND_PATH)
 
 PKG_CHECK_MODULES(MUTTER, $MUTTER_PC_MODULES)
 
-MUTTER_NATIVE_BACKEND_MODULES="libdrm libsystemd libinput >= 1.4 gudev-1.0 gbm >= 10.3"
+MUTTER_NATIVE_BACKEND_MODULES="libdrm >= 2.4.83 libsystemd libinput >= 1.4 gudev-1.0 gbm >= 17.1"
 
 AC_ARG_ENABLE(native-backend,
   AS_HELP_STRING([--disable-native-backend], [disable mutter native (KMS) backend]),,
@@ -282,8 +279,7 @@ AS_IF([test "$have_native_backend" = "yes"], [
 AM_CONDITIONAL([HAVE_NATIVE_BACKEND],[test "$have_native_backend" = "yes"])
 
 AC_ARG_ENABLE(egl-device,
-  AS_HELP_STRING([--enable-egl-device], [enable support for EGLDevice on top of KMS]),
-  enable_egl_device=yes,
+  AS_HELP_STRING([--enable-egl-device], [enable support for EGLDevice on top of KMS]),,
   enable_egl_device=no
 )
 AS_IF([test "$enable_egl_device" = "yes"], [
@@ -307,11 +303,26 @@ AS_IF([test "$have_wayland" = "yes"], [
   AC_SUBST([WAYLAND_SCANNER])
   AC_DEFINE([HAVE_WAYLAND],[1],[Define if you want to enable Wayland support])
 
-  PKG_CHECK_MODULES(WAYLAND_PROTOCOLS, [wayland-protocols >= 1.9],
+  PKG_CHECK_MODULES(WAYLAND_PROTOCOLS, [wayland-protocols >= 1.10],
 		    [ac_wayland_protocols_pkgdatadir=`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`])
   AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, $ac_wayland_protocols_pkgdatadir)
 ])
 AM_CONDITIONAL([HAVE_WAYLAND],[test "$have_wayland" = "yes"])
+
+AC_ARG_WITH([xwayland-grab-default-access-rules],
+    [AS_HELP_STRING([--with-xwayland-grab-default-access-rules="app-res1,app-res2,..."],
+        [comma delimited list of applications ressources or class allowed to issue X11 grabs in Xwayland"])],
+    [with_XWAYLAND_GRAB_DEFAULT_ACCESS_RULES="$withval"],
+    [with_XWAYLAND_GRAB_DEFAULT_ACCESS_RULES="$XWAYLAND_GRAB_DEFAULT_ACCESS_RULES"])
+
+case "$with_XWAYLAND_GRAB_DEFAULT_ACCESS_RULES" in
+    yes) with_XWAYLAND_GRAB_DEFAULT_ACCESS_RULES="$XWAYLAND_GRAB_DEFAULT_ACCESS_RULES" ;;
+    no) with_XWAYLAND_GRAB_DEFAULT_ACCESS_RULES='' ;;
+esac
+AC_DEFINE_UNQUOTED([XWAYLAND_GRAB_DEFAULT_ACCESS_RULES],
+                    "$with_XWAYLAND_GRAB_DEFAULT_ACCESS_RULES",
+                    [Xwayland applications allowed to issue keyboard grabs])
+AC_SUBST(XWAYLAND_GRAB_DEFAULT_ACCESS_RULES)
 
 PKG_CHECK_EXISTS([xi >= 1.6.99.1],
                  AC_DEFINE([HAVE_XI23],[1],[Define if you have support for XInput 2.3 or greater]))

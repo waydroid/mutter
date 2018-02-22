@@ -64,10 +64,10 @@ enum {
   PROP_N_WINDOWS,
   PROP_WORKSPACE_INDEX,
 
-  LAST_PROP,
+  PROP_LAST,
 };
 
-static GParamSpec *obj_props[LAST_PROP];
+static GParamSpec *obj_props[PROP_LAST];
 
 enum
 {
@@ -99,6 +99,7 @@ workspace_logical_monitor_data_free (MetaWorkspaceLogicalMonitorData *data)
 {
   g_clear_pointer (&data->logical_monitor_region,
                    meta_rectangle_free_list_and_elements);
+  g_free (data);
 }
 
 static MetaWorkspaceLogicalMonitorData *
@@ -213,7 +214,7 @@ meta_workspace_class_init (MetaWorkspaceClass *klass)
                                                        0, G_MAXUINT, 0,
                                                        G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_properties (object_class, LAST_PROP, obj_props);
+  g_object_class_install_properties (object_class, PROP_LAST, obj_props);
 }
 
 static void

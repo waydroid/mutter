@@ -41,6 +41,16 @@ static GQuark quark_tool_settings = 0;
 
 typedef struct _MetaInputSettingsPrivate MetaInputSettingsPrivate;
 typedef struct _DeviceMappingInfo DeviceMappingInfo;
+typedef struct _CurrentToolInfo CurrentToolInfo;
+
+struct _CurrentToolInfo
+{
+  MetaInputSettings *input_settings;
+  ClutterInputDevice *device;
+  ClutterInputDeviceTool *tool;
+  GSettings *settings;
+  guint changed_id;
+};
 
 struct _DeviceMappingInfo
 {
@@ -65,8 +75,11 @@ struct _MetaInputSettingsPrivate
   GSettings *trackball_settings;
   GSettings *keyboard_settings;
   GSettings *gsd_settings;
+  GSettings *a11y_settings;
 
   GHashTable *mappable_devices;
+
+  GHashTable *current_tools;
 
   ClutterVirtualInputDevice *virtual_pad_keyboard;
 
@@ -143,7 +156,9 @@ meta_input_settings_dispose (GObject *object)
   g_clear_object (&priv->trackball_settings);
   g_clear_object (&priv->keyboard_settings);
   g_clear_object (&priv->gsd_settings);
+  g_clear_object (&priv->a11y_settings);
   g_clear_pointer (&priv->mappable_devices, g_hash_table_unref);
+  g_clear_pointer (&priv->current_tools, g_hash_table_unref);
 
   if (priv->monitors_changed_id && priv->monitor_manager)
     {
@@ -770,12 +785,11 @@ update_keyboard_repeat (MetaInputSettings *input_settings)
                                              repeat, delay, interval);
 }
 
-static gboolean
-logical_monitor_has_monitor (MetaMonitorManager *monitor_manager,
-                             MetaLogicalMonitor *logical_monitor,
-                             const char         *vendor,
-                             const char         *product,
-                             const char         *serial)
+static MetaMonitor *
+logical_monitor_find_monitor (MetaLogicalMonitor *logical_monitor,
+                              const char         *vendor,
+                              const char         *product,
+                              const char         *serial)
 {
   GList *monitors;
   GList *l;
@@ -788,20 +802,22 @@ logical_monitor_has_monitor (MetaMonitorManager *monitor_manager,
       if (g_strcmp0 (meta_monitor_get_vendor (monitor), vendor) == 0 &&
           g_strcmp0 (meta_monitor_get_product (monitor), product) == 0 &&
           g_strcmp0 (meta_monitor_get_serial (monitor), serial) == 0)
-        return TRUE;
+        return monitor;
     }
 
-  return FALSE;
+  return NULL;
 }
 
-static MetaLogicalMonitor *
-meta_input_settings_find_logical_monitor (MetaInputSettings  *input_settings,
-                                          GSettings          *settings,
-                                          ClutterInputDevice *device)
+static void
+meta_input_settings_find_monitor (MetaInputSettings   *input_settings,
+                                  GSettings           *settings,
+                                  ClutterInputDevice  *device,
+                                  MetaMonitor        **out_monitor,
+                                  MetaLogicalMonitor **out_logical_monitor)
 {
   MetaInputSettingsPrivate *priv;
   MetaMonitorManager *monitor_manager;
-  MetaLogicalMonitor *ret = NULL;
+  MetaMonitor *monitor;
   guint n_values;
   GList *logical_monitors;
   GList *l;
@@ -829,20 +845,20 @@ meta_input_settings_find_logical_monitor (MetaInputSettings  *input_settings,
     {
       MetaLogicalMonitor *logical_monitor = l->data;
 
-      if (logical_monitor_has_monitor (monitor_manager,
-                                       logical_monitor,
-                                       edid[0],
-                                       edid[1],
-                                       edid[2]))
+      monitor = logical_monitor_find_monitor (logical_monitor,
+                                              edid[0], edid[1], edid[2]);
+      if (monitor)
         {
-          ret = logical_monitor;
+          if (out_monitor)
+            *out_monitor = monitor;
+          if (out_logical_monitor)
+            *out_logical_monitor = logical_monitor;
           break;
         }
     }
 
 out:
   g_strfreev (edid);
-  return ret;
 }
 
 static void
@@ -878,9 +894,8 @@ update_tablet_keep_aspect (MetaInputSettings  *input_settings,
       CLUTTER_INPUT_DEVICE_MAPPING_ABSOLUTE)
     {
       keep_aspect = g_settings_get_boolean (settings, "keep-aspect");
-      logical_monitor = meta_input_settings_find_logical_monitor (input_settings,
-                                                                  settings,
-                                                                  device);
+      meta_input_settings_find_monitor (input_settings, settings, device,
+                                        NULL, &logical_monitor);
     }
   else
     {
@@ -899,7 +914,8 @@ update_device_display (MetaInputSettings  *input_settings,
   MetaInputSettingsClass *input_settings_class;
   MetaInputSettingsPrivate *priv;
   gfloat matrix[6] = { 1, 0, 0, 0, 1, 0 };
-  MetaLogicalMonitor *logical_monitor;
+  MetaMonitor *monitor = NULL;
+  MetaLogicalMonitor *logical_monitor = NULL;
 
   if (clutter_input_device_get_device_type (device) != CLUTTER_TABLET_DEVICE &&
       clutter_input_device_get_device_type (device) != CLUTTER_PEN_DEVICE &&
@@ -914,15 +930,12 @@ update_device_display (MetaInputSettings  *input_settings,
   if (clutter_input_device_get_device_type (device) == CLUTTER_TOUCHSCREEN_DEVICE ||
       clutter_input_device_get_mapping_mode (device) ==
       CLUTTER_INPUT_DEVICE_MAPPING_ABSOLUTE)
-    logical_monitor = meta_input_settings_find_logical_monitor (input_settings,
-                                                                settings,
-                                                                device);
-  else
-    logical_monitor = NULL;
+    meta_input_settings_find_monitor (input_settings, settings, device,
+                                      &monitor, &logical_monitor);
 
-  if (logical_monitor)
+  if (monitor)
     meta_monitor_manager_get_monitor_matrix (priv->monitor_manager,
-                                             logical_monitor, matrix);
+                                             monitor, logical_monitor, matrix);
 
   input_settings_class->set_matrix (input_settings, device, matrix);
 
@@ -1140,6 +1153,90 @@ apply_mappable_device_settings (MetaInputSettings *input_settings,
       update_tablet_keep_aspect (input_settings, info->settings, info->device);
       update_tablet_left_handed (input_settings, info->settings, info->device);
     }
+}
+
+struct _a11y_settings_flags_pair {
+  const char *name;
+  ClutterKeyboardA11yFlags flag;
+} settings_flags_pair[] = {
+  { "enable",                    CLUTTER_A11Y_KEYBOARD_ENABLED },
+  { "timeout-enable",            CLUTTER_A11Y_TIMEOUT_ENABLED },
+  { "mousekeys-enable",          CLUTTER_A11Y_MOUSE_KEYS_ENABLED },
+  { "slowkeys-enable",           CLUTTER_A11Y_SLOW_KEYS_ENABLED },
+  { "slowkeys-beep-press",       CLUTTER_A11Y_SLOW_KEYS_BEEP_PRESS },
+  { "slowkeys-beep-accept",      CLUTTER_A11Y_SLOW_KEYS_BEEP_ACCEPT },
+  { "slowkeys-beep-reject",      CLUTTER_A11Y_SLOW_KEYS_BEEP_REJECT },
+  { "bouncekeys-enable",         CLUTTER_A11Y_BOUNCE_KEYS_ENABLED },
+  { "bouncekeys-beep-reject",    CLUTTER_A11Y_BOUNCE_KEYS_BEEP_REJECT },
+  { "togglekeys-enable",         CLUTTER_A11Y_TOGGLE_KEYS_ENABLED },
+  { "stickykeys-enable",         CLUTTER_A11Y_STICKY_KEYS_ENABLED },
+  { "stickykeys-modifier-beep",  CLUTTER_A11Y_STICKY_KEYS_BEEP },
+  { "stickykeys-two-key-off",    CLUTTER_A11Y_STICKY_KEYS_TWO_KEY_OFF },
+  { "feature-state-change-beep", CLUTTER_A11Y_FEATURE_STATE_CHANGE_BEEP },
+};
+
+static void
+load_keyboard_a11y_settings (MetaInputSettings  *input_settings,
+                             ClutterInputDevice *device)
+{
+  MetaInputSettingsPrivate *priv = meta_input_settings_get_instance_private (input_settings);
+  ClutterKbdA11ySettings kbd_a11y_settings;
+  ClutterInputDevice *core_keyboard;
+  guint i;
+
+  core_keyboard = clutter_device_manager_get_core_device (priv->device_manager, CLUTTER_KEYBOARD_DEVICE);
+  if (device && device != core_keyboard)
+    return;
+
+  kbd_a11y_settings.controls = 0;
+  for (i = 0; i < G_N_ELEMENTS (settings_flags_pair); i++)
+    {
+      if (g_settings_get_boolean (priv->a11y_settings, settings_flags_pair[i].name))
+        kbd_a11y_settings.controls |= settings_flags_pair[i].flag;
+    }
+
+  kbd_a11y_settings.timeout_delay = g_settings_get_int (priv->a11y_settings,
+                                                        "disable-timeout");
+  kbd_a11y_settings.slowkeys_delay = g_settings_get_int (priv->a11y_settings,
+                                                         "slowkeys-delay");
+  kbd_a11y_settings.debounce_delay = g_settings_get_int (priv->a11y_settings,
+                                                         "bouncekeys-delay");
+  kbd_a11y_settings.mousekeys_init_delay = g_settings_get_int (priv->a11y_settings,
+                                                               "mousekeys-init-delay");
+  kbd_a11y_settings.mousekeys_max_speed = g_settings_get_int (priv->a11y_settings,
+                                                              "mousekeys-max-speed");
+  kbd_a11y_settings.mousekeys_accel_time = g_settings_get_int (priv->a11y_settings,
+                                                               "mousekeys-accel-time");
+
+  clutter_device_manager_set_kbd_a11y_settings (priv->device_manager, &kbd_a11y_settings);
+}
+
+static void
+on_keyboard_a11y_settings_changed (ClutterDeviceManager    *device_manager,
+                                   ClutterKeyboardA11yFlags new_flags,
+                                   ClutterKeyboardA11yFlags what_changed,
+                                   MetaInputSettings       *input_settings)
+{
+  MetaInputSettingsPrivate *priv = meta_input_settings_get_instance_private (input_settings);
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (settings_flags_pair); i++)
+    {
+      if (settings_flags_pair[i].flag & what_changed)
+        g_settings_set_boolean (priv->a11y_settings,
+                                settings_flags_pair[i].name,
+                                (new_flags & settings_flags_pair[i].flag) ? TRUE : FALSE);
+    }
+}
+
+static void
+meta_input_a11y_settings_changed (GSettings  *settings,
+                                  const char *key,
+                                  gpointer    user_data)
+{
+  MetaInputSettings *input_settings = META_INPUT_SETTINGS (user_data);
+
+  load_keyboard_a11y_settings (input_settings, NULL);
 }
 
 static GSettings *
@@ -1397,6 +1494,7 @@ apply_device_settings (MetaInputSettings  *input_settings,
   update_pointer_accel_profile (input_settings,
                                 priv->trackball_settings,
                                 device);
+  load_keyboard_a11y_settings (input_settings, device);
 }
 
 static void
@@ -1440,7 +1538,7 @@ update_stylus_buttonmap (MetaInputSettings      *input_settings,
                          ClutterInputDeviceTool *tool)
 {
   MetaInputSettingsClass *input_settings_class;
-  GDesktopStylusButtonAction primary, secondary;
+  GDesktopStylusButtonAction primary, secondary, tertiary;
   GSettings *tool_settings;
 
   if (clutter_input_device_get_device_type (device) != CLUTTER_TABLET_DEVICE &&
@@ -1455,10 +1553,11 @@ update_stylus_buttonmap (MetaInputSettings      *input_settings,
 
   primary = g_settings_get_enum (tool_settings, "button-action");
   secondary = g_settings_get_enum (tool_settings, "secondary-button-action");
+  tertiary = g_settings_get_enum (tool_settings, "tertiary-button-action");
 
   input_settings_class = META_INPUT_SETTINGS_GET_CLASS (input_settings);
   input_settings_class->set_stylus_button_map (input_settings, device, tool,
-                                               primary, secondary);
+                                               primary, secondary, tertiary);
 }
 
 static void
@@ -1510,10 +1609,47 @@ meta_input_settings_device_removed (ClutterDeviceManager *device_manager,
 
   priv = meta_input_settings_get_instance_private (input_settings);
   g_hash_table_remove (priv->mappable_devices, device);
+  g_hash_table_remove (priv->current_tools, device);
 
   if (g_hash_table_remove (priv->two_finger_devices, device) &&
       g_hash_table_size (priv->two_finger_devices) == 0)
     apply_device_settings (input_settings, NULL);
+}
+
+static void
+current_tool_changed_cb (GSettings  *settings,
+                         const char *key,
+                         gpointer    user_data)
+{
+  CurrentToolInfo *info = user_data;
+
+  apply_stylus_settings (info->input_settings, info->device, info->tool);
+}
+
+static CurrentToolInfo *
+current_tool_info_new (MetaInputSettings      *input_settings,
+                       ClutterInputDevice     *device,
+                       ClutterInputDeviceTool *tool)
+{
+  CurrentToolInfo *info;
+
+  info = g_new0 (CurrentToolInfo, 1);
+  info->input_settings = input_settings;
+  info->device = device;
+  info->tool = tool;
+  info->settings = lookup_tool_settings (tool, device);
+  info->changed_id =
+    g_signal_connect (info->settings, "changed",
+                      G_CALLBACK (current_tool_changed_cb),
+                      info);
+  return info;
+}
+
+static void
+current_tool_info_free (CurrentToolInfo *info)
+{
+  g_signal_handler_disconnect (info->settings, info->changed_id);
+  g_free (info);
 }
 
 static void
@@ -1522,10 +1658,22 @@ meta_input_settings_tool_changed (ClutterDeviceManager   *device_manager,
                                   ClutterInputDeviceTool *tool,
                                   MetaInputSettings      *input_settings)
 {
-  if (!tool)
-    return;
+  MetaInputSettingsPrivate *priv;
 
-  apply_stylus_settings (input_settings, device, tool);
+  priv = meta_input_settings_get_instance_private (input_settings);
+
+  if (tool)
+    {
+      CurrentToolInfo *current_tool;
+
+      current_tool = current_tool_info_new (input_settings, device, tool);
+      g_hash_table_insert (priv->current_tools, device, current_tool);
+      apply_stylus_settings (input_settings, device, tool);
+    }
+  else
+    {
+      g_hash_table_remove (priv->current_tools, device);
+    }
 }
 
 static void
@@ -1613,8 +1761,17 @@ meta_input_settings_init (MetaInputSettings *settings)
                    clutter_settings_get_default(), "double-click-time",
                    G_SETTINGS_BIND_GET);
 
+  priv->a11y_settings = g_settings_new ("org.gnome.desktop.a11y.keyboard");
+  g_signal_connect (priv->a11y_settings, "changed",
+                    G_CALLBACK (meta_input_a11y_settings_changed), settings);
+  g_signal_connect (priv->device_manager, "kbd-a11y-flags-changed",
+                    G_CALLBACK (on_keyboard_a11y_settings_changed), settings);
+
   priv->mappable_devices =
     g_hash_table_new_full (NULL, NULL, NULL, (GDestroyNotify) device_mapping_info_free);
+
+  priv->current_tools =
+    g_hash_table_new_full (NULL, NULL, NULL, (GDestroyNotify) current_tool_info_free);
 
   priv->monitor_manager = g_object_ref (meta_monitor_manager_get ());
   g_signal_connect (priv->monitor_manager, "monitors-changed-internal",
@@ -1652,6 +1809,7 @@ MetaLogicalMonitor *
 meta_input_settings_get_tablet_logical_monitor (MetaInputSettings  *settings,
                                                 ClutterInputDevice *device)
 {
+  MetaLogicalMonitor *logical_monitor = NULL;
   MetaInputSettingsPrivate *priv;
   DeviceMappingInfo *info;
 
@@ -1663,9 +1821,9 @@ meta_input_settings_get_tablet_logical_monitor (MetaInputSettings  *settings,
   if (!info)
     return NULL;
 
-  return meta_input_settings_find_logical_monitor (settings,
-                                                   info->settings,
-                                                   device);
+  meta_input_settings_find_monitor (settings, info->settings, device,
+                                    NULL, &logical_monitor);
+  return logical_monitor;
 }
 
 GDesktopTabletMapping
@@ -1769,7 +1927,7 @@ meta_input_settings_cycle_tablet_output (MetaInputSettings  *input_settings,
 {
   MetaInputSettingsPrivate *priv;
   DeviceMappingInfo *info;
-  MetaLogicalMonitor *logical_monitor;
+  MetaLogicalMonitor *logical_monitor = NULL;
   const gchar *edid[4] = { 0 }, *pretty_name = NULL;
 
   g_return_if_fail (META_IS_INPUT_SETTINGS (input_settings));
@@ -1792,9 +1950,9 @@ meta_input_settings_cycle_tablet_output (MetaInputSettings  *input_settings,
     }
 #endif
 
-  logical_monitor = meta_input_settings_find_logical_monitor (input_settings,
-                                                              info->settings,
-                                                              device);
+  meta_input_settings_find_monitor (input_settings, info->settings, device,
+                                    NULL, &logical_monitor);
+
   if (!cycle_logical_monitors (input_settings,
                                logical_monitor,
                                &logical_monitor))

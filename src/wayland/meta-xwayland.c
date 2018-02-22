@@ -465,7 +465,8 @@ choose_xdisplay (MetaXWaylandManager *manager)
         {
           unlink (lock_file);
           close (manager->abstract_fd);
-          return FALSE;
+          display++;
+          continue;
         }
 
       break;
@@ -562,6 +563,7 @@ meta_xwayland_start (MetaXWaylandManager *manager,
                                                XWAYLAND_PATH, manager->display_name,
                                                "-rootless",
                                                "-terminate",
+                                               "-accessx",
                                                "-core",
                                                "-listen", "4",
                                                "-listen", "5",
