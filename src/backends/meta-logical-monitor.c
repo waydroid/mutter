@@ -21,8 +21,11 @@
 
 #include "config.h"
 
-#include "backends/meta-backend-private.h"
 #include "backends/meta-logical-monitor.h"
+
+#include "backends/meta-backend-private.h"
+#include "backends/meta-crtc.h"
+#include "backends/meta-output.h"
 
 G_DEFINE_TYPE (MetaLogicalMonitor, meta_logical_monitor, G_TYPE_OBJECT)
 
@@ -100,7 +103,8 @@ derive_monitor_transform (MetaMonitor *monitor)
 
   main_output = meta_monitor_get_main_output (monitor);
 
-  return main_output->crtc->transform;
+  return meta_monitor_crtc_to_logical_transform (monitor,
+                                                 main_output->crtc->transform);
 }
 
 MetaLogicalMonitor *
@@ -197,6 +201,51 @@ GList *
 meta_logical_monitor_get_monitors (MetaLogicalMonitor *logical_monitor)
 {
   return logical_monitor->monitors;
+}
+
+typedef struct _ForeachCrtcData
+{
+  MetaLogicalMonitor *logical_monitor;
+  MetaLogicalMonitorCrtcFunc func;
+  gpointer user_data;
+} ForeachCrtcData;
+
+static gboolean
+foreach_crtc (MetaMonitor         *monitor,
+              MetaMonitorMode     *mode,
+              MetaMonitorCrtcMode *monitor_crtc_mode,
+              gpointer             user_data,
+              GError             **error)
+{
+  ForeachCrtcData *data = user_data;
+
+  data->func (data->logical_monitor,
+              monitor_crtc_mode->output->crtc,
+              data->user_data);
+
+  return TRUE;
+}
+
+void
+meta_logical_monitor_foreach_crtc (MetaLogicalMonitor        *logical_monitor,
+                                   MetaLogicalMonitorCrtcFunc func,
+                                   gpointer                   user_data)
+{
+  GList *l;
+
+  for (l = logical_monitor->monitors; l; l = l->next)
+    {
+      MetaMonitor *monitor = l->data;
+      MetaMonitorMode *mode;
+      ForeachCrtcData data = {
+        .logical_monitor = logical_monitor,
+        .func = func,
+        .user_data = user_data
+      };
+
+      mode = meta_monitor_get_current_mode (monitor);
+      meta_monitor_mode_foreach_crtc (monitor, mode, foreach_crtc, &data, NULL);
+    }
 }
 
 static void

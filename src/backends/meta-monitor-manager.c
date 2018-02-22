@@ -36,14 +36,27 @@
 #include "util-private.h"
 #include <meta/errors.h>
 #include "edid.h"
+#include "backends/meta-crtc.h"
 #include "backends/meta-logical-monitor.h"
 #include "backends/meta-monitor.h"
 #include "backends/meta-monitor-config-manager.h"
 #include "backends/meta-orientation-manager.h"
+#include "backends/meta-output.h"
 #include "backends/x11/meta-monitor-manager-xrandr.h"
 #include "meta-backend-private.h"
 
 #define DEFAULT_DISPLAY_CONFIGURATION_TIMEOUT 20
+
+enum
+{
+  PROP_0,
+
+  PROP_BACKEND,
+
+  PROP_LAST
+};
+
+static GParamSpec *obj_props[PROP_LAST];
 
 enum {
   MONITORS_CHANGED_INTERNAL,
@@ -76,8 +89,11 @@ static gboolean
 meta_monitor_manager_is_config_complete (MetaMonitorManager *manager,
                                          MetaMonitorsConfig *config);
 
-static void
-cleanup_pending_cleanup_state (MetaMonitorManager *manager);
+MetaBackend *
+meta_monitor_manager_get_backend (MetaMonitorManager *manager)
+{
+  return manager->backend;
+}
 
 static void
 meta_monitor_manager_init (MetaMonitorManager *manager)
@@ -450,13 +466,13 @@ meta_monitor_manager_apply_monitors_config (MetaMonitorManager      *manager,
 gboolean
 meta_monitor_manager_has_hotplug_mode_update (MetaMonitorManager *manager)
 {
-  unsigned int i;
+  GList *l;
 
-  for (i = 0; i < manager->n_outputs; i++)
+  for (l = manager->gpus; l; l = l->next)
     {
-      MetaOutput *output = &manager->outputs[i];
+      MetaGpu *gpu = l->data;
 
-      if (output->hotplug_mode_update)
+      if (meta_gpu_has_hotplug_mode_update (gpu))
         return TRUE;
     }
 
@@ -678,13 +694,27 @@ experimental_features_changed (MetaSettings           *settings,
   meta_settings_update_ui_scaling_factor (settings);
 }
 
+void
+meta_monitor_manager_setup (MetaMonitorManager *manager)
+{
+  manager->in_init = TRUE;
+
+  manager->config_manager = meta_monitor_config_manager_new (manager);
+
+  meta_monitor_manager_read_current_state (manager);
+
+  meta_monitor_manager_ensure_initial_config (manager);
+
+  manager->in_init = FALSE;
+}
+
 static void
 meta_monitor_manager_constructed (GObject *object)
 {
   MetaMonitorManager *manager = META_MONITOR_MANAGER (object);
   MetaMonitorManagerClass *manager_class =
     META_MONITOR_MANAGER_GET_CLASS (manager);
-  MetaBackend *backend = meta_get_backend ();
+  MetaBackend *backend = manager->backend;
   MetaSettings *settings = meta_backend_get_settings (backend);
 
   manager->experimental_features_changed_handler_id =
@@ -709,90 +739,8 @@ meta_monitor_manager_constructed (GObject *object)
                            manager, 0);
 
   manager->current_switch_config = META_MONITOR_SWITCH_CONFIG_UNKNOWN;
-  manager->in_init = TRUE;
-
-  manager->config_manager = meta_monitor_config_manager_new (manager);
-
-  meta_monitor_manager_read_current_state (manager);
-
-  meta_monitor_manager_ensure_initial_config (manager);
 
   initialize_dbus_interface (manager);
-
-  manager->in_init = FALSE;
-}
-
-void
-meta_monitor_manager_clear_output (MetaOutput *output)
-{
-  g_free (output->name);
-  g_free (output->vendor);
-  g_free (output->product);
-  g_free (output->serial);
-  g_free (output->modes);
-  g_free (output->possible_crtcs);
-  g_free (output->possible_clones);
-
-  if (output->driver_notify)
-    output->driver_notify (output);
-
-  memset (output, 0, sizeof (*output));
-}
-
-static void
-meta_monitor_manager_free_output_array (MetaOutput *old_outputs,
-                                        int         n_old_outputs)
-{
-  int i;
-
-  for (i = 0; i < n_old_outputs; i++)
-    meta_monitor_manager_clear_output (&old_outputs[i]);
-
-  g_free (old_outputs);
-}
-
-void
-meta_monitor_manager_clear_mode (MetaCrtcMode *mode)
-{
-  g_free (mode->name);
-
-  if (mode->driver_notify)
-    mode->driver_notify (mode);
-
-  memset (mode, 0, sizeof (*mode));
-}
-
-static void
-meta_monitor_manager_free_mode_array (MetaCrtcMode *old_modes,
-                                      int           n_old_modes)
-{
-  int i;
-
-  for (i = 0; i < n_old_modes; i++)
-    meta_monitor_manager_clear_mode (&old_modes[i]);
-
-  g_free (old_modes);
-}
-
-void
-meta_monitor_manager_clear_crtc (MetaCrtc *crtc)
-{
-  if (crtc->driver_notify)
-    crtc->driver_notify (crtc);
-
-  memset (crtc, 0, sizeof (*crtc));
-}
-
-static void
-meta_monitor_manager_free_crtc_array (MetaCrtc *old_crtcs,
-                                      int       n_old_crtcs)
-{
-  int i;
-
-  for (i = 0; i < n_old_crtcs; i++)
-    meta_monitor_manager_clear_crtc (&old_crtcs[i]);
-
-  g_free (old_crtcs);
 }
 
 static void
@@ -800,14 +748,10 @@ meta_monitor_manager_finalize (GObject *object)
 {
   MetaMonitorManager *manager = META_MONITOR_MANAGER (object);
 
-  meta_monitor_manager_free_output_array (manager->outputs, manager->n_outputs);
-  meta_monitor_manager_free_mode_array (manager->modes, manager->n_modes);
-  meta_monitor_manager_free_crtc_array (manager->crtcs, manager->n_crtcs);
+  g_list_free_full (manager->gpus, g_object_unref);
   g_list_free_full (manager->logical_monitors, g_object_unref);
 
-  cleanup_pending_cleanup_state (manager);
-
-  g_signal_handler_disconnect (meta_get_backend (),
+  g_signal_handler_disconnect (manager->backend,
                                manager->experimental_features_changed_handler_id);
 
   G_OBJECT_CLASS (meta_monitor_manager_parent_class)->finalize (object);
@@ -845,6 +789,42 @@ meta_monitor_manager_real_get_edid_file (MetaMonitorManager *manager,
 }
 
 static void
+meta_monitor_manager_set_property (GObject      *object,
+                                   guint         prop_id,
+                                   const GValue *value,
+                                   GParamSpec   *pspec)
+{
+  MetaMonitorManager *manager = META_MONITOR_MANAGER (object);
+
+  switch (prop_id)
+    {
+    case PROP_BACKEND:
+      manager->backend = g_value_get_object (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
+}
+
+static void
+meta_monitor_manager_get_property (GObject    *object,
+                                   guint       prop_id,
+                                   GValue     *value,
+                                   GParamSpec *pspec)
+{
+  MetaMonitorManager *manager = META_MONITOR_MANAGER (object);
+
+  switch (prop_id)
+    {
+    case PROP_BACKEND:
+      g_value_set_object (value, manager->backend);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
+}
+
+static void
 meta_monitor_manager_class_init (MetaMonitorManagerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -852,6 +832,8 @@ meta_monitor_manager_class_init (MetaMonitorManagerClass *klass)
   object_class->constructed = meta_monitor_manager_constructed;
   object_class->dispose = meta_monitor_manager_dispose;
   object_class->finalize = meta_monitor_manager_finalize;
+  object_class->get_property = meta_monitor_manager_get_property;
+  object_class->set_property = meta_monitor_manager_set_property;
 
   klass->get_edid_file = meta_monitor_manager_real_get_edid_file;
   klass->read_edid = meta_monitor_manager_real_read_edid;
@@ -872,6 +854,16 @@ meta_monitor_manager_class_init (MetaMonitorManagerClass *klass)
 		  0,
                   NULL, NULL, NULL,
 		  G_TYPE_NONE, 0);
+
+  obj_props[PROP_BACKEND] =
+    g_param_spec_object ("backend",
+                         "backend",
+                         "MetaBackend",
+                         META_TYPE_BACKEND,
+                         G_PARAM_READWRITE |
+                         G_PARAM_CONSTRUCT_ONLY |
+                         G_PARAM_STATIC_STRINGS);
+  g_object_class_install_properties (object_class, PROP_LAST, obj_props);
 }
 
 static const double known_diagonals[] = {
@@ -972,31 +964,61 @@ get_connector_type_name (MetaConnectorType connector_type)
     }
 }
 
+static GList *
+combine_gpu_lists (MetaMonitorManager    *manager,
+                   GList              * (*list_getter) (MetaGpu *gpu))
+{
+  GList *list = NULL;
+  GList *l;
+
+  for (l = manager->gpus; l; l = l->next)
+    {
+      MetaGpu *gpu = l->data;
+
+      list = g_list_concat (list, g_list_copy (list_getter (gpu)));
+    }
+
+  return list;
+}
+
 static gboolean
 meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
                                            GDBusMethodInvocation *invocation)
 {
   MetaMonitorManager *manager = META_MONITOR_MANAGER (skeleton);
   MetaMonitorManagerClass *manager_class = META_MONITOR_MANAGER_GET_CLASS (skeleton);
+  GList *combined_modes;
+  GList *combined_outputs;
+  GList *combined_crtcs;
   GVariantBuilder crtc_builder, output_builder, mode_builder;
+  GList *l;
   unsigned int i, j;
   int max_screen_width;
   int max_screen_height;
+
+  combined_modes = combine_gpu_lists (manager, meta_gpu_get_modes);
+  combined_outputs = combine_gpu_lists (manager, meta_gpu_get_outputs);
+  combined_crtcs = combine_gpu_lists (manager, meta_gpu_get_crtcs);
 
   g_variant_builder_init (&crtc_builder, G_VARIANT_TYPE ("a(uxiiiiiuaua{sv})"));
   g_variant_builder_init (&output_builder, G_VARIANT_TYPE ("a(uxiausauaua{sv})"));
   g_variant_builder_init (&mode_builder, G_VARIANT_TYPE ("a(uxuudu)"));
 
-  for (i = 0; i < manager->n_crtcs; i++)
+  for (l = combined_crtcs, i = 0; l; l = l->next, i++)
     {
-      MetaCrtc *crtc = &manager->crtcs[i];
+      MetaCrtc *crtc = l->data;
       GVariantBuilder transforms;
+      int current_mode_index;
 
       g_variant_builder_init (&transforms, G_VARIANT_TYPE ("au"));
       for (j = 0; j <= META_MONITOR_TRANSFORM_FLIPPED_270; j++)
         if (crtc->all_transforms & (1 << j))
           g_variant_builder_add (&transforms, "u", j);
 
+      if (crtc->current_mode)
+        current_mode_index = g_list_index (combined_modes, crtc->current_mode);
+      else
+        current_mode_index = -1;
       g_variant_builder_add (&crtc_builder, "(uxiiiiiuaua{sv})",
                              i, /* ID */
                              (gint64)crtc->crtc_id,
@@ -1004,33 +1026,48 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
                              (int)crtc->rect.y,
                              (int)crtc->rect.width,
                              (int)crtc->rect.height,
-                             (int)(crtc->current_mode ? crtc->current_mode - manager->modes : -1),
+                             current_mode_index,
                              (guint32)crtc->transform,
                              &transforms,
                              NULL /* properties */);
     }
 
-  for (i = 0; i < manager->n_outputs; i++)
+  for (l = combined_outputs; l; l = l->next)
     {
-      MetaOutput *output = &manager->outputs[i];
+      MetaOutput *output = l->data;
       GVariantBuilder crtcs, modes, clones, properties;
       GBytes *edid;
       char *edid_file;
+      int crtc_index;
 
       g_variant_builder_init (&crtcs, G_VARIANT_TYPE ("au"));
       for (j = 0; j < output->n_possible_crtcs; j++)
-        g_variant_builder_add (&crtcs, "u",
-                               (unsigned)(output->possible_crtcs[j] - manager->crtcs));
+        {
+          MetaCrtc *possible_crtc = output->possible_crtcs[j];
+          unsigned possible_crtc_index;
+
+          possible_crtc_index = g_list_index (combined_crtcs, possible_crtc);
+          g_variant_builder_add (&crtcs, "u", possible_crtc_index);
+        }
 
       g_variant_builder_init (&modes, G_VARIANT_TYPE ("au"));
       for (j = 0; j < output->n_modes; j++)
-        g_variant_builder_add (&modes, "u",
-                               (unsigned)(output->modes[j] - manager->modes));
+        {
+          unsigned mode_index;
+
+          mode_index = g_list_index (combined_modes, output->modes[j]);
+          g_variant_builder_add (&modes, "u", mode_index);
+        }
 
       g_variant_builder_init (&clones, G_VARIANT_TYPE ("au"));
       for (j = 0; j < output->n_possible_clones; j++)
-        g_variant_builder_add (&clones, "u",
-                               (unsigned)(output->possible_clones[j] - manager->outputs));
+        {
+          unsigned int possible_clone_index;
+
+          possible_clone_index = g_list_index (combined_outputs,
+                                               output->possible_clones[j]);
+          g_variant_builder_add (&clones, "u", possible_clone_index);
+        }
 
       g_variant_builder_init (&properties, G_VARIANT_TYPE ("a{sv}"));
       g_variant_builder_add (&properties, "{sv}", "vendor",
@@ -1094,10 +1131,12 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
                                                 output->tile_info.tile_h));
         }
 
+      crtc_index = output->crtc ? g_list_index (combined_crtcs, output->crtc)
+                                : -1;
       g_variant_builder_add (&output_builder, "(uxiausauaua{sv})",
                              i, /* ID */
                              (gint64)output->winsys_id,
-                             (int)(output->crtc ? output->crtc - manager->crtcs : -1),
+                             crtc_index,
                              &crtcs,
                              output->name,
                              &modes,
@@ -1105,9 +1144,9 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
                              &properties);
     }
 
-  for (i = 0; i < manager->n_modes; i++)
+  for (l = combined_modes, i = 0; l; l = l->next, i++)
     {
-      MetaCrtcMode *mode = &manager->modes[i];
+      MetaCrtcMode *mode = l->data;
 
       g_variant_builder_add (&mode_builder, "(uxuudu)",
                              i, /* ID */
@@ -1135,6 +1174,11 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
                                                    g_variant_builder_end (&mode_builder),
                                                    max_screen_width,
                                                    max_screen_height);
+
+  g_list_free (combined_modes);
+  g_list_free (combined_outputs);
+  g_list_free (combined_crtcs);
+
   return TRUE;
 }
 
@@ -1226,12 +1270,14 @@ meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
                                                GDBusMethodInvocation *invocation)
 {
   MetaMonitorManager *manager = META_MONITOR_MANAGER (skeleton);
+  MetaSettings *settings = meta_backend_get_settings (manager->backend);
   GVariantBuilder monitors_builder;
   GVariantBuilder logical_monitors_builder;
   GVariantBuilder properties_builder;
   GList *l;
   int i;
   MetaMonitorManagerCapability capabilities;
+  int ui_scaling_factor;
   int max_screen_width, max_screen_height;
 
   g_variant_builder_init (&monitors_builder,
@@ -1409,6 +1455,11 @@ meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
                              g_variant_new_boolean (TRUE));
     }
 
+  ui_scaling_factor = meta_settings_get_ui_scaling_factor (settings);
+  g_variant_builder_add (&properties_builder, "{sv}",
+                         "legacy-ui-scaling-factor",
+                         g_variant_new_int32 (ui_scaling_factor));
+
   if (meta_monitor_manager_get_max_screen_size (manager,
                                                 &max_screen_width,
                                                 &max_screen_height))
@@ -1522,6 +1573,13 @@ meta_monitor_manager_is_config_applicable (MetaMonitorManager *manager,
               return FALSE;
             }
 
+          if (meta_monitor_is_laptop_panel (monitor) &&
+              meta_monitor_manager_is_lid_closed (manager))
+            {
+              g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                           "Refusing to activate a closed laptop panel");
+              return FALSE;
+            }
         }
     }
 
@@ -1532,35 +1590,19 @@ static gboolean
 meta_monitor_manager_is_config_complete (MetaMonitorManager *manager,
                                          MetaMonitorsConfig *config)
 {
-  GList *l;
-  unsigned int configured_monitor_count = 0;
-  unsigned int expected_monitor_count = 0;
+  MetaMonitorsConfigKey *current_state_key;
+  gboolean is_config_complete;
 
-  for (l = config->logical_monitor_configs; l; l = l->next)
-    {
-      MetaLogicalMonitorConfig *logical_monitor_config = l->data;
-      GList *k;
+  current_state_key =
+    meta_create_monitors_config_key_for_current_state (manager);
+  if (!current_state_key)
+    return FALSE;
 
-      for (k = logical_monitor_config->monitor_configs; k; k = k->next)
-        configured_monitor_count++;
-    }
+  is_config_complete = meta_monitors_config_key_equal (current_state_key,
+                                                       config->key);
+  meta_monitors_config_key_free (current_state_key);
 
-  for (l = manager->monitors; l; l = l->next)
-    {
-      MetaMonitor *monitor = l->data;
-
-      if (meta_monitor_is_laptop_panel (monitor))
-        {
-          if (!meta_monitor_manager_is_lid_closed (manager))
-            expected_monitor_count++;
-        }
-      else
-        {
-          expected_monitor_count++;
-        }
-    }
-
-  if (configured_monitor_count != expected_monitor_count)
+  if (!is_config_complete)
     return FALSE;
 
   return meta_monitor_manager_is_config_applicable (manager, config, NULL);
@@ -2038,6 +2080,7 @@ meta_monitor_manager_handle_change_backlight  (MetaDBusDisplayConfig *skeleton,
                                                gint                   value)
 {
   MetaMonitorManager *manager = META_MONITOR_MANAGER (skeleton);
+  GList *combined_outputs;
   MetaOutput *output;
 
   if (serial != manager->serial)
@@ -2048,14 +2091,18 @@ meta_monitor_manager_handle_change_backlight  (MetaDBusDisplayConfig *skeleton,
       return TRUE;
     }
 
-  if (output_index >= manager->n_outputs)
+  combined_outputs = combine_gpu_lists (manager, meta_gpu_get_outputs);
+
+  if (output_index >= g_list_length (combined_outputs))
     {
+      g_list_free (combined_outputs);
       g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
                                              G_DBUS_ERROR_INVALID_ARGS,
                                              "Invalid output id");
       return TRUE;
     }
-  output = &manager->outputs[output_index];
+  output = g_list_nth_data (combined_outputs, output_index);
+  g_list_free (combined_outputs);
 
   if (value < 0 || value > 100)
     {
@@ -2088,6 +2135,7 @@ meta_monitor_manager_handle_get_crtc_gamma  (MetaDBusDisplayConfig *skeleton,
 {
   MetaMonitorManager *manager = META_MONITOR_MANAGER (skeleton);
   MetaMonitorManagerClass *klass;
+  GList *combined_crtcs;
   MetaCrtc *crtc;
   gsize size;
   unsigned short *red;
@@ -2104,14 +2152,18 @@ meta_monitor_manager_handle_get_crtc_gamma  (MetaDBusDisplayConfig *skeleton,
       return TRUE;
     }
 
-  if (crtc_id >= manager->n_crtcs)
+  combined_crtcs = combine_gpu_lists (manager, meta_gpu_get_crtcs);
+  if (crtc_id >= g_list_length (combined_crtcs))
     {
+      g_list_free (combined_crtcs);
       g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
                                              G_DBUS_ERROR_INVALID_ARGS,
                                              "Invalid crtc id");
       return TRUE;
     }
-  crtc = &manager->crtcs[crtc_id];
+
+  crtc = g_list_nth_data (combined_crtcs, crtc_id);
+  g_list_free (combined_crtcs);
 
   klass = META_MONITOR_MANAGER_GET_CLASS (manager);
   if (klass->get_crtc_gamma)
@@ -2151,6 +2203,7 @@ meta_monitor_manager_handle_set_crtc_gamma  (MetaDBusDisplayConfig *skeleton,
 {
   MetaMonitorManager *manager = META_MONITOR_MANAGER (skeleton);
   MetaMonitorManagerClass *klass;
+  GList *combined_crtcs;
   MetaCrtc *crtc;
   gsize size, dummy;
   unsigned short *red;
@@ -2166,14 +2219,19 @@ meta_monitor_manager_handle_set_crtc_gamma  (MetaDBusDisplayConfig *skeleton,
       return TRUE;
     }
 
-  if (crtc_id >= manager->n_crtcs)
+  combined_crtcs = combine_gpu_lists (manager, meta_gpu_get_crtcs);
+
+  if (crtc_id >= g_list_length (combined_crtcs))
     {
+      g_list_free (combined_crtcs);
       g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
                                              G_DBUS_ERROR_INVALID_ARGS,
                                              "Invalid crtc id");
       return TRUE;
     }
-  crtc = &manager->crtcs[crtc_id];
+
+  crtc = g_list_nth_data (combined_crtcs, crtc_id);
+  g_list_free (combined_crtcs);
 
   red_bytes = g_variant_get_data_as_bytes (red_v);
   green_bytes = g_variant_get_data_as_bytes (green_v);
@@ -2443,38 +2501,17 @@ meta_monitor_manager_get_monitors (MetaMonitorManager *manager)
   return manager->monitors;
 }
 
-MetaOutput *
-meta_monitor_manager_get_outputs (MetaMonitorManager *manager,
-                                  unsigned int       *n_outputs)
+void
+meta_monitor_manager_add_gpu (MetaMonitorManager *manager,
+                              MetaGpu            *gpu)
 {
-  *n_outputs = manager->n_outputs;
-  return manager->outputs;
+  manager->gpus = g_list_append (manager->gpus, gpu);
 }
 
-void
-meta_monitor_manager_get_resources (MetaMonitorManager  *manager,
-                                    MetaCrtcMode       **modes,
-                                    unsigned int        *n_modes,
-                                    MetaCrtc           **crtcs,
-                                    unsigned int        *n_crtcs,
-                                    MetaOutput         **outputs,
-                                    unsigned int        *n_outputs)
+GList *
+meta_monitor_manager_get_gpus (MetaMonitorManager *manager)
 {
-  if (modes)
-    {
-      *modes = manager->modes;
-      *n_modes = manager->n_modes;
-    }
-  if (crtcs)
-    {
-      *crtcs = manager->crtcs;
-      *n_crtcs = manager->n_crtcs;
-    }
-  if (outputs)
-    {
-      *outputs = manager->outputs;
-      *n_outputs = manager->n_outputs;
-    }
+  return manager->gpus;
 }
 
 void
@@ -2487,32 +2524,44 @@ meta_monitor_manager_get_screen_size (MetaMonitorManager *manager,
 }
 
 static void
-generate_monitors (MetaMonitorManager *manager)
+rebuild_monitors (MetaMonitorManager *manager)
 {
-  unsigned int i;
+  GList *l;
 
-  for (i = 0; i < manager->n_outputs; i++)
+  if (manager->monitors)
     {
-      MetaOutput *output = &manager->outputs[i];
+      g_list_free_full (manager->monitors, g_object_unref);
+      manager->monitors = NULL;
+    }
 
-      if (output->tile_info.group_id)
+  for (l = manager->gpus; l; l = l->next)
+    {
+      MetaGpu *gpu = l->data;
+      GList *k;
+
+      for (k = meta_gpu_get_outputs (gpu); k; k = k->next)
         {
-          if (is_main_tiled_monitor_output (output))
+          MetaOutput *output = k->data;
+
+          if (output->tile_info.group_id)
             {
-              MetaMonitorTiled *monitor_tiled;
+              if (is_main_tiled_monitor_output (output))
+                {
+                  MetaMonitorTiled *monitor_tiled;
 
-              monitor_tiled = meta_monitor_tiled_new (manager, output);
-              manager->monitors = g_list_append (manager->monitors,
-                                                 monitor_tiled);
+                  monitor_tiled = meta_monitor_tiled_new (gpu, output);
+                  manager->monitors = g_list_append (manager->monitors,
+                                                     monitor_tiled);
+                }
             }
-        }
-      else
-        {
-          MetaMonitorNormal *monitor_normal;
+          else
+            {
+              MetaMonitorNormal *monitor_normal;
 
-          monitor_normal = meta_monitor_normal_new (manager, output);
-          manager->monitors = g_list_append (manager->monitors,
-                                             monitor_normal);
+              monitor_normal = meta_monitor_normal_new (gpu, output);
+              manager->monitors = g_list_append (manager->monitors,
+                                                 monitor_normal);
+            }
         }
     }
 }
@@ -2550,108 +2599,34 @@ meta_monitor_manager_is_transform_handled (MetaMonitorManager  *manager,
   return manager_class->is_transform_handled (manager, crtc, transform);
 }
 
-static void
-cleanup_pending_cleanup_state (MetaMonitorManager *manager)
-{
-  if (manager->pending_cleanup.monitors)
-    {
-      g_list_free_full (manager->pending_cleanup.monitors, g_object_unref);
-      manager->pending_cleanup.monitors = NULL;
-    }
-  if (manager->pending_cleanup.outputs)
-    {
-      meta_monitor_manager_free_output_array (manager->pending_cleanup.outputs,
-                                              manager->pending_cleanup.n_outputs);
-      manager->pending_cleanup.outputs = NULL;
-      manager->pending_cleanup.n_outputs = 0;
-    }
-  if (manager->pending_cleanup.modes)
-    {
-      meta_monitor_manager_free_mode_array (manager->pending_cleanup.modes,
-                                            manager->pending_cleanup.n_modes);
-      manager->pending_cleanup.modes = NULL;
-      manager->pending_cleanup.n_modes = 0;
-    }
-  if (manager->pending_cleanup.crtcs)
-    {
-      meta_monitor_manager_free_crtc_array (manager->pending_cleanup.crtcs,
-                                            manager->pending_cleanup.n_crtcs);
-      manager->pending_cleanup.crtcs = NULL;
-      manager->pending_cleanup.n_crtcs = 0;
-    }
-}
-
 void
 meta_monitor_manager_read_current_state (MetaMonitorManager *manager)
 {
-  MetaOutput *old_outputs;
-  MetaCrtc *old_crtcs;
-  MetaCrtcMode *old_modes;
-  unsigned int n_old_outputs, n_old_crtcs, n_old_modes;
-
-  /* Some implementations of read_current use the existing information
-   * we have available, so don't free the old configuration until after
-   * read_current finishes. */
-  old_outputs = manager->outputs;
-  n_old_outputs = manager->n_outputs;
-  old_crtcs = manager->crtcs;
-  n_old_crtcs = manager->n_crtcs;
-  old_modes = manager->modes;
-  n_old_modes = manager->n_modes;
+  GList *l;
 
   manager->serial++;
-  META_MONITOR_MANAGER_GET_CLASS (manager)->read_current (manager);
 
-  /*
-   * We must delay cleaning up the old hardware state, because the current
-   * logical state, when running on top of X11/Xrandr, may still be based on it
-   * for some time. The logical state may not be updated immediately, in case
-   * it is reconfigured, but after getting the response from a logical state
-   * configuration request to the X server. To be able to handle events and
-   * other things needing the logical state between the request and the
-   * response, the hardware state the logical state points to must be kept
-   * alive.
-   *
-   * If there is already a hardware state pending cleaning up, it means that
-   * the current logical state is still using that hardware state, so we can
-   * destroy the just replaced state immedietaley.
-   */
-  if (manager->pending_cleanup.outputs ||
-      manager->pending_cleanup.crtcs ||
-      manager->pending_cleanup.monitors)
+  for (l = manager->gpus; l; l = l->next)
     {
-      if (manager->monitors)
+      MetaGpu *gpu = l->data;
+      GError *error = NULL;
+
+      if (!meta_gpu_read_current (gpu, &error))
         {
-          g_list_free_full (manager->monitors, g_object_unref);
-          manager->monitors = NULL;
+          g_warning ("Failed to read current KMS state: %s", error->message);
+          g_clear_error (&error);
         }
-      meta_monitor_manager_free_output_array (old_outputs, n_old_outputs);
-      meta_monitor_manager_free_mode_array (old_modes, n_old_modes);
-      meta_monitor_manager_free_crtc_array (old_crtcs, n_old_crtcs);
-    }
-  else
-    {
-      manager->pending_cleanup.outputs = old_outputs;
-      manager->pending_cleanup.n_outputs = n_old_outputs;
-      manager->pending_cleanup.modes = old_modes;
-      manager->pending_cleanup.n_modes = n_old_modes;
-      manager->pending_cleanup.crtcs = old_crtcs;
-      manager->pending_cleanup.n_crtcs = n_old_crtcs;
-      manager->pending_cleanup.monitors = manager->monitors;
-      manager->monitors = NULL;
     }
 
-  generate_monitors (manager);
+  rebuild_monitors (manager);
 }
 
 static void
 meta_monitor_manager_notify_monitors_changed (MetaMonitorManager *manager)
 {
-  MetaBackend *backend = meta_get_backend ();
-
   manager->current_switch_config = META_MONITOR_SWITCH_CONFIG_UNKNOWN;
 
-  meta_backend_monitors_changed (backend);
+  meta_backend_monitors_changed (manager->backend);
 
   g_signal_emit (manager, signals[MONITORS_CHANGED_INTERNAL], 0);
   g_signal_emit_by_name (manager, "monitors-changed");
@@ -2733,8 +2708,6 @@ meta_monitor_manager_rebuild (MetaMonitorManager *manager,
   meta_monitor_manager_notify_monitors_changed (manager);
 
   g_list_free_full (old_logical_monitors, g_object_unref);
-
-  cleanup_pending_cleanup_state (manager);
 }
 
 static void
@@ -2777,8 +2750,6 @@ meta_monitor_manager_rebuild_derived (MetaMonitorManager *manager,
   meta_monitor_manager_notify_monitors_changed (manager);
 
   g_list_free_full (old_logical_monitors, g_object_unref);
-
-  cleanup_pending_cleanup_state (manager);
 }
 
 void
@@ -2885,6 +2856,7 @@ multiply_matrix (float a[6],
 
 gboolean
 meta_monitor_manager_get_monitor_matrix (MetaMonitorManager *manager,
+                                         MetaMonitor        *monitor,
                                          MetaLogicalMonitor *logical_monitor,
                                          gfloat              matrix[6])
 {
@@ -2894,44 +2866,12 @@ meta_monitor_manager_get_monitor_matrix (MetaMonitorManager *manager,
   if (!calculate_viewport_matrix (manager, logical_monitor, viewport))
     return FALSE;
 
+  /* Get transform corrected for LCD panel-orientation. */
   transform = logical_monitor->transform;
+  transform = meta_monitor_logical_to_crtc_transform (monitor, transform);
   multiply_matrix (viewport, transform_matrices[transform],
                    matrix);
   return TRUE;
-}
-
-/**
- * meta_monitor_manager_get_monitor_for_output:
- * @manager: A #MetaMonitorManager
- * @id: A valid #MetaOutput id
- *
- * Returns: The monitor index or -1 if @id isn't valid or the output
- * isn't associated with a logical monitor.
- */
-gint
-meta_monitor_manager_get_monitor_for_output (MetaMonitorManager *manager,
-                                             guint               id)
-{
-  MetaOutput *output;
-  GList *l;
-
-  g_return_val_if_fail (META_IS_MONITOR_MANAGER (manager), -1);
-  g_return_val_if_fail (id < manager->n_outputs, -1);
-
-  output = &manager->outputs[id];
-  if (!output || !output->crtc)
-    return -1;
-
-  for (l = manager->logical_monitors; l; l = l->next)
-    {
-      MetaLogicalMonitor *logical_monitor = l->data;
-
-      if (meta_rectangle_contains_rect (&logical_monitor->rect,
-                                        &output->crtc->rect))
-        return logical_monitor->number;
-    }
-
-  return -1;
 }
 
 /**

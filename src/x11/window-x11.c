@@ -53,11 +53,6 @@
 #include "backends/meta-logical-monitor.h"
 #include "backends/x11/meta-backend-x11.h"
 
-struct _MetaWindowX11Class
-{
-  MetaWindowClass parent_class;
-};
-
 G_DEFINE_TYPE_WITH_PRIVATE (MetaWindowX11, meta_window_x11, META_TYPE_WINDOW)
 
 static void
@@ -466,6 +461,7 @@ meta_window_apply_session_info (MetaWindow *window,
           MetaWorkspace *workspace = spaces->data;
 
           meta_window_change_workspace (window, workspace);
+          window->initial_workspace_set = TRUE;
 
           meta_topic (META_DEBUG_SM,
                       "Restoring saved window %s to workspace %d\n",
@@ -1554,6 +1550,12 @@ meta_window_x11_shortcuts_inhibited (MetaWindow         *window,
   return FALSE;
 }
 
+static gboolean
+meta_window_x11_is_stackable (MetaWindow *window)
+{
+  return !window->override_redirect;
+}
+
 static void
 meta_window_x11_class_init (MetaWindowX11Class *klass)
 {
@@ -1577,6 +1579,7 @@ meta_window_x11_class_init (MetaWindowX11Class *klass)
   window_class->get_client_pid = meta_window_x11_get_client_pid;
   window_class->force_restore_shortcuts = meta_window_x11_force_restore_shortcuts;
   window_class->shortcuts_inhibited = meta_window_x11_shortcuts_inhibited;
+  window_class->is_stackable = meta_window_x11_is_stackable;
 }
 
 void
@@ -2092,30 +2095,33 @@ meta_window_move_resize_request (MetaWindow *window,
       rect.width = width;
       rect.height = height;
 
-      meta_screen_get_monitor_geometry (window->screen, window->monitor->number, &monitor_rect);
-
-      /* Workaround braindead legacy apps that don't know how to
-       * fullscreen themselves properly - don't get fooled by
-       * windows which hide their titlebar when maximized or which are
-       * client decorated; that's not the same as fullscreen, even
-       * if there are no struts making the workarea smaller than
-       * the monitor.
-       */
-      if (meta_prefs_get_force_fullscreen() &&
-          !window->hide_titlebar_when_maximized &&
-          (window->decorated || !meta_window_is_client_decorated (window)) &&
-          meta_rectangle_equal (&rect, &monitor_rect) &&
-          window->has_fullscreen_func &&
-          !window->fullscreen)
+      if (window->monitor)
         {
-          /*
-          meta_topic (META_DEBUG_GEOMETRY,
-          */
-          meta_warning (
-                      "Treating resize request of legacy application %s as a "
-                      "fullscreen request\n",
-                      window->desc);
-          meta_window_make_fullscreen_internal (window);
+          meta_screen_get_monitor_geometry (window->screen, window->monitor->number, &monitor_rect);
+
+          /* Workaround braindead legacy apps that don't know how to
+           * fullscreen themselves properly - don't get fooled by
+           * windows which hide their titlebar when maximized or which are
+           * client decorated; that's not the same as fullscreen, even
+           * if there are no struts making the workarea smaller than
+           * the monitor.
+           */
+          if (meta_prefs_get_force_fullscreen() &&
+              !window->hide_titlebar_when_maximized &&
+              (window->decorated || !meta_window_is_client_decorated (window)) &&
+              meta_rectangle_equal (&rect, &monitor_rect) &&
+              window->has_fullscreen_func &&
+              !window->fullscreen)
+            {
+              /*
+              meta_topic (META_DEBUG_GEOMETRY,
+              */
+              meta_warning (
+                           "Treating resize request of legacy application %s as a "
+                           "fullscreen request\n",
+                           window->desc);
+              meta_window_make_fullscreen_internal (window);
+            }
         }
 
       adjust_for_gravity (window, TRUE, gravity, &rect);

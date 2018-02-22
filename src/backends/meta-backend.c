@@ -337,6 +337,8 @@ on_device_removed (ClutterDeviceManager *device_manager,
       gboolean has_touchscreen, has_pointing_device;
       ClutterInputDeviceType device_type;
 
+      priv->current_device_id = 0;
+
       device_type = clutter_input_device_get_device_type (device);
       has_touchscreen = check_has_slave_touchscreen (device_manager);
 
@@ -353,15 +355,6 @@ on_device_removed (ClutterDeviceManager *device_manager,
                                                    !has_touchscreen);
         }
     }
-}
-
-static MetaMonitorManager *
-create_monitor_manager (MetaBackend *backend)
-{
-  if (g_getenv ("META_DUMMY_MONITORS"))
-    return g_object_new (META_TYPE_MONITOR_MANAGER_DUMMY, NULL);
-
-  return META_BACKEND_GET_CLASS (backend)->create_monitor_manager (backend);
 }
 
 static void
@@ -441,7 +434,7 @@ meta_backend_real_post_init (MetaBackend *backend)
   clutter_actor_realize (priv->stage);
   META_BACKEND_GET_CLASS (backend)->select_stage_events (backend);
 
-  priv->monitor_manager = create_monitor_manager (backend);
+  meta_monitor_manager_setup (priv->monitor_manager);
 
   meta_backend_sync_screen_size (backend);
 
@@ -579,6 +572,24 @@ experimental_features_changed (MetaSettings            *settings,
 #endif /* HAVE_REMOTE_DESKTOP */
 }
 
+static MetaMonitorManager *
+meta_backend_create_monitor_manager (MetaBackend *backend,
+                                     GError     **error)
+{
+  if (g_getenv ("META_DUMMY_MONITORS"))
+    return g_object_new (META_TYPE_MONITOR_MANAGER_DUMMY, NULL);
+
+  return META_BACKEND_GET_CLASS (backend)->create_monitor_manager (backend,
+                                                                   error);
+}
+
+static MetaRenderer *
+meta_backend_create_renderer (MetaBackend *backend,
+                              GError     **error)
+{
+  return META_BACKEND_GET_CLASS (backend)->create_renderer (backend, error);
+}
+
 static gboolean
 meta_backend_initable_init (GInitable     *initable,
                             GCancellable  *cancellable,
@@ -594,20 +605,19 @@ meta_backend_initable_init (GInitable     *initable,
 
   priv->egl = g_object_new (META_TYPE_EGL, NULL);
 
-  priv->renderer = META_BACKEND_GET_CLASS (backend)->create_renderer (backend);
+  priv->orientation_manager = g_object_new (META_TYPE_ORIENTATION_MANAGER, NULL);
+
+  priv->monitor_manager = meta_backend_create_monitor_manager (backend, error);
+  if (!priv->monitor_manager)
+    return FALSE;
+
+  priv->renderer = meta_backend_create_renderer (backend, error);
   if (!priv->renderer)
-    {
-      g_set_error (error, G_IO_ERROR,
-                   G_IO_ERROR_FAILED,
-                   "Failed to create MetaRenderer");
-      return FALSE;
-    }
+    return FALSE;
 
   priv->cursor_tracker = g_object_new (META_TYPE_CURSOR_TRACKER, NULL);
 
   priv->dnd = g_object_new (META_TYPE_DND, NULL);
-
-  priv->orientation_manager = g_object_new (META_TYPE_ORIENTATION_MANAGER, NULL);
 
   return TRUE;
 }

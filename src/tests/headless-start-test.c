@@ -20,6 +20,8 @@
 #include "config.h"
 
 #include "backends/meta-monitor-manager-private.h"
+#include "backends/meta-crtc.h"
+#include "backends/meta-output.h"
 #include "compositor/meta-plugin-manager.h"
 #include "core/main-private.h"
 #include "meta/main.h"
@@ -55,16 +57,16 @@ meta_test_headless_start (void)
   MetaBackend *backend = meta_get_backend ();
   MetaMonitorManager *monitor_manager =
     meta_backend_get_monitor_manager (backend);
+  GList *gpus;
+  MetaGpu *gpu;
 
-  g_assert_cmpint ((int) monitor_manager->n_modes,
-                   ==,
-                   0);
-  g_assert_cmpint ((int) monitor_manager->n_outputs,
-                   ==,
-                   0);
-  g_assert_cmpint ((int) monitor_manager->n_crtcs,
-                   ==,
-                   0);
+  gpus = meta_monitor_manager_get_gpus (monitor_manager);
+  g_assert_cmpint ((int) g_list_length (gpus), ==, 1);
+
+  gpu = gpus->data;
+  g_assert_null (meta_gpu_get_modes (gpu));
+  g_assert_null (meta_gpu_get_outputs (gpu));
+  g_assert_null (meta_gpu_get_crtcs (gpu));
   g_assert_null (monitor_manager->monitors);
   g_assert_null (monitor_manager->logical_monitors);
 
@@ -101,49 +103,46 @@ meta_test_headless_monitor_connect (void)
     META_MONITOR_MANAGER_TEST (monitor_manager);
   MetaMonitorTestSetup *test_setup;
   MetaCrtcMode **modes;
+  MetaCrtcMode *crtc_mode;
+  MetaCrtc *crtc;
   MetaCrtc **possible_crtcs;
+  MetaOutput *output;
   GList *logical_monitors;
   ClutterActor *stage;
 
   test_setup = g_new0 (MetaMonitorTestSetup, 1);
-  test_setup->n_modes = 1;
-  test_setup->modes = g_new0 (MetaCrtcMode, test_setup->n_modes);
-  test_setup->modes[0] = (MetaCrtcMode) {
-    .mode_id = 1,
-    .width = 1024,
-    .height = 768,
-    .refresh_rate = 60.0
-  };
 
-  test_setup->n_crtcs = 1;
-  test_setup->crtcs = g_new0 (MetaCrtc, test_setup->n_crtcs);
-  test_setup->crtcs[0] = (MetaCrtc) {
-    .crtc_id = 1,
-    .all_transforms = ALL_TRANSFORMS
-  };
+  crtc_mode = g_object_new (META_TYPE_CRTC_MODE, NULL);
+  crtc_mode->mode_id = 1;
+  crtc_mode->width = 1024;
+  crtc_mode->height = 768;
+  crtc_mode->refresh_rate = 60.0;
+  test_setup->modes = g_list_append (NULL, crtc_mode);
+
+  crtc = g_object_new (META_TYPE_CRTC, NULL);
+  crtc->crtc_id = 1;
+  crtc->all_transforms = ALL_TRANSFORMS;
+  test_setup->crtcs = g_list_append (NULL, crtc);
 
   modes = g_new0 (MetaCrtcMode *, 1);
-  modes[0] = &test_setup->modes[0];
+  modes[0] = crtc_mode;
 
   possible_crtcs = g_new0 (MetaCrtc *, 1);
-  possible_crtcs[0] = &test_setup->crtcs[0];
+  possible_crtcs[0] = g_list_first (test_setup->crtcs)->data;
 
-  test_setup->n_outputs = 1;
-  test_setup->outputs = g_new0 (MetaOutput, test_setup->n_outputs);
-  test_setup->outputs[0] = (MetaOutput) {
-    .winsys_id = 1,
-    .name = g_strdup ("DP-1"),
-    .vendor = g_strdup ("MetaProduct's Inc."),
-    .product = g_strdup ("MetaMonitor"),
-    .serial = g_strdup ("0x987654"),
-    .preferred_mode = modes[0],
-    .n_modes = 1,
-    .modes = modes,
-    .n_possible_crtcs = 1,
-    .possible_crtcs = possible_crtcs,
-    .backlight = -1,
-    .connector_type = META_CONNECTOR_TYPE_DisplayPort
-  };
+  output = g_object_new (META_TYPE_OUTPUT, NULL);
+  output->winsys_id = 1;
+  output->name = g_strdup ("DP-1");
+  output->vendor = g_strdup ("MetaProduct's Inc.");
+  output->product = g_strdup ("MetaMonitor");
+  output->serial = g_strdup ("0x987654");
+  output->preferred_mode = modes[0];
+  output->n_modes = 1;
+  output->modes = modes;
+  output->n_possible_crtcs = 1;
+  output->possible_crtcs = possible_crtcs;
+  output->connector_type = META_CONNECTOR_TYPE_DisplayPort;
+  test_setup->outputs = g_list_append (NULL, output);
 
   meta_monitor_manager_test_emulate_hotplug (monitor_manager_test, test_setup);
 

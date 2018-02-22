@@ -31,8 +31,10 @@
 
 #include <meta/util.h>
 #include "backends/meta-backend-private.h"
+#include "backends/meta-crtc.h"
 #include "backends/meta-monitor.h"
 #include "backends/meta-monitor-config-manager.h"
+#include "backends/meta-output.h"
 
 #define ALL_TRANSFORMS ((1 << (META_MONITOR_TRANSFORM_FLIPPED_270 + 1)) - 1)
 
@@ -44,6 +46,8 @@
 struct _MetaMonitorManagerDummy
 {
   MetaMonitorManager parent_instance;
+
+  MetaGpu *gpu;
 
   gboolean is_transform_handled;
 };
@@ -60,19 +64,49 @@ typedef struct _MetaOutputDummy
 
 G_DEFINE_TYPE (MetaMonitorManagerDummy, meta_monitor_manager_dummy, META_TYPE_MONITOR_MANAGER);
 
+struct _MetaGpuDummy
+{
+  MetaGpu parent;
+};
+
+G_DEFINE_TYPE (MetaGpuDummy, meta_gpu_dummy, META_TYPE_GPU)
+
 static void
 meta_output_dummy_notify_destroy (MetaOutput *output);
 
-#define array_last(a, t) \
-  g_array_index (a, t, a->len - 1)
+typedef struct _CrtcModeSpec
+{
+  int width;
+  int height;
+  float refresh_rate;
+} CrtcModeSpec;
+
+static MetaCrtcMode *
+create_mode (CrtcModeSpec *spec,
+             long          mode_id)
+{
+  MetaCrtcMode *mode;
+
+  mode = g_object_new (META_TYPE_CRTC_MODE, NULL);
+
+  mode->mode_id = mode_id;
+  mode->width = spec->width;
+  mode->height = spec->height;
+  mode->refresh_rate = spec->refresh_rate;
+
+  return mode;
+}
 
 static void
-append_monitor (GArray *modes,
-                GArray *crtcs,
-                GArray *outputs,
-                float   scale)
+append_monitor (MetaMonitorManager *manager,
+                GList             **modes,
+                GList             **crtcs,
+                GList             **outputs,
+                float               scale)
 {
-  MetaCrtcMode modes_decl[] = {
+  MetaMonitorManagerDummy *manager_dummy = META_MONITOR_MANAGER_DUMMY (manager);
+  MetaGpu *gpu = manager_dummy->gpu;
+  CrtcModeSpec mode_specs[] = {
     {
       .width = 800,
       .height = 600,
@@ -84,65 +118,84 @@ append_monitor (GArray *modes,
       .refresh_rate = 60.0
     }
   };
-  MetaCrtc crtc;
+  GList *new_modes = NULL;
+  MetaCrtc *crtc;
   MetaOutputDummy *output_dummy;
-  MetaOutput output;
+  MetaOutput *output;
   unsigned int i;
+  unsigned int number;
+  GList *l;
 
-  for (i = 0; i < G_N_ELEMENTS (modes_decl); i++)
-    modes_decl[i].mode_id = modes->len + i;
-  g_array_append_vals (modes, modes_decl, G_N_ELEMENTS (modes_decl));
+  for (i = 0; i < G_N_ELEMENTS (mode_specs); i++)
+    {
+      long mode_id;
+      MetaCrtcMode *mode;
 
-  crtc = (MetaCrtc) {
-    .crtc_id = crtcs->len + 1,
-    .all_transforms = ALL_TRANSFORMS,
-  };
-  g_array_append_val (crtcs, crtc);
+      mode_id = g_list_length (*modes) + i + 1;
+      mode = create_mode (&mode_specs[i], mode_id);
+
+      new_modes = g_list_append (new_modes, mode);
+    }
+  *modes = g_list_concat (*modes, new_modes);
+
+  crtc = g_object_new (META_TYPE_CRTC, NULL);
+  crtc->crtc_id = g_list_length (*crtcs) + 1;
+  crtc->all_transforms = ALL_TRANSFORMS;
+  *crtcs = g_list_append (*crtcs, crtc);
+
+  output = g_object_new (META_TYPE_OUTPUT, NULL);
 
   output_dummy = g_new0 (MetaOutputDummy, 1);
   *output_dummy = (MetaOutputDummy) {
     .scale = scale
   };
 
-  output = (MetaOutput) {
-    .winsys_id = outputs->len + 1,
-    .name = g_strdup_printf ("LVDS%d", outputs->len + 1),
-    .vendor = g_strdup ("MetaProducts Inc."),
-    .product = g_strdup ("MetaMonitor"),
-    .serial = g_strdup_printf ("0xC0FFEE-%d", outputs->len + 1),
-    .suggested_x = -1,
-    .suggested_y = -1,
-    .width_mm = 222,
-    .height_mm = 125,
-    .subpixel_order = COGL_SUBPIXEL_ORDER_UNKNOWN,
-    .preferred_mode = &array_last (modes, MetaCrtcMode),
-    .n_possible_clones = 0,
-    .backlight = -1,
-    .connector_type = META_CONNECTOR_TYPE_LVDS,
-    .driver_private = output_dummy,
-    .driver_notify =
-      (GDestroyNotify) meta_output_dummy_notify_destroy
-  };
+  number = g_list_length (*outputs) + 1;
 
-  output.modes = g_new0 (MetaCrtcMode *, G_N_ELEMENTS (modes_decl));
-  for (i = 0; i < G_N_ELEMENTS (modes_decl); i++)
-    output.modes[i] = &g_array_index (modes, MetaCrtcMode,
-                                      modes->len - (i + 1));
-  output.n_modes = G_N_ELEMENTS (modes_decl);
-  output.possible_crtcs = g_new0 (MetaCrtc *, 1);
-  output.possible_crtcs[0] = &array_last (crtcs, MetaCrtc);
-  output.n_possible_crtcs = 1;
+  output->gpu = gpu;
+  output->winsys_id = number;
+  output->name = g_strdup_printf ("LVDS%d", number);
+  output->vendor = g_strdup ("MetaProducts Inc.");
+  output->product = g_strdup ("MetaMonitor");
+  output->serial = g_strdup_printf ("0xC0FFEE-%d", number);
+  output->suggested_x = -1;
+  output->suggested_y = -1;
+  output->width_mm = 222;
+  output->height_mm = 125;
+  output->subpixel_order = COGL_SUBPIXEL_ORDER_UNKNOWN;
+  output->preferred_mode = g_list_last (*modes)->data;
+  output->n_possible_clones = 0;
+  output->backlight = -1;
+  output->connector_type = META_CONNECTOR_TYPE_LVDS;
+  output->driver_private = output_dummy;
+  output->driver_notify =
+    (GDestroyNotify) meta_output_dummy_notify_destroy;
 
-  g_array_append_val (outputs, output);
+  output->modes = g_new0 (MetaCrtcMode *, G_N_ELEMENTS (mode_specs));
+  for (l = new_modes, i = 0; l; l = l->next, i++)
+    {
+      MetaCrtcMode *mode = l->data;
+
+      output->modes[i] = mode;
+    }
+  output->n_modes = G_N_ELEMENTS (mode_specs);
+  output->possible_crtcs = g_new0 (MetaCrtc *, 1);
+  output->possible_crtcs[0] = g_list_last (*crtcs)->data;
+  output->n_possible_crtcs = 1;
+
+  *outputs = g_list_append (*outputs, output);
 }
 
 static void
-append_tiled_monitor (GArray *modes,
-                      GArray *crtcs,
-                      GArray *outputs,
-                      int     scale)
+append_tiled_monitor (MetaMonitorManager *manager,
+                      GList             **modes,
+                      GList             **crtcs,
+                      GList             **outputs,
+                      int                 scale)
 {
-  MetaCrtcMode modes_decl[] = {
+  MetaMonitorManagerDummy *manager_dummy = META_MONITOR_MANAGER_DUMMY (manager);
+  MetaGpu *gpu = manager_dummy->gpu;
+  CrtcModeSpec mode_specs[] = {
     {
       .width = 800,
       .height = 600,
@@ -154,81 +207,105 @@ append_tiled_monitor (GArray *modes,
       .refresh_rate = 60.0
     }
   };
-  MetaCrtc crtcs_decl[] = {
-    {
-      .all_transforms = ALL_TRANSFORMS,
-    },
-    {
-      .all_transforms = ALL_TRANSFORMS,
-    },
-  };
-  MetaOutput output;
+  unsigned int n_tiles = 2;
+  GList *new_modes = NULL;
+  GList *new_crtcs = NULL;
+  MetaOutput *output;
   unsigned int i;
   uint32_t tile_group_id;
 
-  for (i = 0; i < G_N_ELEMENTS (modes_decl); i++)
-    modes_decl[i].mode_id = modes->len + i;
-  g_array_append_vals (modes, modes_decl, G_N_ELEMENTS (modes_decl));
+  for (i = 0; i < G_N_ELEMENTS (mode_specs); i++)
+    {
+      long mode_id;
+      MetaCrtcMode *mode;
 
-  for (i = 0; i < G_N_ELEMENTS (crtcs_decl); i++)
-    crtcs_decl[i].crtc_id = crtcs->len + i + 1;
-  g_array_append_vals (crtcs, crtcs_decl, G_N_ELEMENTS (crtcs_decl));
+      mode_id = g_list_length (*modes) + i + 1;
+      mode = create_mode (&mode_specs[i], mode_id);
 
-  tile_group_id = outputs->len + 1;
-  for (i = 0; i < G_N_ELEMENTS (crtcs_decl); i++)
+      new_modes = g_list_append (new_modes, mode);
+    }
+  *modes = g_list_concat (*modes, new_modes);
+
+  for (i = 0; i < n_tiles; i++)
+    {
+      MetaCrtc *crtc;
+
+      crtc = g_object_new (META_TYPE_CRTC, NULL);
+      crtc->gpu = gpu;
+      crtc->crtc_id = g_list_length (*crtcs) + i + 1;
+      crtc->all_transforms = ALL_TRANSFORMS;
+      new_crtcs = g_list_append (new_crtcs, crtc);
+    }
+  *crtcs = g_list_concat (*crtcs, new_crtcs);
+
+  tile_group_id = g_list_length (*outputs) + 1;
+  for (i = 0; i < n_tiles; i++)
     {
       MetaOutputDummy *output_dummy;
       MetaCrtcMode *preferred_mode;
       unsigned int j;
+      unsigned int number;
+      GList *l;
 
       output_dummy = g_new0 (MetaOutputDummy, 1);
       *output_dummy = (MetaOutputDummy) {
         .scale = scale
       };
 
-      preferred_mode = &array_last (modes, MetaCrtcMode),
-      output = (MetaOutput) {
-        .winsys_id = outputs->len + 1,
-        .name = g_strdup_printf ("LVDS%d", outputs->len + 1),
-        .vendor = g_strdup ("MetaProducts Inc."),
-        .product = g_strdup ("MetaMonitor"),
-        .serial = g_strdup_printf ("0xC0FFEE-%d", outputs->len + 1),
-        .suggested_x = -1,
-        .suggested_y = -1,
-        .width_mm = 222,
-        .height_mm = 125,
-        .subpixel_order = COGL_SUBPIXEL_ORDER_UNKNOWN,
-        .preferred_mode = preferred_mode,
-        .n_possible_clones = 0,
-        .backlight = -1,
-        .connector_type = META_CONNECTOR_TYPE_LVDS,
-        .tile_info = (MetaTileInfo) {
-          .group_id = tile_group_id,
-          .max_h_tiles = G_N_ELEMENTS (crtcs_decl),
-          .max_v_tiles = 1,
-          .loc_h_tile = i,
-          .loc_v_tile = 0,
-          .tile_w = preferred_mode->width,
-          .tile_h = preferred_mode->height
-        },
-        .driver_private = output_dummy,
-        .driver_notify =
-          (GDestroyNotify) meta_output_dummy_notify_destroy
-      };
+      /* Arbitrary ID unique for this output */
+      number = g_list_length (*outputs) + 1;
 
-      output.modes = g_new0 (MetaCrtcMode *, G_N_ELEMENTS (modes_decl));
-      for (j = 0; j < G_N_ELEMENTS (modes_decl); j++)
-        output.modes[j] = &g_array_index (modes, MetaCrtcMode,
-                                          modes->len - (j + 1));
-      output.n_modes = G_N_ELEMENTS (modes_decl);
+      preferred_mode = g_list_last (*modes)->data;
 
-      output.possible_crtcs = g_new0 (MetaCrtc *, G_N_ELEMENTS (crtcs_decl));
-      for (j = 0; j < G_N_ELEMENTS (crtcs_decl); j++)
-        output.possible_crtcs[j] = &g_array_index (crtcs, MetaCrtc,
-                                                   crtcs->len - (j + 1));
-      output.n_possible_crtcs = G_N_ELEMENTS (crtcs_decl);
+      output = g_object_new (META_TYPE_OUTPUT, NULL);
 
-      g_array_append_val (outputs, output);
+      output->gpu = gpu;
+      output->winsys_id = number;
+      output->name = g_strdup_printf ("LVDS%d", number);
+      output->vendor = g_strdup ("MetaProducts Inc.");
+      output->product = g_strdup ("MetaMonitor");
+      output->serial = g_strdup_printf ("0xC0FFEE-%d", number);
+      output->suggested_x = -1;
+      output->suggested_y = -1;
+      output->width_mm = 222;
+      output->height_mm = 125;
+      output->subpixel_order = COGL_SUBPIXEL_ORDER_UNKNOWN;
+      output->preferred_mode = preferred_mode;
+      output->n_possible_clones = 0;
+      output->backlight = -1;
+      output->connector_type = META_CONNECTOR_TYPE_LVDS;
+      output->tile_info = (MetaTileInfo) {
+        .group_id = tile_group_id,
+        .max_h_tiles = n_tiles,
+        .max_v_tiles = 1,
+        .loc_h_tile = i,
+        .loc_v_tile = 0,
+        .tile_w = preferred_mode->width,
+        .tile_h = preferred_mode->height
+      },
+      output->driver_private = output_dummy;
+      output->driver_notify =
+        (GDestroyNotify) meta_output_dummy_notify_destroy;
+
+      output->modes = g_new0 (MetaCrtcMode *, G_N_ELEMENTS (mode_specs));
+      for (l = new_modes, j = 0; l; l = l->next, j++)
+        {
+          MetaCrtcMode *mode = l->data;
+
+          output->modes[j] = mode;
+        }
+      output->n_modes = G_N_ELEMENTS (mode_specs);
+
+      output->possible_crtcs = g_new0 (MetaCrtc *, n_tiles);
+      for (l = new_crtcs, j = 0; l; l = l->next, j++)
+        {
+          MetaCrtc *crtc = l->data;
+
+          output->possible_crtcs[j] = crtc;
+        }
+      output->n_possible_crtcs = n_tiles;
+
+      *outputs = g_list_append (*outputs, output);
     }
 }
 
@@ -241,6 +318,8 @@ meta_output_dummy_notify_destroy (MetaOutput *output)
 static void
 meta_monitor_manager_dummy_read_current (MetaMonitorManager *manager)
 {
+  MetaMonitorManagerDummy *manager_dummy = META_MONITOR_MANAGER_DUMMY (manager);
+  MetaGpu *gpu = manager_dummy->gpu;
   unsigned int num_monitors = 1;
   float *monitor_scales = NULL;
   const char *num_monitors_str;
@@ -248,9 +327,9 @@ meta_monitor_manager_dummy_read_current (MetaMonitorManager *manager)
   const char *tiled_monitors_str;
   gboolean tiled_monitors;
   unsigned int i;
-  GArray *outputs;
-  GArray *crtcs;
-  GArray *modes;
+  GList *outputs;
+  GList *crtcs;
+  GList *modes;
 
   /* To control what monitor configuration is generated, there are two available
    * environmental variables that can be used:
@@ -319,28 +398,22 @@ meta_monitor_manager_dummy_read_current (MetaMonitorManager *manager)
   tiled_monitors_str = g_getenv ("MUTTER_DEBUG_TILED_DUMMY_MONITORS");
   tiled_monitors = g_strcmp0 (tiled_monitors_str, "1") == 0;
 
-  modes = g_array_sized_new (FALSE, TRUE, sizeof (MetaCrtcMode), MAX_MODES);
-  crtcs = g_array_sized_new (FALSE, TRUE, sizeof (MetaCrtc), MAX_CRTCS);
-  outputs = g_array_sized_new (FALSE, TRUE, sizeof (MetaOutput), MAX_OUTPUTS);
+  modes = NULL;
+  crtcs = NULL;
+  outputs = NULL;
 
   for (i = 0; i < num_monitors; i++)
     {
       if (tiled_monitors)
-        append_tiled_monitor (modes, crtcs, outputs, monitor_scales[i]);
+        append_tiled_monitor (manager,
+                              &modes, &crtcs, &outputs, monitor_scales[i]);
       else
-        append_monitor (modes, crtcs, outputs, monitor_scales[i]);
+        append_monitor (manager, &modes, &crtcs, &outputs, monitor_scales[i]);
     }
 
-  manager->modes = (MetaCrtcMode *) modes->data;
-  manager->n_modes = modes->len;
-  manager->crtcs = (MetaCrtc *) crtcs->data;
-  manager->n_crtcs = crtcs->len;
-  manager->outputs = (MetaOutput *) outputs->data;
-  manager->n_outputs = outputs->len;
-
-  g_array_free (modes, FALSE);
-  g_array_free (crtcs, FALSE);
-  g_array_free (outputs, FALSE);
+  meta_gpu_take_modes (gpu, modes);
+  meta_gpu_take_crtcs (gpu, crtcs);
+  meta_gpu_take_outputs (gpu, outputs);
 }
 
 static void
@@ -363,6 +436,8 @@ apply_crtc_assignments (MetaMonitorManager *manager,
                         MetaOutputInfo    **outputs,
                         unsigned int        n_outputs)
 {
+  MetaMonitorManagerDummy *manager_dummy = META_MONITOR_MANAGER_DUMMY (manager);
+  GList *l;
   unsigned i;
 
   for (i = 0; i < n_crtcs; i++)
@@ -426,9 +501,9 @@ apply_crtc_assignments (MetaMonitorManager *manager,
     }
 
   /* Disable CRTCs not mentioned in the list */
-  for (i = 0; i < manager->n_crtcs; i++)
+  for (l = meta_gpu_get_crtcs (manager_dummy->gpu); l; l = l->next)
     {
-      MetaCrtc *crtc = &manager->crtcs[i];
+      MetaCrtc *crtc = l->data;
 
       crtc->logical_monitor = NULL;
 
@@ -446,9 +521,9 @@ apply_crtc_assignments (MetaMonitorManager *manager,
     }
 
   /* Disable outputs not mentioned in the list */
-  for (i = 0; i < manager->n_outputs; i++)
+  for (l = meta_gpu_get_outputs (manager_dummy->gpu); l; l = l->next)
     {
-      MetaOutput *output = &manager->outputs[i];
+      MetaOutput *output = l->data;
 
       if (output->is_dirty)
         {
@@ -643,7 +718,6 @@ meta_monitor_manager_dummy_class_init (MetaMonitorManagerDummyClass *klass)
 {
   MetaMonitorManagerClass *manager_class = META_MONITOR_MANAGER_CLASS (klass);
 
-  manager_class->read_current = meta_monitor_manager_dummy_read_current;
   manager_class->ensure_initial_config = meta_monitor_manager_dummy_ensure_initial_config;
   manager_class->apply_monitors_config = meta_monitor_manager_dummy_apply_monitors_config;
   manager_class->is_transform_handled = meta_monitor_manager_dummy_is_transform_handled;
@@ -655,14 +729,44 @@ meta_monitor_manager_dummy_class_init (MetaMonitorManagerDummyClass *klass)
 }
 
 static void
-meta_monitor_manager_dummy_init (MetaMonitorManagerDummy *manager)
+meta_monitor_manager_dummy_init (MetaMonitorManagerDummy *manager_dummy)
 {
+  MetaMonitorManager *manager = META_MONITOR_MANAGER (manager_dummy);
   const char *nested_offscreen_transform;
 
   nested_offscreen_transform =
     g_getenv ("MUTTER_DEBUG_NESTED_OFFSCREEN_TRANSFORM");
   if (g_strcmp0 (nested_offscreen_transform, "1") == 0)
-    manager->is_transform_handled = FALSE;
+    manager_dummy->is_transform_handled = FALSE;
   else
-    manager->is_transform_handled = TRUE;
+    manager_dummy->is_transform_handled = TRUE;
+
+  manager_dummy->gpu = g_object_new (META_TYPE_GPU_DUMMY,
+                                     "monitor-manager", manager,
+                                     NULL);
+  meta_monitor_manager_add_gpu (manager, manager_dummy->gpu);
+}
+
+static gboolean
+meta_gpu_dummy_read_current (MetaGpu  *gpu,
+                             GError  **error)
+{
+  MetaMonitorManager *manager = meta_gpu_get_monitor_manager (gpu);
+
+  meta_monitor_manager_dummy_read_current (manager);
+
+  return TRUE;
+}
+
+static void
+meta_gpu_dummy_init (MetaGpuDummy *gpu_dummy)
+{
+}
+
+static void
+meta_gpu_dummy_class_init (MetaGpuDummyClass *klass)
+{
+  MetaGpuClass *gpu_class = META_GPU_CLASS (klass);
+
+  gpu_class->read_current = meta_gpu_dummy_read_current;
 }

@@ -119,6 +119,12 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	linux-dmabuf-unstable-v1-server-protocol.h				\
 @HAVE_WAYLAND_TRUE@	keyboard-shortcuts-inhibit-unstable-v1-protocol.c		\
 @HAVE_WAYLAND_TRUE@	keyboard-shortcuts-inhibit-unstable-v1-server-protocol.h	\
+@HAVE_WAYLAND_TRUE@	xdg-output-unstable-v1-protocol.c				\
+@HAVE_WAYLAND_TRUE@	xdg-output-unstable-v1-server-protocol.h			\
+@HAVE_WAYLAND_TRUE@	xwayland-keyboard-grab-unstable-v1-protocol.c			\
+@HAVE_WAYLAND_TRUE@	xwayland-keyboard-grab-unstable-v1-server-protocol.h		\
+@HAVE_WAYLAND_TRUE@	gtk-text-input-protocol.c					\
+@HAVE_WAYLAND_TRUE@	gtk-text-input-server-protocol.h				\
 @HAVE_WAYLAND_TRUE@	$(NULL)
 
 @HAVE_REMOTE_DESKTOP_TRUE@am__append_3 = \
@@ -210,6 +216,8 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-cursor.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-tablet-cursor.c	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-tablet-cursor.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-text-input.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-text-input.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-types.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-versions.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-outputs.c		\
@@ -218,6 +226,8 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-foreign.h     	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.c		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.h		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-window-xwayland.c		\
+@HAVE_WAYLAND_TRUE@	wayland/meta-window-xwayland.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-shell.c	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-shell.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-wl-shell.c		\
@@ -228,6 +238,8 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-inhibit-shortcuts.h \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-inhibit-shortcuts-dialog.c	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-inhibit-shortcuts-dialog.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-xwayland-grab-keyboard.c  	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-xwayland-grab-keyboard.h  	\
 @HAVE_WAYLAND_TRUE@	$(NULL)
 
 @HAVE_NATIVE_BACKEND_TRUE@am__append_5 = \
@@ -236,11 +248,15 @@ host_triplet = @host@
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-backend-native-private.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-barrier-native.c		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-barrier-native.h		\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-crtc-kms.c			\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-crtc-kms.h			\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-clutter-backend-native.c	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-clutter-backend-native.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.c	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-default-modes.h		\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-gpu-kms.c			\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-gpu-kms.h			\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-idle-monitor-native.c	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-idle-monitor-native.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-input-settings-native.c	\
@@ -249,8 +265,12 @@ host_triplet = @host@
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-monitor-manager-kms.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-launcher.c			\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-launcher.h			\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-output-kms.c		\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-output-kms.h		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-renderer-native.c		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-renderer-native.h		\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-renderer-native-gles3.c	\
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-renderer-native-gles3.h	\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-stage-native.c		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-stage-native.h		\
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/dbus-utils.c			\
@@ -326,13 +346,17 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	backends/meta-backend.c meta/meta-backend.h \
 	meta/meta-settings.h backends/meta-backend-private.h \
 	backends/meta-barrier.c backends/meta-barrier-private.h \
+	backends/meta-crtc.c backends/meta-crtc.h \
 	backends/meta-cursor.c backends/meta-cursor.h \
 	backends/meta-cursor-tracker.c \
 	backends/meta-cursor-tracker-private.h \
 	backends/meta-cursor-renderer.c \
 	backends/meta-cursor-renderer.h backends/meta-dnd-private.h \
 	backends/meta-egl.c backends/meta-egl.h \
-	backends/meta-egl-ext.h backends/meta-display-config-shared.h \
+	backends/meta-egl-ext.h backends/meta-gles3.c \
+	backends/meta-gles3.h backends/meta-gles3-table.h \
+	backends/meta-gpu.c backends/meta-gpu.h \
+	backends/meta-display-config-shared.h \
 	backends/meta-idle-monitor.c \
 	backends/meta-idle-monitor-private.h \
 	backends/meta-idle-monitor-dbus.c \
@@ -353,8 +377,8 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	backends/meta-monitor-manager-dummy.c \
 	backends/meta-monitor-manager-dummy.h \
 	backends/meta-orientation-manager.c \
-	backends/meta-orientation-manager.h \
-	backends/meta-pointer-constraint.c \
+	backends/meta-orientation-manager.h backends/meta-output.c \
+	backends/meta-output.h backends/meta-pointer-constraint.c \
 	backends/meta-pointer-constraint.h backends/meta-settings.c \
 	backends/meta-settings-private.h backends/meta-stage.h \
 	backends/meta-stage.c backends/meta-renderer.c \
@@ -366,8 +390,11 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	backends/x11/meta-barrier-x11.h \
 	backends/x11/meta-clutter-backend-x11.c \
 	backends/x11/meta-clutter-backend-x11.h \
+	backends/x11/meta-crtc-xrandr.c \
+	backends/x11/meta-crtc-xrandr.h \
 	backends/x11/meta-cursor-renderer-x11.c \
 	backends/x11/meta-cursor-renderer-x11.h \
+	backends/x11/meta-gpu-xrandr.c backends/x11/meta-gpu-xrandr.h \
 	backends/x11/cm/meta-backend-x11-cm.c \
 	backends/x11/cm/meta-backend-x11-cm.h \
 	backends/x11/cm/meta-renderer-x11-cm.c \
@@ -384,6 +411,8 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	backends/x11/meta-input-settings-x11.h \
 	backends/x11/meta-monitor-manager-xrandr.c \
 	backends/x11/meta-monitor-manager-xrandr.h \
+	backends/x11/meta-output-xrandr.c \
+	backends/x11/meta-output-xrandr.h \
 	backends/x11/meta-renderer-x11.c \
 	backends/x11/meta-renderer-x11.h \
 	backends/x11/meta-stage-x11-nested.c \
@@ -529,11 +558,14 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	wayland/meta-wayland-surface-role-cursor.h \
 	wayland/meta-wayland-surface-role-tablet-cursor.c \
 	wayland/meta-wayland-surface-role-tablet-cursor.h \
-	wayland/meta-wayland-types.h wayland/meta-wayland-versions.h \
-	wayland/meta-wayland-outputs.c wayland/meta-wayland-outputs.h \
+	wayland/meta-wayland-text-input.c \
+	wayland/meta-wayland-text-input.h wayland/meta-wayland-types.h \
+	wayland/meta-wayland-versions.h wayland/meta-wayland-outputs.c \
+	wayland/meta-wayland-outputs.h \
 	wayland/meta-wayland-xdg-foreign.c \
 	wayland/meta-wayland-xdg-foreign.h \
 	wayland/meta-window-wayland.c wayland/meta-window-wayland.h \
+	wayland/meta-window-xwayland.c wayland/meta-window-xwayland.h \
 	wayland/meta-wayland-xdg-shell.c \
 	wayland/meta-wayland-xdg-shell.h \
 	wayland/meta-wayland-wl-shell.c \
@@ -544,16 +576,21 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	wayland/meta-wayland-inhibit-shortcuts.h \
 	wayland/meta-wayland-inhibit-shortcuts-dialog.c \
 	wayland/meta-wayland-inhibit-shortcuts-dialog.h \
+	wayland/meta-xwayland-grab-keyboard.c \
+	wayland/meta-xwayland-grab-keyboard.h \
 	backends/native/meta-backend-native.c \
 	backends/native/meta-backend-native.h \
 	backends/native/meta-backend-native-private.h \
 	backends/native/meta-barrier-native.c \
 	backends/native/meta-barrier-native.h \
+	backends/native/meta-crtc-kms.c \
+	backends/native/meta-crtc-kms.h \
 	backends/native/meta-clutter-backend-native.c \
 	backends/native/meta-clutter-backend-native.h \
 	backends/native/meta-cursor-renderer-native.c \
 	backends/native/meta-cursor-renderer-native.h \
 	backends/native/meta-default-modes.h \
+	backends/native/meta-gpu-kms.c backends/native/meta-gpu-kms.h \
 	backends/native/meta-idle-monitor-native.c \
 	backends/native/meta-idle-monitor-native.h \
 	backends/native/meta-input-settings-native.c \
@@ -562,8 +599,12 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	backends/native/meta-monitor-manager-kms.h \
 	backends/native/meta-launcher.c \
 	backends/native/meta-launcher.h \
+	backends/native/meta-output-kms.c \
+	backends/native/meta-output-kms.h \
 	backends/native/meta-renderer-native.c \
 	backends/native/meta-renderer-native.h \
+	backends/native/meta-renderer-native-gles3.c \
+	backends/native/meta-renderer-native-gles3.h \
 	backends/native/meta-stage-native.c \
 	backends/native/meta-stage-native.h \
 	backends/native/dbus-utils.c backends/native/dbus-utils.h
@@ -612,31 +653,40 @@ am__objects_1 =
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-cursor.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-tablet-cursor.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-text-input.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-outputs.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-foreign.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-window-xwayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-shell.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-wl-shell.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-gtk-shell.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-inhibit-shortcuts.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-inhibit-shortcuts-dialog.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-xwayland-grab-keyboard.lo \
 @HAVE_WAYLAND_TRUE@	$(am__objects_1)
 @HAVE_NATIVE_BACKEND_TRUE@am__objects_4 = backends/native/meta-backend-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-barrier-native.lo \
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-crtc-kms.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-clutter-backend-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-cursor-renderer-native.lo \
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-gpu-kms.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-idle-monitor-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-input-settings-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-monitor-manager-kms.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-launcher.lo \
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-output-kms.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-renderer-native.lo \
+@HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-renderer-native-gles3.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/meta-stage-native.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	backends/native/dbus-utils.lo \
 @HAVE_NATIVE_BACKEND_TRUE@	$(am__objects_1)
 am_libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS =  \
 	backends/meta-backend.lo backends/meta-barrier.lo \
-	backends/meta-cursor.lo backends/meta-cursor-tracker.lo \
+	backends/meta-crtc.lo backends/meta-cursor.lo \
+	backends/meta-cursor-tracker.lo \
 	backends/meta-cursor-renderer.lo backends/meta-egl.lo \
+	backends/meta-gles3.lo backends/meta-gpu.lo \
 	backends/meta-idle-monitor.lo \
 	backends/meta-idle-monitor-dbus.lo \
 	backends/meta-input-settings.lo \
@@ -646,14 +696,16 @@ am_libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS =  \
 	backends/meta-monitor-config-store.lo backends/meta-monitor.lo \
 	backends/meta-monitor-manager.lo \
 	backends/meta-monitor-manager-dummy.lo \
-	backends/meta-orientation-manager.lo \
+	backends/meta-orientation-manager.lo backends/meta-output.lo \
 	backends/meta-pointer-constraint.lo backends/meta-settings.lo \
 	backends/meta-stage.lo backends/meta-renderer.lo \
 	backends/meta-renderer-view.lo backends/edid-parse.lo \
 	backends/x11/meta-backend-x11.lo \
 	backends/x11/meta-barrier-x11.lo \
 	backends/x11/meta-clutter-backend-x11.lo \
+	backends/x11/meta-crtc-xrandr.lo \
 	backends/x11/meta-cursor-renderer-x11.lo \
+	backends/x11/meta-gpu-xrandr.lo \
 	backends/x11/cm/meta-backend-x11-cm.lo \
 	backends/x11/cm/meta-renderer-x11-cm.lo \
 	backends/x11/nested/meta-backend-x11-nested.lo \
@@ -662,6 +714,7 @@ am_libmutter_@LIBMUTTER_API_VERSION@_la_OBJECTS =  \
 	backends/x11/meta-idle-monitor-xsync.lo \
 	backends/x11/meta-input-settings-x11.lo \
 	backends/x11/meta-monitor-manager-xrandr.lo \
+	backends/x11/meta-output-xrandr.lo \
 	backends/x11/meta-renderer-x11.lo \
 	backends/x11/meta-stage-x11-nested.lo core/meta-accel-parse.lo \
 	core/bell.lo core/boxes.lo core/meta-border.lo \
@@ -717,7 +770,9 @@ am__objects_7 = meta-dbus-login1.lo
 @HAVE_WAYLAND_TRUE@	xdg-foreign-unstable-v1-protocol.lo \
 @HAVE_WAYLAND_TRUE@	linux-dmabuf-unstable-v1-protocol.lo \
 @HAVE_WAYLAND_TRUE@	keyboard-shortcuts-inhibit-unstable-v1-protocol.lo \
-@HAVE_WAYLAND_TRUE@	$(am__objects_1)
+@HAVE_WAYLAND_TRUE@	xdg-output-unstable-v1-protocol.lo \
+@HAVE_WAYLAND_TRUE@	xwayland-keyboard-grab-unstable-v1-protocol.lo \
+@HAVE_WAYLAND_TRUE@	gtk-text-input-protocol.lo $(am__objects_1)
 am__objects_12 = $(am__objects_5) $(am__objects_6) $(am__objects_7) \
 	meta-enum-types.lo $(am__objects_1) $(am__objects_10) \
 	$(am__objects_11)
@@ -1060,6 +1115,7 @@ XGETTEXT = @XGETTEXT@
 XGETTEXT_015 = @XGETTEXT_015@
 XGETTEXT_EXTRA_OPTIONS = @XGETTEXT_EXTRA_OPTIONS@
 XMKMF = @XMKMF@
+XWAYLAND_GRAB_DEFAULT_ACCESS_RULES = @XWAYLAND_GRAB_DEFAULT_ACCESS_RULES@
 XWAYLAND_PATH = @XWAYLAND_PATH@
 X_CFLAGS = @X_CFLAGS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
@@ -1174,19 +1230,24 @@ mutter_built_sources = $(dbus_idle_built_sources) \
 wayland_protocols = \
 	wayland/protocol/gtk-shell.xml		\
 	wayland/protocol/gtk-primary-selection.xml	\
+	wayland/protocol/gtk-text-input.xml	\
 	$(NULL)
 
 libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =  \
 	backends/meta-backend.c meta/meta-backend.h \
 	meta/meta-settings.h backends/meta-backend-private.h \
 	backends/meta-barrier.c backends/meta-barrier-private.h \
+	backends/meta-crtc.c backends/meta-crtc.h \
 	backends/meta-cursor.c backends/meta-cursor.h \
 	backends/meta-cursor-tracker.c \
 	backends/meta-cursor-tracker-private.h \
 	backends/meta-cursor-renderer.c \
 	backends/meta-cursor-renderer.h backends/meta-dnd-private.h \
 	backends/meta-egl.c backends/meta-egl.h \
-	backends/meta-egl-ext.h backends/meta-display-config-shared.h \
+	backends/meta-egl-ext.h backends/meta-gles3.c \
+	backends/meta-gles3.h backends/meta-gles3-table.h \
+	backends/meta-gpu.c backends/meta-gpu.h \
+	backends/meta-display-config-shared.h \
 	backends/meta-idle-monitor.c \
 	backends/meta-idle-monitor-private.h \
 	backends/meta-idle-monitor-dbus.c \
@@ -1207,8 +1268,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =  \
 	backends/meta-monitor-manager-dummy.c \
 	backends/meta-monitor-manager-dummy.h \
 	backends/meta-orientation-manager.c \
-	backends/meta-orientation-manager.h \
-	backends/meta-pointer-constraint.c \
+	backends/meta-orientation-manager.h backends/meta-output.c \
+	backends/meta-output.h backends/meta-pointer-constraint.c \
 	backends/meta-pointer-constraint.h backends/meta-settings.c \
 	backends/meta-settings-private.h backends/meta-stage.h \
 	backends/meta-stage.c backends/meta-renderer.c \
@@ -1220,8 +1281,11 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =  \
 	backends/x11/meta-barrier-x11.h \
 	backends/x11/meta-clutter-backend-x11.c \
 	backends/x11/meta-clutter-backend-x11.h \
+	backends/x11/meta-crtc-xrandr.c \
+	backends/x11/meta-crtc-xrandr.h \
 	backends/x11/meta-cursor-renderer-x11.c \
 	backends/x11/meta-cursor-renderer-x11.h \
+	backends/x11/meta-gpu-xrandr.c backends/x11/meta-gpu-xrandr.h \
 	backends/x11/cm/meta-backend-x11-cm.c \
 	backends/x11/cm/meta-backend-x11-cm.h \
 	backends/x11/cm/meta-renderer-x11-cm.c \
@@ -1238,6 +1302,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =  \
 	backends/x11/meta-input-settings-x11.h \
 	backends/x11/meta-monitor-manager-xrandr.c \
 	backends/x11/meta-monitor-manager-xrandr.h \
+	backends/x11/meta-output-xrandr.c \
+	backends/x11/meta-output-xrandr.h \
 	backends/x11/meta-renderer-x11.c \
 	backends/x11/meta-renderer-x11.h \
 	backends/x11/meta-stage-x11-nested.c \
@@ -1584,6 +1650,8 @@ backends/meta-backend.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-barrier.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-crtc.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-cursor.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-cursor-tracker.lo: backends/$(am__dirstamp) \
@@ -1591,6 +1659,10 @@ backends/meta-cursor-tracker.lo: backends/$(am__dirstamp) \
 backends/meta-cursor-renderer.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-egl.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-gles3.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-gpu.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-idle-monitor.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
@@ -1613,6 +1685,8 @@ backends/meta-monitor-manager.lo: backends/$(am__dirstamp) \
 backends/meta-monitor-manager-dummy.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-orientation-manager.lo: backends/$(am__dirstamp) \
+	backends/$(DEPDIR)/$(am__dirstamp)
+backends/meta-output.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
 backends/meta-pointer-constraint.lo: backends/$(am__dirstamp) \
 	backends/$(DEPDIR)/$(am__dirstamp)
@@ -1639,8 +1713,12 @@ backends/x11/meta-barrier-x11.lo: backends/x11/$(am__dirstamp) \
 backends/x11/meta-clutter-backend-x11.lo:  \
 	backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/meta-crtc-xrandr.lo: backends/x11/$(am__dirstamp) \
+	backends/x11/$(DEPDIR)/$(am__dirstamp)
 backends/x11/meta-cursor-renderer-x11.lo:  \
 	backends/x11/$(am__dirstamp) \
+	backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/meta-gpu-xrandr.lo: backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
 backends/x11/cm/$(am__dirstamp):
 	@$(MKDIR_P) backends/x11/cm
@@ -1675,6 +1753,8 @@ backends/x11/meta-input-settings-x11.lo: backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
 backends/x11/meta-monitor-manager-xrandr.lo:  \
 	backends/x11/$(am__dirstamp) \
+	backends/x11/$(DEPDIR)/$(am__dirstamp)
+backends/x11/meta-output-xrandr.lo: backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
 backends/x11/meta-renderer-x11.lo: backends/x11/$(am__dirstamp) \
 	backends/x11/$(DEPDIR)/$(am__dirstamp)
@@ -1896,11 +1976,15 @@ wayland/meta-wayland-surface-role-cursor.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-surface-role-tablet-cursor.lo:  \
 	wayland/$(am__dirstamp) wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-text-input.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-outputs.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-xdg-foreign.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-window-wayland.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-window-xwayland.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-xdg-shell.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
@@ -1912,6 +1996,8 @@ wayland/meta-wayland-inhibit-shortcuts.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-inhibit-shortcuts-dialog.lo:  \
 	wayland/$(am__dirstamp) wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-xwayland-grab-keyboard.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
 backends/native/$(am__dirstamp):
 	@$(MKDIR_P) backends/native
 	@: > backends/native/$(am__dirstamp)
@@ -1924,11 +2010,15 @@ backends/native/meta-backend-native.lo:  \
 backends/native/meta-barrier-native.lo:  \
 	backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-crtc-kms.lo: backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/meta-clutter-backend-native.lo:  \
 	backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/meta-cursor-renderer-native.lo:  \
 	backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-gpu-kms.lo: backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/meta-idle-monitor-native.lo:  \
 	backends/native/$(am__dirstamp) \
@@ -1941,7 +2031,12 @@ backends/native/meta-monitor-manager-kms.lo:  \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/meta-launcher.lo: backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-output-kms.lo: backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/meta-renderer-native.lo:  \
+	backends/native/$(am__dirstamp) \
+	backends/native/$(DEPDIR)/$(am__dirstamp)
+backends/native/meta-renderer-native-gles3.lo:  \
 	backends/native/$(am__dirstamp) \
 	backends/native/$(DEPDIR)/$(am__dirstamp)
 backends/native/meta-stage-native.lo: backends/native/$(am__dirstamp) \
@@ -2199,6 +2294,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtk-primary-selection-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtk-shell-protocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtk-text-input-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keyboard-shortcuts-inhibit-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux-dmabuf-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta-dbus-display-config.Plo@am__quote@
@@ -2212,15 +2308,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/relative-pointer-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tablet-unstable-v2-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-foreign-unstable-v1-protocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-output-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-shell-unstable-v6-protocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xwayland-keyboard-grab-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/edid-parse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-backend.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-barrier.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-crtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-cursor-renderer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-cursor-tracker.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-dbus-session-watcher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-egl.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-gles3.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-gpu.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-idle-monitor-dbus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-idle-monitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-input-settings.Plo@am__quote@
@@ -2232,6 +2333,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-monitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-orientation-manager.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-output.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-pointer-constraint.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-remote-desktop-session.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/meta-remote-desktop.Plo@am__quote@
@@ -2249,20 +2351,27 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-backend-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-barrier-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-clutter-backend-native.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-crtc-kms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-cursor-renderer-native.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-gpu-kms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-idle-monitor-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-input-settings-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-launcher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-monitor-manager-kms.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-output-kms.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-renderer-native-gles3.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-renderer-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/native/$(DEPDIR)/meta-stage-native.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-backend-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-barrier-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-clutter-backend-x11.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-crtc-xrandr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-cursor-renderer-x11.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-gpu-xrandr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-idle-monitor-xsync.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-input-settings-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-monitor-manager-xrandr.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-output-xrandr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-renderer-x11.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/$(DEPDIR)/meta-stage-x11-nested.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/x11/cm/$(DEPDIR)/meta-backend-x11-cm.Plo@am__quote@
@@ -2374,12 +2483,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet-seat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet-tool.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-tablet.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-text-input.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-touch.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-wl-shell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-xdg-foreign.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-xdg-shell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-window-wayland.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-window-xwayland.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-xwayland-grab-keyboard.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-xwayland-selection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-xwayland.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@x11/$(DEPDIR)/events.Plo@am__quote@
@@ -3024,6 +3136,13 @@ endef
 keyboard-shortcuts-inhibit-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
 keyboard-shortcuts-inhibit-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
+xdg-output-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+xdg-output-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
+xwayland-keyboard-grab-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+xwayland-keyboard-grab-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -82,12 +82,19 @@ mutter_built_sources += \
 	linux-dmabuf-unstable-v1-server-protocol.h				\
 	keyboard-shortcuts-inhibit-unstable-v1-protocol.c		\
 	keyboard-shortcuts-inhibit-unstable-v1-server-protocol.h	\
+	xdg-output-unstable-v1-protocol.c				\
+	xdg-output-unstable-v1-server-protocol.h			\
+	xwayland-keyboard-grab-unstable-v1-protocol.c			\
+	xwayland-keyboard-grab-unstable-v1-server-protocol.h		\
+	gtk-text-input-protocol.c					\
+	gtk-text-input-server-protocol.h				\
 	$(NULL)
 endif
 
 wayland_protocols =				\
 	wayland/protocol/gtk-shell.xml		\
 	wayland/protocol/gtk-primary-selection.xml	\
+	wayland/protocol/gtk-text-input.xml	\
 	$(NULL)
 
 libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =	\
@@ -97,6 +104,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =	\
 	backends/meta-backend-private.h		\
 	backends/meta-barrier.c			\
 	backends/meta-barrier-private.h		\
+	backends/meta-crtc.c			\
+	backends/meta-crtc.h			\
 	backends/meta-cursor.c			\
 	backends/meta-cursor.h			\
 	backends/meta-cursor-tracker.c		\
@@ -107,6 +116,11 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =	\
 	backends/meta-egl.c			\
 	backends/meta-egl.h			\
 	backends/meta-egl-ext.h			\
+	backends/meta-gles3.c			\
+	backends/meta-gles3.h			\
+	backends/meta-gles3-table.h		\
+	backends/meta-gpu.c			\
+	backends/meta-gpu.h			\
 	backends/meta-display-config-shared.h	\
 	backends/meta-idle-monitor.c		\
 	backends/meta-idle-monitor-private.h	\
@@ -131,6 +145,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =	\
 	backends/meta-monitor-manager-dummy.h	\
 	backends/meta-orientation-manager.c	\
 	backends/meta-orientation-manager.h	\
+	backends/meta-output.c			\
+	backends/meta-output.h			\
 	backends/meta-pointer-constraint.c	\
 	backends/meta-pointer-constraint.h	\
 	backends/meta-settings.c		\
@@ -149,8 +165,12 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =	\
 	backends/x11/meta-barrier-x11.h			\
 	backends/x11/meta-clutter-backend-x11.c		\
 	backends/x11/meta-clutter-backend-x11.h		\
+	backends/x11/meta-crtc-xrandr.c			\
+	backends/x11/meta-crtc-xrandr.h			\
 	backends/x11/meta-cursor-renderer-x11.c		\
 	backends/x11/meta-cursor-renderer-x11.h		\
+	backends/x11/meta-gpu-xrandr.c			\
+	backends/x11/meta-gpu-xrandr.h			\
 	backends/x11/cm/meta-backend-x11-cm.c		\
 	backends/x11/cm/meta-backend-x11-cm.h		\
 	backends/x11/cm/meta-renderer-x11-cm.c		\
@@ -167,6 +187,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES =	\
 	backends/x11/meta-input-settings-x11.h		\
 	backends/x11/meta-monitor-manager-xrandr.c	\
 	backends/x11/meta-monitor-manager-xrandr.h	\
+	backends/x11/meta-output-xrandr.c		\
+	backends/x11/meta-output-xrandr.h		\
 	backends/x11/meta-renderer-x11.c		\
 	backends/x11/meta-renderer-x11.h		\
 	backends/x11/meta-stage-x11-nested.c		\
@@ -412,6 +434,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES +=	\
 	wayland/meta-wayland-surface-role-cursor.h	\
 	wayland/meta-wayland-surface-role-tablet-cursor.c	\
 	wayland/meta-wayland-surface-role-tablet-cursor.h	\
+	wayland/meta-wayland-text-input.c	\
+	wayland/meta-wayland-text-input.h	\
 	wayland/meta-wayland-types.h		\
 	wayland/meta-wayland-versions.h		\
 	wayland/meta-wayland-outputs.c		\
@@ -420,6 +444,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES +=	\
 	wayland/meta-wayland-xdg-foreign.h     	\
 	wayland/meta-window-wayland.c		\
 	wayland/meta-window-wayland.h		\
+	wayland/meta-window-xwayland.c		\
+	wayland/meta-window-xwayland.h		\
 	wayland/meta-wayland-xdg-shell.c	\
 	wayland/meta-wayland-xdg-shell.h	\
 	wayland/meta-wayland-wl-shell.c		\
@@ -430,6 +456,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES +=	\
 	wayland/meta-wayland-inhibit-shortcuts.h \
 	wayland/meta-wayland-inhibit-shortcuts-dialog.c	\
 	wayland/meta-wayland-inhibit-shortcuts-dialog.h	\
+	wayland/meta-xwayland-grab-keyboard.c  	\
+	wayland/meta-xwayland-grab-keyboard.h  	\
 	$(NULL)
 endif
 
@@ -440,11 +468,15 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES +=		\
 	backends/native/meta-backend-native-private.h	\
 	backends/native/meta-barrier-native.c		\
 	backends/native/meta-barrier-native.h		\
+	backends/native/meta-crtc-kms.c			\
+	backends/native/meta-crtc-kms.h			\
 	backends/native/meta-clutter-backend-native.c	\
 	backends/native/meta-clutter-backend-native.h	\
 	backends/native/meta-cursor-renderer-native.c	\
 	backends/native/meta-cursor-renderer-native.h	\
 	backends/native/meta-default-modes.h		\
+	backends/native/meta-gpu-kms.c			\
+	backends/native/meta-gpu-kms.h			\
 	backends/native/meta-idle-monitor-native.c	\
 	backends/native/meta-idle-monitor-native.h	\
 	backends/native/meta-input-settings-native.c	\
@@ -453,8 +485,12 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES +=		\
 	backends/native/meta-monitor-manager-kms.h	\
 	backends/native/meta-launcher.c			\
 	backends/native/meta-launcher.h			\
+	backends/native/meta-output-kms.c		\
+	backends/native/meta-output-kms.h		\
 	backends/native/meta-renderer-native.c		\
 	backends/native/meta-renderer-native.h		\
+	backends/native/meta-renderer-native-gles3.c	\
+	backends/native/meta-renderer-native-gles3.h	\
 	backends/native/meta-stage-native.c		\
 	backends/native/meta-stage-native.h		\
 	backends/native/dbus-utils.c			\
@@ -718,4 +754,11 @@ endef
 keyboard-shortcuts-inhibit-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
 keyboard-shortcuts-inhibit-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
+xdg-output-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+xdg-output-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
+xwayland-keyboard-grab-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+xwayland-keyboard-grab-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@

@@ -124,9 +124,6 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Pipewire micro version used */
-#undef PIPEWIRE_VERSION_MICRO
-
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -160,6 +157,9 @@
 
 /* XKB base dir */
 #undef XKB_BASE
+
+/* Xwayland applications allowed to issue keyboard grabs */
+#undef XWAYLAND_GRAB_DEFAULT_ACCESS_RULES
 
 /* Define to 1 if the X Window System is missing or not being used. */
 #undef X_DISPLAY_MISSING

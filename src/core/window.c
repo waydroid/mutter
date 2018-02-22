@@ -58,6 +58,7 @@
 
 #ifdef HAVE_WAYLAND
 #include "wayland/meta-window-wayland.h"
+#include "wayland/meta-window-xwayland.h"
 #include "wayland/meta-wayland-surface.h"
 #include "wayland/meta-wayland-private.h"
 #endif
@@ -179,10 +180,10 @@ enum {
   PROP_GTK_MENUBAR_OBJECT_PATH,
   PROP_ON_ALL_WORKSPACES,
 
-  LAST_PROP,
+  PROP_LAST,
 };
 
-static GParamSpec *obj_props[LAST_PROP];
+static GParamSpec *obj_props[PROP_LAST];
 
 enum
 {
@@ -588,7 +589,7 @@ meta_window_class_init (MetaWindowClass *klass)
                           FALSE,
                           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_properties (object_class, LAST_PROP, obj_props);
+  g_object_class_install_properties (object_class, PROP_LAST, obj_props);
 
   window_signals[WORKSPACE_CHANGED] =
     g_signal_new ("workspace-changed",
@@ -942,9 +943,11 @@ _meta_window_shared_new (MetaDisplay         *display,
                 "IsUnviewable" :
                 "(unknown)");
 
-  if (client_type == META_WINDOW_CLIENT_TYPE_X11)
+  if (client_type == META_WINDOW_CLIENT_TYPE_X11 && !meta_is_wayland_compositor ())
     window = g_object_new (META_TYPE_WINDOW_X11, NULL);
 #ifdef HAVE_WAYLAND
+  else if (client_type == META_WINDOW_CLIENT_TYPE_X11)
+    window = g_object_new (META_TYPE_WINDOW_XWAYLAND, NULL);
   else if (client_type == META_WINDOW_CLIENT_TYPE_WAYLAND)
     window = g_object_new (META_TYPE_WINDOW_WAYLAND, NULL);
 #endif
@@ -1295,10 +1298,10 @@ _meta_window_shared_new (MetaDisplay         *display,
    * and thus constraints may try to auto-fullscreen it which also
    * means restacking it.
    */
-  if (!window->override_redirect)
+  if (meta_window_is_stackable (window))
     meta_stack_add (window->screen->stack,
                     window);
-  else
+  else if (window->override_redirect)
     window->layer = META_LAYER_OVERRIDE_REDIRECT; /* otherwise set by MetaStack */
 
   if (!window->override_redirect)
@@ -1532,7 +1535,7 @@ meta_window_unmanage (MetaWindow  *window,
       meta_window_main_monitor_changed (window, old);
     }
 
-  if (!window->override_redirect)
+  if (meta_window_is_in_stack (window))
     meta_stack_remove (window->screen->stack, window);
 
   /* If an undecorated window is being withdrawn, that will change the
@@ -1695,6 +1698,10 @@ implement_showing (MetaWindow *window,
   meta_verbose ("Implement showing = %d for window %s\n",
                 showing, window->desc);
 
+  /* Some windows are not stackable until being showed, so add those now. */
+  if (meta_window_is_stackable (window) && !meta_window_is_in_stack (window))
+    meta_stack_add (window->screen->stack, window);
+
   if (!showing)
     {
       /* When we manage a new window, we normally delay placing it
@@ -1706,7 +1713,7 @@ implement_showing (MetaWindow *window,
        * see #751887
        */
       if (!window->placed && client_window_should_be_mapped (window))
-        meta_window_force_placement (window);
+        meta_window_force_placement (window, FALSE);
 
       meta_window_hide (window);
     }
@@ -2287,8 +2294,11 @@ window_would_be_covered (const MetaWindow *newbie)
 }
 
 void
-meta_window_force_placement (MetaWindow *window)
+meta_window_force_placement (MetaWindow *window,
+                             gboolean    force_move)
 {
+  MetaMoveResizeFlags flags;
+
   if (window->placed)
     return;
 
@@ -2301,7 +2311,15 @@ meta_window_force_placement (MetaWindow *window)
    * show the window.
    */
   window->calc_placement = TRUE;
-  meta_window_move_resize_now (window);
+
+  flags = META_MOVE_RESIZE_MOVE_ACTION | META_MOVE_RESIZE_RESIZE_ACTION;
+  if (force_move)
+    flags |= META_MOVE_RESIZE_FORCE_MOVE;
+
+  meta_window_move_resize_internal (window,
+                                    flags,
+                                    NorthWestGravity,
+                                    window->unconstrained_rect);
   window->calc_placement = FALSE;
 
   /* don't ever do the initial position constraint thing again.
@@ -2380,7 +2398,7 @@ meta_window_show (MetaWindow *window)
               window->maximize_vertically_after_placement = TRUE;
             }
         }
-      meta_window_force_placement (window);
+      meta_window_force_placement (window, FALSE);
     }
 
   if (needs_stacking_adjustment)
@@ -3310,7 +3328,8 @@ meta_window_unmaximize (MetaWindow        *window,
       meta_window_move_resize_internal (window,
                                         (META_MOVE_RESIZE_MOVE_ACTION |
                                          META_MOVE_RESIZE_RESIZE_ACTION |
-                                         META_MOVE_RESIZE_STATE_CHANGED),
+                                         META_MOVE_RESIZE_STATE_CHANGED |
+                                         META_MOVE_RESIZE_UNMAXIMIZE),
                                         NorthWestGravity,
                                         target_rect);
 
@@ -6894,6 +6913,12 @@ ensure_mru_position_after (MetaWindow *window,
     }
 }
 
+gboolean
+meta_window_is_in_stack (MetaWindow *window)
+{
+  return window->stack_position >= 0;
+}
+
 void
 meta_window_stack_just_below (MetaWindow *window,
                               MetaWindow *below_this_one)
@@ -7293,13 +7318,16 @@ meta_window_get_wm_class_instance (MetaWindow *window)
 }
 
 /**
- * meta_window_get_flatpak_id:
+ * meta_window_get_sandboxed_app_id:
  * @window: a #MetaWindow
  *
- * Return value: (transfer none): the Flatpak application ID or %NULL
+ * Gets an unique id for a sandboxed app (currently flatpaks and snaps are
+ * supported).
+ *
+ * Return value: (transfer none): the sandboxed application ID or %NULL
  **/
 const char *
-meta_window_get_flatpak_id (MetaWindow *window)
+meta_window_get_sandboxed_app_id (MetaWindow *window)
 {
   /* We're abusing this API here not to break the gnome shell assumptions
    * or adding a new function, to be renamed to generic names in new versions */
@@ -8418,4 +8446,10 @@ meta_window_shortcuts_inhibited (MetaWindow         *window,
                                  ClutterInputDevice *source)
 {
   return META_WINDOW_GET_CLASS (window)->shortcuts_inhibited (window, source);
+}
+
+gboolean
+meta_window_is_stackable (MetaWindow *window)
+{
+  return META_WINDOW_GET_CLASS (window)->is_stackable (window);
 }

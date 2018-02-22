@@ -44,6 +44,7 @@
 #include "meta-wayland-dma-buf.h"
 #include "meta-wayland-inhibit-shortcuts.h"
 #include "meta-wayland-inhibit-shortcuts-dialog.h"
+#include "meta-xwayland-grab-keyboard.h"
 
 static MetaWaylandCompositor _meta_wayland_compositor;
 static char *_display_name_override;
@@ -277,9 +278,13 @@ set_gnome_env (const char *name,
 			       -1, NULL, &error);
   if (error)
     {
-      if (g_strcmp0 (g_dbus_error_get_remote_error (error), "org.gnome.SessionManager.NotInInitialization") != 0)
+      char *remote_error;
+
+      remote_error = g_dbus_error_get_remote_error (error);
+      if (g_strcmp0 (remote_error, "org.gnome.SessionManager.NotInInitialization") != 0)
         meta_warning ("Failed to set environment variable %s for gnome-session: %s\n", name, error->message);
 
+      g_free (remote_error);
       g_error_free (error);
     }
 }
@@ -316,6 +321,23 @@ meta_wayland_pre_clutter_init (void)
     g_error ("Failed to create the global wl_display");
 
   clutter_wayland_set_compositor_display (compositor->wayland_display);
+}
+
+static bool
+meta_xwayland_global_filter (const struct wl_client *client,
+                             const struct wl_global *global,
+                             void                   *data)
+{
+  MetaWaylandCompositor *compositor = (MetaWaylandCompositor *) data;
+  MetaXWaylandManager *xwayland_manager = &compositor->xwayland_manager;
+
+  /* Keyboard grabbing protocol is for Xwayland only */
+  if (client != xwayland_manager->client)
+    return (wl_global_get_interface (global) !=
+            &zwp_xwayland_keyboard_grab_manager_v1_interface);
+
+  /* All others are visible to all clients */
+  return true;
 }
 
 void
@@ -362,6 +384,13 @@ meta_wayland_init (void)
   meta_wayland_dma_buf_init (compositor);
   meta_wayland_keyboard_shortcuts_inhibit_init (compositor);
   meta_wayland_surface_inhibit_shortcuts_dialog_init ();
+  meta_wayland_text_input_init (compositor);
+
+  /* Xwayland specific protocol, needs to be filtered out for all other clients */
+  if (meta_xwayland_grab_keyboard_init (compositor))
+    wl_display_set_global_filter (compositor->wayland_display,
+                                  meta_xwayland_global_filter,
+                                  compositor);
 
   if (!meta_xwayland_start (&compositor->xwayland_manager, compositor->wayland_display))
     g_error ("Failed to start X Wayland");
@@ -436,9 +465,6 @@ meta_wayland_compositor_is_shortcuts_inhibited (MetaWaylandCompositor *composito
                                                 ClutterInputDevice    *source)
 {
   MetaWaylandKeyboard *keyboard;
-
-  if (clutter_input_device_get_device_type (source) != CLUTTER_KEYBOARD_DEVICE)
-    return FALSE;
 
   /* Clutter is not multi-seat aware yet, use the default seat instead */
   keyboard = compositor->seat->keyboard;

@@ -67,6 +67,8 @@ G_DEFINE_TYPE (MetaWindowWayland, meta_window_wayland, META_TYPE_WINDOW)
 static int
 get_window_geometry_scale_for_logical_monitor (MetaLogicalMonitor *logical_monitor)
 {
+  g_assert (logical_monitor);
+
   if (meta_is_stage_views_scaled ())
     return 1;
   else
@@ -79,8 +81,7 @@ meta_window_wayland_manage (MetaWindow *window)
   MetaWindowWayland *wl_window = META_WINDOW_WAYLAND (window);
   MetaDisplay *display = window->display;
 
-  wl_window->geometry_scale =
-    get_window_geometry_scale_for_logical_monitor (window->monitor);
+  wl_window->geometry_scale = meta_window_wayland_get_geometry_scale (window);
 
   meta_display_register_wayland_window (display, window);
 
@@ -209,8 +210,17 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
    * coordinate space so that we can have a scale independent size to pass
    * to the Wayland surface. */
   geometry_scale = meta_window_wayland_get_geometry_scale (window);
-  configured_width = constrained_rect.width / geometry_scale;
-  configured_height = constrained_rect.height / geometry_scale;
+  if (flags & META_MOVE_RESIZE_UNMAXIMIZE)
+    {
+      /* On un-maximize, let the client decide on its size */
+      configured_width = 0;
+      configured_height = 0;
+    }
+  else
+    {
+      configured_width = constrained_rect.width / geometry_scale;
+      configured_height = constrained_rect.height / geometry_scale;
+    }
 
   /* For wayland clients, the size is completely determined by the client,
    * and while this allows to avoid some trickery with frames and the resulting
@@ -222,7 +232,11 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
    * it can be for maximized or fullscreen.
    */
 
-  if (flags & META_MOVE_RESIZE_WAYLAND_RESIZE)
+  if (flags & META_MOVE_RESIZE_FORCE_MOVE)
+    {
+      can_move_now = TRUE;
+    }
+  else if (flags & META_MOVE_RESIZE_WAYLAND_RESIZE)
     {
       /* This is a call to wl_surface_commit(), ignore the constrained_rect and
        * update the real client size to match the buffer size.
@@ -542,6 +556,12 @@ meta_window_wayland_shortcuts_inhibited (MetaWindow         *window,
   return meta_wayland_compositor_is_shortcuts_inhibited (compositor, source);
 }
 
+static gboolean
+meta_window_wayland_is_stackable (MetaWindow *window)
+{
+  return meta_wayland_surface_get_buffer (window->surface) != NULL;
+}
+
 static void
 meta_window_wayland_class_init (MetaWindowWaylandClass *klass)
 {
@@ -561,6 +581,7 @@ meta_window_wayland_class_init (MetaWindowWaylandClass *klass)
   window_class->get_client_pid = meta_window_wayland_get_client_pid;
   window_class->force_restore_shortcuts = meta_window_wayland_force_restore_shortcuts;
   window_class->shortcuts_inhibited = meta_window_wayland_shortcuts_inhibited;
+  window_class->is_stackable = meta_window_wayland_is_stackable;
 }
 
 MetaWindow *
@@ -634,6 +655,9 @@ should_do_pending_move (MetaWindowWayland *wl_window,
 int
 meta_window_wayland_get_geometry_scale (MetaWindow *window)
 {
+  if (!window->monitor)
+    return 1;
+
   return get_window_geometry_scale_for_logical_monitor (window->monitor);
 }
 
@@ -742,7 +766,7 @@ meta_window_place_with_placement_rule (MetaWindow        *window,
 
   window->unconstrained_rect.width = placement_rule->width;
   window->unconstrained_rect.height = placement_rule->height;
-  meta_window_force_placement (window);
+  meta_window_force_placement (window, FALSE);
 }
 
 void

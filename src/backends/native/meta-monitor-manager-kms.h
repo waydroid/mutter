@@ -23,40 +23,19 @@
 #ifndef META_MONITOR_MANAGER_KMS_H
 #define META_MONITOR_MANAGER_KMS_H
 
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+
 #include "meta-monitor-manager-private.h"
 
-#define META_TYPE_MONITOR_MANAGER_KMS            (meta_monitor_manager_kms_get_type ())
-#define META_MONITOR_MANAGER_KMS(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), META_TYPE_MONITOR_MANAGER_KMS, MetaMonitorManagerKms))
-#define META_MONITOR_MANAGER_KMS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  META_TYPE_MONITOR_MANAGER_KMS, MetaMonitorManagerKmsClass))
-#define META_IS_MONITOR_MANAGER_KMS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), META_TYPE_MONITOR_MANAGER_KMS))
-#define META_IS_MONITOR_MANAGER_KMS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  META_TYPE_MONITOR_MANAGER_KMS))
-#define META_MONITOR_MANAGER_KMS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  META_TYPE_MONITOR_MANAGER_KMS, MetaMonitorManagerKmsClass))
+typedef struct _MetaGpuKms MetaGpuKms;
 
-typedef struct _MetaMonitorManagerKmsClass    MetaMonitorManagerKmsClass;
-typedef struct _MetaMonitorManagerKms         MetaMonitorManagerKms;
+#define META_TYPE_MONITOR_MANAGER_KMS (meta_monitor_manager_kms_get_type ())
+G_DECLARE_FINAL_TYPE (MetaMonitorManagerKms, meta_monitor_manager_kms,
+                      META, MONITOR_MANAGER_KMS,
+                      MetaMonitorManager)
 
-GType meta_monitor_manager_kms_get_type (void);
-
-typedef void (*MetaKmsFlipCallback) (void *user_data);
-
-gboolean meta_monitor_manager_kms_apply_crtc_mode (MetaMonitorManagerKms *manager_kms,
-                                                   MetaCrtc              *crtc,
-                                                   int                    x,
-                                                   int                    y,
-                                                   uint32_t               fb_id);
-
-gboolean meta_monitor_manager_kms_is_crtc_active (MetaMonitorManagerKms *manager_kms,
-                                                  MetaCrtc              *crtc);
-
-gboolean meta_monitor_manager_kms_flip_crtc (MetaMonitorManagerKms *manager_kms,
-                                             MetaCrtc              *crtc,
-                                             int                    x,
-                                             int                    y,
-                                             uint32_t               fb_id,
-                                             GClosure              *flip_closure,
-                                             gboolean              *fb_in_use);
-
-void meta_monitor_manager_kms_wait_for_flip (MetaMonitorManagerKms *manager_kms);
+MetaGpuKms * meta_monitor_manager_kms_get_primary_gpu (MetaMonitorManagerKms *manager_kms);
 
 void meta_monitor_manager_kms_pause (MetaMonitorManagerKms *manager_kms);
 

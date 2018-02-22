@@ -74,11 +74,13 @@ typedef enum {
 typedef enum
 {
   META_MOVE_RESIZE_CONFIGURE_REQUEST = 1 << 0,
-  META_MOVE_RESIZE_USER_ACTION       = 1 << 1,
-  META_MOVE_RESIZE_MOVE_ACTION       = 1 << 2,
-  META_MOVE_RESIZE_RESIZE_ACTION     = 1 << 3,
-  META_MOVE_RESIZE_WAYLAND_RESIZE    = 1 << 4,
-  META_MOVE_RESIZE_STATE_CHANGED     = 1 << 5,
+  META_MOVE_RESIZE_USER_ACTION = 1 << 1,
+  META_MOVE_RESIZE_MOVE_ACTION = 1 << 2,
+  META_MOVE_RESIZE_RESIZE_ACTION = 1 << 3,
+  META_MOVE_RESIZE_WAYLAND_RESIZE = 1 << 4,
+  META_MOVE_RESIZE_STATE_CHANGED = 1 << 5,
+  META_MOVE_RESIZE_UNMAXIMIZE = 1 << 6,
+  META_MOVE_RESIZE_FORCE_MOVE = 1 << 7,
 } MetaMoveResizeFlags;
 
 typedef enum
@@ -553,6 +555,7 @@ struct _MetaWindowClass
                                    ClutterInputDevice *source);
   gboolean (*shortcuts_inhibited) (MetaWindow         *window,
                                    ClutterInputDevice *source);
+  gboolean (*is_stackable)        (MetaWindow *window);
 };
 
 /* These differ from window->has_foo_func in that they consider
@@ -699,6 +702,8 @@ void meta_window_set_type (MetaWindow     *window,
 
 void meta_window_frame_size_changed (MetaWindow *window);
 
+gboolean meta_window_is_in_stack (MetaWindow *window);
+
 void meta_window_stack_just_below (MetaWindow *window,
                                    MetaWindow *below_this_one);
 
@@ -788,11 +793,13 @@ void meta_window_emit_size_changed (MetaWindow *window);
 
 MetaPlacementRule *meta_window_get_placement_rule (MetaWindow *window);
 
-void meta_window_force_placement (MetaWindow *window);
+void meta_window_force_placement (MetaWindow *window,
+                                  gboolean    force_move);
 
 void meta_window_force_restore_shortcuts (MetaWindow         *window,
                                           ClutterInputDevice *source);
 
 gboolean meta_window_shortcuts_inhibited (MetaWindow         *window,
                                           ClutterInputDevice *source);
+gboolean meta_window_is_stackable (MetaWindow *window);
 #endif

@@ -55,6 +55,46 @@ enum {
   SCROLL_METHOD_NUM_FIELDS
 };
 
+static void
+device_free_xdevice (gpointer user_data)
+{
+  MetaDisplay *display = meta_get_display ();
+  MetaBackend *backend = meta_get_backend ();
+  Display *xdisplay = meta_backend_x11_get_xdisplay (META_BACKEND_X11 (backend));
+  XDevice *xdev = user_data;
+
+  meta_error_trap_push (display);
+  XCloseDevice (xdisplay, xdev);
+  meta_error_trap_pop (display);
+}
+
+static XDevice *
+device_ensure_xdevice (ClutterInputDevice *device)
+{
+  MetaDisplay *display = meta_get_display ();
+  MetaBackend *backend = meta_get_backend ();
+  Display *xdisplay = meta_backend_x11_get_xdisplay (META_BACKEND_X11 (backend));
+  int device_id = clutter_input_device_get_device_id (device);
+  XDevice *xdev = NULL;
+
+  xdev = g_object_get_data (G_OBJECT (device), "meta-input-settings-xdevice");
+  if (xdev)
+    return xdev;
+
+  meta_error_trap_push (display);
+  xdev = XOpenDevice (xdisplay, device_id);
+  meta_error_trap_pop (display);
+
+  if (xdev)
+    {
+      g_object_set_data_full (G_OBJECT (device),
+                              "meta-input-settings-xdevice",
+                              xdev, device_free_xdevice);
+    }
+
+  return xdev;
+}
+
 static void *
 get_property (ClutterInputDevice *device,
               const gchar        *property,
@@ -239,7 +279,7 @@ meta_input_settings_x11_set_tap_and_drag_enabled (MetaInputSettings  *settings,
 {
   guchar value = (enabled) ? 1 : 0;
 
-  change_property (device, "libinput TappingDrag Enabled",
+  change_property (device, "libinput Tapping Drag Enabled",
                    XA_INTEGER, 8, &value, 1);
 }
 
@@ -540,7 +580,6 @@ meta_input_settings_x11_set_tablet_mapping (MetaInputSettings     *settings,
   MetaDisplay *display = meta_get_display ();
   MetaBackend *backend = meta_get_backend ();
   Display *xdisplay = meta_backend_x11_get_xdisplay (META_BACKEND_X11 (backend));
-  int device_id = clutter_input_device_get_device_id (device);
   XDevice *xdev;
 
   if (!display)
@@ -548,13 +587,12 @@ meta_input_settings_x11_set_tablet_mapping (MetaInputSettings     *settings,
 
   /* Grab the puke bucket! */
   meta_error_trap_push (display);
-  xdev = XOpenDevice (xdisplay, device_id);
+  xdev = device_ensure_xdevice (device);
   if (xdev)
     {
       XSetDeviceMode (xdisplay, xdev,
                       mapping == G_DESKTOP_TABLET_MAPPING_ABSOLUTE ?
                       Absolute : Relative);
-      XCloseDevice (xdisplay, xdev);
     }
 
   if (meta_error_trap_pop_with_return (display))
@@ -732,12 +770,12 @@ meta_input_settings_x11_set_stylus_button_map (MetaInputSettings          *setti
                                                ClutterInputDevice         *device,
                                                ClutterInputDeviceTool     *tool,
                                                GDesktopStylusButtonAction  primary,
-                                               GDesktopStylusButtonAction  secondary)
+                                               GDesktopStylusButtonAction  secondary,
+                                               GDesktopStylusButtonAction  tertiary)
 {
   MetaDisplay *display = meta_get_display ();
   MetaBackend *backend = meta_get_backend ();
   Display *xdisplay = meta_backend_x11_get_xdisplay (META_BACKEND_X11 (backend));
-  int device_id = clutter_input_device_get_device_id (device);
   XDevice *xdev;
 
   if (!display)
@@ -745,17 +783,21 @@ meta_input_settings_x11_set_stylus_button_map (MetaInputSettings          *setti
 
   /* Grab the puke bucket! */
   meta_error_trap_push (display);
-  xdev = XOpenDevice (xdisplay, device_id);
+  xdev = device_ensure_xdevice (device);
   if (xdev)
     {
-      guchar map[3] = {
+      guchar map[8] = {
         CLUTTER_BUTTON_PRIMARY,
         action_to_button (primary, CLUTTER_BUTTON_MIDDLE),
         action_to_button (secondary, CLUTTER_BUTTON_SECONDARY),
+        4,
+        5,
+        6,
+        7,
+        action_to_button (tertiary, 8), /* "Back" */
       };
 
       XSetDeviceButtonMapping (xdisplay, xdev, map, G_N_ELEMENTS (map));
-      XCloseDevice (xdisplay, xdev);
     }
 
   if (meta_error_trap_pop_with_return (display))
@@ -771,9 +813,9 @@ meta_input_settings_x11_set_stylus_pressure (MetaInputSettings      *settings,
                                              ClutterInputDeviceTool *tool,
                                              const gint32            pressure[4])
 {
-  guchar values[4] = { pressure[0], pressure[1], pressure[2], pressure[3] };
+  guint32 values[4] = { pressure[0], pressure[1], pressure[2], pressure[3] };
 
-  change_property (device, "Wacom Pressurecurve", XA_INTEGER, 8,
+  change_property (device, "Wacom Pressurecurve", XA_INTEGER, 32,
                    &values, G_N_ELEMENTS (values));
 }
 
