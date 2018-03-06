@@ -310,6 +310,247 @@ meta_onscreen_native_get_egl (MetaOnscreenNative *onscreen_native)
   return meta_renderer_native_get_egl (onscreen_native->renderer_native);
 }
 
+static GArray *
+get_supported_kms_modifiers (CoglOnscreen *onscreen,
+                             MetaGpu      *gpu,
+                             uint32_t      format)
+{
+  CoglOnscreenEGL *onscreen_egl = onscreen->winsys;
+  MetaOnscreenNative *onscreen_native = onscreen_egl->platform;
+  MetaLogicalMonitor *logical_monitor = onscreen_native->logical_monitor;
+  GArray *modifiers;
+  GArray *base_mods;
+  GList *l_crtc;
+  MetaCrtc *base_crtc = NULL;
+  GList *other_crtcs = NULL;
+  unsigned int i;
+
+  if (!logical_monitor)
+    return NULL;
+
+  /* Find our base CRTC to intersect against. */
+  for (l_crtc = meta_gpu_get_crtcs (gpu); l_crtc; l_crtc = l_crtc->next)
+    {
+      MetaCrtc *crtc = l_crtc->data;
+
+      if (crtc->logical_monitor != logical_monitor)
+        continue;
+
+      if (!base_crtc)
+        base_crtc = crtc;
+      else if (crtc == base_crtc)
+        continue;
+      else if (g_list_index (other_crtcs, crtc) == -1)
+        other_crtcs = g_list_append (other_crtcs, crtc);
+    }
+
+  if (!base_crtc)
+    goto out;
+
+  base_mods = meta_crtc_kms_get_modifiers (base_crtc, format);
+  if (!base_mods)
+    goto out;
+
+  /*
+   * If this is the only CRTC we have, we don't need to intersect the sets of
+   * modifiers.
+   */
+  if (other_crtcs == NULL)
+    {
+      modifiers = g_array_sized_new (FALSE, FALSE, sizeof (uint64_t),
+                                     base_mods->len);
+      g_array_append_vals (modifiers, base_mods->data, base_mods->len);
+      return modifiers;
+    }
+
+  modifiers = g_array_new (FALSE, FALSE, sizeof (uint64_t));
+
+  /*
+   * For each modifier from base_crtc, check if it's available on all other
+   * CRTCs.
+   */
+  for (i = 0; i < base_mods->len; i++)
+    {
+      uint64_t modifier = g_array_index (base_mods, uint64_t, i);
+      gboolean found_everywhere = TRUE;
+      GList *k;
+
+      /* Check if we have the same modifier available for all CRTCs. */
+      for (k = other_crtcs; k; k = k->next)
+        {
+          MetaCrtc *crtc = k->data;
+          GArray *crtc_mods;
+          unsigned int m;
+          gboolean found_here = FALSE;
+
+          if (crtc->logical_monitor != logical_monitor)
+            continue;
+
+          crtc_mods = meta_crtc_kms_get_modifiers (crtc, format);
+          if (!crtc_mods)
+            {
+              g_array_free (modifiers, TRUE);
+              goto out;
+            }
+
+          for (m = 0; m < crtc_mods->len; m++)
+            {
+              uint64_t local_mod = g_array_index (crtc_mods, uint64_t, m);
+
+              if (local_mod == modifier)
+                {
+                  found_here = TRUE;
+                  break;
+                }
+            }
+
+          if (!found_here)
+            {
+              found_everywhere = FALSE;
+              break;
+            }
+        }
+
+      if (found_everywhere)
+        g_array_append_val (modifiers, modifier);
+    }
+
+  if (modifiers->len == 0)
+    {
+      g_array_free (modifiers, TRUE);
+      goto out;
+    }
+
+  return modifiers;
+
+out:
+  g_list_free (other_crtcs);
+  return NULL;
+}
+
+static GArray *
+get_supported_egl_modifiers (CoglOnscreen *onscreen,
+                             MetaGpu      *gpu,
+                             uint32_t      format)
+{
+  CoglOnscreenEGL *onscreen_egl = onscreen->winsys;
+  MetaOnscreenNative *onscreen_native = onscreen_egl->platform;
+  MetaRendererNative *renderer_native = onscreen_native->renderer_native;
+  MetaEgl *egl = meta_onscreen_native_get_egl (onscreen_native);
+  MetaRendererNativeGpuData *renderer_gpu_data;
+  EGLint num_modifiers;
+  GArray *modifiers;
+  GError *error = NULL;
+  gboolean ret;
+
+  renderer_gpu_data = meta_renderer_native_get_gpu_data (renderer_native,
+                                                         META_GPU_KMS (gpu));
+
+  if (!meta_egl_has_extensions (egl, renderer_gpu_data->egl_display, NULL,
+                                "EGL_EXT_image_dma_buf_import_modifiers",
+                                NULL))
+    return NULL;
+
+  ret = meta_egl_query_dma_buf_modifiers (egl, renderer_gpu_data->egl_display,
+                                          format, 0, NULL, NULL,
+                                          &num_modifiers, NULL);
+  if (!ret || num_modifiers == 0)
+    return NULL;
+
+  modifiers = g_array_sized_new (FALSE, FALSE, sizeof (uint64_t),
+                                 num_modifiers);
+  ret = meta_egl_query_dma_buf_modifiers (egl, renderer_gpu_data->egl_display,
+                                          format, num_modifiers,
+                                          (EGLuint64KHR *) modifiers->data, NULL,
+                                          &num_modifiers, &error);
+
+  if (!ret)
+    {
+      g_warning ("Failed to query DMABUF modifiers: %s", error->message);
+      g_error_free (error);
+      g_array_free (modifiers, TRUE);
+      return NULL;
+    }
+
+  return modifiers;
+}
+
+static GArray *
+get_supported_modifiers (CoglOnscreen *onscreen,
+                         uint32_t      format)
+{
+  CoglOnscreenEGL *onscreen_egl = onscreen->winsys;
+  MetaOnscreenNative *onscreen_native = onscreen_egl->platform;
+  MetaLogicalMonitor *logical_monitor = onscreen_native->logical_monitor;
+  GArray *modifiers = NULL;
+  GArray *gpu_mods;
+  GList *l_monitor;
+  unsigned int i;
+
+  if (!logical_monitor)
+    return NULL;
+
+  /* Find our base CRTC to intersect against. */
+  for (l_monitor = meta_logical_monitor_get_monitors (logical_monitor);
+       l_monitor;
+       l_monitor = l_monitor->next)
+    {
+      MetaMonitor *monitor = l_monitor->data;
+      MetaGpu *gpu = meta_monitor_get_gpu (monitor);
+
+      if (gpu == META_GPU (onscreen_native->render_gpu))
+        gpu_mods = get_supported_kms_modifiers (onscreen, gpu, format);
+      else
+        gpu_mods = get_supported_egl_modifiers (onscreen, gpu, format);
+
+      if (!gpu_mods)
+        {
+          g_array_free (modifiers, TRUE);
+          return NULL;
+        }
+
+      if (!modifiers)
+        {
+          modifiers = gpu_mods;
+          continue;
+        }
+
+      for (i = 0; i < modifiers->len; i++)
+        {
+          uint64_t modifier = g_array_index (modifiers, uint64_t, i);
+          gboolean found = FALSE;
+          unsigned int m;
+
+          for (m = 0; m < gpu_mods->len; m++)
+            {
+              uint64_t gpu_mod = g_array_index (gpu_mods, uint64_t, m);
+
+              if (gpu_mod == modifier)
+                {
+                  found = TRUE;
+                  break;
+                }
+            }
+
+          if (!found)
+            {
+              g_array_remove_index_fast (modifiers, i);
+              i--;
+            }
+        }
+
+      g_array_free (gpu_mods, TRUE);
+    }
+
+  if (modifiers && modifiers->len == 0)
+    {
+      g_array_free (modifiers, TRUE);
+      return NULL;
+    }
+
+  return modifiers;
+}
+
 static gboolean
 init_secondary_gpu_state_gpu_copy_mode (MetaRendererNative         *renderer_native,
                                         CoglOnscreen               *onscreen,
@@ -694,6 +935,73 @@ meta_renderer_native_add_egl_config_attributes (CoglDisplay           *cogl_disp
 }
 
 static gboolean
+choose_egl_config_from_gbm_format (MetaEgl       *egl,
+                                   EGLDisplay     egl_display,
+                                   const EGLint  *attributes,
+                                   uint32_t       gbm_format,
+                                   EGLConfig     *out_config,
+                                   GError       **error)
+{
+  EGLConfig *egl_configs;
+  EGLint n_configs;
+  EGLint i;
+
+  egl_configs = meta_egl_choose_all_configs (egl, egl_display,
+                                             attributes,
+                                             &n_configs,
+                                             error);
+  if (!egl_configs)
+    return FALSE;
+
+  for (i = 0; i < n_configs; i++)
+    {
+      EGLint visual_id;
+
+      if (!meta_egl_get_config_attrib (egl, egl_display,
+                                       egl_configs[i],
+                                       EGL_NATIVE_VISUAL_ID,
+                                       &visual_id,
+                                       error))
+        {
+          g_free (egl_configs);
+          return FALSE;
+        }
+
+      if ((uint32_t) visual_id == gbm_format)
+        {
+          *out_config = egl_configs[i];
+          g_free (egl_configs);
+          return TRUE;
+        }
+    }
+
+  g_free (egl_configs);
+  g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+               "No EGL config matching supported GBM format found");
+  return FALSE;
+}
+
+static gboolean
+meta_renderer_native_choose_egl_config (CoglDisplay  *cogl_display,
+                                        EGLint       *attributes,
+                                        EGLConfig    *out_config,
+                                        GError      **error)
+{
+  CoglRenderer *cogl_renderer = cogl_display->renderer;
+  CoglRendererEGL *cogl_renderer_egl = cogl_renderer->winsys;
+  MetaBackend *backend = meta_get_backend ();
+  MetaEgl *egl = meta_backend_get_egl (backend);
+  EGLDisplay egl_display = cogl_renderer_egl->edpy;
+
+  return choose_egl_config_from_gbm_format (egl,
+                                            egl_display,
+                                            attributes,
+                                            GBM_FORMAT_XRGB8888,
+                                            out_config,
+                                            error);
+}
+
+static gboolean
 meta_renderer_native_setup_egl_display (CoglDisplay *cogl_display,
                                         GError     **error)
 {
@@ -739,8 +1047,8 @@ create_dummy_pbuffer_surface (EGLDisplay egl_display,
     EGL_NONE
   };
 
-  if (!meta_egl_choose_config (egl, egl_display, pbuffer_config_attribs,
-                               &pbuffer_config, error))
+  if (!meta_egl_choose_first_config (egl, egl_display, pbuffer_config_attribs,
+                                     &pbuffer_config, error))
     return EGL_NO_SURFACE;
 
   return meta_egl_create_pbuffer_surface (egl, egl_display,
@@ -1639,146 +1947,6 @@ meta_renderer_native_init_egl_context (CoglContext *cogl_context,
   return TRUE;
 }
 
-static GArray *
-get_supported_modifiers (CoglOnscreen *onscreen,
-                         uint32_t      format)
-{
-  CoglOnscreenEGL *onscreen_egl = onscreen->winsys;
-  MetaOnscreenNative *onscreen_native = onscreen_egl->platform;
-  MetaRendererNative *renderer_native = onscreen_native->renderer_native;
-  MetaLogicalMonitor *logical_monitor = onscreen_native->logical_monitor;
-  MetaEgl *egl = meta_onscreen_native_get_egl (onscreen_native);
-  CoglContext *cogl_context = COGL_FRAMEBUFFER (onscreen)->context;
-  CoglRenderer *cogl_renderer = cogl_context->display->renderer;
-  CoglRendererEGL *cogl_renderer_egl = cogl_renderer->winsys;
-  GArray *modifiers;
-  GArray *base_mods;
-  GList *l_crtc, *l_monitor;
-  MetaCrtc *base_crtc = NULL;
-  GList *other_crtcs = NULL;
-  unsigned int i;
-
-  if (!logical_monitor)
-    return NULL;
-
-  /* Find our base CRTC to intersect against. */
-  for (l_monitor = meta_logical_monitor_get_monitors (logical_monitor);
-       l_monitor;
-       l_monitor = l_monitor->next)
-    {
-      MetaMonitor *monitor = l_monitor->data;
-      MetaGpu *gpu = meta_monitor_get_gpu (monitor);
-      MetaRendererNativeGpuData *renderer_gpu_data;
-
-      /* All secondary GPUs need to be able to import DMA BUF with modifiers */
-      renderer_gpu_data = meta_renderer_native_get_gpu_data (renderer_native,
-                                                             META_GPU_KMS (gpu));
-      if (cogl_renderer_egl->platform != renderer_gpu_data &&
-          !meta_egl_has_extensions (egl, renderer_gpu_data->egl_display, NULL,
-                                    "EGL_EXT_image_dma_buf_import_modifiers",
-                                    NULL))
-        goto out;
-
-      for (l_crtc = meta_gpu_get_crtcs (gpu); l_crtc; l_crtc = l_crtc->next)
-        {
-          MetaCrtc *crtc = l_crtc->data;
-
-          if (crtc->logical_monitor != logical_monitor)
-            continue;
-
-          if (!base_crtc)
-            base_crtc = crtc;
-          else if (crtc == base_crtc)
-            continue;
-          else if (g_list_index (other_crtcs, crtc) == -1)
-            other_crtcs = g_list_append (other_crtcs, crtc);
-        }
-    }
-
-  if (!base_crtc)
-    goto out;
-
-  base_mods = meta_crtc_kms_get_modifiers (base_crtc, format);
-  if (!base_mods)
-    goto out;
-
-  /*
-   * If this is the only CRTC we have, we don't need to intersect the sets of
-   * modifiers.
-   */
-  if (other_crtcs == NULL)
-    {
-      modifiers = g_array_sized_new (FALSE, FALSE, sizeof (uint64_t),
-                                     base_mods->len);
-      g_array_append_vals (modifiers, base_mods->data, base_mods->len);
-      return modifiers;
-    }
-
-  modifiers = g_array_new (FALSE, FALSE, sizeof (uint64_t));
-
-  /*
-   * For each modifier from base_crtc, check if it's available on all other
-   * CRTCs.
-   */
-  for (i = 0; i < base_mods->len; i++)
-    {
-      uint64_t modifier = g_array_index (base_mods, uint64_t, i);
-      gboolean found_everywhere = TRUE;
-      GList *k;
-
-      /* Check if we have the same modifier available for all CRTCs. */
-      for (k = other_crtcs; k; k = k->next)
-        {
-          MetaCrtc *crtc = k->data;
-          GArray *crtc_mods;
-          unsigned int m;
-          gboolean found_here = FALSE;
-
-          if (crtc->logical_monitor != logical_monitor)
-            continue;
-
-          crtc_mods = meta_crtc_kms_get_modifiers (crtc, format);
-          if (!crtc_mods)
-            {
-              g_array_free (modifiers, TRUE);
-              goto out;
-            }
-
-          for (m = 0; m < crtc_mods->len; m++)
-            {
-              uint64_t local_mod = g_array_index (crtc_mods, uint64_t, m);
-
-              if (local_mod == modifier)
-                {
-                  found_here = TRUE;
-                  break;
-                }
-            }
-
-          if (!found_here)
-            {
-              found_everywhere = FALSE;
-              break;
-            }
-        }
-
-      if (found_everywhere)
-        g_array_append_val (modifiers, modifier);
-    }
-
-  if (modifiers->len == 0)
-    {
-      g_array_free (modifiers, TRUE);
-      goto out;
-    }
-
-  return modifiers;
-
-out:
-  g_list_free (other_crtcs);
-  return NULL;
-}
-
 static gboolean
 should_surface_be_sharable (CoglOnscreen *onscreen)
 {
@@ -2307,6 +2475,7 @@ meta_renderer_native_release_onscreen (CoglOnscreen *onscreen)
 static const CoglWinsysEGLVtable
 _cogl_winsys_egl_vtable = {
   .add_config_attributes = meta_renderer_native_add_egl_config_attributes,
+  .choose_config = meta_renderer_native_choose_egl_config,
   .display_setup = meta_renderer_native_setup_egl_display,
   .display_destroy = meta_renderer_native_destroy_egl_display,
   .context_created = meta_renderer_native_egl_context_created,
@@ -2745,11 +2914,12 @@ create_secondary_egl_config (MetaEgl   *egl,
     EGL_NONE
   };
 
-  return meta_egl_choose_config (egl,
-                                 egl_display,
-                                 attributes,
-                                 egl_config,
-                                 error);
+  return choose_egl_config_from_gbm_format (egl,
+                                            egl_display,
+                                            attributes,
+                                            GBM_FORMAT_XRGB8888,
+                                            egl_config,
+                                            error);
 }
 
 static EGLContext

@@ -677,6 +677,8 @@ PIXBUF_TESTS_FALSE
 PIXBUF_TESTS_TRUE
 GDK_PIXBUF_LIBS
 GDK_PIXBUF_CFLAGS
+LIBWACOM_LIBS
+LIBWACOM_CFLAGS
 X11_TESTS_FALSE
 X11_TESTS_TRUE
 BUILD_XI2_FALSE
@@ -705,6 +707,7 @@ GLIB_CFLAGS
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
+LIBWACOM_REQ_VERSION
 LIBUDEV_REQ_VERSION
 LIBINPUT_REQ_VERSION
 GDK_REQ_VERSION
@@ -859,6 +862,7 @@ enable_Bsymbolic
 enable_wayland_egl_server
 with_x
 enable_xinput
+with_libwacom
 enable_gdk_pixbuf
 enable_debug
 enable_deprecated
@@ -886,6 +890,8 @@ PKG_CONFIG
 PKG_CONFIG_PATH
 PKG_CONFIG_LIBDIR
 XMKMF
+LIBWACOM_CFLAGS
+LIBWACOM_LIBS
 GDK_PIXBUF_CFLAGS
 GDK_PIXBUF_LIBS
 CLUTTER_DEPS_CFLAGS
@@ -1561,6 +1567,8 @@ Optional Packages:
   --with-sysroot[=DIR]    Search for dependent libraries within DIR (or the
                           compiler's sysroot if not specified).
   --with-x                use the X Window System
+  --without-libwacom      disable the use of libwacom for advanced tablet
+                          management
 
 Some influential environment variables:
   MUTTER_VERSION
@@ -1583,6 +1591,10 @@ Some influential environment variables:
   PKG_CONFIG_LIBDIR
               path overriding pkg-config's built-in search path
   XMKMF       Path to xmkmf, Makefile generator for X Window System
+  LIBWACOM_CFLAGS
+              C compiler flags for LIBWACOM, overriding pkg-config
+  LIBWACOM_LIBS
+              linker flags for LIBWACOM, overriding pkg-config
   GDK_PIXBUF_CFLAGS
               C compiler flags for GDK_PIXBUF, overriding pkg-config
   GDK_PIXBUF_LIBS
@@ -12772,6 +12784,7 @@ fi
 
 
 
+
 GLIB_REQ_VERSION=2.53.2
 
 COGL_REQ_VERSION=1.21.2
@@ -12793,6 +12806,8 @@ GDK_REQ_VERSION=3.3.18
 LIBINPUT_REQ_VERSION=1.4.0
 
 LIBUDEV_REQ_VERSION=136
+
+LIBWACOM_REQ_VERSION=0.13
 
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -14172,6 +14187,131 @@ fi
 rm -f confcache
 
 
+# Check whether --with-libwacom was given.
+if test "${with_libwacom+set}" = set; then :
+  withval=$with_libwacom;
+else
+  with_libwacom=auto
+fi
+
+
+have_libwacom=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking libwacom" >&5
+$as_echo_n "checking libwacom... " >&6; }
+if test x$with_libwacom = xno ; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: disabled" >&5
+$as_echo "disabled" >&6; }
+else
+  if $PKG_CONFIG --exists libwacom '>=' $LIBWACOM_REQ_VERSION; then
+    have_libwacom=yes
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LIBWACOM" >&5
+$as_echo_n "checking for LIBWACOM... " >&6; }
+
+if test -n "$LIBWACOM_CFLAGS"; then
+    pkg_cv_LIBWACOM_CFLAGS="$LIBWACOM_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libwacom\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libwacom") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBWACOM_CFLAGS=`$PKG_CONFIG --cflags "libwacom" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$LIBWACOM_LIBS"; then
+    pkg_cv_LIBWACOM_LIBS="$LIBWACOM_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libwacom\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libwacom") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBWACOM_LIBS=`$PKG_CONFIG --libs "libwacom" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        LIBWACOM_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libwacom" 2>&1`
+        else
+	        LIBWACOM_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libwacom" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$LIBWACOM_PKG_ERRORS" >&5
+
+	as_fn_error $? "Package requirements (libwacom) were not met:
+
+$LIBWACOM_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables LIBWACOM_CFLAGS
+and LIBWACOM_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details." "$LINENO" 5
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables LIBWACOM_CFLAGS
+and LIBWACOM_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details" "$LINENO" 5; }
+else
+	LIBWACOM_CFLAGS=$pkg_cv_LIBWACOM_CFLAGS
+	LIBWACOM_LIBS=$pkg_cv_LIBWACOM_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+fi
+
+
+
+$as_echo "#define HAVE_LIBWACOM 1" >>confdefs.h
+
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+    if test x$with_libwacom = xyes ; then
+      as_fn_error $? "libwacom forced but not found" "$LINENO" 5
+    fi
+  fi
+fi
+
+
 
 # Check whether --enable-gdk-pixbuf was given.
 if test "${enable_gdk_pixbuf+set}" = set; then :
@@ -14707,8 +14847,8 @@ fi
 
 
 
-CLUTTER_CFLAGS="$FLAVOUR_CFLAGS $CLUTTER_DEPS_CFLAGS $CLUTTER_DEPS_PRIVATE_CFLAGS $GLIB_CFLAGS"
-CLUTTER_LIBS="$FLAVOUR_LIBS $CLUTTER_DEPS_LIBS $CLUTTER_DEPS_PRIVATE_LIBS $GLIB_LIBS"
+CLUTTER_CFLAGS="$FLAVOUR_CFLAGS $CLUTTER_DEPS_CFLAGS $CLUTTER_DEPS_PRIVATE_CFLAGS $GLIB_CFLAGS $LIBWACOM_CFLAGS"
+CLUTTER_LIBS="$FLAVOUR_LIBS $CLUTTER_DEPS_LIBS $CLUTTER_DEPS_PRIVATE_LIBS $GLIB_LIBS $LIBWACOM_LIBS"
 
 
 

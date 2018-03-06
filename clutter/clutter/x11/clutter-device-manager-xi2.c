@@ -495,13 +495,21 @@ create_device (ClutterDeviceManagerXI2 *manager_xi2,
                          "device-node", node_path,
                          "n-rings", num_rings,
                          "n-strips", num_strips,
+                         "n-mode-groups", MAX (num_rings, num_strips),
                          NULL);
 
   translate_device_classes (backend_x11->xdpy, retval,
                             info->classes,
                             info->num_classes);
+
+#ifdef HAVE_LIBWACOM
+  if (source == CLUTTER_PAD_DEVICE)
+    clutter_input_device_xi2_ensure_wacom_info (retval, manager_xi2->wacom_db);
+#endif
+
   g_free (vendor_id);
   g_free (product_id);
+  g_free (node_path);
 
   CLUTTER_NOTE (BACKEND, "Created device '%s' (id: %d, has-cursor: %s)",
                 info->name,
@@ -1126,7 +1134,7 @@ translate_pad_event (ClutterEvent       *event,
                      ClutterInputDevice *device)
 {
   gdouble value;
-  guint number;
+  guint number, mode = 0;
 
   if (!translate_pad_axis (device, &xev->valuators,
                            &event->any.type,
@@ -1140,15 +1148,21 @@ translate_pad_event (ClutterEvent       *event,
   if (xev->evtype == XI_Motion)
     value = -1;
 
+#ifdef HAVE_LIBWACOM
+  mode = clutter_input_device_xi2_get_pad_group_mode (device, number);
+#endif
+
   if (event->any.type == CLUTTER_PAD_RING)
     {
       event->pad_ring.ring_number = number;
       event->pad_ring.angle = value;
+      event->pad_ring.mode = mode;
     }
   else
     {
       event->pad_strip.strip_number = number;
       event->pad_strip.value = value;
+      event->pad_strip.mode = mode;
     }
 
   event->any.time = xev->time;
@@ -1375,6 +1389,13 @@ clutter_device_manager_xi2_translate_event (ClutterEventTranslator *translator,
 
             /* Pad buttons are 0-indexed */
             event->pad_button.button = xev->detail - 1;
+#ifdef HAVE_LIBWACOM
+            clutter_input_device_xi2_update_pad_state (device,
+                                                       event->pad_button.button,
+                                                       (xi_event->evtype == XI_ButtonPress),
+                                                       &event->pad_button.group,
+                                                       &event->pad_button.mode);
+#endif
             clutter_event_set_device (event, device);
             clutter_event_set_source_device (event, source_device);
 
@@ -2024,6 +2045,13 @@ clutter_device_manager_xi2_create_virtual_device (ClutterDeviceManager   *manage
                        NULL);
 }
 
+static ClutterVirtualDeviceType
+clutter_device_manager_xi2_get_supported_virtual_device_types (ClutterDeviceManager *device_manager)
+{
+  return (CLUTTER_VIRTUAL_DEVICE_TYPE_KEYBOARD |
+          CLUTTER_VIRTUAL_DEVICE_TYPE_POINTER);
+}
+
 static void
 clutter_device_manager_xi2_class_init (ClutterDeviceManagerXI2Class *klass)
 {
@@ -2052,6 +2080,7 @@ clutter_device_manager_xi2_class_init (ClutterDeviceManagerXI2Class *klass)
   manager_class->get_device = clutter_device_manager_xi2_get_device;
   manager_class->select_stage_events = clutter_device_manager_xi2_select_stage_events;
   manager_class->create_virtual_device = clutter_device_manager_xi2_create_virtual_device;
+  manager_class->get_supported_virtual_device_types = clutter_device_manager_xi2_get_supported_virtual_device_types;
   manager_class->apply_kbd_a11y_settings = clutter_device_manager_x11_apply_kbd_a11y_settings;
 }
 
@@ -2063,4 +2092,8 @@ clutter_device_manager_xi2_init (ClutterDeviceManagerXI2 *self)
                                                (GDestroyNotify) g_object_unref);
   self->tools_by_serial = g_hash_table_new_full (NULL, NULL, NULL,
                                                  (GDestroyNotify) g_object_unref);
+
+#ifdef HAVE_LIBWACOM
+  self->wacom_db = libwacom_database_new ();
+#endif
 }
