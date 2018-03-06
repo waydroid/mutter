@@ -70,46 +70,6 @@ struct _MetaWaylandSerial {
   uint32_t value;
 };
 
-#define META_TYPE_WAYLAND_SURFACE_ROLE_ACTOR_SURFACE (meta_wayland_surface_role_actor_surface_get_type ())
-G_DECLARE_DERIVABLE_TYPE (MetaWaylandSurfaceRoleActorSurface,
-                          meta_wayland_surface_role_actor_surface,
-                          META, WAYLAND_SURFACE_ROLE_ACTOR_SURFACE,
-                          MetaWaylandSurfaceRole);
-
-struct _MetaWaylandSurfaceRoleActorSurfaceClass
-{
-  MetaWaylandSurfaceRoleClass parent_class;
-};
-
-#define META_TYPE_WAYLAND_SURFACE_ROLE_SHELL_SURFACE (meta_wayland_surface_role_shell_surface_get_type ())
-G_DECLARE_DERIVABLE_TYPE (MetaWaylandSurfaceRoleShellSurface,
-                          meta_wayland_surface_role_shell_surface,
-                          META, WAYLAND_SURFACE_ROLE_SHELL_SURFACE,
-                          MetaWaylandSurfaceRoleActorSurface);
-
-struct _MetaWaylandSurfaceRoleShellSurfaceClass
-{
-  MetaWaylandSurfaceRoleActorSurfaceClass parent_class;
-
-  void (*configure) (MetaWaylandSurfaceRoleShellSurface *shell_surface_role,
-                     int                                 new_x,
-                     int                                 new_y,
-                     int                                 new_width,
-                     int                                 new_height,
-                     MetaWaylandSerial                  *sent_serial);
-  void (*managed) (MetaWaylandSurfaceRoleShellSurface *shell_surface_role,
-                   MetaWindow                         *window);
-  void (*ping) (MetaWaylandSurfaceRoleShellSurface *shell_surface_role,
-                uint32_t                            serial);
-  void (*close) (MetaWaylandSurfaceRoleShellSurface *shell_surface_role);
-};
-
-#define META_TYPE_WAYLAND_SURFACE_ROLE_SUBSURFACE (meta_wayland_surface_role_subsurface_get_type ())
-G_DECLARE_FINAL_TYPE (MetaWaylandSurfaceRoleSubsurface,
-                      meta_wayland_surface_role_subsurface,
-                      META, WAYLAND_SURFACE_ROLE_SUBSURFACE,
-                      MetaWaylandSurfaceRoleActorSurface);
-
 #define META_TYPE_WAYLAND_SURFACE_ROLE_DND (meta_wayland_surface_role_dnd_get_type ())
 G_DECLARE_FINAL_TYPE (MetaWaylandSurfaceRoleDND,
                       meta_wayland_surface_role_dnd,
@@ -252,6 +212,11 @@ MetaWaylandSurface *meta_wayland_surface_create (MetaWaylandCompositor *composit
                                                  struct wl_resource    *compositor_resource,
                                                  guint32                id);
 
+void                meta_wayland_surface_apply_pending_state (MetaWaylandSurface      *surface,
+                                                              MetaWaylandPendingState *pending);
+
+gboolean            meta_wayland_surface_is_effectively_synchronized (MetaWaylandSurface *surface);
+
 gboolean            meta_wayland_surface_assign_role (MetaWaylandSurface *surface,
                                                       GType               role_type,
                                                       const char         *first_property_name,
@@ -265,6 +230,10 @@ void                meta_wayland_surface_unref_buffer_use_count (MetaWaylandSurf
 
 void                meta_wayland_surface_set_window (MetaWaylandSurface *surface,
                                                      MetaWindow         *window);
+
+void                meta_wayland_surface_create_surface_actor (MetaWaylandSurface *surface);
+
+void                meta_wayland_surface_clear_surface_actor (MetaWaylandSurface *surface);
 
 void                meta_wayland_surface_configure_notify (MetaWaylandSurface *surface,
                                                            int                 new_x,
@@ -313,10 +282,6 @@ MetaWaylandSurface * meta_wayland_surface_role_get_surface (MetaWaylandSurfaceRo
 
 cairo_region_t *    meta_wayland_surface_calculate_input_region (MetaWaylandSurface *surface);
 
-void                meta_wayland_surface_calculate_window_geometry (MetaWaylandSurface *surface,
-                                                                    MetaRectangle      *total_geometry,
-                                                                    float               parent_x,
-                                                                    float               parent_y);
 
 void                meta_wayland_surface_destroy_window (MetaWaylandSurface *surface);
 

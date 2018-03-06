@@ -68,6 +68,8 @@ mutter_built_sources += \
 	gtk-shell-server-protocol.h		\
 	gtk-primary-selection-protocol.c				\
 	gtk-primary-selection-server-protocol.h				\
+	xdg-shell-protocol.c						\
+	xdg-shell-server-protocol.h					\
 	xdg-shell-unstable-v6-protocol.c				\
 	xdg-shell-unstable-v6-server-protocol.h				\
 	relative-pointer-unstable-v1-protocol.c				\
@@ -434,6 +436,12 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES +=	\
 	wayland/meta-wayland-surface-role-cursor.h	\
 	wayland/meta-wayland-surface-role-tablet-cursor.c	\
 	wayland/meta-wayland-surface-role-tablet-cursor.h	\
+	wayland/meta-wayland-actor-surface.c	\
+	wayland/meta-wayland-actor-surface.h	\
+	wayland/meta-wayland-subsurface.c	\
+	wayland/meta-wayland-subsurface.h	\
+	wayland/meta-wayland-shell-surface.c	\
+	wayland/meta-wayland-shell-surface.h	\
 	wayland/meta-wayland-text-input.c	\
 	wayland/meta-wayland-text-input.h	\
 	wayland/meta-wayland-types.h		\
@@ -448,6 +456,8 @@ libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES +=	\
 	wayland/meta-window-xwayland.h		\
 	wayland/meta-wayland-xdg-shell.c	\
 	wayland/meta-wayland-xdg-shell.h	\
+	wayland/meta-wayland-legacy-xdg-shell.c	\
+	wayland/meta-wayland-legacy-xdg-shell.h	\
 	wayland/meta-wayland-wl-shell.c		\
 	wayland/meta-wayland-wl-shell.h		\
 	wayland/meta-wayland-gtk-shell.c	\
@@ -736,7 +746,7 @@ backends/native/meta-default-modes.h: backends/native/gen-default-modes.py Makef
 .SECONDEXPANSION:
 
 define protostability
-$(shell echo $1 | sed 's/.*\(\<unstable\>\|\<stable\>\).*/\1/')
+$(if $(findstring unstable,$1),unstable,stable)
 endef
 
 define protoname
@@ -751,14 +761,3 @@ endef
 	$(AM_V_GEN)$(WAYLAND_SCANNER) code $< $@
 %-server-protocol.h : $(srcdir)/wayland/protocol/%.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header $< $@
-keyboard-shortcuts-inhibit-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
-keyboard-shortcuts-inhibit-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
-xdg-output-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
-xdg-output-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
-xwayland-keyboard-grab-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
-xwayland-keyboard-grab-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@

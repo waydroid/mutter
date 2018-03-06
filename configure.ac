@@ -2,7 +2,7 @@ AC_PREREQ(2.62)
 
 m4_define([mutter_major_version], [3])
 m4_define([mutter_minor_version], [27])
-m4_define([mutter_micro_version], [91])
+m4_define([mutter_micro_version], [92])
 
 m4_define([mutter_version],
           [mutter_major_version.mutter_minor_version.mutter_micro_version])
@@ -303,7 +303,7 @@ AS_IF([test "$have_wayland" = "yes"], [
   AC_SUBST([WAYLAND_SCANNER])
   AC_DEFINE([HAVE_WAYLAND],[1],[Define if you want to enable Wayland support])
 
-  PKG_CHECK_MODULES(WAYLAND_PROTOCOLS, [wayland-protocols >= 1.10],
+  PKG_CHECK_MODULES(WAYLAND_PROTOCOLS, [wayland-protocols >= 1.12],
 		    [ac_wayland_protocols_pkgdatadir=`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`])
   AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, $ac_wayland_protocols_pkgdatadir)
 ])

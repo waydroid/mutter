@@ -398,54 +398,6 @@ notify_relative_tool_motion (ClutterInputDevice *input_device,
 }
 
 static void
-notify_touch_event (ClutterInputDevice *input_device,
-		    ClutterEventType    evtype,
-		    guint64             time_us,
-		    gint32              slot,
-		    gdouble             x,
-		    gdouble             y)
-{
-  ClutterInputDeviceEvdev *device_evdev;
-  ClutterSeatEvdev *seat;
-  ClutterStage *stage;
-  ClutterEvent *event = NULL;
-
-  /* We can drop the event on the floor if no stage has been
-   * associated with the device yet. */
-  stage = _clutter_input_device_get_stage (input_device);
-  if (stage == NULL)
-    return;
-
-  device_evdev = CLUTTER_INPUT_DEVICE_EVDEV (input_device);
-  seat = _clutter_input_device_evdev_get_seat (device_evdev);
-
-  event = clutter_event_new (evtype);
-
-  _clutter_evdev_event_set_time_usec (event, time_us);
-  event->touch.time = us2ms (time_us);
-  event->touch.stage = CLUTTER_STAGE (stage);
-  event->touch.device = seat->core_pointer;
-  event->touch.x = x;
-  event->touch.y = y;
-  clutter_input_device_evdev_translate_coordinates (input_device, stage,
-                                                    &event->touch.x,
-                                                    &event->touch.y);
-
-  /* "NULL" sequences are special cased in clutter */
-  event->touch.sequence = GINT_TO_POINTER (MAX (1, slot + 1));
-  _clutter_xkb_translate_state (event, seat->xkb, seat->button_state);
-
-  if (evtype == CLUTTER_TOUCH_BEGIN ||
-      evtype == CLUTTER_TOUCH_UPDATE)
-    event->touch.modifier_state |= CLUTTER_BUTTON1_MASK;
-
-  clutter_event_set_device (event, seat->core_pointer);
-  clutter_event_set_source_device (event, input_device);
-
-  queue_event (event);
-}
-
-static void
 notify_pinch_gesture_event (ClutterInputDevice          *input_device,
                             ClutterTouchpadGesturePhase  phase,
                             guint64                      time_us,
@@ -1252,6 +1204,7 @@ process_device_event (ClutterDeviceManagerEvdev *manager_evdev,
   gboolean handled = TRUE;
   struct libinput_device *libinput_device = libinput_event_get_device(event);
   ClutterInputDevice *device;
+  ClutterInputDeviceEvdev *device_evdev;
 
   switch (libinput_event_get_type (event))
     {
@@ -1408,7 +1361,7 @@ process_device_event (ClutterDeviceManagerEvdev *manager_evdev,
 
     case LIBINPUT_EVENT_TOUCH_DOWN:
       {
-        gint32 slot;
+        int device_slot;
         guint64 time_us;
         double x, y;
         gfloat stage_width, stage_height;
@@ -1419,7 +1372,8 @@ process_device_event (ClutterDeviceManagerEvdev *manager_evdev,
           libinput_event_get_touch_event (event);
 
         device = libinput_device_get_user_data (libinput_device);
-        seat = _clutter_input_device_evdev_get_seat (CLUTTER_INPUT_DEVICE_EVDEV (device));
+        device_evdev = CLUTTER_INPUT_DEVICE_EVDEV (device);
+        seat = _clutter_input_device_evdev_get_seat (device_evdev);
 
         stage = _clutter_input_device_get_stage (device);
         if (stage == NULL)
@@ -1428,25 +1382,31 @@ process_device_event (ClutterDeviceManagerEvdev *manager_evdev,
         stage_width = clutter_actor_get_width (CLUTTER_ACTOR (stage));
         stage_height = clutter_actor_get_height (CLUTTER_ACTOR (stage));
 
-        slot = libinput_event_touch_get_slot (touch_event);
+        device_slot = libinput_event_touch_get_slot (touch_event);
         time_us = libinput_event_touch_get_time_usec (touch_event);
         x = libinput_event_touch_get_x_transformed (touch_event,
                                                     stage_width);
         y = libinput_event_touch_get_y_transformed (touch_event,
                                                     stage_height);
 
-        touch_state = clutter_seat_evdev_add_touch (seat, slot);
+        touch_state =
+          clutter_input_device_evdev_acquire_touch_state (device_evdev,
+                                                          device_slot);
         touch_state->coords.x = x;
         touch_state->coords.y = y;
 
-        notify_touch_event (device, CLUTTER_TOUCH_BEGIN, time_us, slot,
-                             touch_state->coords.x, touch_state->coords.y);
+        clutter_seat_evdev_notify_touch_event (seat, device,
+                                               CLUTTER_TOUCH_BEGIN,
+                                               time_us,
+                                               touch_state->seat_slot,
+                                               touch_state->coords.x,
+                                               touch_state->coords.y);
         break;
       }
 
     case LIBINPUT_EVENT_TOUCH_UP:
       {
-        gint32 slot;
+        int device_slot;
         guint64 time_us;
         ClutterSeatEvdev *seat;
         ClutterTouchState *touch_state;
@@ -1454,24 +1414,30 @@ process_device_event (ClutterDeviceManagerEvdev *manager_evdev,
           libinput_event_get_touch_event (event);
 
         device = libinput_device_get_user_data (libinput_device);
-        seat = _clutter_input_device_evdev_get_seat (CLUTTER_INPUT_DEVICE_EVDEV (device));
+        device_evdev = CLUTTER_INPUT_DEVICE_EVDEV (device);
+        seat = _clutter_input_device_evdev_get_seat (device_evdev);
 
-        slot = libinput_event_touch_get_slot (touch_event);
+        device_slot = libinput_event_touch_get_slot (touch_event);
         time_us = libinput_event_touch_get_time_usec (touch_event);
-        touch_state = clutter_seat_evdev_get_touch (seat, slot);
+        touch_state =
+          clutter_input_device_evdev_lookup_touch_state (device_evdev,
+                                                         device_slot);
         if (!touch_state)
           break;
 
-        notify_touch_event (device, CLUTTER_TOUCH_END, time_us, slot,
-			    touch_state->coords.x, touch_state->coords.y);
-        clutter_seat_evdev_remove_touch (seat, slot);
-
+        clutter_seat_evdev_notify_touch_event (seat, device,
+                                               CLUTTER_TOUCH_END, time_us,
+                                               touch_state->seat_slot,
+                                               touch_state->coords.x,
+                                               touch_state->coords.y);
+        clutter_input_device_evdev_release_touch_state (device_evdev,
+                                                        touch_state);
         break;
       }
 
     case LIBINPUT_EVENT_TOUCH_MOTION:
       {
-        gint32 slot;
+        int device_slot;
         guint64 time_us;
         double x, y;
         gfloat stage_width, stage_height;
@@ -1482,7 +1448,8 @@ process_device_event (ClutterDeviceManagerEvdev *manager_evdev,
           libinput_event_get_touch_event (event);
 
         device = libinput_device_get_user_data (libinput_device);
-        seat = _clutter_input_device_evdev_get_seat (CLUTTER_INPUT_DEVICE_EVDEV (device));
+        device_evdev = CLUTTER_INPUT_DEVICE_EVDEV (device);
+        seat = _clutter_input_device_evdev_get_seat (device_evdev);
 
         stage = _clutter_input_device_get_stage (device);
         if (stage == NULL)
@@ -1491,45 +1458,41 @@ process_device_event (ClutterDeviceManagerEvdev *manager_evdev,
         stage_width = clutter_actor_get_width (CLUTTER_ACTOR (stage));
         stage_height = clutter_actor_get_height (CLUTTER_ACTOR (stage));
 
-        slot = libinput_event_touch_get_slot (touch_event);
+        device_slot = libinput_event_touch_get_slot (touch_event);
         time_us = libinput_event_touch_get_time_usec (touch_event);
         x = libinput_event_touch_get_x_transformed (touch_event,
                                                     stage_width);
         y = libinput_event_touch_get_y_transformed (touch_event,
                                                     stage_height);
 
-        touch_state = clutter_seat_evdev_get_touch (seat, slot);
+        touch_state =
+          clutter_input_device_evdev_lookup_touch_state (device_evdev,
+                                                         device_slot);
         if (!touch_state)
           break;
 
         touch_state->coords.x = x;
         touch_state->coords.y = y;
 
-        notify_touch_event (device, CLUTTER_TOUCH_UPDATE, time_us, slot,
-			    touch_state->coords.x, touch_state->coords.y);
+        clutter_seat_evdev_notify_touch_event (seat, device,
+                                               CLUTTER_TOUCH_UPDATE,
+                                               time_us,
+                                               touch_state->seat_slot,
+                                               touch_state->coords.x,
+                                               touch_state->coords.y);
         break;
       }
     case LIBINPUT_EVENT_TOUCH_CANCEL:
       {
-        ClutterTouchState *touch_state;
-        GHashTableIter iter;
         guint64 time_us;
         struct libinput_event_touch *touch_event =
           libinput_event_get_touch_event (event);
-        ClutterSeatEvdev *seat;
 
         device = libinput_device_get_user_data (libinput_device);
+        device_evdev = CLUTTER_INPUT_DEVICE_EVDEV (device);
         time_us = libinput_event_touch_get_time_usec (touch_event);
-        seat = _clutter_input_device_evdev_get_seat (CLUTTER_INPUT_DEVICE_EVDEV (device));
-        g_hash_table_iter_init (&iter, seat->touches);
 
-        while (g_hash_table_iter_next (&iter, NULL, (gpointer*) &touch_state))
-          {
-            notify_touch_event (device, CLUTTER_TOUCH_CANCEL,
-                                time_us, touch_state->id,
-                                touch_state->coords.x, touch_state->coords.y);
-            g_hash_table_iter_remove (&iter);
-          }
+        clutter_input_device_evdev_release_touch_slots (device_evdev, time_us);
 
         break;
       }
@@ -1903,6 +1866,14 @@ clutter_device_manager_evdev_create_virtual_device (ClutterDeviceManager  *manag
                        NULL);
 }
 
+static ClutterVirtualDeviceType
+clutter_device_manager_evdev_get_supported_virtual_device_types (ClutterDeviceManager *device_manager)
+{
+  return (CLUTTER_VIRTUAL_DEVICE_TYPE_KEYBOARD |
+          CLUTTER_VIRTUAL_DEVICE_TYPE_POINTER |
+          CLUTTER_VIRTUAL_DEVICE_TYPE_TOUCHSCREEN);
+}
+
 static void
 clutter_device_manager_evdev_compress_motion (ClutterDeviceManager *device_manger,
                                               ClutterEvent         *event,
@@ -2081,6 +2052,7 @@ clutter_device_manager_evdev_class_init (ClutterDeviceManagerEvdevClass *klass)
   manager_class->get_core_device = clutter_device_manager_evdev_get_core_device;
   manager_class->get_device = clutter_device_manager_evdev_get_device;
   manager_class->create_virtual_device = clutter_device_manager_evdev_create_virtual_device;
+  manager_class->get_supported_virtual_device_types = clutter_device_manager_evdev_get_supported_virtual_device_types;
   manager_class->compress_motion = clutter_device_manager_evdev_compress_motion;
   manager_class->apply_kbd_a11y_settings = clutter_device_manager_evdev_apply_kbd_a11y_settings;
 }

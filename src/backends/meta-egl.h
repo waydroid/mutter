@@ -56,11 +56,24 @@ gpointer meta_egl_get_proc_address (MetaEgl    *egl,
                                     const char *procname,
                                     GError    **error);
 
-gboolean meta_egl_choose_config (MetaEgl      *egl,
-                                 EGLDisplay    display,
-                                 const EGLint *attrib_list,
-                                 EGLConfig    *chosen_config,
-                                 GError      **error);
+gboolean meta_egl_choose_first_config (MetaEgl       *egl,
+                                       EGLDisplay     display,
+                                       const EGLint  *attrib_list,
+                                       EGLConfig     *chosen_config,
+                                       GError       **error);
+
+gboolean meta_egl_get_config_attrib (MetaEgl     *egl,
+                                     EGLDisplay   display,
+                                     EGLConfig    config,
+                                     EGLint       attribute,
+                                     EGLint      *value,
+                                     GError     **error);
+
+EGLConfig * meta_egl_choose_all_configs (MetaEgl       *egl,
+                                         EGLDisplay     display,
+                                         const EGLint  *attrib_list,
+                                         EGLint        *out_num_configs,
+                                         GError       **error);
 
 EGLContext meta_egl_create_context (MetaEgl      *egl,
                                     EGLDisplay    display,

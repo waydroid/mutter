@@ -26,6 +26,7 @@
 
 #include <linux/input.h>
 #include <xkbcommon/xkbcommon.h>
+#include <stdlib.h>
 
 #include "backends/meta-dbus-session-watcher.h"
 #include "backends/meta-screen-cast-session.h"
@@ -37,6 +38,11 @@
 #include "meta-dbus-remote-desktop.h"
 
 #define META_REMOTE_DESKTOP_SESSION_DBUS_PATH "/org/gnome/Mutter/RemoteDesktop/Session"
+
+enum _MetaRemoteDesktopNotifyAxisFlags
+{
+  META_REMOTE_DESKTOP_NOTIFY_AXIS_FLAGS_FINISH = 1 << 0,
+} MetaRemoteDesktopNotifyAxisFlags;
 
 struct _MetaRemoteDesktopSession
 {
@@ -52,6 +58,7 @@ struct _MetaRemoteDesktopSession
 
   ClutterVirtualInputDevice *virtual_pointer;
   ClutterVirtualInputDevice *virtual_keyboard;
+  ClutterVirtualInputDevice *virtual_touchscreen;
 };
 
 static void
@@ -95,6 +102,10 @@ meta_remote_desktop_session_start (MetaRemoteDesktopSession *session,
   session->virtual_keyboard =
     clutter_device_manager_create_virtual_device (device_manager,
                                                   CLUTTER_KEYBOARD_DEVICE);
+
+  session->virtual_touchscreen =
+    clutter_device_manager_create_virtual_device (device_manager,
+                                                  CLUTTER_TOUCHSCREEN_DEVICE);
 
   return TRUE;
 }
@@ -255,6 +266,38 @@ handle_stop (MetaDBusRemoteDesktopSession *skeleton,
 }
 
 static gboolean
+handle_notify_keyboard_keycode (MetaDBusRemoteDesktopSession *skeleton,
+                                GDBusMethodInvocation        *invocation,
+                                unsigned int                  keycode,
+                                gboolean                      pressed)
+{
+  MetaRemoteDesktopSession *session = META_REMOTE_DESKTOP_SESSION (skeleton);
+  ClutterKeyState state;
+
+  if (!check_permission (session, invocation))
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_ACCESS_DENIED,
+                                             "Permission denied");
+      return TRUE;
+    }
+
+  if (pressed)
+    state = CLUTTER_KEY_STATE_PRESSED;
+  else
+    state = CLUTTER_KEY_STATE_RELEASED;
+
+  clutter_virtual_input_device_notify_key (session->virtual_keyboard,
+                                           CLUTTER_CURRENT_TIME,
+                                           keycode,
+                                           state);
+
+  meta_dbus_remote_desktop_session_complete_notify_keyboard_keycode (skeleton,
+                                                                     invocation);
+  return TRUE;
+}
+
+static gboolean
 handle_notify_keyboard_keysym (MetaDBusRemoteDesktopSession *skeleton,
                                GDBusMethodInvocation        *invocation,
                                unsigned int                  keysym,
@@ -343,6 +386,42 @@ handle_notify_pointer_button (MetaDBusRemoteDesktopSession *skeleton,
   return TRUE;
 }
 
+static gboolean
+handle_notify_pointer_axis (MetaDBusRemoteDesktopSession *skeleton,
+                            GDBusMethodInvocation        *invocation,
+                            double                        dx,
+                            double                        dy,
+                            uint32_t                      flags)
+{
+  MetaRemoteDesktopSession *session = META_REMOTE_DESKTOP_SESSION (skeleton);
+  ClutterScrollFinishFlags finish_flags = CLUTTER_SCROLL_FINISHED_NONE;
+
+  if (!check_permission (session, invocation))
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_ACCESS_DENIED,
+                                             "Permission denied");
+      return TRUE;
+    }
+
+  if (flags & META_REMOTE_DESKTOP_NOTIFY_AXIS_FLAGS_FINISH)
+    {
+      finish_flags |= (CLUTTER_SCROLL_FINISHED_HORIZONTAL |
+                       CLUTTER_SCROLL_FINISHED_VERTICAL);
+    }
+
+  clutter_virtual_input_device_notify_scroll_continuous (session->virtual_pointer,
+                                                         CLUTTER_CURRENT_TIME,
+                                                         dx, dy,
+                                                         CLUTTER_SCROLL_SOURCE_FINGER,
+                                                         finish_flags);
+
+  meta_dbus_remote_desktop_session_complete_notify_pointer_axis (skeleton,
+                                                                 invocation);
+
+  return TRUE;
+}
+
 static ClutterScrollDirection
 discrete_steps_to_scroll_direction (unsigned int axis,
                                     int          steps)
@@ -367,6 +446,7 @@ handle_notify_pointer_axis_discrete (MetaDBusRemoteDesktopSession *skeleton,
 {
   MetaRemoteDesktopSession *session = META_REMOTE_DESKTOP_SESSION (skeleton);
   ClutterScrollDirection direction;
+  int step_count;
 
   if (!check_permission (session, invocation))
     {
@@ -376,7 +456,7 @@ handle_notify_pointer_axis_discrete (MetaDBusRemoteDesktopSession *skeleton,
       return TRUE;
     }
 
-  if (axis <= 1)
+  if (axis > 1)
     {
       g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
                                              G_DBUS_ERROR_FAILED,
@@ -392,22 +472,47 @@ handle_notify_pointer_axis_discrete (MetaDBusRemoteDesktopSession *skeleton,
       return TRUE;
     }
 
-  if (steps != -1 && steps != 1)
-    g_warning ("Multiple steps at at once not yet implemented, treating as one.");
-
   /*
    * We don't have the actual scroll source, but only know they should be
    * considered as discrete steps. The device that produces such scroll events
    * is the scroll wheel, so pretend that is the scroll source.
    */
   direction = discrete_steps_to_scroll_direction (axis, steps);
-  clutter_virtual_input_device_notify_discrete_scroll (session->virtual_pointer,
-                                                       CLUTTER_CURRENT_TIME,
-                                                       direction,
-                                                       CLUTTER_SCROLL_SOURCE_WHEEL);
+
+  for (step_count = 0; step_count < abs (steps); step_count++)
+    clutter_virtual_input_device_notify_discrete_scroll (session->virtual_pointer,
+                                                         CLUTTER_CURRENT_TIME,
+                                                         direction,
+                                                         CLUTTER_SCROLL_SOURCE_WHEEL);
 
   meta_dbus_remote_desktop_session_complete_notify_pointer_axis_discrete (skeleton,
                                                                           invocation);
+
+  return TRUE;
+}
+
+static gboolean
+handle_notify_pointer_motion_relative (MetaDBusRemoteDesktopSession *skeleton,
+                                       GDBusMethodInvocation        *invocation,
+                                       double                        dx,
+                                       double                        dy)
+{
+  MetaRemoteDesktopSession *session = META_REMOTE_DESKTOP_SESSION (skeleton);
+
+  if (!check_permission (session, invocation))
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_ACCESS_DENIED,
+                                             "Permission denied");
+      return TRUE;
+    }
+
+  clutter_virtual_input_device_notify_relative_motion (session->virtual_pointer,
+                                                       CLUTTER_CURRENT_TIME,
+                                                       dx, dy);
+
+  meta_dbus_remote_desktop_session_complete_notify_pointer_motion_relative (skeleton,
+                                                                            invocation);
 
   return TRUE;
 }
@@ -420,6 +525,8 @@ handle_notify_pointer_motion_absolute (MetaDBusRemoteDesktopSession *skeleton,
                                        double                        y)
 {
   MetaRemoteDesktopSession *session = META_REMOTE_DESKTOP_SESSION (skeleton);
+  MetaScreenCastStream *stream;
+  double abs_x, abs_y;
 
   if (!check_permission (session, invocation))
     {
@@ -429,12 +536,159 @@ handle_notify_pointer_motion_absolute (MetaDBusRemoteDesktopSession *skeleton,
       return TRUE;
     }
 
+  if (!session->screen_cast_session)
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_FAILED,
+                                             "No screen cast active");
+      return TRUE;
+    }
+
+  stream = meta_screen_cast_session_get_stream (session->screen_cast_session,
+                                                stream_path);
+  if (!stream)
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_FAILED,
+                                             "Unknown stream");
+      return TRUE;
+    }
+
+  meta_screen_cast_stream_transform_position (stream, x, y, &abs_x, &abs_y);
+
   clutter_virtual_input_device_notify_absolute_motion (session->virtual_pointer,
                                                        CLUTTER_CURRENT_TIME,
-                                                       x, y);
+                                                       abs_x, abs_y);
 
   meta_dbus_remote_desktop_session_complete_notify_pointer_motion_absolute (skeleton,
                                                                             invocation);
+
+  return TRUE;
+}
+
+static gboolean
+handle_notify_touch_down (MetaDBusRemoteDesktopSession *skeleton,
+                          GDBusMethodInvocation        *invocation,
+                          const char                   *stream_path,
+                          unsigned int                  slot,
+                          double                        x,
+                          double                        y)
+{
+  MetaRemoteDesktopSession *session = META_REMOTE_DESKTOP_SESSION (skeleton);
+  MetaScreenCastStream *stream;
+  double abs_x, abs_y;
+
+  if (!check_permission (session, invocation))
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_ACCESS_DENIED,
+                                             "Permission denied");
+      return TRUE;
+    }
+
+  if (!session->screen_cast_session)
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_FAILED,
+                                             "No screen cast active");
+      return TRUE;
+    }
+
+  stream = meta_screen_cast_session_get_stream (session->screen_cast_session,
+                                                stream_path);
+  if (!stream)
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_FAILED,
+                                             "Unknown stream");
+      return TRUE;
+    }
+
+  meta_screen_cast_stream_transform_position (stream, x, y, &abs_x, &abs_y);
+
+  clutter_virtual_input_device_notify_touch_down (session->virtual_touchscreen,
+                                                  CLUTTER_CURRENT_TIME,
+                                                  slot,
+                                                  abs_x, abs_y);
+
+  meta_dbus_remote_desktop_session_complete_notify_touch_down (skeleton,
+                                                               invocation);
+
+  return TRUE;
+}
+
+static gboolean
+handle_notify_touch_motion (MetaDBusRemoteDesktopSession *skeleton,
+                            GDBusMethodInvocation        *invocation,
+                            const char                   *stream_path,
+                            unsigned int                  slot,
+                            double                        x,
+                            double                        y)
+{
+  MetaRemoteDesktopSession *session = META_REMOTE_DESKTOP_SESSION (skeleton);
+  MetaScreenCastStream *stream;
+  double abs_x, abs_y;
+
+  if (!check_permission (session, invocation))
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_ACCESS_DENIED,
+                                             "Permission denied");
+      return TRUE;
+    }
+
+  if (!session->screen_cast_session)
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_FAILED,
+                                             "No screen cast active");
+      return TRUE;
+    }
+
+  stream = meta_screen_cast_session_get_stream (session->screen_cast_session,
+                                                stream_path);
+  if (!stream)
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_FAILED,
+                                             "Unknown stream");
+      return TRUE;
+    }
+
+  meta_screen_cast_stream_transform_position (stream, x, y, &abs_x, &abs_y);
+
+  clutter_virtual_input_device_notify_touch_motion (session->virtual_touchscreen,
+                                                    CLUTTER_CURRENT_TIME,
+                                                    slot,
+                                                    abs_x, abs_y);
+
+  meta_dbus_remote_desktop_session_complete_notify_touch_motion (skeleton,
+                                                                 invocation);
+
+  return TRUE;
+}
+
+static gboolean
+handle_notify_touch_up (MetaDBusRemoteDesktopSession *skeleton,
+                          GDBusMethodInvocation        *invocation,
+                          unsigned int                  slot)
+{
+  MetaRemoteDesktopSession *session = META_REMOTE_DESKTOP_SESSION (skeleton);
+
+  if (!check_permission (session, invocation))
+    {
+      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                             G_DBUS_ERROR_ACCESS_DENIED,
+                                             "Permission denied");
+      return TRUE;
+    }
+
+  clutter_virtual_input_device_notify_touch_up (session->virtual_touchscreen,
+                                                       CLUTTER_CURRENT_TIME,
+                                                       slot);
+
+  meta_dbus_remote_desktop_session_complete_notify_touch_up (skeleton,
+                                                             invocation);
 
   return TRUE;
 }
@@ -444,10 +698,16 @@ meta_remote_desktop_session_init_iface (MetaDBusRemoteDesktopSessionIface *iface
 {
   iface->handle_start = handle_start;
   iface->handle_stop = handle_stop;
+  iface->handle_notify_keyboard_keycode = handle_notify_keyboard_keycode;
   iface->handle_notify_keyboard_keysym = handle_notify_keyboard_keysym;
   iface->handle_notify_pointer_button = handle_notify_pointer_button;
+  iface->handle_notify_pointer_axis = handle_notify_pointer_axis;
   iface->handle_notify_pointer_axis_discrete = handle_notify_pointer_axis_discrete;
+  iface->handle_notify_pointer_motion_relative = handle_notify_pointer_motion_relative;
   iface->handle_notify_pointer_motion_absolute = handle_notify_pointer_motion_absolute;
+  iface->handle_notify_touch_down = handle_notify_touch_down;
+  iface->handle_notify_touch_motion = handle_notify_touch_motion;
+  iface->handle_notify_touch_up = handle_notify_touch_up;
 }
 
 static void

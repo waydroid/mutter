@@ -105,6 +105,8 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	gtk-shell-server-protocol.h		\
 @HAVE_WAYLAND_TRUE@	gtk-primary-selection-protocol.c				\
 @HAVE_WAYLAND_TRUE@	gtk-primary-selection-server-protocol.h				\
+@HAVE_WAYLAND_TRUE@	xdg-shell-protocol.c						\
+@HAVE_WAYLAND_TRUE@	xdg-shell-server-protocol.h					\
 @HAVE_WAYLAND_TRUE@	xdg-shell-unstable-v6-protocol.c				\
 @HAVE_WAYLAND_TRUE@	xdg-shell-unstable-v6-server-protocol.h				\
 @HAVE_WAYLAND_TRUE@	relative-pointer-unstable-v1-protocol.c				\
@@ -216,6 +218,12 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-cursor.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-tablet-cursor.c	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-tablet-cursor.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-actor-surface.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-actor-surface.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-subsurface.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-subsurface.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-shell-surface.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-shell-surface.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-text-input.c	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-text-input.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-types.h		\
@@ -230,6 +238,8 @@ host_triplet = @host@
 @HAVE_WAYLAND_TRUE@	wayland/meta-window-xwayland.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-shell.c	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-shell.h	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-legacy-xdg-shell.c	\
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-legacy-xdg-shell.h	\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-wl-shell.c		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-wl-shell.h		\
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-gtk-shell.c	\
@@ -558,6 +568,12 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	wayland/meta-wayland-surface-role-cursor.h \
 	wayland/meta-wayland-surface-role-tablet-cursor.c \
 	wayland/meta-wayland-surface-role-tablet-cursor.h \
+	wayland/meta-wayland-actor-surface.c \
+	wayland/meta-wayland-actor-surface.h \
+	wayland/meta-wayland-subsurface.c \
+	wayland/meta-wayland-subsurface.h \
+	wayland/meta-wayland-shell-surface.c \
+	wayland/meta-wayland-shell-surface.h \
 	wayland/meta-wayland-text-input.c \
 	wayland/meta-wayland-text-input.h wayland/meta-wayland-types.h \
 	wayland/meta-wayland-versions.h wayland/meta-wayland-outputs.c \
@@ -568,6 +584,8 @@ am__libmutter_@LIBMUTTER_API_VERSION@_la_SOURCES_DIST =  \
 	wayland/meta-window-xwayland.c wayland/meta-window-xwayland.h \
 	wayland/meta-wayland-xdg-shell.c \
 	wayland/meta-wayland-xdg-shell.h \
+	wayland/meta-wayland-legacy-xdg-shell.c \
+	wayland/meta-wayland-legacy-xdg-shell.h \
 	wayland/meta-wayland-wl-shell.c \
 	wayland/meta-wayland-wl-shell.h \
 	wayland/meta-wayland-gtk-shell.c \
@@ -653,12 +671,16 @@ am__objects_1 =
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-cursor.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-surface-role-tablet-cursor.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-actor-surface.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-subsurface.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-shell-surface.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-text-input.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-outputs.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-foreign.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-window-wayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-window-xwayland.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-xdg-shell.lo \
+@HAVE_WAYLAND_TRUE@	wayland/meta-wayland-legacy-xdg-shell.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-wl-shell.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-gtk-shell.lo \
 @HAVE_WAYLAND_TRUE@	wayland/meta-wayland-inhibit-shortcuts.lo \
@@ -763,6 +785,7 @@ am__objects_7 = meta-dbus-login1.lo
 @HAVE_WAYLAND_TRUE@	pointer-gestures-unstable-v1-protocol.lo \
 @HAVE_WAYLAND_TRUE@	gtk-shell-protocol.lo \
 @HAVE_WAYLAND_TRUE@	gtk-primary-selection-protocol.lo \
+@HAVE_WAYLAND_TRUE@	xdg-shell-protocol.lo \
 @HAVE_WAYLAND_TRUE@	xdg-shell-unstable-v6-protocol.lo \
 @HAVE_WAYLAND_TRUE@	relative-pointer-unstable-v1-protocol.lo \
 @HAVE_WAYLAND_TRUE@	pointer-constraints-unstable-v1-protocol.lo \
@@ -1976,6 +1999,12 @@ wayland/meta-wayland-surface-role-cursor.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-surface-role-tablet-cursor.lo:  \
 	wayland/$(am__dirstamp) wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-actor-surface.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-subsurface.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-shell-surface.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-text-input.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-outputs.lo: wayland/$(am__dirstamp) \
@@ -1987,6 +2016,8 @@ wayland/meta-window-wayland.lo: wayland/$(am__dirstamp) \
 wayland/meta-window-xwayland.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-xdg-shell.lo: wayland/$(am__dirstamp) \
+	wayland/$(DEPDIR)/$(am__dirstamp)
+wayland/meta-wayland-legacy-xdg-shell.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
 wayland/meta-wayland-wl-shell.lo: wayland/$(am__dirstamp) \
 	wayland/$(DEPDIR)/$(am__dirstamp)
@@ -2309,6 +2340,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tablet-unstable-v2-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-foreign-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-output-unstable-v1-protocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-shell-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdg-shell-unstable-v6-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xwayland-keyboard-grab-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@backends/$(DEPDIR)/edid-parse.Plo@am__quote@
@@ -2454,6 +2486,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@ui/$(DEPDIR)/ui.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-pointer-confinement-wayland.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-pointer-lock-wayland.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-actor-surface.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-buffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-data-device.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-dma-buf.Plo@am__quote@
@@ -2463,6 +2496,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-inhibit-shortcuts.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-input-device.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-keyboard.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-legacy-xdg-shell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-outputs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-pointer-constraints.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-pointer-gesture-pinch.Plo@am__quote@
@@ -2472,6 +2506,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-popup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-region.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-seat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-shell-surface.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-subsurface.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-surface-role-cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-surface-role-tablet-cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wayland/$(DEPDIR)/meta-wayland-surface.Plo@am__quote@
@@ -3118,7 +3154,7 @@ backends/native/meta-default-modes.h: backends/native/gen-default-modes.py Makef
 .SECONDEXPANSION:
 
 define protostability
-$(shell echo $1 | sed 's/.*\(\<unstable\>\|\<stable\>\).*/\1/')
+$(if $(findstring unstable,$1),unstable,stable)
 endef
 
 define protoname
@@ -3133,17 +3169,6 @@ endef
 	$(AM_V_GEN)$(WAYLAND_SCANNER) code $< $@
 %-server-protocol.h : $(srcdir)/wayland/protocol/%.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header $< $@
-keyboard-shortcuts-inhibit-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
-keyboard-shortcuts-inhibit-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
-xdg-output-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
-xdg-output-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
-xwayland-keyboard-grab-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
-xwayland-keyboard-grab-unstable-v1-server-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
