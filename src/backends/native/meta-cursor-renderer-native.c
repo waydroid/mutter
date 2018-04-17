@@ -291,9 +291,12 @@ update_monitor_crtc_cursor (MetaMonitor         *monitor,
     data->in_cursor_renderer_native;
   MetaCursorRendererNativePrivate *priv =
     meta_cursor_renderer_native_get_instance_private (cursor_renderer_native);
+  MetaCrtc *crtc;
+  MetaMonitorTransform transform;
   ClutterRect scaled_crtc_rect;
   float scale;
   int crtc_x, crtc_y;
+  int crtc_width, crtc_height;
 
   if (meta_is_stage_views_scaled ())
     scale = meta_logical_monitor_get_scale (data->in_logical_monitor);
@@ -305,16 +308,30 @@ update_monitor_crtc_cursor (MetaMonitor         *monitor,
                                    META_MONITOR_TRANSFORM_NORMAL,
                                    &crtc_x, &crtc_y);
 
+  transform = meta_logical_monitor_get_transform (data->in_logical_monitor);
+  if (meta_monitor_transform_is_rotated (transform))
+    {
+      crtc_width = monitor_crtc_mode->crtc_mode->height;
+      crtc_height = monitor_crtc_mode->crtc_mode->width;
+    }
+  else
+    {
+      crtc_width = monitor_crtc_mode->crtc_mode->width;
+      crtc_height = monitor_crtc_mode->crtc_mode->height;
+    }
+
   scaled_crtc_rect = (ClutterRect) {
     .origin = {
       .x = crtc_x / scale,
       .y = crtc_y / scale
     },
     .size = {
-      .width = monitor_crtc_mode->crtc_mode->width / scale,
-      .height = monitor_crtc_mode->crtc_mode->height / scale
+      .width = crtc_width / scale,
+      .height = crtc_height / scale
     },
   };
+
+  crtc = meta_output_get_assigned_crtc (monitor_crtc_mode->output);
 
   if (priv->has_hw_cursor &&
       clutter_rect_intersection (&scaled_crtc_rect,
@@ -326,7 +343,7 @@ update_monitor_crtc_cursor (MetaMonitor         *monitor,
       float crtc_cursor_x, crtc_cursor_y;
 
       set_crtc_cursor (data->in_cursor_renderer_native,
-                       monitor_crtc_mode->output->crtc,
+                       crtc,
                        data->in_cursor_sprite);
 
       gpu_kms = META_GPU_KMS (meta_monitor_get_gpu (monitor));
@@ -336,7 +353,7 @@ update_monitor_crtc_cursor (MetaMonitor         *monitor,
       crtc_cursor_y = (data->in_local_cursor_rect.origin.y -
                        scaled_crtc_rect.origin.y) * scale;
       drmModeMoveCursor (kms_fd,
-                         monitor_crtc_mode->output->crtc->crtc_id,
+                         crtc->crtc_id,
                          roundf (crtc_cursor_x),
                          roundf (crtc_cursor_y));
 
@@ -344,8 +361,7 @@ update_monitor_crtc_cursor (MetaMonitor         *monitor,
     }
   else
     {
-      set_crtc_cursor (data->in_cursor_renderer_native,
-                       monitor_crtc_mode->output->crtc, NULL);
+      set_crtc_cursor (data->in_cursor_renderer_native, crtc, NULL);
     }
 
   return TRUE;

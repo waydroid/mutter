@@ -580,7 +580,7 @@ meta_frame_layout_calc_geometry (MetaFrameLayout        *layout,
       x = rect->visible.x - layout->button_margin.left * scale;
 
       if (i > 0)
-        x -= layout->titlebar_spacing;
+        x -= layout->titlebar_spacing * scale;
 
       --i;
     }
@@ -712,6 +712,8 @@ get_class_from_button_type (MetaButtonType type)
       return "maximize";
     case META_BUTTON_TYPE_MINIMIZE:
       return "minimize";
+    case META_BUTTON_TYPE_APPMENU:
+      return "appmenu";
     default:
       return NULL;
     }
@@ -734,7 +736,9 @@ meta_frame_layout_draw_with_style (MetaFrameLayout         *layout,
   GdkRectangle titlebar_rect;
   GdkRectangle button_rect;
   const MetaFrameBorders *borders;
-  int scale = meta_theme_get_window_scaling_factor ();
+  cairo_surface_t *frame_surface;
+  double xscale, yscale;
+  int scale;
 
   /* We opt out of GTK+/Clutter's HiDPI handling, so we have to do the scaling
    * ourselves; the nitty-gritty is a bit confusing, so here is an overview:
@@ -746,8 +750,14 @@ meta_frame_layout_draw_with_style (MetaFrameLayout         *layout,
    *  - for drawing, we scale the canvas to have GTK+ render elements (borders,
    *    radii, ...) at the correct scale - as a result, we have to "unscale"
    *    the geometry again to not apply the scaling twice
+   *  - As per commit e36b629c GTK expects the device scale to be set and match
+   *    the final scaling or the surface caching won't take this in account
+   *    breaking -gtk-scaled items.
    */
-  cairo_scale (cr, scale, scale);
+  scale = meta_theme_get_window_scaling_factor ();
+  frame_surface = cairo_get_target (cr);
+  cairo_surface_get_device_scale (frame_surface, &xscale, &yscale);
+  cairo_surface_set_device_scale (frame_surface, scale, scale);
 
   borders = &fgeom->borders;
 
@@ -868,33 +878,43 @@ meta_frame_layout_draw_with_style (MetaFrameLayout         *layout,
 
           if (icon_name)
             {
-              GtkIconTheme *theme = gtk_icon_theme_get_default ();
-              GtkIconInfo *info;
-              GdkPixbuf *pixbuf;
+              g_autoptr (GIcon) icon = NULL;
+              g_autoptr (GtkIconInfo) info = NULL;
+              g_autoptr (GdkPixbuf) pixbuf = NULL;
+              GtkIconTheme *theme;
+              int flags;
 
-              info = gtk_icon_theme_lookup_icon_for_scale (theme, icon_name,
-                                                           layout->icon_size, scale, 0);
-              pixbuf = gtk_icon_info_load_symbolic_for_context (info, style, NULL, NULL);
-              surface = gdk_cairo_surface_create_from_pixbuf (pixbuf, scale, NULL);
+              theme = gtk_icon_theme_get_default ();
+
+              /* This can't be exactly like Gtk does as some -gtk-* css
+               * properties that are used for setting the loading flags
+               * are not accessible from here */
+              flags = GTK_ICON_LOOKUP_USE_BUILTIN;
+              flags |= (meta_get_locale_direction () == META_LOCALE_DIRECTION_LTR) ?
+                        GTK_ICON_LOOKUP_DIR_LTR : GTK_ICON_LOOKUP_DIR_RTL;
+
+              icon = g_themed_icon_new_with_default_fallbacks (icon_name);
+              info = gtk_icon_theme_lookup_by_gicon_for_scale (theme, icon,
+                                                               layout->icon_size,
+                                                               scale, flags);
+              if (gtk_icon_info_is_symbolic (info))
+                pixbuf = gtk_icon_info_load_symbolic_for_context (info, style,
+                                                                  NULL, NULL);
+              else
+                pixbuf = gtk_icon_info_load_icon (info, NULL);
+
+              if (pixbuf)
+                surface = gdk_cairo_surface_create_from_pixbuf (pixbuf, scale,
+                                                                NULL);
             }
 
           if (surface)
             {
-              float width, height;
-              int x, y;
+              double x, y;
+              x = button_rect.x + (button_rect.width - layout->icon_size) / 2.0;
+              y = button_rect.y + (button_rect.height - layout->icon_size) / 2.0;
 
-              width = cairo_image_surface_get_width (surface) / scale;
-              height = cairo_image_surface_get_height (surface) / scale;
-              x = button_rect.x + (button_rect.width - layout->icon_size) / 2;
-              y = button_rect.y + (button_rect.height - layout->icon_size) / 2;
-
-              cairo_translate (cr, x, y);
-              cairo_scale (cr,
-                           layout->icon_size / width,
-                           layout->icon_size / height);
-              cairo_set_source_surface (cr, surface, 0, 0);
-              cairo_paint (cr);
-
+              gtk_render_icon_surface (style, cr, surface, x, y);
               cairo_surface_destroy (surface);
             }
         }
@@ -903,6 +923,8 @@ meta_frame_layout_draw_with_style (MetaFrameLayout         *layout,
         gtk_style_context_remove_class (style, button_class);
       gtk_style_context_set_state (style, state);
     }
+
+  cairo_surface_set_device_scale (frame_surface, xscale, yscale);
 }
 
 /**
