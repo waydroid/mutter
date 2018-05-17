@@ -33,7 +33,7 @@
 #include <cogl/cogl.h>
 #include <clutter/clutter.h>
 
-#include "meta-stage.h"
+#include "meta-stage-private.h"
 
 struct _MetaCursorRendererPrivate
 {
@@ -262,6 +262,18 @@ meta_cursor_renderer_set_position (MetaCursorRenderer *renderer,
   priv->current_y = y;
 
   update_cursor (renderer, priv->displayed_cursor);
+}
+
+ClutterPoint
+meta_cursor_renderer_get_position (MetaCursorRenderer *renderer)
+{
+  MetaCursorRendererPrivate *priv =
+    meta_cursor_renderer_get_instance_private (renderer);
+
+  return (ClutterPoint) {
+    .x = priv->current_x,
+    .y = priv->current_y
+  };
 }
 
 MetaCursorSprite *
