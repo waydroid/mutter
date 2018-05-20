@@ -99,8 +99,6 @@ struct _MetaFrames
   guint grab_button;
   gdouble grab_x;
   gdouble grab_y;
-
-  ClutterEventSequence *grab_touch;
 };
 
 struct _MetaFramesClass
