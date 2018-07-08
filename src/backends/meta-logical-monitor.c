@@ -100,10 +100,12 @@ static MetaMonitorTransform
 derive_monitor_transform (MetaMonitor *monitor)
 {
   MetaOutput *main_output;
+  MetaMonitorTransform transform;
 
   main_output = meta_monitor_get_main_output (monitor);
+  transform = meta_output_get_assigned_crtc (main_output)->transform;
 
-  return meta_output_get_assigned_crtc (main_output)->transform;
+  return meta_monitor_crtc_to_logical_transform (monitor, transform);
 }
 
 MetaLogicalMonitor *
