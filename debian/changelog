@@ -1,3 +1,32 @@
+mutter (3.29.4-1) experimental; urgency=medium
+
+  * debian/control*, gbp.conf: Update for experimental (3.29 series).
+  * New upstream release 3.29.4 (etc)
+    + Fix crash with parent-less modal dialogs
+    + Preserve paint volumes where possible to optimize CPU usage
+    + Fix Korean Hangul support on wayland
+    + Improve support for proprietary Nvidia driver
+    + Only upload HW cursor sprite to the GPU that will display them
+    + Improve EGLstream support
+    + Remove MetaScreen to prepare for non-mandatary X11 dependency
+    + Misc. bug fixes
+    + Fix size change animations on wayland
+    + Handle touch events on server-side titlebars
+    + Fix various input-method regressions
+    + Fix wayland build on FreeBSD
+    + Fix swapped colors in screenshots (again)
+    + Allow building with elogind
+    + Consider display rotation for cursor
+    + Fall back to non-modifier GBM surfaces
+    + Take inhibitors into account for monitoring idle
+  * debian/control*: Drop libupower-glib BD - mutter now accesses upower
+    directly.
+  * d/p/core-Return-1-if-meta_window_get_monitor-is-called-on-an-.patch: Drop,
+    this is applied upstream.
+  * debian/*: SONAME 2 -> 3
+
+ -- Iain Lane <laney@debian.org>  Wed, 25 Jul 2018 17:39:37 +0100
+
 mutter (3.28.3-1) unstable; urgency=medium
 
   * New upstream release
