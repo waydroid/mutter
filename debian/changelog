@@ -1,3 +1,19 @@
+mutter (3.29.91-1) experimental; urgency=medium
+
+  * Team upload
+  * New upstream development release
+  * Update wayland-protocols build-dependency to 1.16
+  * d/copyright: Update
+  * Rebase patch series
+  * d/*.install: Sort file lists (wrap-and-sort -a)
+  * Normalize package lists with wrap-and-sort -a
+  * d/control: Normalize package stanza order with wrap-and-sort -abk
+  * Standards-Version: 4.2.0 (no changes required)
+  * d/libmutter-3-0.symbols: Update
+  * d/rules: Tell dh_shlibdeps about our private libraries
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 20 Aug 2018 21:17:31 +0100
+
 mutter (3.29.90-2) experimental; urgency=medium
 
   * Team upload
