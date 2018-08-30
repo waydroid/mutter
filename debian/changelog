@@ -1,3 +1,21 @@
+mutter (3.29.92-1) experimental; urgency=medium
+
+  * Team upload
+
+  [ Marco Trevisan (Treviño) ]
+  * New upstream development release
+    - Fix a crash when drmModeGetResources() fails, for example when
+      using Wayland on Nvidia hardware (Closes: #900002)
+  * Rebase patch series
+  * d/p/renderer-native-Check-calculated-transform-when-creating-.patch:
+    - dropped as applied upstream
+
+  [ Simon McVittie ]
+  * Standards-Version: 4.2.1 (no changes required)
+  * Update debian/libmutter-3-0.symbols
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 30 Aug 2018 08:45:01 +0100
+
 mutter (3.29.91-1) experimental; urgency=medium
 
   * Team upload
