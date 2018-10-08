@@ -622,10 +622,10 @@ is_mouse (MetaInputSettings  *settings,
 }
 
 static gboolean
-is_trackball (MetaInputSettings  *settings,
-              ClutterInputDevice *device)
+meta_input_settings_x11_is_trackball_device (MetaInputSettings  *settings,
+                                             ClutterInputDevice *device)
 {
-  return meta_input_device_is_trackball (device);
+  return has_udev_property (settings, device, "ID_INPUT_TRACKBALL");
 }
 
 static void
@@ -688,7 +688,7 @@ meta_input_settings_x11_set_trackball_accel_profile (MetaInputSettings          
                                                      ClutterInputDevice         *device,
                                                      GDesktopPointerAccelProfile profile)
 {
-  if (!is_trackball (settings, device))
+  if (!meta_input_settings_x11_is_trackball_device (settings, device))
     return;
 
   set_device_accel_profile (device, profile);
@@ -904,6 +904,7 @@ meta_input_settings_x11_set_stylus_button_map (MetaInputSettings          *setti
     return;
 
   /* Grab the puke bucket! */
+  meta_x11_error_trap_push (display->x11_display);
   xdev = device_ensure_xdevice (device);
   if (xdev)
     {
@@ -973,6 +974,7 @@ meta_input_settings_x11_class_init (MetaInputSettingsX11Class *klass)
   input_settings_class->set_stylus_button_map = meta_input_settings_x11_set_stylus_button_map;
 
   input_settings_class->has_two_finger_scroll = meta_input_settings_x11_has_two_finger_scroll;
+  input_settings_class->is_trackball_device = meta_input_settings_x11_is_trackball_device;
 }
 
 static void
