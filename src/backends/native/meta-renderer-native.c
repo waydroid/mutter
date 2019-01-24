@@ -60,8 +60,9 @@
 #include "backends/native/meta-crtc-kms.h"
 #include "backends/native/meta-gpu-kms.h"
 #include "backends/native/meta-monitor-manager-kms.h"
-#include "backends/native/meta-renderer-native.h"
 #include "backends/native/meta-renderer-native-gles3.h"
+#include "backends/native/meta-renderer-native.h"
+#include "meta-marshal.h"
 #include "cogl/cogl.h"
 #include "core/boxes-private.h"
 
@@ -1159,6 +1160,8 @@ meta_onscreen_native_swap_drm_fb (CoglOnscreen *onscreen)
 static void
 on_crtc_flipped (GClosure         *closure,
                  MetaGpuKms       *gpu_kms,
+                 MetaCrtc         *crtc,
+                 int64_t           page_flip_time_ns,
                  MetaRendererView *view)
 {
   ClutterStageView *stage_view = CLUTTER_STAGE_VIEW (view);
@@ -1169,6 +1172,24 @@ on_crtc_flipped (GClosure         *closure,
   MetaOnscreenNative *onscreen_native = onscreen_egl->platform;
   MetaRendererNative *renderer_native = onscreen_native->renderer_native;
   MetaGpuKms *render_gpu = onscreen_native->render_gpu;
+  CoglFrameInfo *frame_info;
+  float refresh_rate;
+
+  frame_info = g_queue_peek_tail (&onscreen->pending_frame_infos);
+  refresh_rate = crtc && crtc->current_mode ?
+                 crtc->current_mode->refresh_rate :
+                 0.0f;
+
+  /* Only keep the frame info for the fastest CRTC in use, which may not be
+   * the first one to complete a flip. By only telling the compositor about the
+   * fastest monitor(s) we direct it to produce new frames fast enough to
+   * satisfy all monitors.
+   */
+  if (refresh_rate >= frame_info->refresh_rate)
+    {
+      frame_info->presentation_time = page_flip_time_ns;
+      frame_info->refresh_rate = refresh_rate;
+    }
 
   if (gpu_kms != render_gpu)
     {
@@ -1299,7 +1320,9 @@ flip_egl_stream (MetaOnscreenNative *onscreen_native,
     return FALSE;
 
   closure_container =
-    meta_gpu_kms_wrap_flip_closure (onscreen_native->render_gpu, flip_closure);
+    meta_gpu_kms_wrap_flip_closure (onscreen_native->render_gpu,
+                                    NULL,
+                                    flip_closure);
 
   acquire_attribs = (EGLAttrib[]) {
     EGL_DRM_FLIP_EVENT_DATA_NV,
@@ -1542,7 +1565,7 @@ meta_onscreen_native_flip_crtcs (CoglOnscreen *onscreen)
   flip_closure = g_cclosure_new (G_CALLBACK (on_crtc_flipped),
                                  g_object_ref (view),
                                  (GClosureNotify) flip_closure_destroyed);
-  g_closure_set_marshal (flip_closure, g_cclosure_marshal_VOID__OBJECT);
+  g_closure_set_marshal (flip_closure, meta_marshal_VOID__OBJECT_OBJECT_INT64);
 
   /* Either flip the CRTC's of the monitor info, if we are drawing just part
    * of the stage, or all of the CRTC's if we are drawing the whole stage.
@@ -1980,6 +2003,13 @@ meta_renderer_native_init_egl_context (CoglContext *cogl_context,
                   TRUE);
   COGL_FLAGS_SET (cogl_context->winsys_features,
                   COGL_WINSYS_FEATURE_MULTIPLE_ONSCREEN,
+                  TRUE);
+
+  /* COGL_WINSYS_FEATURE_SWAP_THROTTLE is always true for this renderer
+   * because we have the call to wait_for_pending_flips on every frame.
+   */
+  COGL_FLAGS_SET (cogl_context->winsys_features,
+                  COGL_WINSYS_FEATURE_SWAP_THROTTLE,
                   TRUE);
 
 #ifdef HAVE_EGL_DEVICE
@@ -2616,8 +2646,12 @@ meta_renderer_native_create_onscreen (MetaRendererNative   *renderer_native,
     }
 
   onscreen = cogl_onscreen_new (context, width, height);
-  cogl_onscreen_set_swap_throttled (onscreen,
-                                    _clutter_get_sync_to_vblank ());
+
+  /* We have wait_for_pending_flips hardcoded, so throttling always. */
+  cogl_onscreen_set_swap_throttled (onscreen, TRUE);
+  if (!_clutter_get_sync_to_vblank ())
+    g_warning ("Request to disable sync-to-vblank is being ignored. "
+               "MetaRendererNative does not support disabling it.");
 
   if (!cogl_framebuffer_allocate (COGL_FRAMEBUFFER (onscreen), error))
     {
@@ -2687,6 +2721,15 @@ meta_renderer_native_create_offscreen (MetaRendererNative    *renderer,
   return fb;
 }
 
+static int64_t
+meta_renderer_native_get_clock_time (CoglContext *context)
+{
+  CoglRenderer *cogl_renderer = cogl_context_get_renderer (context);
+  MetaGpuKms *gpu_kms = cogl_renderer->custom_winsys_user_data;
+
+  return meta_gpu_kms_get_current_time_ns (gpu_kms);
+}
+
 static const CoglWinsysVtable *
 get_native_cogl_winsys_vtable (CoglRenderer *cogl_renderer)
 {
@@ -2714,6 +2757,8 @@ get_native_cogl_winsys_vtable (CoglRenderer *cogl_renderer)
       vtable.onscreen_swap_region = NULL;
       vtable.onscreen_swap_buffers_with_damage =
         meta_onscreen_native_swap_buffers_with_damage;
+
+      vtable.context_get_clock_time = meta_renderer_native_get_clock_time;
 
       vtable_inited = TRUE;
     }
