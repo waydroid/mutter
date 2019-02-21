@@ -2,6 +2,7 @@
 
 /*
  * Copyright (C) 2017 Red Hat
+ * Copyright (c) 2018 DisplayLink (UK) Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -38,7 +39,8 @@
 #include "backends/native/meta-crtc-kms.h"
 #include "backends/native/meta-launcher.h"
 #include "backends/native/meta-output-kms.h"
-#include "backends/native/meta-default-modes.h"
+
+#include "meta-default-modes.h"
 
 typedef struct _MetaKmsSource
 {
@@ -59,6 +61,7 @@ struct _MetaGpuKms
 {
   MetaGpu parent;
 
+  uint32_t id;
   int fd;
   char *file_path;
   GSource *source;
@@ -74,6 +77,8 @@ struct _MetaGpuKms
   gboolean page_flips_not_supported;
 
   gboolean resources_init_failed_before;
+
+  MetaGpuKmsFlag flags;
 };
 
 G_DEFINE_TYPE (MetaGpuKms, meta_gpu_kms, META_TYPE_GPU)
@@ -120,7 +125,12 @@ get_crtc_drm_connectors (MetaGpu       *gpu,
 
       assigned_crtc = meta_output_get_assigned_crtc (output);
       if (assigned_crtc == crtc)
-        g_array_append_val (connectors_array, output->winsys_id);
+        {
+          uint32_t connector_id;
+
+          connector_id = meta_output_kms_get_connector_id (output);
+          g_array_append_val (connectors_array, connector_id);
+        }
     }
 
   *n_connectors = connectors_array->len;
@@ -271,6 +281,8 @@ meta_gpu_kms_flip_crtc (MetaGpuKms *gpu_kms,
   g_assert (n_connectors > 0);
   g_free (connectors);
 
+  g_assert (fb_id != 0);
+
   if (!gpu_kms->page_flips_not_supported)
     {
       MetaGpuKmsFlipClosureContainer *closure_container;
@@ -361,7 +373,7 @@ meta_gpu_kms_wait_for_flip (MetaGpuKms *gpu_kms,
     }
 
   memset (&evctx, 0, sizeof evctx);
-  evctx.version = DRM_EVENT_CONTEXT_VERSION;
+  evctx.version = 2;
   evctx.page_flip_handler = page_flip_handler;
 
   while (TRUE)
@@ -410,6 +422,12 @@ meta_gpu_kms_get_fd (MetaGpuKms *gpu_kms)
   return gpu_kms->fd;
 }
 
+uint32_t
+meta_gpu_kms_get_id (MetaGpuKms *gpu_kms)
+{
+  return gpu_kms->id;
+}
+
 const char *
 meta_gpu_kms_get_file_path (MetaGpuKms *gpu_kms)
 {
@@ -439,6 +457,18 @@ meta_gpu_kms_set_power_save_mode (MetaGpuKms *gpu_kms,
 
       meta_output_kms_set_power_save_mode (output, state);
     }
+}
+
+gboolean
+meta_gpu_kms_is_boot_vga (MetaGpuKms *gpu_kms)
+{
+  return !!(gpu_kms->flags & META_GPU_KMS_FLAG_BOOT_VGA);
+}
+
+gboolean
+meta_gpu_kms_is_platform_device (MetaGpuKms *gpu_kms)
+{
+  return !!(gpu_kms->flags & META_GPU_KMS_FLAG_PLATFORM_DEVICE);
 }
 
 static void
@@ -565,8 +595,8 @@ create_mode (const drmModeModeInfo *drm_mode,
 }
 
 static MetaOutput *
-find_output_by_id (GList *outputs,
-                   glong  id)
+find_output_by_connector_id (GList *outputs,
+                             glong  id)
 {
   GList *l;
 
@@ -574,7 +604,7 @@ find_output_by_id (GList *outputs,
     {
       MetaOutput *output = l->data;
 
-      if (output->winsys_id == id)
+      if (meta_output_kms_get_connector_id (output) == id)
         return output;
     }
 
@@ -762,7 +792,8 @@ init_outputs (MetaGpuKms       *gpu_kms,
           MetaOutput *old_output;
           GError *error = NULL;
 
-          old_output = find_output_by_id (old_outputs, connector->connector_id);
+          old_output = find_output_by_connector_id (old_outputs,
+                                                    connector->connector_id);
           output = meta_create_kms_output (gpu_kms, connector, resources,
                                            old_output,
                                            &error);
@@ -880,6 +911,7 @@ meta_gpu_kms_can_have_outputs (MetaGpuKms *gpu_kms)
 MetaGpuKms *
 meta_gpu_kms_new (MetaMonitorManagerKms  *monitor_manager_kms,
                   const char             *kms_file_path,
+                  MetaGpuKmsFlag          flags,
                   GError                **error)
 {
   MetaMonitorManager *monitor_manager =
@@ -900,6 +932,7 @@ meta_gpu_kms_new (MetaMonitorManagerKms  *monitor_manager_kms,
                           "monitor-manager", monitor_manager_kms,
                           NULL);
 
+  gpu_kms->flags = flags;
   gpu_kms->fd = kms_fd;
   gpu_kms->file_path = g_strdup (kms_file_path);
 
@@ -944,7 +977,10 @@ meta_gpu_kms_finalize (GObject *object)
 static void
 meta_gpu_kms_init (MetaGpuKms *gpu_kms)
 {
+  static uint32_t id = 0;
+
   gpu_kms->fd = -1;
+  gpu_kms->id = ++id;
 }
 
 static void

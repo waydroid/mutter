@@ -1,3 +1,67 @@
+mutter (3.31.90-2) experimental; urgency=medium
+
+  * control: BD on dmz-cursor-theme instead of adwaita-icon-theme for tests.
+    We actually only need *a* cursor theme, not the full icon theme.
+
+ -- Iain Lane <laney@debian.org>  Thu, 21 Feb 2019 13:52:05 +0000
+
+mutter (3.31.90-1) experimental; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * New upstream release
+    - Fix crash in dual monitor setup and gdm activation (LP: #1790525,
+      LP: #1795774)
+    - Fix regression causing one of the external displays to be off sometimes
+      (LP: #1772811)
+  * debian/rules:
+    - Compile using meson, autotools has been removed upstream
+    - Ignore test failures in s390x
+    - tests: increase meson tests timeout or they will fail in some archs,
+      using meson test to run them
+    - Explicitly enable Wayland EGL stream
+  * debian/control:
+    - Build depend on meson and pkg-config
+    - Build depend on gsettings-desktop-schemas-dev (>= 3.31.0)
+    - Build depend on xserver-xorg-core in linux (as it ships 'cvt')
+    - Build depend on libnvidia-egl-wayland-dev in linux per EGL stream support
+    - Build depend on packages needed for running tests:
+      + adwaita-icon-theme
+      + at-spi2-core
+      + gnome-settings-daemon-dev, gnome-settings-daemon-common
+      + XWayland (in linux)
+    - Set build dependency versions on libgbm-dev, libinput-dev, libxi-dev and
+      libxcomposite-dev to match upstream required versions
+    - libmutter-4-dev depends on libgles2 development files,
+    - removed breaks as per SONAME change
+  * debian/*: SONAME 3 -> 4
+  * debian/libmutter-4-0.symbols: Add new symbols, remove deprecated ones
+  * debian/libmutter-4-0.lintian-overrides:
+    - ignore library-not-linked-against-libc for libmutter-cogl-gles2
+  * d/p/Sync-to-the-hardware-refresh-rate-not-just-60.00Hz.patch,
+    d/p/clutter-Avoid-rounding-compensation-when-invalidating-2D-.patch,
+    d/p/clutter-Fix-offscreen-effect-painting-of-clones.patch,
+    d/p/clutter-offscreen-effect-Disable-if-no-texture.patch,
+    d/p/cogl-auto-texture-Avoid-a-double-free-crash.patch,
+    d/p/screen-cast-Fix-monitor-recording-on-HiDPI.patch,
+    d/p/tests-Don-t-check-pixels-outside-actor-allocation.patch:
+    - dropped as applied upstream
+  * d/p/bgo768531_workaround-startup-notifications.patch:
+    - not needed anymore as per startup notifications upstream refactory
+  * d/p/debian/skip-texture-test.patch:
+    - removed since the test now passes in all tested archs
+  * d/p/debian/synaptics-support.patch,
+    d/p/debian/skip-texture-test.patch,
+    d/p/theme-load-icons-as-Gtk-does-with-fallback-and-RTL-suppor.patch,
+    d/p/theme-use-gtk_render_icon_suface-to-paint-button-icon.patch:
+    - refreshed
+  * d/p/meson-add-back-default_driver-option.patch:
+    - Add option to choose at build time the default cogl driver
+
+  [ Iain Lane ]
+  * debian/rules: No need to remove .la files in meson
+
+ -- Iain Lane <laney@debian.org>  Wed, 20 Feb 2019 17:07:10 +0000
+
 mutter (3.30.2-6) unstable; urgency=medium
 
   * Team upload
