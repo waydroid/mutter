@@ -1,3 +1,58 @@
+mutter (3.33.4-1) experimental; urgency=medium
+
+  * New upstream release
+    + Add API to reorder workspaces
+    + Add a Sysprof-based profiler
+    + Add initial KMS transactional support
+    + Add xdg-output v2 support
+    + Consolidate frame throttling
+    + Defer actor allocation till shown
+    + Discard page flip retries on hotplug
+    + Don't emit ::size-changed when only position changed
+    + Don't use grab modifiers when shortcuts are inhibited
+    + Expose workspace layout properties
+    + Fix background corruption on Nvidia after resuming from suspend (LP:
+      #1809407)
+    + Fix black shadows when using fractional scaling
+    + Fix modifier-drag on wayland subsurfaces
+    + Fix running X11 applications with sudo under wayland
+    + Fix setting blank cursor under wayland
+    + Fix stuttering due to unchanged power save mode notifications
+    + Fix text selection color rendering
+    + Handle returning from fullscreen/maximization better
+    + Honor startup sequence workspace on wayland
+    + Implement locate-pointer accessibility feature
+    + Implement mouse accessibility
+    + Implement toggle-keys notification
+    + Improve finding new focus window when the old one is closed
+    + Improve screencast support on multi-monitor systems
+    + Make picking a new focus window more reliable
+    + Only emit 'grab-op-end` signal after dropping grabs
+    + Only grab the locate-pointer key when necessary
+    + Pixel-align OpenGL cursors
+    + Prepare for running Xwayland on demand
+    + Relax "xwayland-allow-grabs" setting
+    + Restore DRM format fallbacks
+    + Try to use primary GPU for copy instead of glReadPixels
+    + Unset pointer focus when the cursor is hidden
+  * debian/control: Update dependencies per meson.build
+  * debian/rules: Disable profiler.
+    We need to split sysprof into a library before we can enable this, so
+    that all users don't get headers / the profiler application installed
+  * Drop patches applied upstream
+    - window-x11-Focus-a-window-in-the-active-workspace-as-take.patch
+    - metatest-Dispatch-the-destruction-instead-of-sleeping-aft.patch
+    - debian/Revert-meson-Bump-meson-requirement-to-0.50.0.patch
+  * cogl-tests-Only-install-run-tests.sh-when-building-instal.patch:
+    Cherry-pick to fix building without installed tests
+  * build-Bump-API-version-automatically-each-development-cyc.patch:
+    Cherry-pick - bump ABI
+  * Refresh patches
+  * Bump to libmutter-5 and update symbols
+  * BD on a gnome-desktop that provides libgnome-desktop-3-18
+
+ -- Iain Lane <laney@debian.org>  Tue, 30 Jul 2019 18:16:52 +0100
+
 mutter (3.32.2+git20190711-2) experimental; urgency=medium
 
   * d/p/window-x11-Focus-a-window-in-the-active-workspace-as-take.patch:
