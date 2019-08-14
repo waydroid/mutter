@@ -52,11 +52,14 @@ override_dh_auto_configure:
 
 # Use meson test directly as it allows us to use the timeout multiplier
 BUILDDIR=$(CURDIR)/obj-$(DEB_HOST_GNU_TYPE)
-TEST_COMMAND=env \
+TEST_COMMAND_BASE=env \
 	XDG_RUNTIME_DIR=$(BUILDDIR)/XRD \
 	GSETTINGS_SCHEMA_DIR=$(BUILDDIR)/data \
 	dbus-run-session -- xvfb-run -s '+iglx -noreset' -a \
-	meson test -C $(BUILDDIR) --no-rebuild --verbose --timeout-multiplier 4
+	meson test -C $(BUILDDIR) --no-rebuild --verbose --timeout-multiplier 4 \
+	           --no-stdsplit --print-errorlogs
+TEST_COMMAND=$(TEST_COMMAND_BASE) --no-suite flaky
+TEST_COMMAND_FLAKY=$(TEST_COMMAND_BASE) --suite flaky
 
 ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
   NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
@@ -73,8 +76,10 @@ override_dh_auto_test:
 	mkdir -m 700 $(BUILDDIR)/XRD
 ifneq (,$(filter hurd-i386 kfreebsd-i386 kfreebsd-amd64 s390x,$(DEB_HOST_ARCH)))
 	-$(TEST_COMMAND)
-else ifeq (,$(filter mips mipsel,$(DEB_HOST_ARCH)))
+	-$(TEST_COMMAND_FLAKY)
+else ifeq (,$(filter mips mips64el mipsel,$(DEB_HOST_ARCH)))
 	$(TEST_COMMAND)
+	-$(TEST_COMMAND_FLAKY)
 endif
 
 override_dh_missing:
