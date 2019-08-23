@@ -86,7 +86,7 @@ override_dh_missing:
 	dh_missing --fail-missing
 
 override_dh_girepository:
-	dh_girepository /usr/lib/$(DEB_HOST_MULTIARCH)/mutter-4
+	dh_girepository /usr/lib/$(DEB_HOST_MULTIARCH)/mutter-5
 
 override_dh_makeshlibs:
 	dh_makeshlibs -V

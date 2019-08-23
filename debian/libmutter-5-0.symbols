@@ -59,11 +59,10 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_compositor_destroy@Base 3.28.2
  meta_compositor_filter_keybinding@Base 3.28.2
  meta_compositor_flash_display@Base 3.29.4
+ meta_compositor_get_type@Base 3.33.91
  meta_compositor_hide_tile_preview@Base 3.28.2
  meta_compositor_hide_window@Base 3.28.2
  meta_compositor_manage@Base 3.28.2
- meta_compositor_new@Base 3.28.2
- meta_compositor_process_event@Base 3.28.2
  meta_compositor_queue_frame_drawn@Base 3.28.2
  meta_compositor_remove_window@Base 3.28.2
  meta_compositor_show_tile_preview@Base 3.28.2
@@ -146,7 +145,6 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_display_xserver_time_is_before@Base 3.28.2
  meta_dnd_get_type@Base 3.28.2
  meta_edge_type_get_type@Base 3.28.2
- meta_empty_stage_input_region@Base 3.28.2
  meta_enable_unredirect_for_display@Base 3.29.4
  meta_exit@Base 3.28.2
  meta_exit_code_get_type@Base 3.28.2
@@ -454,7 +452,6 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_selection_type_get_type@Base 3.33.4
  meta_selection_unset_owner@Base 3.33.4
  meta_set_gnome_wm_keybindings@Base 3.28.2
- meta_set_stage_input_region@Base 3.28.2
  meta_set_wm_name@Base 3.28.2
  meta_settings_enable_experimental_feature@Base 3.28.2
  meta_settings_get_font_dpi@Base 3.28.2
@@ -670,6 +667,7 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_workspace_manager_remove_workspace@Base 3.29.4
  meta_workspace_manager_reorder_workspace@Base 3.33.4
  meta_workspace_set_builtin_struts@Base 3.28.2
+ meta_x11_display_clear_stage_input_region@Base 3.33.91
  meta_x11_display_get_damage_event_base@Base 3.29.4
  meta_x11_display_get_screen_number@Base 3.29.4
  meta_x11_display_get_shape_event_base@Base 3.29.4
@@ -681,6 +679,7 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_x11_display_lookup_group@Base 3.29.4
  meta_x11_display_set_alarm_filter@Base 3.29.4
  meta_x11_display_set_cm_selection@Base 3.29.4
+ meta_x11_display_set_stage_input_region@Base 3.33.91
  meta_x11_display_xwindow_is_a_no_focus_window@Base 3.29.4
  meta_x11_error_trap_pop@Base 3.29.4
  meta_x11_error_trap_pop_with_return@Base 3.29.4
@@ -1439,13 +1438,9 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_get_default_frame_rate@Base 3.29.4
  clutter_get_default_text_direction@Base 3.29.4
  clutter_get_font_map@Base 3.29.4
- clutter_get_keyboard_grab@Base 3.29.4
  clutter_get_option_group@Base 3.29.4
  clutter_get_option_group_without_init@Base 3.29.4
- clutter_get_pointer_grab@Base 3.29.4
  clutter_get_script_id@Base 3.29.4
- clutter_grab_keyboard@Base 3.29.4
- clutter_grab_pointer@Base 3.29.4
  clutter_gravity_get_type@Base 3.29.4
  clutter_grid_layout_attach@Base 3.29.4
  clutter_grid_layout_attach_next_to@Base 3.29.4
@@ -2173,8 +2168,6 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_transition_set_remove_on_complete@Base 3.29.4
  clutter_transition_set_to@Base 3.29.4
  clutter_transition_set_to_value@Base 3.29.4
- clutter_ungrab_keyboard@Base 3.29.4
- clutter_ungrab_pointer@Base 3.29.4
  clutter_unicode_to_keysym@Base 3.29.4
  clutter_unit_type_get_type@Base 3.29.4
  clutter_units_copy@Base 3.29.4
@@ -2323,7 +2316,6 @@ libmutter-cogl-5.so.0 libmutter-5-0 #MINVER#
  cogl_attribute_new_const_4x4fv@Base 3.29.4
  cogl_attribute_set_buffer@Base 3.29.4
  cogl_attribute_set_normalized@Base 3.29.4
- cogl_begin_gl@Base 3.29.4
  cogl_bitmap_error_quark@Base 3.29.4
  cogl_bitmap_get_buffer@Base 3.29.4
  cogl_bitmap_get_format@Base 3.29.4
@@ -2416,7 +2408,6 @@ libmutter-cogl-5.so.0 libmutter-5-0 #MINVER#
  cogl_egl_context_get_egl_context@Base 3.29.4
  cogl_egl_context_get_egl_display@Base 3.29.4
  cogl_egl_texture_2d_new_from_image@Base 3.29.4
- cogl_end_gl@Base 3.29.4
  cogl_euler_copy@Base 3.29.4
  cogl_euler_equal@Base 3.29.4
  cogl_euler_free@Base 3.29.4
@@ -2521,12 +2512,6 @@ libmutter-cogl-5.so.0 libmutter-5-0 #MINVER#
  cogl_get_static_identity_quaternion@Base 3.29.4
  cogl_get_static_zero_quaternion@Base 3.29.4
  cogl_get_viewport@Base 3.29.4
- cogl_gles2_context_get_gtype@Base 3.29.4
- cogl_gles2_context_get_vtable@Base 3.29.4
- cogl_gles2_context_new@Base 3.29.4
- cogl_gles2_get_current_vtable@Base 3.29.4
- cogl_gles2_texture_2d_new_from_handle@Base 3.29.4
- cogl_gles2_texture_get_handle@Base 3.29.4
  cogl_glib_renderer_source_new@Base 3.29.4
  cogl_glib_source_new@Base 3.29.4
  cogl_glx_context_get_glx_context@Base 3.29.4
@@ -2554,7 +2539,6 @@ libmutter-cogl-5.so.0 libmutter-5-0 #MINVER#
  cogl_is_display@Base 3.29.4
  cogl_is_frame_info@Base 3.29.4
  cogl_is_framebuffer@Base 3.29.4
- cogl_is_gles2_context@Base 3.29.4
  cogl_is_index_buffer@Base 3.29.4
  cogl_is_indices@Base 3.29.4
  cogl_is_material@Base 3.29.4
@@ -2810,7 +2794,6 @@ libmutter-cogl-5.so.0 libmutter-5-0 #MINVER#
  cogl_polygon@Base 3.29.4
  cogl_pop_draw_buffer@Base 3.29.4
  cogl_pop_framebuffer@Base 3.29.4
- cogl_pop_gles2_context@Base 3.29.4
  cogl_pop_matrix@Base 3.29.4
  cogl_pop_source@Base 3.29.4
  cogl_primitive_copy@Base 3.29.4
@@ -2855,7 +2838,6 @@ libmutter-cogl-5.so.0 libmutter-5-0 #MINVER#
  cogl_program_use@Base 3.29.4
  cogl_push_draw_buffer@Base 3.29.4
  cogl_push_framebuffer@Base 3.29.4
- cogl_push_gles2_context@Base 3.29.4
  cogl_push_matrix@Base 3.29.4
  cogl_push_source@Base 3.29.4
  cogl_quaternion_copy@Base 3.29.4
@@ -3059,7 +3041,6 @@ libmutter-cogl-5.so.0 libmutter-5-0 #MINVER#
  unit_test_check_pipeline_pruning@Base 3.33.4
  unit_test_check_point_size_shader@Base 3.33.4
  unit_test_check_uniform_ancestry@Base 3.33.4
-libmutter-cogl-gles2-5.so.0 libmutter-5-0 #MINVER#
 libmutter-cogl-pango-5.so.0 libmutter-5-0 #MINVER#
 * Build-Depends-Package: libmutter-5-dev
  cogl_pango_ensure_glyph_cache_for_layout@Base 3.29.4
