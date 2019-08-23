@@ -1,3 +1,24 @@
+mutter (3.33.91-1) experimental; urgency=medium
+
+  [ Dmitry Shachnev ]
+  * Update dh_girepository argument from mutter-4 to mutter-5
+
+  [ Iain Lane ]
+  * New upstream release
+    + Fix primary selection copy and paste between X11 and wayland
+    + Improve monitor hotplug support
+    + Remove a source of frame skips
+    + Fix windows being lowered after unmaximizing with double click
+    + Remove Clutter API for global grabs
+    + Improve processing of incompressible events
+    + Add xdg-output v3 support
+  * control: Bump BDs per upstream
+  * debian/libmutter-5-0.symbols: Update for new/dropped symbols.
+    The ABI of libmutter-5-0 is *not* considered stable until the final
+    release.
+
+ -- Iain Lane <laney@debian.org>  Fri, 23 Aug 2019 15:15:50 +0100
+
 mutter (3.33.90-2) experimental; urgency=medium
 
   [ Marco Trevisan (Treviño) ]

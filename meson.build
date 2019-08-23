@@ -1,5 +1,5 @@
 project('mutter', 'c',
-  version: '3.33.90',
+  version: '3.33.91',
   meson_version: '>= 0.50.0',
   license: 'GPLv2+'
 )
@@ -15,7 +15,7 @@ libmutter_api_version = '@0@'.format(api_version)
 
 # generic version requirements
 fribidi_req = '>= 1.0.0'
-glib_req = '>= 2.53.2'
+glib_req = '>= 2.61.1'
 gi_req = '>= 0.9.5'
 gtk3_req = '>= 3.19.8'
 gdk_pixbuf_req = '>= 2.0'
@@ -42,7 +42,7 @@ gudev_req = '>= 232'
 
 # wayland version requirements
 wayland_server_req = '>= 1.13.0'
-wayland_protocols_req = '>= 1.16'
+wayland_protocols_req = '>= 1.18'
 
 # native backend version requirements
 libinput_req = '>= 1.4'
