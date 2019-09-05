@@ -28,7 +28,6 @@
 #include <glib.h>
 #include <wayland-server.h>
 
-#include "clutter/evdev/clutter-evdev.h"
 #include "wayland/meta-wayland-private.h"
 #include "wayland/meta-wayland-tablet-cursor-surface.h"
 #include "compositor/meta-surface-actor-wayland.h"
@@ -41,6 +40,7 @@
 #include <linux/input-event-codes.h>
 
 #include "backends/native/meta-backend-native.h"
+#include "backends/native/meta-event-native.h"
 #endif
 
 #include "tablet-unstable-v2-server-protocol.h"
@@ -657,14 +657,10 @@ meta_wayland_tablet_tool_get_relative_coordinates (MetaWaylandTabletTool *tool,
                                                    wl_fixed_t            *sx,
                                                    wl_fixed_t            *sy)
 {
-  MetaSurfaceActor *surface_actor;
   float xf, yf;
 
-  surface_actor = meta_wayland_surface_get_actor (surface);
-
   clutter_event_get_coords (event, &xf, &yf);
-  clutter_actor_transform_stage_point (CLUTTER_ACTOR (meta_surface_actor_get_texture (surface_actor)),
-                                       xf, yf, &xf, &yf);
+  meta_wayland_surface_get_relative_coordinates (surface, xf, yf, &xf, &yf);
 
   *sx = wl_fixed_from_double (xf) / surface->scale;
   *sy = wl_fixed_from_double (yf) / surface->scale;
@@ -724,7 +720,7 @@ broadcast_button (MetaWaylandTabletTool *tool,
   MetaBackend *backend = meta_get_backend ();
   if (META_IS_BACKEND_NATIVE (backend))
     {
-      button = clutter_evdev_event_get_event_code (event);
+      button = meta_event_native_get_event_code (event);
     }
   else
 #endif
@@ -993,14 +989,19 @@ static gboolean
 tablet_tool_can_grab_surface (MetaWaylandTabletTool *tool,
                               MetaWaylandSurface    *surface)
 {
-  GList *l;
+  GNode *n;
 
   if (tool->focus_surface == surface)
     return TRUE;
 
-  for (l = surface->subsurfaces; l; l = l->next)
+  for (n = g_node_first_child (surface->subsurface_branch_node);
+       n;
+       n = g_node_next_sibling (n))
     {
-      MetaWaylandSurface *subsurface = l->data;
+      MetaWaylandSurface *subsurface = n->data;
+
+      if (G_NODE_IS_LEAF (n))
+        continue;
 
       if (tablet_tool_can_grab_surface (tool, subsurface))
         return TRUE;

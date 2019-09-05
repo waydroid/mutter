@@ -1,3 +1,26 @@
+mutter (3.33.92-1) experimental; urgency=medium
+
+  * New upstream release
+    + Add additional sysprof trace points
+    + Add meta_window_actor_get_image()
+    + Fix lost keyboard focus after DND
+    + Fix position of drag surfaces
+    + Implement geometric picking
+    + Implement subsurface.place_below() for parents
+    + Misc. pointer a11y improvements
+    + Remove GLX "threaded swap wait" used on Nvidia
+    + Restore inhibit shortcut for overlay key
+    + Revert faulty optimization from !719
+    + Turn MetaShapedTexture into a ClutterContent implementation
+  * control: Bump libxi-dev per upstream
+  * d/p/*: Refresh. In particular synaptics-support.patch needed rebasing.
+    Hopefully this can be dropped soon.
+  * d/p: Sync with upstream as of 5111e339487b4bfb4b90b3281d57b1ee4cbf7f95
+  * d/libmutter-5-0.symbols: Refresh up to 3.33.92. There are dropped symbols
+    here. As a reminder, libmutter5 is not considered ABI stable until 3.34.0
+
+ -- Iain Lane <laney@debian.org>  Thu, 05 Sep 2019 15:25:59 +0100
+
 mutter (3.33.91-1) experimental; urgency=medium
 
   [ Dmitry Shachnev ]

@@ -30,6 +30,7 @@
 #include "backends/meta-cursor-tracker-private.h"
 #include "clutter/clutter.h"
 #include "clutter/wayland/clutter-wayland-compositor.h"
+#include "cogl/cogl-trace.h"
 #include "cogl/cogl-wayland-server.h"
 #include "compositor/meta-surface-actor-wayland.h"
 #include "compositor/meta-surface-actor.h"
@@ -646,12 +647,16 @@ meta_wayland_surface_is_effectively_synchronized (MetaWaylandSurface *surface)
 }
 
 static void
-parent_surface_state_applied (gpointer data,
-                              gpointer user_data)
+parent_surface_state_applied (GNode    *subsurface_node,
+                              gpointer  user_data)
 {
-  MetaWaylandSurface *surface = data;
-  MetaWaylandSubsurface *subsurface = META_WAYLAND_SUBSURFACE (surface->role);
+  MetaWaylandSurface *surface = subsurface_node->data;
+  MetaWaylandSubsurface *subsurface;
 
+  if (G_NODE_IS_LEAF (subsurface_node))
+    return;
+
+  subsurface = META_WAYLAND_SUBSURFACE (surface->role);
   meta_wayland_subsurface_parent_state_applied (subsurface);
 }
 
@@ -668,6 +673,8 @@ void
 meta_wayland_surface_apply_pending_state (MetaWaylandSurface      *surface,
                                           MetaWaylandPendingState *pending)
 {
+  gboolean had_damage = FALSE;
+
   if (surface->role)
     {
       meta_wayland_surface_role_pre_commit (surface->role, pending);
@@ -774,9 +781,12 @@ meta_wayland_surface_apply_pending_state (MetaWaylandSurface      *surface,
 
   if (!cairo_region_is_empty (pending->surface_damage) ||
       !cairo_region_is_empty (pending->buffer_damage))
-    surface_process_damage (surface,
-                            pending->surface_damage,
-                            pending->buffer_damage);
+    {
+      surface_process_damage (surface,
+                              pending->surface_damage,
+                              pending->buffer_damage);
+      had_damage = TRUE;
+    }
 
   surface->offset_x += pending->dx;
   surface->offset_y += pending->dy;
@@ -836,12 +846,34 @@ cleanup:
 
   pending_state_reset (pending);
 
-  g_list_foreach (surface->subsurfaces, parent_surface_state_applied, NULL);
+  g_node_children_foreach (surface->subsurface_branch_node,
+                           G_TRAVERSE_ALL,
+                           parent_surface_state_applied,
+                           NULL);
+
+  if (had_damage)
+    {
+      MetaWindow *toplevel_window;
+
+      toplevel_window = meta_wayland_surface_get_toplevel_window (surface);
+      if (toplevel_window)
+        {
+          MetaWindowActor *toplevel_window_actor;
+
+          toplevel_window_actor =
+            meta_window_actor_from_window (toplevel_window);
+          if (toplevel_window_actor)
+            meta_window_actor_notify_damaged (toplevel_window_actor);
+        }
+    }
 }
 
 static void
 meta_wayland_surface_commit (MetaWaylandSurface *surface)
 {
+  COGL_TRACE_BEGIN_SCOPED (MetaWaylandSurfaceCommit,
+                           "WaylandSurface (commit");
+
   if (surface->pending->buffer &&
       !meta_wayland_buffer_is_realized (surface->pending->buffer))
     meta_wayland_buffer_realize (surface->pending->buffer);
@@ -1254,13 +1286,21 @@ meta_wayland_surface_update_outputs (MetaWaylandSurface *surface)
 static void
 meta_wayland_surface_update_outputs_recursively (MetaWaylandSurface *surface)
 {
-  GList *l;
+  GNode *n;
 
   meta_wayland_surface_update_outputs (surface);
 
-  for (l = surface->subsurfaces; l != NULL; l = l->next)
-    meta_wayland_surface_update_outputs_recursively (l->data);
+  for (n = g_node_first_child (surface->subsurface_branch_node);
+       n;
+       n = g_node_next_sibling (n))
+    {
+      if (G_NODE_IS_LEAF (n))
+        continue;
+
+      meta_wayland_surface_update_outputs_recursively (n->data);
+    }
 }
+
 
 void
 meta_wayland_surface_set_window (MetaWaylandSurface *surface,
@@ -1304,6 +1344,13 @@ meta_wayland_surface_set_window (MetaWaylandSurface *surface,
                                G_CALLBACK (window_actor_effects_completed),
                                surface, 0);
     }
+}
+
+static void
+unlink_note (GNode    *node,
+             gpointer  data)
+{
+  g_node_unlink (node);
 }
 
 static void
@@ -1354,6 +1401,15 @@ wl_surface_destructor (struct wl_resource *resource)
 
   if (surface->wl_subsurface)
     wl_resource_destroy (surface->wl_subsurface);
+
+  if (surface->subsurface_branch_node)
+    {
+      g_node_children_foreach (surface->subsurface_branch_node,
+                               G_TRAVERSE_NON_LEAVES,
+                               unlink_note,
+                               NULL);
+      g_clear_pointer (&surface->subsurface_branch_node, g_node_destroy);
+    }
 
   g_hash_table_destroy (surface->shortcut_inhibited_seats);
 
@@ -1581,11 +1637,9 @@ meta_wayland_surface_get_relative_coordinates (MetaWaylandSurface *surface,
   else
     {
       ClutterActor *actor =
-        CLUTTER_ACTOR (meta_surface_actor_get_texture (meta_wayland_surface_get_actor (surface)));
+        CLUTTER_ACTOR (meta_wayland_surface_get_actor (surface));
 
       clutter_actor_transform_stage_point (actor, abs_x, abs_y, sx, sy);
-      *sx /= surface->scale;
-      *sy /= surface->scale;
     }
 }
 
@@ -1597,7 +1651,7 @@ meta_wayland_surface_get_absolute_coordinates (MetaWaylandSurface *surface,
                                                float               *y)
 {
   ClutterActor *actor =
-    CLUTTER_ACTOR (meta_surface_actor_get_texture (meta_wayland_surface_get_actor (surface)));
+    CLUTTER_ACTOR (meta_wayland_surface_get_actor (surface));
   ClutterVertex sv = {
     .x = sx * surface->scale,
     .y = sy * surface->scale,
@@ -1614,6 +1668,9 @@ static void
 meta_wayland_surface_init (MetaWaylandSurface *surface)
 {
   surface->pending = g_object_new (META_TYPE_WAYLAND_PENDING_STATE, NULL);
+  surface->subsurface_branch_node = g_node_new (surface);
+  surface->subsurface_leaf_node =
+    g_node_prepend_data (surface->subsurface_branch_node, surface);
 
   g_signal_connect (surface, "geometry-changed",
                     G_CALLBACK (meta_wayland_surface_update_outputs_recursively),

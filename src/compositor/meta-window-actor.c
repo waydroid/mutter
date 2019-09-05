@@ -81,6 +81,8 @@ typedef struct _MetaWindowActorPrivate
 
   MetaShadowMode    shadow_mode;
 
+  int geometry_scale;
+
   guint             size_changed_id;
 
   /*
@@ -113,6 +115,7 @@ enum
 {
   FIRST_FRAME,
   EFFECTS_COMPLETED,
+  DAMAGED,
 
   LAST_SIGNAL
 };
@@ -217,6 +220,20 @@ meta_window_actor_class_init (MetaWindowActorClass *klass)
                   NULL, NULL, NULL,
                   G_TYPE_NONE, 0);
 
+  /**
+   * MetaWindowActor::damaged:
+   * @actor: the #MetaWindowActor instance
+   *
+   * Notify that one or more of the surfaces of the window have been damaged.
+   */
+  signals[DAMAGED] =
+    g_signal_new ("damaged",
+                  G_TYPE_FROM_CLASS (object_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL, NULL,
+                  G_TYPE_NONE, 0);
+
   pspec = g_param_spec_object ("meta-window",
                                "MetaWindow",
                                "The displayed MetaWindow",
@@ -252,6 +269,10 @@ meta_window_actor_class_init (MetaWindowActorClass *klass)
 static void
 meta_window_actor_init (MetaWindowActor *self)
 {
+  MetaWindowActorPrivate *priv =
+    meta_window_actor_get_instance_private (self);
+
+  priv->geometry_scale = 1;
 }
 
 static void
@@ -371,7 +392,6 @@ meta_window_actor_real_assign_surface_actor (MetaWindowActor  *self,
   priv->size_changed_id = g_signal_connect (priv->surface, "size-changed",
                                             G_CALLBACK (surface_size_changed),
                                             self);
-  clutter_actor_add_child (CLUTTER_ACTOR (self), CLUTTER_ACTOR (priv->surface));
 
   meta_window_actor_update_shape (self);
 
@@ -833,14 +853,14 @@ meta_window_actor_get_meta_window (MetaWindowActor *self)
  *
  * Return value: (transfer none): the #ClutterActor for the contents
  */
-ClutterActor *
+MetaShapedTexture *
 meta_window_actor_get_texture (MetaWindowActor *self)
 {
   MetaWindowActorPrivate *priv =
     meta_window_actor_get_instance_private (self);
 
   if (priv->surface)
-    return CLUTTER_ACTOR (meta_surface_actor_get_texture (priv->surface));
+    return meta_surface_actor_get_texture (priv->surface);
   else
     return NULL;
 }
@@ -1493,6 +1513,8 @@ meta_window_actor_process_x11_damage (MetaWindowActor    *self,
                                        event->area.y,
                                        event->area.width,
                                        event->area.height);
+
+  meta_window_actor_notify_damaged (self);
 }
 
 void
@@ -1891,6 +1913,34 @@ meta_window_actor_from_window (MetaWindow *window)
   return META_WINDOW_ACTOR (meta_window_get_compositor_private (window));
 }
 
+void
+meta_window_actor_set_geometry_scale (MetaWindowActor *window_actor,
+                                      int              geometry_scale)
+{
+  MetaWindowActorPrivate *priv =
+    meta_window_actor_get_instance_private (window_actor);
+  CoglMatrix child_transform;
+
+  if (priv->geometry_scale == geometry_scale)
+    return;
+
+  priv->geometry_scale = geometry_scale;
+
+  cogl_matrix_init_identity (&child_transform);
+  cogl_matrix_scale (&child_transform, geometry_scale, geometry_scale, 1);
+  clutter_actor_set_child_transform (CLUTTER_ACTOR (window_actor),
+                                     &child_transform);
+}
+
+int
+meta_window_actor_get_geometry_scale (MetaWindowActor *window_actor)
+{
+  MetaWindowActorPrivate *priv =
+    meta_window_actor_get_instance_private (window_actor);
+
+  return priv->geometry_scale;
+}
+
 static void
 meta_window_actor_get_frame_bounds (MetaScreenCastWindow *screen_cast_window,
                                     MetaRectangle        *bounds)
@@ -1902,19 +1952,19 @@ meta_window_actor_get_frame_bounds (MetaScreenCastWindow *screen_cast_window,
   MetaShapedTexture *stex;
   MetaRectangle buffer_rect;
   MetaRectangle frame_rect;
-  double scale_x, scale_y;
+  int buffer_scale;
 
   stex = meta_surface_actor_get_texture (priv->surface);
-  clutter_actor_get_scale (CLUTTER_ACTOR (stex), &scale_x, &scale_y);
+  buffer_scale = meta_shaped_texture_get_buffer_scale (stex);
 
   window = priv->window;
   meta_window_get_buffer_rect (window, &buffer_rect);
   meta_window_get_frame_rect (window, &frame_rect);
 
-  bounds->x = (int) floor ((frame_rect.x - buffer_rect.x) / scale_x);
-  bounds->y = (int) floor ((frame_rect.y - buffer_rect.y) / scale_y);
-  bounds->width = (int) ceil (frame_rect.width / scale_x);
-  bounds->height = (int) ceil (frame_rect.height / scale_y);
+  bounds->x = (int) floor ((frame_rect.x - buffer_rect.x) / (float) buffer_scale);
+  bounds->y = (int) floor ((frame_rect.y - buffer_rect.y) / (float) buffer_scale);
+  bounds->width = (int) ceil (frame_rect.width / (float) buffer_scale);
+  bounds->height = (int) ceil (frame_rect.height / (float) buffer_scale);
 }
 
 static void
@@ -1928,7 +1978,6 @@ meta_window_actor_transform_relative_position (MetaScreenCastWindow *screen_cast
   MetaWindowActor *window_actor = META_WINDOW_ACTOR (screen_cast_window);
   MetaWindowActorPrivate *priv =
     meta_window_actor_get_instance_private (window_actor);
-  MetaShapedTexture *stex;
   MetaRectangle bounds;
   ClutterVertex v1 = { 0.f, }, v2 = { 0.f, };
 
@@ -1941,8 +1990,9 @@ meta_window_actor_transform_relative_position (MetaScreenCastWindow *screen_cast
                 bounds.y,
                 bounds.y + bounds.height);
 
-  stex = meta_surface_actor_get_texture (priv->surface);
-  clutter_actor_apply_transform_to_point (CLUTTER_ACTOR (stex), &v1, &v2);
+  clutter_actor_apply_transform_to_point (CLUTTER_ACTOR (priv->surface),
+                                          &v1,
+                                          &v2);
 
   *x_out = (double) v2.x;
   *y_out = (double) v2.y;
@@ -1969,22 +2019,19 @@ meta_window_actor_transform_cursor_position (MetaScreenCastWindow *screen_cast_w
       out_cursor_scale)
     {
       MetaShapedTexture *stex;
-      double actor_scale;
+      double texture_scale;
       float cursor_texture_scale;
 
       stex = meta_surface_actor_get_texture (priv->surface);
-      clutter_actor_get_scale (CLUTTER_ACTOR (stex), &actor_scale, NULL);
+      texture_scale = meta_shaped_texture_get_buffer_scale (stex);
       cursor_texture_scale = meta_cursor_sprite_get_texture_scale (cursor_sprite);
 
-      *out_cursor_scale = actor_scale / cursor_texture_scale;
+      *out_cursor_scale = texture_scale / cursor_texture_scale;
     }
 
   if (out_relative_cursor_position)
     {
-      MetaShapedTexture *stex;
-
-      stex = meta_surface_actor_get_texture (priv->surface);
-      clutter_actor_transform_stage_point (CLUTTER_ACTOR (stex),
+      clutter_actor_transform_stage_point (CLUTTER_ACTOR (priv->surface),
                                            cursor_position->x,
                                            cursor_position->y,
                                            &out_relative_cursor_position->x,
@@ -2000,8 +2047,6 @@ meta_window_actor_capture_into (MetaScreenCastWindow *screen_cast_window,
                                 uint8_t              *data)
 {
   MetaWindowActor *window_actor = META_WINDOW_ACTOR (screen_cast_window);
-  MetaWindowActorPrivate *priv =
-    meta_window_actor_get_instance_private (window_actor);
   cairo_surface_t *image;
   uint8_t *cr_data;
   int cr_stride;
@@ -2012,7 +2057,7 @@ meta_window_actor_capture_into (MetaScreenCastWindow *screen_cast_window,
   if (meta_window_actor_is_destroyed (window_actor))
     return;
 
-  image = meta_surface_actor_get_image (priv->surface, bounds);
+  image = meta_window_actor_get_image (window_actor, bounds);
   cr_data = cairo_image_surface_get_data (image);
   cr_width = cairo_image_surface_get_width (image);
   cr_height = cairo_image_surface_get_height (image);
@@ -2080,4 +2125,123 @@ meta_window_actor_from_actor (ClutterActor *actor)
   while (actor != NULL);
 
   return NULL;
+}
+
+void
+meta_window_actor_notify_damaged (MetaWindowActor *window_actor)
+{
+  g_signal_emit (window_actor, signals[DAMAGED], 0);
+}
+
+cairo_surface_t *
+meta_window_actor_get_image (MetaWindowActor *self,
+                             MetaRectangle   *clip)
+{
+  MetaWindowActorPrivate *priv = meta_window_actor_get_instance_private (self);
+  ClutterActor *actor = CLUTTER_ACTOR (self);
+  MetaBackend *backend = meta_get_backend ();
+  ClutterBackend *clutter_backend = meta_backend_get_clutter_backend (backend);
+  CoglContext *cogl_context =
+    clutter_backend_get_cogl_context (clutter_backend);
+  float resource_scale;
+  float width, height;
+  CoglTexture2D *texture;
+  g_autoptr (GError) error = NULL;
+  CoglOffscreen *offscreen;
+  CoglFramebuffer *framebuffer;
+  CoglColor clear_color;
+  float x, y;
+  MetaRectangle scaled_clip;
+  cairo_surface_t *surface;
+
+  if (!priv->surface)
+    return NULL;
+
+  if (clutter_actor_get_n_children (actor) == 1)
+    {
+      MetaShapedTexture *stex;
+
+      stex = meta_surface_actor_get_texture (priv->surface);
+      return meta_shaped_texture_get_image (stex, clip);
+    }
+
+  clutter_actor_get_size (actor, &width, &height);
+
+  if (width == 0 || height == 0)
+    return NULL;
+
+  if (!clutter_actor_get_resource_scale (actor, &resource_scale))
+    return NULL;
+
+  width = ceilf (width * resource_scale);
+  height = ceilf (height * resource_scale);
+
+  texture = cogl_texture_2d_new_with_size (cogl_context, width, height);
+  if (!texture)
+    return NULL;
+
+  cogl_primitive_texture_set_auto_mipmap (COGL_PRIMITIVE_TEXTURE (texture),
+                                          FALSE);
+
+  offscreen = cogl_offscreen_new_with_texture (COGL_TEXTURE (texture));
+  framebuffer = COGL_FRAMEBUFFER (offscreen);
+
+  cogl_object_unref (texture);
+
+  if (!cogl_framebuffer_allocate (framebuffer, &error))
+    {
+      g_warning ("Failed to allocate framebuffer for screenshot: %s",
+                 error->message);
+      cogl_object_unref (framebuffer);
+      cogl_object_unref (texture);
+      return NULL;
+    }
+
+  cogl_color_init_from_4ub (&clear_color, 0, 0, 0, 0);
+  clutter_actor_get_position (actor, &x, &y);
+
+  cogl_push_framebuffer (framebuffer);
+
+  cogl_framebuffer_clear (framebuffer, COGL_BUFFER_BIT_COLOR, &clear_color);
+  cogl_framebuffer_orthographic (framebuffer, 0, 0, width, height, 0, 1.0);
+  cogl_framebuffer_scale (framebuffer, resource_scale, resource_scale, 1);
+  cogl_framebuffer_translate (framebuffer, -x, -y, 0);
+
+  clutter_actor_paint (actor);
+
+  cogl_pop_framebuffer ();
+
+  if (clip)
+    {
+      meta_rectangle_scale_double (clip, resource_scale,
+                                   META_ROUNDING_STRATEGY_GROW,
+                                   &scaled_clip);
+      meta_rectangle_intersect (&scaled_clip,
+                                &(MetaRectangle) {
+                                  .width = width,
+                                  .height = height,
+                                },
+                                &scaled_clip);
+    }
+  else
+    {
+      scaled_clip = (MetaRectangle) {
+        .width = width,
+        .height = height,
+      };
+    }
+
+  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+                                        scaled_clip.width, scaled_clip.height);
+  cogl_framebuffer_read_pixels (framebuffer,
+                                scaled_clip.x, scaled_clip.y,
+                                scaled_clip.width, scaled_clip.height,
+                                CLUTTER_CAIRO_FORMAT_ARGB32,
+                                cairo_image_surface_get_data (surface));
+
+  cogl_object_unref (framebuffer);
+
+  cairo_surface_mark_dirty (surface);
+
+  return surface;
 }

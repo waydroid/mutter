@@ -57,7 +57,11 @@
 #include <X11/extensions/Xcomposite.h>
 
 #include "backends/meta-dnd-private.h"
+#include "backends/x11/meta-backend-x11.h"
+#include "backends/x11/meta-event-x11.h"
+#include "backends/x11/meta-stage-x11.h"
 #include "clutter/clutter-mutter.h"
+#include "cogl/cogl-trace.h"
 #include "compositor/meta-window-actor-x11.h"
 #include "compositor/meta-window-actor-wayland.h"
 #include "compositor/meta-window-actor-private.h"
@@ -289,7 +293,7 @@ meta_focus_stage_window (MetaDisplay *display,
   if (!stage)
     return;
 
-  window = clutter_x11_get_stage_window (stage);
+  window = meta_x11_get_stage_window (stage);
 
   if (window == None)
     return;
@@ -312,7 +316,7 @@ meta_stage_is_focused (MetaDisplay *display)
   if (!stage)
     return FALSE;
 
-  window = clutter_x11_get_stage_window (stage);
+  window = meta_x11_get_stage_window (stage);
 
   if (window == None)
     return FALSE;
@@ -1077,6 +1081,8 @@ meta_compositor_real_pre_paint (MetaCompositor *compositor)
 static void
 meta_compositor_pre_paint (MetaCompositor *compositor)
 {
+  COGL_TRACE_BEGIN_SCOPED (MetaCompositorPrePaint,
+                           "Compositor (pre-paint)");
   META_COMPOSITOR_GET_CLASS (compositor)->pre_paint (compositor);
 }
 
@@ -1124,6 +1130,8 @@ meta_compositor_real_post_paint (MetaCompositor *compositor)
 static void
 meta_compositor_post_paint (MetaCompositor *compositor)
 {
+  COGL_TRACE_BEGIN_SCOPED (MetaCompositorPostPaint,
+                           "Compositor (post-paint)");
   META_COMPOSITOR_GET_CLASS (compositor)->post_paint (compositor);
 }
 

@@ -1,5 +1,5 @@
 project('mutter', 'c',
-  version: '3.33.91',
+  version: '3.33.92',
   meson_version: '>= 0.50.0',
   license: 'GPLv2+'
 )
@@ -29,7 +29,7 @@ upower_glib_req = '>= 0.99.0'
 xcomposite_req = '>= 0.4'
 xkbcommon_req = '>= 0.4.3'
 xfixes_req = '>= 3'
-xi_req = '>= 1.6.99.1'
+xi_req = '>= 1.7.4'
 xrandr_req = '>= 1.5.0'
 libstartup_notification_req = '>= 0.7'
 libcanberra_req = '>= 0.26'
@@ -403,6 +403,8 @@ subdir('data')
 subdir('src')
 subdir('po')
 subdir('doc/man')
+
+meson.add_install_script('meson/meson-postinstall.sh')
 
 output = [
   '',
