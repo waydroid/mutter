@@ -12,50 +12,47 @@ Forwarded: https://gitlab.gnome.org/GNOME/mutter/merge_requests/37
 Applied-upstream: no, rejected as not long-term sustainable
 Last-Update: 2018-03-16
 ---
- clutter/clutter/x11/clutter-device-manager-xi2.c |  15 ++-
- src/backends/x11/meta-input-settings-x11.c       | 150 ++++++++++++++++++++---
- 2 files changed, 148 insertions(+), 17 deletions(-)
+ src/backends/x11/meta-device-manager-x11.c |  12 ++-
+ src/backends/x11/meta-input-settings-x11.c | 150 ++++++++++++++++++++++++++---
+ 2 files changed, 146 insertions(+), 16 deletions(-)
 
-diff --git a/clutter/clutter/x11/clutter-device-manager-xi2.c b/clutter/clutter/x11/clutter-device-manager-xi2.c
-index 6d63ed9..a5d6762 100644
---- a/clutter/clutter/x11/clutter-device-manager-xi2.c
-+++ b/clutter/clutter/x11/clutter-device-manager-xi2.c
-@@ -283,8 +283,9 @@ is_touch_device (XIAnyClassInfo         **classes,
+diff --git a/src/backends/x11/meta-device-manager-x11.c b/src/backends/x11/meta-device-manager-x11.c
+index c2a0ec1..84251b1 100644
+--- a/src/backends/x11/meta-device-manager-x11.c
++++ b/src/backends/x11/meta-device-manager-x11.c
+@@ -257,7 +257,8 @@ is_touch_device (XIAnyClassInfo         **classes,
  }
  
  static gboolean
--is_touchpad_device (ClutterBackendX11 *backend_x11,
--                    XIDeviceInfo      *info)
-+has_8bit_property (ClutterBackendX11 *backend_x11,
-+                   XIDeviceInfo      *info,
+-is_touchpad_device (XIDeviceInfo *info)
++has_8bit_property (XIDeviceInfo      *info,
 +                   const char        *name)
  {
    gulong nitems, bytes_after;
-   guint32 *data = NULL;
-@@ -292,7 +293,7 @@ is_touchpad_device (ClutterBackendX11 *backend_x11,
+   uint32_t *data = NULL;
+@@ -265,7 +266,7 @@ is_touchpad_device (XIDeviceInfo *info)
    Atom type;
    Atom prop;
  
--  prop = XInternAtom (backend_x11->xdpy, "libinput Tapping Enabled", True);
-+  prop = XInternAtom (backend_x11->xdpy, name, True);
+-  prop = XInternAtom (clutter_x11_get_default_display (), "libinput Tapping Enabled", True);
++  prop = XInternAtom (clutter_x11_get_default_display (), name, True);
    if (prop == None)
      return FALSE;
  
-@@ -313,6 +314,14 @@ is_touchpad_device (ClutterBackendX11 *backend_x11,
+@@ -286,6 +287,13 @@ is_touchpad_device (XIDeviceInfo *info)
    return TRUE;
  }
  
 +static gboolean
-+is_touchpad_device (ClutterBackendX11 *backend_x11,
-+                    XIDeviceInfo      *info)
++is_touchpad_device (XIDeviceInfo *info)
 +{
-+  return has_8bit_property (backend_x11, info, "libinput Tapping Enabled") ||
-+         has_8bit_property (backend_x11, info, "Synaptics Off");
++  return has_8bit_property (info, "libinput Tapping Enabled") ||
++         has_8bit_property (info, "Synaptics Off");
 +}
 +
  static gboolean
- get_device_ids (ClutterBackendX11  *backend_x11,
-                 XIDeviceInfo       *info,
+ get_device_ids (XIDeviceInfo  *info,
+                 char         **vendor_id,
 diff --git a/src/backends/x11/meta-input-settings-x11.c b/src/backends/x11/meta-input-settings-x11.c
 index 89f07ee..5e3f242 100644
 --- a/src/backends/x11/meta-input-settings-x11.c

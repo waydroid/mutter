@@ -25,6 +25,7 @@
 
 #include "clutter/clutter.h"
 #include "meta/compositor.h"
+#include "meta/meta-shaped-texture.h"
 
 #define META_TYPE_WINDOW_ACTOR (meta_window_actor_get_type ())
 
@@ -38,13 +39,17 @@ META_EXPORT
 MetaWindow *       meta_window_actor_get_meta_window      (MetaWindowActor *self);
 
 META_EXPORT
-ClutterActor *     meta_window_actor_get_texture          (MetaWindowActor *self);
+MetaShapedTexture *meta_window_actor_get_texture          (MetaWindowActor *self);
 
 META_EXPORT
 void               meta_window_actor_sync_visibility      (MetaWindowActor *self);
 
 META_EXPORT
 gboolean       meta_window_actor_is_destroyed (MetaWindowActor *self);
+
+META_EXPORT
+cairo_surface_t * meta_window_actor_get_image (MetaWindowActor       *self,
+                                               cairo_rectangle_int_t *clip);
 
 typedef enum
 {

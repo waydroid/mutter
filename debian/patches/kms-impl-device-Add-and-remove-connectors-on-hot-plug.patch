@@ -1,0 +1,327 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Thu, 22 Aug 2019 14:26:54 +0200
+Subject: kms/impl-device: Add and remove connectors on hot plug
+
+Connectors may disappear and appear on hot plugs, e.g. when a docking
+station is connected, so when processing a hot plug event, make sure we
+remove connectors that are now gone, and add new ones that have appeared
+since last time.
+
+Fixes: https://gitlab.gnome.org/GNOME/mutter/issues/728
+
+https://gitlab.gnome.org/GNOME/mutter/merge_requests/743
+
+Origin: upstream, commit:4cf828323d5c3936233abd91a97bac23ce6e31b2
+Applied-Upstream: 3.34.0
+---
+ src/backends/native/meta-kms-connector-private.h |  3 ++
+ src/backends/native/meta-kms-connector.c         | 11 ++++++
+ src/backends/native/meta-kms-device-private.h    |  3 ++
+ src/backends/native/meta-kms-device.c            | 25 +++++++++++++
+ src/backends/native/meta-kms-impl-device.c       | 47 +++++++++++++++++++-----
+ src/backends/native/meta-kms-impl-device.h       |  3 +-
+ src/backends/native/meta-kms-types.h             |  6 +++
+ src/backends/native/meta-kms.c                   | 28 ++++++++------
+ 8 files changed, 105 insertions(+), 21 deletions(-)
+
+diff --git a/src/backends/native/meta-kms-connector-private.h b/src/backends/native/meta-kms-connector-private.h
+index f61e969..427502a 100644
+--- a/src/backends/native/meta-kms-connector-private.h
++++ b/src/backends/native/meta-kms-connector-private.h
+@@ -29,4 +29,7 @@ MetaKmsConnector * meta_kms_connector_new (MetaKmsImplDevice *impl_device,
+                                            drmModeConnector  *drm_connector,
+                                            drmModeRes        *drm_resources);
+ 
++gboolean meta_kms_connector_is_same_as (MetaKmsConnector *connector,
++                                        drmModeConnector *drm_connector);
++
+ #endif /* META_KMS_CONNECTOR_PRIVATE_H */
+diff --git a/src/backends/native/meta-kms-connector.c b/src/backends/native/meta-kms-connector.c
+index 8eed112..1508d4f 100644
+--- a/src/backends/native/meta-kms-connector.c
++++ b/src/backends/native/meta-kms-connector.c
+@@ -36,6 +36,7 @@ struct _MetaKmsConnector
+ 
+   uint32_t id;
+   MetaConnectorType type;
++  uint32_t type_id;
+   char *name;
+ 
+   MetaKmsConnectorState *current_state;
+@@ -562,6 +563,15 @@ make_connector_name (drmModeConnector *drm_connector)
+                             drm_connector->connector_type_id);
+ }
+ 
++gboolean
++meta_kms_connector_is_same_as (MetaKmsConnector *connector,
++                               drmModeConnector *drm_connector)
++{
++  return (connector->id == drm_connector->connector_id &&
++          connector->type == drm_connector->connector_type &&
++          connector->type_id == drm_connector->connector_type_id);
++}
++
+ MetaKmsConnector *
+ meta_kms_connector_new (MetaKmsImplDevice *impl_device,
+                         drmModeConnector  *drm_connector,
+@@ -573,6 +583,7 @@ meta_kms_connector_new (MetaKmsImplDevice *impl_device,
+   connector->device = meta_kms_impl_device_get_device (impl_device);
+   connector->id = drm_connector->connector_id;
+   connector->type = (MetaConnectorType) drm_connector->connector_type;
++  connector->type_id = drm_connector->connector_type_id;
+   connector->name = make_connector_name (drm_connector);
+ 
+   find_property_ids (connector, impl_device, drm_connector);
+diff --git a/src/backends/native/meta-kms-device-private.h b/src/backends/native/meta-kms-device-private.h
+index 0d4f4e3..bcb3a6e 100644
+--- a/src/backends/native/meta-kms-device-private.h
++++ b/src/backends/native/meta-kms-device-private.h
+@@ -24,4 +24,7 @@
+ 
+ MetaKmsImplDevice * meta_kms_device_get_impl_device (MetaKmsDevice *device);
+ 
++void meta_kms_device_update_states_in_impl (MetaKmsDevice            *device,
++                                            MetaKmsUpdateStatesFlags  flags);
++
+ #endif /* META_KMS_DEVICE_PRIVATE_H */
+diff --git a/src/backends/native/meta-kms-device.c b/src/backends/native/meta-kms-device.c
+index 27dc65e..be0362d 100644
+--- a/src/backends/native/meta-kms-device.c
++++ b/src/backends/native/meta-kms-device.c
+@@ -108,6 +108,31 @@ meta_kms_device_get_primary_plane_for (MetaKmsDevice *device,
+   return NULL;
+ }
+ 
++void
++meta_kms_device_update_states_in_impl (MetaKmsDevice            *device,
++                                       MetaKmsUpdateStatesFlags  flags)
++{
++  MetaKmsImplDevice *impl_device = meta_kms_device_get_impl_device (device);
++
++  meta_assert_in_kms_impl (device->kms);
++
++  meta_kms_impl_device_update_states (impl_device, flags);
++
++  if (flags & META_KMS_UPDATE_STATES_FLAG_HOTPLUG)
++    {
++      meta_assert_is_waiting_for_kms_impl_task (device->kms);
++
++      g_list_free (device->crtcs);
++      device->crtcs = meta_kms_impl_device_copy_crtcs (impl_device);
++
++      g_list_free (device->connectors);
++      device->connectors = meta_kms_impl_device_copy_connectors (impl_device);
++
++      g_list_free (device->planes);
++      device->planes = meta_kms_impl_device_copy_planes (impl_device);
++    }
++}
++
+ static gboolean
+ dispatch_in_impl (MetaKmsImpl  *impl,
+                   gpointer      user_data,
+diff --git a/src/backends/native/meta-kms-impl-device.c b/src/backends/native/meta-kms-impl-device.c
+index c46d746..2f7cb7f 100644
+--- a/src/backends/native/meta-kms-impl-device.c
++++ b/src/backends/native/meta-kms-impl-device.c
+@@ -196,10 +196,28 @@ init_crtcs (MetaKmsImplDevice *impl_device,
+   impl_device->crtcs = g_list_reverse (impl_device->crtcs);
+ }
+ 
++static MetaKmsConnector *
++find_existing_connector (MetaKmsImplDevice *impl_device,
++                         drmModeConnector  *drm_connector)
++{
++  GList *l;
++
++  for (l = impl_device->connectors; l; l = l->next)
++    {
++      MetaKmsConnector *connector = l->data;
++
++      if (meta_kms_connector_is_same_as (connector, drm_connector))
++        return connector;
++    }
++
++  return NULL;
++}
++
+ static void
+-init_connectors (MetaKmsImplDevice *impl_device,
+-                 drmModeRes        *drm_resources)
++update_connectors (MetaKmsImplDevice *impl_device,
++                   drmModeRes        *drm_resources)
+ {
++  GList *connectors = NULL;
+   unsigned int i;
+ 
+   for (i = 0; i < drm_resources->count_connectors; i++)
+@@ -212,14 +230,19 @@ init_connectors (MetaKmsImplDevice *impl_device,
+       if (!drm_connector)
+         continue;
+ 
+-      connector = meta_kms_connector_new (impl_device, drm_connector,
+-                                          drm_resources);
++      connector = find_existing_connector (impl_device, drm_connector);
++      if (connector)
++        connector = g_object_ref (connector);
++      else
++        connector = meta_kms_connector_new (impl_device, drm_connector,
++                                            drm_resources);
+       drmModeFreeConnector (drm_connector);
+ 
+-      impl_device->connectors = g_list_prepend (impl_device->connectors,
+-                                                connector);
++      connectors = g_list_prepend (connectors, connector);
+     }
+-  impl_device->connectors = g_list_reverse (impl_device->connectors);
++
++  g_list_free_full (impl_device->connectors, g_object_unref);
++  impl_device->connectors = g_list_reverse (connectors);
+ }
+ 
+ static MetaKmsPlaneType
+@@ -295,13 +318,18 @@ init_planes (MetaKmsImplDevice *impl_device)
+ }
+ 
+ void
+-meta_kms_impl_device_update_states (MetaKmsImplDevice *impl_device)
++meta_kms_impl_device_update_states (MetaKmsImplDevice        *impl_device,
++                                    MetaKmsUpdateStatesFlags  flags)
+ {
+   drmModeRes *drm_resources;
+ 
+   meta_assert_in_kms_impl (meta_kms_impl_get_kms (impl_device->impl));
+ 
+   drm_resources = drmModeGetResources (impl_device->fd);
++
++  if (flags & META_KMS_UPDATE_STATES_FLAG_HOTPLUG)
++    update_connectors (impl_device, drm_resources);
++
+   g_list_foreach (impl_device->crtcs, (GFunc) meta_kms_crtc_update_state,
+                   NULL);
+   g_list_foreach (impl_device->connectors, (GFunc) meta_kms_connector_update_state,
+@@ -346,9 +374,10 @@ meta_kms_impl_device_new (MetaKmsDevice  *device,
+   impl_device->fd = fd;
+ 
+   init_crtcs (impl_device, drm_resources);
+-  init_connectors (impl_device, drm_resources);
+   init_planes (impl_device);
+ 
++  update_connectors (impl_device, drm_resources);
++
+   drmModeFreeResources (drm_resources);
+ 
+   impl_device->fd_source =
+diff --git a/src/backends/native/meta-kms-impl-device.h b/src/backends/native/meta-kms-impl-device.h
+index 5390ef5..1e971af 100644
+--- a/src/backends/native/meta-kms-impl-device.h
++++ b/src/backends/native/meta-kms-impl-device.h
+@@ -53,7 +53,8 @@ int meta_kms_impl_device_get_fd (MetaKmsImplDevice *impl_device);
+ 
+ int meta_kms_impl_device_leak_fd (MetaKmsImplDevice *impl_device);
+ 
+-void meta_kms_impl_device_update_states (MetaKmsImplDevice *impl_device);
++void meta_kms_impl_device_update_states (MetaKmsImplDevice        *impl_device,
++                                         MetaKmsUpdateStatesFlags  flags);
+ 
+ int meta_kms_impl_device_close (MetaKmsImplDevice *impl_device);
+ 
+diff --git a/src/backends/native/meta-kms-types.h b/src/backends/native/meta-kms-types.h
+index dd14a7b..ed4a4cd 100644
+--- a/src/backends/native/meta-kms-types.h
++++ b/src/backends/native/meta-kms-types.h
+@@ -56,4 +56,10 @@ typedef enum _MetaKmsDeviceFlag
+   META_KMS_DEVICE_FLAG_PLATFORM_DEVICE = 1 << 1,
+ } MetaKmsDeviceFlag;
+ 
++typedef enum _MetaKmsUpdateStatesFlags
++{
++  META_KMS_UPDATE_STATES_FLAG_NONE = 0,
++  META_KMS_UPDATE_STATES_FLAG_HOTPLUG = 1 << 0,
++} MetaKmsUpdateStatesFlags;
++
+ #endif /* META_KMS_IMPL_TYPES_H */
+diff --git a/src/backends/native/meta-kms.c b/src/backends/native/meta-kms.c
+index 91b260d..8397f87 100644
+--- a/src/backends/native/meta-kms.c
++++ b/src/backends/native/meta-kms.c
+@@ -167,7 +167,8 @@ struct _MetaKms
+ G_DEFINE_TYPE (MetaKms, meta_kms, G_TYPE_OBJECT)
+ 
+ static void
+-meta_kms_update_states_in_impl (MetaKms *kms);
++meta_kms_update_states_in_impl (MetaKms                  *kms,
++                                MetaKmsUpdateStatesFlags  flags);
+ 
+ MetaKmsUpdate *
+ meta_kms_ensure_pending_update (MetaKms *kms)
+@@ -195,7 +196,8 @@ meta_kms_update_process_in_impl (MetaKmsImpl  *impl,
+   ret = meta_kms_impl_process_update (impl, update, error);
+ 
+   if (meta_kms_update_has_mode_set (update))
+-    meta_kms_update_states_in_impl (meta_kms_impl_get_kms (impl));
++    meta_kms_update_states_in_impl (meta_kms_impl_get_kms (impl),
++                                    META_KMS_UPDATE_STATES_FLAG_NONE);
+ 
+   return ret;
+ }
+@@ -450,7 +452,8 @@ meta_kms_is_waiting_for_impl_task (MetaKms *kms)
+ }
+ 
+ static void
+-meta_kms_update_states_in_impl (MetaKms *kms)
++meta_kms_update_states_in_impl (MetaKms                  *kms,
++                                MetaKmsUpdateStatesFlags  flags)
+ {
+   GList *l;
+ 
+@@ -462,9 +465,8 @@ meta_kms_update_states_in_impl (MetaKms *kms)
+   for (l = kms->devices; l; l = l->next)
+     {
+       MetaKmsDevice *device = l->data;
+-      MetaKmsImplDevice *impl_device = meta_kms_device_get_impl_device (device);
+ 
+-      meta_kms_impl_device_update_states (impl_device);
++      meta_kms_device_update_states_in_impl (device, flags);
+     }
+ }
+ 
+@@ -473,20 +475,22 @@ update_states_in_impl (MetaKmsImpl  *impl,
+                        gpointer      user_data,
+                        GError      **error)
+ {
+-  MetaKms *kms = user_data;
++  MetaKms *kms = meta_kms_impl_get_kms (impl);;
++  MetaKmsUpdateStatesFlags flags = GPOINTER_TO_UINT (user_data);
+ 
+-  meta_kms_update_states_in_impl (kms);
++  meta_kms_update_states_in_impl (kms, flags);
+ 
+   return TRUE;
+ }
+ 
+ static gboolean
+-meta_kms_update_states_sync (MetaKms  *kms,
+-                             GError  **error)
++meta_kms_update_states_sync (MetaKms                   *kms,
++                             MetaKmsUpdateStatesFlags   flags,
++                             GError                   **error)
+ {
+   return meta_kms_run_impl_task_sync (kms,
+                                       update_states_in_impl,
+-                                      kms,
++                                      GUINT_TO_POINTER (flags),
+                                       error);
+ }
+ 
+@@ -495,7 +499,9 @@ handle_hotplug_event (MetaKms *kms)
+ {
+   g_autoptr (GError) error = NULL;
+ 
+-  if (!meta_kms_update_states_sync (kms, &error))
++  if (!meta_kms_update_states_sync (kms,
++                                    META_KMS_UPDATE_STATES_FLAG_HOTPLUG,
++                                    &error))
+     g_warning ("Updating KMS state failed: %s", error->message);
+ }
+ 

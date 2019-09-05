@@ -476,7 +476,6 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_shaped_texture_set_create_mipmaps@Base 3.28.2
  meta_shaped_texture_set_mask_texture@Base 3.28.2
  meta_shaped_texture_set_opaque_region@Base 3.28.2
- meta_shaped_texture_update_area@Base 3.28.2
  meta_show_dialog@Base 3.28.2
  meta_side_get_type@Base 3.28.2
  meta_size_change_get_type@Base 3.28.2
@@ -487,6 +486,7 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_stack_tracker_get_stack@Base 3.28.2
  meta_stage_get_type@Base 3.28.2
  meta_stage_is_focused@Base 3.28.2
+ meta_stage_x11_get_type@Base 3.33.92
  meta_startup_notification_create_launcher@Base 3.31.90
  meta_startup_notification_get_sequences@Base 3.28.2
  meta_startup_notification_get_type@Base 3.28.2
@@ -502,6 +502,7 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_startup_sequence_get_workspace@Base 3.31.90
  meta_tab_list_get_type@Base 3.28.2
  meta_tab_show_type_get_type@Base 3.28.2
+ meta_test_init@Base 3.33.92
  meta_theme_free@Base 3.28.2
  meta_theme_get_default@Base 3.28.2
  meta_theme_new@Base 3.28.2
@@ -523,6 +524,7 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  (arch=linux-any)meta_wayland_override_display_name@Base 3.28.2
  meta_window_activate@Base 3.28.2
  meta_window_activate_with_workspace@Base 3.28.2
+ meta_window_actor_get_image@Base 3.33.92
  meta_window_actor_get_meta_window@Base 3.28.2
  meta_window_actor_get_texture@Base 3.28.2
  meta_window_actor_get_type@Base 3.28.2
@@ -688,12 +690,53 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_xwayland_override_display_number@Base 3.31.90
 libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
 * Build-Depends-Package: libmutter-5-dev
- _clutter_backend_add_event_translator@Base 3.29.4
  _clutter_backend_reset_cogl_framebuffer@Base 3.29.4
- _clutter_event_translator_get_type@Base 3.29.4
+ _clutter_backend_translate_event@Base 3.33.92
+ _clutter_device_manager_add_device@Base 3.33.92
+ _clutter_device_manager_remove_device@Base 3.33.92
+ _clutter_device_manager_select_stage_events@Base 3.33.92
+ _clutter_event_get_platform_data@Base 3.33.92
+ _clutter_event_process_filters@Base 3.33.92
+ _clutter_event_push@Base 3.33.92
+ _clutter_event_set_platform_data@Base 3.33.92
+ _clutter_event_set_pointer_emulated@Base 3.33.92
+ _clutter_event_set_state_full@Base 3.33.92
+ _clutter_input_device_add_axis@Base 3.33.92
+ _clutter_input_device_add_event_sequence@Base 3.33.92
+ _clutter_input_device_add_scroll_info@Base 3.33.92
+ _clutter_input_device_add_slave@Base 3.33.92
+ _clutter_input_device_get_scroll_delta@Base 3.33.92
+ _clutter_input_device_get_stage@Base 3.33.92
+ _clutter_input_device_remove_event_sequence@Base 3.33.92
+ _clutter_input_device_remove_slave@Base 3.33.92
+ _clutter_input_device_reset_axes@Base 3.33.92
+ _clutter_input_device_reset_scroll_info@Base 3.33.92
+ _clutter_input_device_set_associated_device@Base 3.33.92
+ _clutter_input_device_set_coords@Base 3.33.92
+ _clutter_input_device_set_n_keys@Base 3.33.92
+ _clutter_input_device_set_stage@Base 3.33.92
+ _clutter_input_device_set_state@Base 3.33.92
+ _clutter_input_device_set_time@Base 3.33.92
+ _clutter_input_device_translate_axis@Base 3.33.92
+ _clutter_input_pointer_a11y_add_device@Base 3.33.92
+ _clutter_input_pointer_a11y_on_button_event@Base 3.33.92
+ _clutter_input_pointer_a11y_on_motion_event@Base 3.33.92
+ _clutter_input_pointer_a11y_remove_device@Base 3.33.92
+ _clutter_is_input_pointer_a11y_enabled@Base 3.33.92
+ _clutter_pango_unichar_direction@Base 3.33.92
+ _clutter_process_event@Base 3.33.92
+ _clutter_set_sync_to_vblank@Base 3.33.92
  _clutter_stage_cogl_get_type@Base 3.29.4
  _clutter_stage_cogl_presented@Base 3.29.4
- _clutter_stage_x11_get_type@Base 3.29.4
+ _clutter_stage_get_state@Base 3.33.92
+ _clutter_stage_get_window@Base 3.33.92
+ _clutter_stage_is_activated@Base 3.33.92
+ _clutter_stage_queue_event@Base 3.33.92
+ _clutter_stage_set_window@Base 3.33.92
+ _clutter_stage_update_state@Base 3.33.92
+ _clutter_stage_window_get_geometry@Base 3.33.92
+ _clutter_threads_acquire_lock@Base 3.33.92
+ _clutter_threads_release_lock@Base 3.33.92
  cally_accessibility_init@Base 3.29.4
  cally_actor_add_action@Base 3.29.4
  cally_actor_add_action_full@Base 3.29.4
@@ -909,6 +952,7 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_actor_needs_expand@Base 3.29.4
  clutter_actor_new@Base 3.29.4
  clutter_actor_paint@Base 3.29.4
+ clutter_actor_pick_box@Base 3.33.92
  clutter_actor_pop_internal@Base 3.29.4
  clutter_actor_push_internal@Base 3.29.4
  clutter_actor_queue_redraw@Base 3.29.4
@@ -1055,6 +1099,7 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_backend_get_input_method@Base 3.29.4
  clutter_backend_get_keymap@Base 3.31.90
  clutter_backend_get_resolution@Base 3.29.4
+ clutter_backend_get_stage_window@Base 3.33.92
  clutter_backend_get_type@Base 3.29.4
  clutter_backend_set_font_options@Base 3.29.4
  clutter_backend_set_input_method@Base 3.29.4
@@ -1262,6 +1307,7 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_desaturate_effect_new@Base 3.29.4
  clutter_desaturate_effect_set_factor@Base 3.29.4
  clutter_device_manager_create_virtual_device@Base 3.29.4
+ clutter_device_manager_ensure_a11y_state@Base 3.33.92
  clutter_device_manager_get_core_device@Base 3.29.4
  clutter_device_manager_get_default@Base 3.29.4
  clutter_device_manager_get_device@Base 3.29.4
@@ -1295,28 +1341,6 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_effect_paint_flags_get_type@Base 3.29.4
  clutter_effect_queue_repaint@Base 3.29.4
  (arch=linux-any)clutter_egl_get_egl_display@Base 3.29.4
- (arch=linux-any)clutter_evdev_add_filter@Base 3.29.4
- (arch=linux-any)clutter_evdev_event_get_event_code@Base 3.29.4
- (arch=linux-any)clutter_evdev_event_get_relative_motion@Base 3.29.4
- (arch=linux-any)clutter_evdev_event_get_time_usec@Base 3.29.4
- (arch=linux-any)clutter_evdev_event_sequence_get_slot@Base 3.29.4
- (arch=linux-any)clutter_evdev_get_keyboard_layout_index@Base 3.29.4
- (arch=linux-any)clutter_evdev_get_keyboard_map@Base 3.29.4
- (arch=linux-any)clutter_evdev_input_device_get_libinput_device@Base 3.29.4
- (arch=linux-any)clutter_evdev_input_device_tool_set_button_code@Base 3.29.4
- (arch=linux-any)clutter_evdev_input_device_tool_set_pressure_curve@Base 3.29.4
- (arch=linux-any)clutter_evdev_reclaim_devices@Base 3.29.4
- (arch=linux-any)clutter_evdev_release_devices@Base 3.29.4
- (arch=linux-any)clutter_evdev_remove_filter@Base 3.29.4
- (arch=linux-any)clutter_evdev_set_device_callbacks@Base 3.29.4
- (arch=linux-any)clutter_evdev_set_keyboard_layout_index@Base 3.29.4
- (arch=linux-any)clutter_evdev_set_keyboard_map@Base 3.29.4
- (arch=linux-any)clutter_evdev_set_keyboard_numlock@Base 3.29.4
- (arch=linux-any)clutter_evdev_set_keyboard_repeat@Base 3.29.4
- (arch=linux-any)clutter_evdev_set_pointer_constrain_callback@Base 3.29.4
- (arch=linux-any)clutter_evdev_set_relative_motion_filter@Base 3.29.4
- (arch=linux-any)clutter_evdev_set_seat_id@Base 3.29.4
- (arch=linux-any)clutter_evdev_warp_pointer@Base 3.29.4
  clutter_event_add_filter@Base 3.29.4
  clutter_event_copy@Base 3.29.4
  clutter_event_flags_get_type@Base 3.29.4
@@ -1481,6 +1505,7 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_input_axis_get_type@Base 3.29.4
  clutter_input_content_hint_flags_get_type@Base 3.29.4
  clutter_input_content_purpose_get_type@Base 3.29.4
+ clutter_input_device_add_tool@Base 3.33.92
  clutter_input_device_get_associated_device@Base 3.29.4
  clutter_input_device_get_axis@Base 3.29.4
  clutter_input_device_get_axis_value@Base 3.29.4
@@ -1513,6 +1538,7 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_input_device_is_grouped@Base 3.29.4
  clutter_input_device_is_mode_switch_button@Base 3.29.4
  clutter_input_device_keycode_to_evdev@Base 3.29.4
+ clutter_input_device_lookup_tool@Base 3.33.92
  clutter_input_device_mapping_get_type@Base 3.29.4
  clutter_input_device_pad_source_get_type@Base 3.29.4
  clutter_input_device_sequence_get_grabbed_actor@Base 3.29.4
@@ -1529,6 +1555,7 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_input_device_type_get_type@Base 3.29.4
  clutter_input_device_ungrab@Base 3.29.4
  clutter_input_device_update_from_event@Base 3.29.4
+ clutter_input_device_update_from_tool@Base 3.33.92
  clutter_input_focus_filter_key_event@Base 3.29.4
  clutter_input_focus_get_type@Base 3.29.4
  clutter_input_focus_is_focused@Base 3.29.4
@@ -1648,6 +1675,7 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_paint_node_add_primitive@Base 3.29.4
  clutter_paint_node_add_rectangle@Base 3.29.4
  clutter_paint_node_add_texture_rectangle@Base 3.29.4
+ clutter_paint_node_get_framebuffer@Base 3.33.92
  clutter_paint_node_get_type@Base 3.29.4
  clutter_paint_node_paint@Base 3.31.90
  clutter_paint_node_ref@Base 3.29.4
@@ -1735,6 +1763,7 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_point_free@Base 3.29.4
  clutter_point_get_type@Base 3.29.4
  clutter_point_init@Base 3.29.4
+ clutter_point_inside_quadrilateral@Base 3.33.92
  clutter_point_zero@Base 3.29.4
  clutter_pointer_a11y_dwell_click_type_get_type@Base 3.33.4
  clutter_pointer_a11y_dwell_direction_get_type@Base 3.33.4
@@ -1969,14 +1998,6 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_table_layout_set_use_animations@Base 3.29.4
  clutter_tap_action_get_type@Base 3.29.4
  clutter_tap_action_new@Base 3.29.4
- clutter_test_add@Base 3.29.4
- clutter_test_add_data@Base 3.29.4
- clutter_test_add_data_full@Base 3.29.4
- clutter_test_check_actor_at_point@Base 3.29.4
- clutter_test_check_color_at_point@Base 3.29.4
- clutter_test_get_stage@Base 3.29.4
- clutter_test_init@Base 3.29.4
- clutter_test_run@Base 3.29.4
  clutter_text_activate@Base 3.29.4
  clutter_text_buffer_delete_text@Base 3.29.4
  clutter_text_buffer_emit_deleted_text@Base 3.29.4
@@ -2206,6 +2227,7 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_vertex_init@Base 3.29.4
  clutter_vertex_new@Base 3.29.4
  clutter_virtual_device_type_get_type@Base 3.29.4
+ clutter_virtual_input_device_get_device_type@Base 3.33.92
  clutter_virtual_input_device_get_manager@Base 3.29.4
  clutter_virtual_input_device_get_type@Base 3.29.4
  clutter_virtual_input_device_notify_absolute_motion@Base 3.29.4
@@ -2220,26 +2242,15 @@ libmutter-clutter-5.so.0 libmutter-5-0 #MINVER#
  clutter_virtual_input_device_notify_touch_up@Base 3.29.4
  (arch=linux-any)clutter_wayland_set_compositor_display@Base 3.29.4
  clutter_x11_add_filter@Base 3.29.4
- clutter_x11_disable_event_retrieval@Base 3.29.4
- clutter_x11_event_get_key_group@Base 3.29.4
- clutter_x11_event_sequence_get_touch_detail@Base 3.29.4
  clutter_x11_filter_return_get_type@Base 3.29.4
- clutter_x11_get_current_event_time@Base 3.29.4
  clutter_x11_get_default_display@Base 3.29.4
  clutter_x11_get_default_screen@Base 3.29.4
  clutter_x11_get_root_window@Base 3.29.4
- clutter_x11_get_stage_from_window@Base 3.29.4
- clutter_x11_get_stage_window@Base 3.29.4
  clutter_x11_get_use_argb_visual@Base 3.29.4
  clutter_x11_get_use_stereo_stage@Base 3.29.4
- clutter_x11_get_visual_info@Base 3.29.4
- clutter_x11_handle_event@Base 3.29.4
  clutter_x11_has_composite_extension@Base 3.29.4
- clutter_x11_has_event_retrieval@Base 3.29.4
- clutter_x11_has_xinput@Base 3.29.4
  clutter_x11_remove_filter@Base 3.29.4
  clutter_x11_set_display@Base 3.29.4
- clutter_x11_set_stage_foreign@Base 3.29.4
  clutter_x11_set_use_argb_visual@Base 3.29.4
  clutter_x11_set_use_stereo_stage@Base 3.29.4
  clutter_x11_trap_x_errors@Base 3.29.4
@@ -3018,7 +3029,6 @@ libmutter-cogl-5.so.0 libmutter-5-0 #MINVER#
  cogl_xlib_renderer_request_reset_on_video_memory_purge@Base 3.29.4
  cogl_xlib_renderer_set_event_retrieval_enabled@Base 3.29.4
  cogl_xlib_renderer_set_foreign_display@Base 3.29.4
- cogl_xlib_renderer_set_threaded_swap_wait_enabled@Base 3.29.4
  cogl_xlib_set_display@Base 3.29.4
  test_ctx@Base 3.33.4
  test_fb@Base 3.33.4

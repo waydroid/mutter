@@ -32,6 +32,7 @@
 #include "backends/meta-cursor-tracker-private.h"
 #include "backends/x11/meta-backend-x11.h"
 #include "compositor/meta-compositor-x11.h"
+#include "cogl/cogl-trace.h"
 #include "core/bell.h"
 #include "core/display-private.h"
 #include "core/meta-workspace-manager-private.h"
@@ -1392,7 +1393,8 @@ handle_other_xevent (MetaX11Display *x11_display,
           window = meta_window_x11_new (display, event->xmap.window,
                                         FALSE, META_COMP_EFFECT_CREATE);
         }
-      else if (window && window->restore_focus_on_map)
+      else if (window && window->restore_focus_on_map &&
+               window->reparents_pending == 0)
         {
           meta_window_focus (window,
                              meta_display_get_current_time_roundtrip (display));
@@ -1436,6 +1438,8 @@ handle_other_xevent (MetaX11Display *x11_display,
       break;
     case ReparentNotify:
       {
+        if (window && window->reparents_pending > 0)
+          window->reparents_pending -= 1;
         if (event->xreparent.event == x11_display->xroot)
           meta_stack_tracker_reparent_event (display->stack_tracker,
                                              &event->xreparent);
@@ -1762,6 +1766,9 @@ meta_x11_display_handle_xevent (MetaX11Display *x11_display,
   gboolean bypass_compositor = FALSE, bypass_gtk = FALSE;
   XIEvent *input_event;
   MetaCursorTracker *cursor_tracker;
+
+  COGL_TRACE_BEGIN_SCOPED (MetaX11DisplayHandleXevent,
+                           "X11Display (handle X11 event)");
 
 #if 0
   meta_spew_event_print (x11_display, event);

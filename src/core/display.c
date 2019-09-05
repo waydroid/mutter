@@ -47,10 +47,12 @@
 #include "backends/meta-logical-monitor.h"
 #include "backends/meta-stage-private.h"
 #include "backends/x11/meta-backend-x11.h"
+#include "backends/x11/meta-event-x11.h"
 #include "backends/x11/cm/meta-backend-x11-cm.h"
 #include "clutter/x11/clutter-x11.h"
 #include "compositor/compositor-private.h"
 #include "compositor/meta-compositor-x11.h"
+#include "cogl/cogl-trace.h"
 #include "core/bell.h"
 #include "core/boxes-private.h"
 #include "core/display-private.h"
@@ -630,7 +632,7 @@ gesture_tracker_state_changed (MetaGestureTracker   *tracker,
 
       XIAllowTouchEvents (meta_backend_x11_get_xdisplay (backend),
                           META_VIRTUAL_CORE_POINTER_ID,
-                          clutter_x11_event_sequence_get_touch_detail (sequence),
+                          meta_x11_event_sequence_get_touch_detail (sequence),
                           DefaultRootWindow (display->x11_display->xdisplay), event_mode);
     }
 }
@@ -1480,6 +1482,8 @@ void
 meta_display_notify_window_created (MetaDisplay  *display,
                                     MetaWindow   *window)
 {
+  COGL_TRACE_BEGIN_SCOPED (MetaDisplayNotifyWindowCreated,
+                           "Display (notify window created)");
   g_signal_emit (display, display_signals[WINDOW_CREATED], 0, window);
 }
 
