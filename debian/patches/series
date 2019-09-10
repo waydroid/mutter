@@ -1,12 +1,8 @@
-Update-Brazilian-Portuguese-translation.patch
-Update-Korean-translation.patch
-wayland-xdg-output-Fix-xdg-output-v3-support.patch
-window-actor-Handle-changing-surface-actor-on-window-repa.patch
-kms-Add-assert-to-check-that-the-main-thread-is-blocked-o.patch
-kms-impl-device-Add-and-remove-connectors-on-hot-plug.patch
-monitor-manager-kms-Get-hotplug-events-from-MetaKms.patch
+build-Compile-with-ffloat-store-on-x86-32-bit.patch
 theme-use-gtk_render_icon_suface-to-paint-button-icon.patch
 theme-load-icons-as-Gtk-does-with-fallback-and-RTL-suppor.patch
 meson-add-back-default_driver-option.patch
+x11-Use-the-currently-focused-X-window-for-_NET_ACTIVE_WI.patch
+x11-Minor-refactor-of-input-focus-handling-code.patch
 debian/synaptics-support.patch
 debian/tests-Tag-closed-transient-no-input-tests-as-flaky.patch

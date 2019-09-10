@@ -1,3 +1,39 @@
+mutter (3.34.0-1) experimental; urgency=medium
+
+  [ Simon McVittie ]
+  * libmutter-5-0: Add Breaks on apparmor (<< 2.13.3-5~).
+    This ensures that #935058 has been fixed, so X11 apps with the X
+    abstraction can read /run/user/1000/.mutter-Xwaylandauth.*
+    (Closes: #939736)
+  * d/tests: Add a superficial build-test for the -dev package.
+    I'm deliberately not testing the included forks of clutter and cogl here
+    since those are an implementation detail of Mutter.
+  * Use default libexecdir.
+    The version of the FHS used in Debian has supported this since
+    Policy 4.1.5.
+  * d/rules: Use a temporary home directory for build-time tests
+  * d/clean: Clean up temporary home directory and XDG_RUNTIME_DIR
+  * Standards-Version: 4.4.0 (no changes required)
+  * Rewrite package descriptions based on the upstream README.
+    This removes the strange breakfast cereal references, and reframes
+    Mutter as primarily a shared library used by GNOME Shell and only
+    secondarily a standalone window manager, matching its real upstream
+    maintenance status.
+
+  [ Iain Lane ]
+  * d/p/x11*: Cherry pick fixes from upstream to fix focus order on X11
+    (LP: #1842971)
+  * New upstream release
+    + Fix xdg-output v3 support
+    + Fix crash when changing decoration state
+    + Add and remove connectors on hot-plug
+  * d/p/*: Drop upstream cherry-picks
+  * d/p/build-Compile-with-ffloat-store-on-x86-32-bit.patch: Take from MR 785.
+    This fixes the testsuite on i386, which is broken because of the use of
+    x87 extended precision introducing rounding errors.
+
+ -- Iain Lane <laney@debian.org>  Tue, 10 Sep 2019 11:46:06 +0100
+
 mutter (3.33.92-1) experimental; urgency=medium
 
   * New upstream release

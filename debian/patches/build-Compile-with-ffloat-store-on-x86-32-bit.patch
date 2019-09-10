@@ -1,0 +1,47 @@
+From: Iain Lane <laney@debian.org>
+Date: Mon, 9 Sep 2019 10:17:22 +0100
+Subject: build: Compile with `-ffloat-store` on x86 (32 bit)
+
+GCC's manpage says that this flag does the following:
+
+  Do not store floating-point variables in registers, and inhibit other
+  options that might change whether a floating-point value is taken from
+  a register or memory.
+
+  This option prevents undesirable excess precision on machines such as
+  the 68000 where the floating registers (of the 68881) keep more
+  precision than a "double" is supposed to have.  Similarly for the x86
+  architecture.  For most programs, the excess precision does only good,
+  but a few programs rely on the precise definition of IEEE floating
+  point.
+
+We rely on this behaviour in our fork of clutter. When performing
+floating point computations on x86, we are getting the wrong results
+because of this architecture's use of the CPU's extended (x87, non-IEEE
+confirming) precision by default. If we enable `-ffloat-store` here,
+then we'll get the same results everywhere by storing into variables
+instead of registers. This does not remove the need to be correct when
+handling floats, but it does mean we don't need to be more correct than
+the IEEE spec requires.
+
+Bug-Upstream: https://gitlab.gnome.org/GNOME/mutter/merge_requests/785
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/merge_requests/785
+Origin: https://gitlab.gnome.org/GNOME/mutter/commit/b47d25ab7ddc8244bb008b17a073720953ac17ea
+---
+ meson.build | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/meson.build b/meson.build
+index ed38b05..ae0bbfc 100644
+--- a/meson.build
++++ b/meson.build
+@@ -286,6 +286,9 @@ foreach function : required_functions
+   endif
+ endforeach
+ 
++if host_machine.cpu_family() == 'x86'
++  add_project_arguments('-ffloat-store', language: 'c')
++endif
+ add_project_arguments('-D_GNU_SOURCE', language: 'c')
+ 
+ buildtype = get_option('buildtype')

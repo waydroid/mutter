@@ -1,5 +1,5 @@
 project('mutter', 'c',
-  version: '3.33.92',
+  version: '3.34.0',
   meson_version: '>= 0.50.0',
   license: 'GPLv2+'
 )
@@ -288,6 +288,9 @@ foreach function : required_functions
   endif
 endforeach
 
+if host_machine.cpu_family() == 'x86'
+  add_project_arguments('-ffloat-store', language: 'c')
+endif
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
 
 buildtype = get_option('buildtype')
