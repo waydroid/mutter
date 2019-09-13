@@ -1,3 +1,10 @@
+mutter (3.34.0-2) experimental; urgency=medium
+
+  * d/p/core-Split-x11-display-initialization-in-2-signals.patch: Cherry-pick.
+    Fixes starting up of gsd-xsettings on Wayland. (LP: #1843107)
+
+ -- Iain Lane <laney@debian.org>  Fri, 13 Sep 2019 11:10:15 +0100
+
 mutter (3.34.0-1) experimental; urgency=medium
 
   [ Simon McVittie ]
