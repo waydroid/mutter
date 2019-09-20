@@ -2,6 +2,9 @@ core-Split-x11-display-initialization-in-2-signals.patch
 x11-Use-the-currently-focused-X-window-for-_NET_ACTIVE_WI.patch
 x11-Minor-refactor-of-input-focus-handling-code.patch
 build-Compile-with-ffloat-store-on-x86-32-bit.patch
+clutter-timeline-Use-a-function-to-cancel-the-delay-timeo.patch
+clutter-timeline-Don-t-emit-paused-signal-on-delayed-time.patch
+clutter-actor-Cancel-delayed-timelines-on-removal.patch
 theme-use-gtk_render_icon_suface-to-paint-button-icon.patch
 theme-load-icons-as-Gtk-does-with-fallback-and-RTL-suppor.patch
 meson-add-back-default_driver-option.patch
