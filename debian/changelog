@@ -1,3 +1,11 @@
+mutter (3.34.0-3) experimental; urgency=medium
+
+  * d/p/clutter-*: Cherry-pick from upstream to fix a crash. During
+    animations, which was particularly bad when using Dash-to-Dock in
+    auto-hide mode. (LP: #1841794)
+
+ -- Iain Lane <laney@debian.org>  Fri, 20 Sep 2019 16:08:03 +0100
+
 mutter (3.34.0-2) experimental; urgency=medium
 
   * d/p/core-Split-x11-display-initialization-in-2-signals.patch: Cherry-pick.
