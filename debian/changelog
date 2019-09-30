@@ -1,3 +1,10 @@
+mutter (3.34.0-4) unstable; urgency=medium
+
+  * Team upload.
+  * Upload to unstable.
+
+ -- Andreas Henriksson <andreas@fatal.se>  Mon, 30 Sep 2019 13:26:44 +0200
+
 mutter (3.34.0-3) experimental; urgency=medium
 
   * d/p/clutter-*: Cherry-pick from upstream to fix a crash. During
