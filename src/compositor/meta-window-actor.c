@@ -29,6 +29,7 @@
 #include "core/frame.h"
 #include "compositor/compositor-private.h"
 #include "compositor/meta-cullable.h"
+#include "compositor/meta-shaped-texture-private.h"
 #include "compositor/meta-surface-actor-x11.h"
 #include "compositor/meta-surface-actor.h"
 #include "compositor/meta-window-actor-private.h"
@@ -2142,6 +2143,19 @@ meta_window_actor_notify_damaged (MetaWindowActor *window_actor)
   g_signal_emit (window_actor, signals[DAMAGED], 0);
 }
 
+/**
+ * meta_window_actor_get_image:
+ * @self: A #MetaWindowActor
+ * @clip: (nullable): A clipping rectangle, to help prevent extra processing.
+ * In the case that the clipping rectangle is partially or fully
+ * outside the bounds of the actor, the rectangle will be clipped.
+ *
+ * Flattens the layers of @self into one ARGB32 image by alpha blending
+ * the images, and returns the flattened image.
+ *
+ * Returns: (nullable) (transfer full): a new cairo surface to be freed with
+ * cairo_surface_destroy().
+ */
 cairo_surface_t *
 meta_window_actor_get_image (MetaWindowActor *self,
                              MetaRectangle   *clip)
@@ -2169,9 +2183,21 @@ meta_window_actor_get_image (MetaWindowActor *self,
   if (clutter_actor_get_n_children (actor) == 1)
     {
       MetaShapedTexture *stex;
+      MetaRectangle surface_clip;
+      int geometry_scale;
+
+      geometry_scale =
+        meta_window_actor_get_geometry_scale (self);
+
+      surface_clip = (MetaRectangle) {
+        .x = clip->x / geometry_scale,
+        .y = clip->y / geometry_scale,
+        .width = clip->width / geometry_scale,
+        .height = clip->height / geometry_scale,
+      };
 
       stex = meta_surface_actor_get_texture (priv->surface);
-      return meta_shaped_texture_get_image (stex, clip);
+      return meta_shaped_texture_get_image (stex, &surface_clip);
     }
 
   clutter_actor_get_size (actor, &width, &height);

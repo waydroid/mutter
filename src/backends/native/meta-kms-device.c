@@ -109,28 +109,34 @@ meta_kms_device_get_primary_plane_for (MetaKmsDevice *device,
 }
 
 void
-meta_kms_device_update_states_in_impl (MetaKmsDevice            *device,
-                                       MetaKmsUpdateStatesFlags  flags)
+meta_kms_device_update_states_in_impl (MetaKmsDevice *device)
+{
+  MetaKmsImplDevice *impl_device = meta_kms_device_get_impl_device (device);
+
+  meta_assert_in_kms_impl (device->kms);
+  meta_assert_is_waiting_for_kms_impl_task (device->kms);
+
+  meta_kms_impl_device_update_states (impl_device);
+
+  g_list_free (device->crtcs);
+  device->crtcs = meta_kms_impl_device_copy_crtcs (impl_device);
+
+  g_list_free (device->connectors);
+  device->connectors = meta_kms_impl_device_copy_connectors (impl_device);
+
+  g_list_free (device->planes);
+  device->planes = meta_kms_impl_device_copy_planes (impl_device);
+}
+
+void
+meta_kms_device_predict_states_in_impl (MetaKmsDevice *device,
+                                        MetaKmsUpdate *update)
 {
   MetaKmsImplDevice *impl_device = meta_kms_device_get_impl_device (device);
 
   meta_assert_in_kms_impl (device->kms);
 
-  meta_kms_impl_device_update_states (impl_device, flags);
-
-  if (flags & META_KMS_UPDATE_STATES_FLAG_HOTPLUG)
-    {
-      meta_assert_is_waiting_for_kms_impl_task (device->kms);
-
-      g_list_free (device->crtcs);
-      device->crtcs = meta_kms_impl_device_copy_crtcs (impl_device);
-
-      g_list_free (device->connectors);
-      device->connectors = meta_kms_impl_device_copy_connectors (impl_device);
-
-      g_list_free (device->planes);
-      device->planes = meta_kms_impl_device_copy_planes (impl_device);
-    }
+  meta_kms_impl_device_predict_states (impl_device, update);
 }
 
 static gboolean
@@ -211,6 +217,7 @@ meta_kms_device_new (MetaKms            *kms,
     return NULL;
 
   device = g_object_new (META_TYPE_KMS_DEVICE, NULL);
+  device->kms = kms;
 
   data = (CreateImplDeviceData) {
     .device = device,
@@ -224,7 +231,6 @@ meta_kms_device_new (MetaKms            *kms,
       return NULL;
     }
 
-  device->kms = kms;
   device->impl_device = data.out_impl_device;
   device->flags = flags;
   device->path = g_strdup (path);
@@ -266,27 +272,31 @@ meta_kms_device_finalize (GObject *object)
   MetaBackend *backend = meta_kms_get_backend (device->kms);
   MetaBackendNative *backend_native = META_BACKEND_NATIVE (backend);
   MetaLauncher *launcher = meta_backend_native_get_launcher (backend_native);
-  FreeImplDeviceData data;
-  GError *error = NULL;
 
+  g_free (device->path);
   g_list_free (device->crtcs);
   g_list_free (device->connectors);
   g_list_free (device->planes);
 
-  data = (FreeImplDeviceData) {
-    .impl_device = device->impl_device,
-  };
-  if (!meta_kms_run_impl_task_sync (device->kms, free_impl_device_in_impl, &data,
-                                   &error))
+  if (device->impl_device)
     {
-      g_warning ("Failed to close KMS impl device: %s", error->message);
-      g_error_free (error);
-    }
-  else
-    {
-      meta_launcher_close_restricted (launcher, data.out_fd);
-    }
+      FreeImplDeviceData data;
+      GError *error = NULL;
 
+      data = (FreeImplDeviceData) {
+        .impl_device = device->impl_device,
+      };
+      if (!meta_kms_run_impl_task_sync (device->kms, free_impl_device_in_impl, &data,
+                                       &error))
+        {
+          g_warning ("Failed to close KMS impl device: %s", error->message);
+          g_error_free (error);
+        }
+      else
+        {
+          meta_launcher_close_restricted (launcher, data.out_fd);
+        }
+    }
   G_OBJECT_CLASS (meta_kms_device_parent_class)->finalize (object);
 }
 

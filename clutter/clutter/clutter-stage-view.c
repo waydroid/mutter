@@ -143,6 +143,21 @@ clutter_stage_view_blit_offscreen (ClutterStageView            *view,
     clutter_stage_view_get_instance_private (view);
   CoglMatrix matrix;
 
+  clutter_stage_view_get_offscreen_transformation_matrix (view, &matrix);
+  if (cogl_matrix_is_identity (&matrix))
+    {
+      int fb_width = cogl_framebuffer_get_width (priv->framebuffer);
+      int fb_height = cogl_framebuffer_get_height (priv->framebuffer);
+
+      if (cogl_blit_framebuffer (priv->offscreen,
+                                 priv->framebuffer,
+                                 0, 0,
+                                 0, 0,
+                                 fb_width, fb_height,
+                                 NULL))
+        return;
+    }
+
   clutter_stage_view_ensure_offscreen_blit_pipeline (view);
   cogl_framebuffer_push_matrix (priv->framebuffer);
 
