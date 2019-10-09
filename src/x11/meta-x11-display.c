@@ -1320,7 +1320,7 @@ meta_x11_display_new (MetaDisplay *display, GError **error)
                                        &list, &n_items))
         {
           num = list[0];
-          meta_XFree (list);
+          g_free (list);
         }
 
         if (num > meta_workspace_manager_get_n_workspaces (display->workspace_manager))
@@ -1825,14 +1825,17 @@ meta_x11_display_increment_event_serial (MetaX11Display *x11_display)
                    x11_display->atom__MOTIF_WM_HINTS);
 }
 
-void
+static void
 meta_x11_display_update_active_window_hint (MetaX11Display *x11_display)
 {
-  MetaWindow *focus_window = x11_display->display->focus_window;
+  MetaWindow *focus_window;
   gulong data[1];
 
   if (x11_display->display->closing)
     return; /* Leave old value for a replacement */
+
+  focus_window = meta_x11_display_lookup_x_window (x11_display,
+                                                   x11_display->focus_xwindow);
 
   if (focus_window)
     data[0] = focus_window->xwindow;
@@ -1864,10 +1867,10 @@ meta_x11_display_update_focus_window (MetaX11Display *x11_display,
   meta_x11_display_update_active_window_hint (x11_display);
 }
 
-void
-meta_x11_display_set_input_focus (MetaX11Display *x11_display,
-                                  Window          xwindow,
-                                  guint32         timestamp)
+static void
+meta_x11_display_set_input_focus_internal (MetaX11Display *x11_display,
+                                           Window          xwindow,
+                                           uint32_t        timestamp)
 {
   meta_x11_error_trap_push (x11_display);
 
@@ -1898,6 +1901,27 @@ meta_x11_display_set_input_focus (MetaX11Display *x11_display,
 }
 
 void
+meta_x11_display_set_input_focus (MetaX11Display *x11_display,
+                                  MetaWindow     *window,
+                                  gboolean        focus_frame,
+                                  uint32_t        timestamp)
+{
+  Window xwindow;
+  gulong serial;
+
+  if (window)
+    xwindow = focus_frame ? window->frame->xwindow : window->xwindow;
+  else
+    xwindow = x11_display->no_focus_window;
+
+  meta_x11_error_trap_push (x11_display);
+  meta_x11_display_set_input_focus_internal (x11_display, xwindow, timestamp);
+  serial = XNextRequest (x11_display->xdisplay);
+  meta_x11_display_update_focus_window (x11_display, xwindow, serial, TRUE);
+  meta_x11_error_trap_pop (x11_display);
+}
+
+void
 meta_x11_display_set_input_focus_xwindow (MetaX11Display *x11_display,
                                           Window          window,
                                           guint32         timestamp)
@@ -1906,7 +1930,7 @@ meta_x11_display_set_input_focus_xwindow (MetaX11Display *x11_display,
 
   meta_display_unset_input_focus (x11_display->display, timestamp);
   serial = XNextRequest (x11_display->xdisplay);
-  meta_x11_display_set_input_focus (x11_display, window, timestamp);
+  meta_x11_display_set_input_focus_internal (x11_display, window, timestamp);
   meta_x11_display_update_focus_window (x11_display, window, serial, TRUE);
 }
 
@@ -2162,7 +2186,7 @@ meta_x11_display_update_workspace_layout (MetaX11Display *x11_display)
                         "(3 is accepted for backwards compat)\n", n_items);
         }
 
-      meta_XFree (list);
+      g_free (list);
 
       meta_workspace_manager_update_workspace_layout (workspace_manager,
                                                       starting_corner,

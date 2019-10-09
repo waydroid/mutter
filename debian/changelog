@@ -1,3 +1,31 @@
+mutter (3.34.1-1) unstable; urgency=medium
+
+  * New upstream release
+    + Fix focusing of Java applications (LP: #1847184)
+    + Fix freeze of pointer event delivery on X11
+    + Fix initial view perspective
+    + Fix memory leak when using implicit animations
+    + Fix _NET_ACTIVE_WINDOW emission
+    + Fix numlock state for native backend (LP: #1845031)
+    + Fix scaling of DND surface actors
+    + Fix scaling of stylus input coordinates with HiDPI
+    + Fix screenshots and window animations when scaled
+    + Fix startup of X11 session services on wayland
+    + kms: Predict state changes when processing update (LP: #1847044)
+    + Optimize blitting of untransformed offscreen stage views
+    + Re-enable coredumps when capabilities are set
+  * Drop several upstream backports which are now applied
+    - d/p/build-Compile-with-ffloat-store-on-x86-32-bit.patch
+    - d/p/clutter-actor-Cancel-delayed-timelines-on-removal.patch
+    - d/p/clutter-timeline-Don-t-emit-paused-signal-on-delayed-time.patch
+    - d/p/clutter-timeline-Use-a-function-to-cancel-the-delay-timeo.patch
+    - d/p/core-Split-x11-display-initialization-in-2-signals.patch
+    - d/p/x11-Minor-refactor-of-input-focus-handling-code.patch
+    - d/p/x11-Use-the-currently-focused-X-window-for-_NET_ACTIVE_WI.patch
+  * rules: Skip tests when DEB_BUILD_OPTIONS=nocheck is set
+
+ -- Iain Lane <laney@debian.org>  Wed, 09 Oct 2019 11:17:08 +0100
+
 mutter (3.34.0-4) unstable; urgency=medium
 
   * Team upload.

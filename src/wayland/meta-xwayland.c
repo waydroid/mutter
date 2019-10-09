@@ -907,6 +907,12 @@ xwayland_surface_get_toplevel (MetaWaylandSurfaceRole *surface_role)
   return meta_wayland_surface_role_get_surface (surface_role);
 }
 
+static double
+xwayland_surface_get_geometry_scale (MetaWaylandActorSurface *actor_surface)
+{
+  return 1;
+}
+
 static void
 xwayland_surface_sync_actor_state (MetaWaylandActorSurface *actor_surface)
 {
@@ -922,6 +928,27 @@ xwayland_surface_sync_actor_state (MetaWaylandActorSurface *actor_surface)
 }
 
 static void
+xwayland_surface_finalize (GObject *object)
+{
+  MetaWaylandSurfaceRole *surface_role =
+    META_WAYLAND_SURFACE_ROLE (object);
+  MetaWaylandSurface *surface =
+    meta_wayland_surface_role_get_surface (surface_role);
+  GObjectClass *parent_object_class =
+    G_OBJECT_CLASS (meta_wayland_surface_role_xwayland_parent_class);
+  MetaWindow *window;
+
+  window = surface->window;
+  if (window)
+    {
+      meta_wayland_surface_set_window (surface, NULL);
+      window->surface = NULL;
+    }
+
+  parent_object_class->finalize (object);
+}
+
+static void
 meta_wayland_surface_role_xwayland_init (MetaWaylandSurfaceRoleXWayland *role)
 {
 }
@@ -929,15 +956,19 @@ meta_wayland_surface_role_xwayland_init (MetaWaylandSurfaceRoleXWayland *role)
 static void
 meta_wayland_surface_role_xwayland_class_init (MetaWaylandSurfaceRoleXWaylandClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   MetaWaylandSurfaceRoleClass *surface_role_class =
     META_WAYLAND_SURFACE_ROLE_CLASS (klass);
   MetaWaylandActorSurfaceClass *actor_surface_class =
     META_WAYLAND_ACTOR_SURFACE_CLASS (klass);
 
+  object_class->finalize = xwayland_surface_finalize;
+
   surface_role_class->assigned = xwayland_surface_assigned;
   surface_role_class->commit = xwayland_surface_commit;
   surface_role_class->get_toplevel = xwayland_surface_get_toplevel;
 
+  actor_surface_class->get_geometry_scale = xwayland_surface_get_geometry_scale;
   actor_surface_class->sync_actor_state = xwayland_surface_sync_actor_state;
 
   xwayland_surface_signals[XWAYLAND_SURFACE_WINDOW_ASSOCIATED] =

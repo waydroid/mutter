@@ -126,6 +126,7 @@ G_DEFINE_TYPE(MetaDisplay, meta_display, G_TYPE_OBJECT);
 enum
 {
   CURSOR_UPDATED,
+  X11_DISPLAY_SETUP,
   X11_DISPLAY_OPENED,
   X11_DISPLAY_CLOSING,
   OVERLAY_KEY,
@@ -226,6 +227,14 @@ meta_display_class_init (MetaDisplayClass *klass)
 
   display_signals[CURSOR_UPDATED] =
     g_signal_new ("cursor-updated",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL, NULL,
+                  G_TYPE_NONE, 0);
+
+  display_signals[X11_DISPLAY_SETUP] =
+    g_signal_new ("x11-display-setup",
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST,
                   0,
@@ -657,12 +666,13 @@ meta_display_init_x11 (MetaDisplay  *display,
     return FALSE;
 
   display->x11_display = x11_display;
-  g_signal_emit (display, display_signals[X11_DISPLAY_OPENED], 0);
+  g_signal_emit (display, display_signals[X11_DISPLAY_SETUP], 0);
 
   meta_x11_display_create_guard_window (x11_display);
 
   if (!display->display_opening)
     {
+      g_signal_emit (display, display_signals[X11_DISPLAY_OPENED], 0);
       meta_display_manage_all_xwindows (display);
       meta_compositor_redirect_x11_windows (display->compositor);
     }
@@ -803,6 +813,7 @@ meta_display_open (void)
 
   if (display->x11_display)
     {
+      g_signal_emit (display, display_signals[X11_DISPLAY_OPENED], 0);
       meta_x11_display_restore_active_workspace (display->x11_display);
       meta_x11_display_create_guard_window (display->x11_display);
     }
@@ -1361,23 +1372,8 @@ meta_display_set_input_focus (MetaDisplay *display,
 
   if (display->x11_display)
     {
-      MetaX11Display *x11_display = display->x11_display;
-      Window xwindow;
-      gulong serial;
-
-      meta_x11_error_trap_push (x11_display);
-
-      if (window)
-        xwindow = focus_frame ? window->frame->xwindow : window->xwindow;
-      else
-        xwindow = x11_display->no_focus_window;
-
-      meta_x11_display_set_input_focus (x11_display, xwindow, timestamp);
-      serial = XNextRequest (x11_display->xdisplay);
-
-      meta_x11_display_update_focus_window (x11_display, xwindow, serial, TRUE);
-
-      meta_x11_error_trap_pop (display->x11_display);
+      meta_x11_display_set_input_focus (display->x11_display, window,
+                                        focus_frame, timestamp);
     }
 
   meta_display_update_focus_window (display, window);
