@@ -61,7 +61,7 @@ TEST_COMMAND_BASE=env \
 	XDG_RUNTIME_DIR=$(BUILDDIR)/XRD \
 	GSETTINGS_SCHEMA_DIR=$(BUILDDIR)/data \
 	dbus-run-session -- xvfb-run -s '+iglx -noreset' -a \
-	meson test -C $(BUILDDIR) --no-rebuild --verbose --timeout-multiplier 4 \
+	meson test -C $(BUILDDIR) --no-rebuild --verbose --timeout-multiplier 6 \
 	           --no-stdsplit --print-errorlogs
 TEST_COMMAND=$(TEST_COMMAND_BASE) --no-suite flaky
 TEST_COMMAND_FLAKY=$(TEST_COMMAND_BASE) --suite flaky
