@@ -1,3 +1,16 @@
+mutter (3.34.1+git20191022-1) unstable; urgency=medium
+
+  * New upstream snapshot release
+    + Fix night mode in wayland session (LP: #1847551)
+    + Don't emit key-focus-out events on destroyed actors (LP: #1848119)
+    + Fix an headers syntax error (LP: #1841709)
+    + backends: Update inhibited state for the monitor and respect that state
+    + clutter-backend-x11: Don't push keymap events to clutter
+    + Fix drag and drop for applications in wayland
+    + Avoid X11 roundtrips on underscanning checks
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Wed, 23 Oct 2019 10:53:23 +0100
+
 mutter (3.34.1-3) unstable; urgency=medium
 
   * Bump meson test timeout multiplier from 4 to 6 for armel
