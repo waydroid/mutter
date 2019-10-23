@@ -82,6 +82,15 @@ meta_selection_source_x11_read_async (MetaSelectionSource *source,
   task = g_task_new (source, cancellable, callback, user_data);
   g_task_set_source_tag (task, meta_selection_source_x11_read_async);
 
+  if (strcmp (mimetype, "text/plain") == 0 &&
+      g_list_find_custom (source_x11->mimetypes, "STRING",
+                          (GCompareFunc) g_strcmp0))
+    mimetype = "STRING";
+  else if (strcmp (mimetype, "text/plain;charset=utf-8") == 0 &&
+           g_list_find_custom (source_x11->mimetypes, "UTF8_STRING",
+                               (GCompareFunc) g_strcmp0))
+    mimetype = "UTF8_STRING";
+
   meta_x11_selection_input_stream_new_async (source_x11->x11_display,
                                              source_x11->x11_display->selection.xwindow,
                                              gdk_x11_get_xatom_name (source_x11->xselection),
@@ -139,6 +148,8 @@ atoms_to_mimetypes (MetaX11Display *display,
   const Atom *atoms;
   gsize size;
   guint i, n_atoms;
+  gboolean utf8_string_found = FALSE, utf8_text_plain_found = FALSE;
+  gboolean string_found = FALSE, text_plain_found = FALSE;
 
   atoms = g_bytes_get_data (bytes, &size);
   n_atoms = size / sizeof (Atom);
@@ -149,7 +160,18 @@ atoms_to_mimetypes (MetaX11Display *display,
 
       mimetype = gdk_x11_get_xatom_name (atoms[i]);
       mimetypes = g_list_prepend (mimetypes, g_strdup (mimetype));
+
+      utf8_text_plain_found |= strcmp (mimetype, "text/plain;charset=utf-8") == 0;
+      text_plain_found |= strcmp (mimetype, "text/plain") == 0;
+      utf8_string_found |= strcmp (mimetype, "UTF8_STRING") == 0;
+      string_found |= strcmp (mimetype, "STRING") == 0;
     }
+
+  /* Ensure non-x11 clients get well-known mimetypes */
+  if (string_found && !text_plain_found)
+    mimetypes = g_list_prepend (mimetypes, g_strdup ("text/plain"));
+  if (utf8_string_found && !utf8_text_plain_found)
+    mimetypes = g_list_prepend (mimetypes, g_strdup ("text/plain;charset=utf-8"));
 
   return mimetypes;
 }
