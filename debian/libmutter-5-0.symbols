@@ -640,6 +640,7 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_window_showing_on_its_workspace@Base 3.28.2
  meta_window_shutdown_group@Base 3.28.2
  meta_window_stick@Base 3.28.2
+ meta_window_tile@Base 3.34.1+git20191107
  meta_window_titlebar_is_onscreen@Base 3.28.2
  meta_window_type_get_type@Base 3.28.2
  meta_window_unmake_above@Base 3.28.2
