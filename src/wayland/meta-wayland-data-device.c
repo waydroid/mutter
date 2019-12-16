@@ -571,12 +571,7 @@ destroy_data_offer (struct wl_resource *resource)
               WL_DATA_OFFER_ACTION_SINCE_VERSION)
             meta_wayland_data_source_notify_finish (offer->source);
           else
-            {
-              if (seat->data_device.dnd_data_source == offer->source)
-                unset_selection_source (&seat->data_device, META_SELECTION_DND);
-              meta_wayland_data_source_cancel (offer->source);
-              meta_wayland_data_source_set_current_offer (offer->source, NULL);
-            }
+            meta_wayland_data_source_set_current_offer (offer->source, NULL);
         }
 
       g_object_remove_weak_pointer (G_OBJECT (offer->source),
@@ -1036,6 +1031,7 @@ drag_grab_button (MetaWaylandPointerGrab *grab,
       gboolean success;
 
       if (drag_grab->drag_focus && source &&
+          meta_wayland_data_source_get_current_offer (source) &&
           meta_wayland_data_source_has_target (source) &&
           meta_wayland_data_source_get_current_action (source))
         {
@@ -1059,7 +1055,6 @@ drag_grab_button (MetaWaylandPointerGrab *grab,
         }
       else
         {
-          meta_wayland_data_source_cancel (source);
           meta_wayland_data_source_set_current_offer (source, NULL);
           meta_wayland_data_device_set_dnd_source (&seat->data_device, NULL);
           unset_selection_source (&seat->data_device, META_SELECTION_DND);
@@ -1134,8 +1129,6 @@ drag_grab_data_source_destroyed (gpointer data, GObject *where_the_object_was)
   MetaWaylandDragGrab *drag_grab = data;
 
   drag_grab->drag_data_source = NULL;
-  meta_wayland_data_device_set_dnd_source (&drag_grab->seat->data_device, NULL);
-  unset_selection_source (&drag_grab->seat->data_device, META_SELECTION_DND);
   data_device_end_drag_grab (drag_grab);
 }
 
@@ -1318,7 +1311,6 @@ selection_data_source_destroyed (gpointer data, GObject *object_was_here)
         wl_data_device_send_selection (data_device_resource, NULL);
     }
 
-  wl_signal_emit (&data_device->selection_ownership_signal, NULL);
   unset_selection_source (data_device, META_SELECTION_CLIPBOARD);
 }
 
@@ -1598,6 +1590,16 @@ meta_wayland_data_device_get_drag_dest_funcs (void)
   return &meta_wayland_drag_dest_funcs;
 }
 
+static void
+dnd_data_source_destroyed (gpointer  data,
+                           GObject  *object_was_here)
+{
+  MetaWaylandDataDevice *data_device = data;
+
+  data_device->dnd_data_source = NULL;
+  unset_selection_source (data_device, META_SELECTION_DND);
+}
+
 void
 meta_wayland_data_device_set_dnd_source (MetaWaylandDataDevice *data_device,
                                          MetaWaylandDataSource *source)
@@ -1606,16 +1608,20 @@ meta_wayland_data_device_set_dnd_source (MetaWaylandDataDevice *data_device,
     return;
 
   if (data_device->dnd_data_source)
-    g_object_remove_weak_pointer (G_OBJECT (data_device->dnd_data_source),
-                                  (gpointer *)&data_device->dnd_data_source);
+    {
+      g_object_weak_unref (G_OBJECT (data_device->dnd_data_source),
+                           dnd_data_source_destroyed,
+                           data_device);
+    }
 
   data_device->dnd_data_source = source;
 
   if (source)
-    g_object_add_weak_pointer (G_OBJECT (data_device->dnd_data_source),
-                               (gpointer *)&data_device->dnd_data_source);
-
-  wl_signal_emit (&data_device->dnd_ownership_signal, source);
+    {
+      g_object_weak_ref (G_OBJECT (source),
+                         dnd_data_source_destroyed,
+                         data_device);
+    }
 }
 
 void
@@ -1673,8 +1679,6 @@ meta_wayland_data_device_set_selection (MetaWaylandDataDevice *data_device,
           wl_data_device_send_selection (data_device_resource, offer);
         }
     }
-
-  wl_signal_emit (&data_device->selection_ownership_signal, source);
 }
 
 static void
@@ -1735,7 +1739,6 @@ primary_source_destroyed (gpointer  data,
         gtk_primary_selection_device_send_selection (data_device_resource, NULL);
     }
 
-  wl_signal_emit (&data_device->primary_ownership_signal, NULL);
   unset_selection_source (data_device, META_SELECTION_PRIMARY);
 }
 
@@ -1804,8 +1807,6 @@ meta_wayland_data_device_set_primary (MetaWaylandDataDevice *data_device,
           gtk_primary_selection_device_send_selection (data_device_resource, offer);
         }
     }
-
-  wl_signal_emit (&data_device->primary_ownership_signal, source);
 }
 
 static void
@@ -2022,9 +2023,6 @@ meta_wayland_data_device_init (MetaWaylandDataDevice *data_device)
 {
   wl_list_init (&data_device->resource_list);
   wl_list_init (&data_device->primary_resource_list);
-  wl_signal_init (&data_device->selection_ownership_signal);
-  wl_signal_init (&data_device->primary_ownership_signal);
-  wl_signal_init (&data_device->dnd_ownership_signal);
 }
 
 static struct wl_resource *
