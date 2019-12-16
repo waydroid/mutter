@@ -1306,6 +1306,7 @@ _meta_window_shared_new (MetaDisplay         *display,
                       "Putting window %s on same workspace as parent %s\n",
                       window->desc, window->transient_for->desc);
 
+          g_warn_if_fail (!window->transient_for->override_redirect);
           set_workspace_state (window,
                                should_be_on_all_workspaces (window->transient_for),
                                window->transient_for->workspace);
@@ -4825,9 +4826,12 @@ set_workspace_state (MetaWindow    *window,
 {
   MetaWorkspaceManager *workspace_manager = window->display->workspace_manager;
 
-  /* If we're on all workspaces, then our new workspace must be NULL. */
+  /* If we're on all workspaces, then our new workspace must be NULL,
+   * otherwise it must be set, unless we're unmanaging. */
   if (on_all_workspaces)
-    g_assert (workspace == NULL);
+    g_assert_null (workspace);
+  else
+    g_assert_true (window->unmanaging || workspace != NULL);
 
   /* If this is an override-redirect window, ensure that the only
    * times we're setting the workspace state is either during construction

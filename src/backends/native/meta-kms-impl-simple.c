@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018-2019 Red Hat
+ * Copyright (C) 2019 DisplayLink (UK) Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -518,7 +519,7 @@ mode_set_fallback_feedback_idle (gpointer user_data)
   g_clear_pointer (&impl_simple->mode_set_fallback_feedback_source,
                    g_source_unref);
 
-  if (!impl_simple->pending_page_flip_retries)
+  if (impl_simple->pending_page_flip_retries)
     {
       impl_simple->postponed_mode_set_fallback_datas =
         g_steal_pointer (&impl_simple->mode_set_fallback_page_flip_datas);
@@ -772,12 +773,14 @@ meta_kms_impl_simple_handle_page_flip_callback (MetaKmsImpl         *impl,
     {
       impl_simple->postponed_page_flip_datas =
         g_list_append (impl_simple->postponed_page_flip_datas,
-                       page_flip_data);
+                       meta_kms_page_flip_data_ref (page_flip_data));
     }
   else
     {
       meta_kms_page_flip_data_flipped_in_impl (page_flip_data);
     }
+
+  meta_kms_page_flip_data_unref (page_flip_data);
 }
 
 static void
@@ -802,6 +805,15 @@ meta_kms_impl_simple_discard_pending_page_flips (MetaKmsImpl *impl)
 
   g_clear_pointer (&impl_simple->retry_page_flips_source,
                    g_source_destroy);
+}
+
+static void
+meta_kms_impl_simple_dispatch_idle (MetaKmsImpl *impl)
+{
+  MetaKmsImplSimple *impl_simple = META_KMS_IMPL_SIMPLE (impl);
+
+  if (impl_simple->mode_set_fallback_feedback_source)
+    mode_set_fallback_feedback_idle (impl_simple);
 }
 
 static void
@@ -843,4 +855,5 @@ meta_kms_impl_simple_class_init (MetaKmsImplSimpleClass *klass)
   impl_class->process_update = meta_kms_impl_simple_process_update;
   impl_class->handle_page_flip_callback = meta_kms_impl_simple_handle_page_flip_callback;
   impl_class->discard_pending_page_flips = meta_kms_impl_simple_discard_pending_page_flips;
+  impl_class->dispatch_idle = meta_kms_impl_simple_dispatch_idle;
 }

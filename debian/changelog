@@ -1,3 +1,17 @@
+mutter (3.34.2-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - d/libmutter-5-0.symbols: Update
+    - d/copyright: Update
+  * d/gbp.conf: Use upstream/3.34.x branch
+  * Remove obsolete Lintian override
+  * Standards-Version: 4.4.1 (no changes required)
+  * d/tests: Use correct compiler for proposed autopkgtest
+    cross-architecture testing support
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 16 Dec 2019 16:55:47 +0000
+
 mutter (3.34.1+git20191107-1) unstable; urgency=high
 
   * New upstream snapshot

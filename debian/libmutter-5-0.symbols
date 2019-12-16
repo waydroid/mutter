@@ -83,10 +83,12 @@ libmutter-5.so.0 libmutter-5-0 #MINVER#
  meta_cursor_get_type@Base 3.28.2
  meta_cursor_tracker_get_for_display@Base 3.29.4
  meta_cursor_tracker_get_hot@Base 3.28.2
+ meta_cursor_tracker_get_keep_focus_while_hidden@Base 3.34.2
  meta_cursor_tracker_get_pointer@Base 3.28.2
  meta_cursor_tracker_get_pointer_visible@Base 3.33.4
  meta_cursor_tracker_get_sprite@Base 3.28.2
  meta_cursor_tracker_get_type@Base 3.28.2
+ meta_cursor_tracker_set_keep_focus_while_hidden@Base 3.34.2
  meta_cursor_tracker_set_pointer_visible@Base 3.28.2
  meta_debug_spew_real@Base 3.28.2
  meta_debug_topic_get_type@Base 3.28.2
