@@ -1,3 +1,11 @@
+mutter (3.34.2-2) unstable; urgency=medium
+
+  * d/p/EGL-Include-EGL-eglmesaext.h.patch: Cherry pick from master. This
+    fixes the generated EGL includes for the move of exlext.h from mesa to
+    libglvnd, which has just happened in Debian.
+
+ -- Iain Lane <laney@debian.org>  Sun, 22 Dec 2019 15:42:09 +0000
+
 mutter (3.34.2-1) unstable; urgency=medium
 
   * Team upload
