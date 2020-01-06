@@ -1,3 +1,11 @@
+mutter (3.34.3-1) unstable; urgency=medium
+
+  * New upstream release
+    + Fix window recording on HiDPI
+    + Fix top-left pixel being insensitive to clicks (LP: #1849135)
+
+ -- Iain Lane <laney@debian.org>  Mon, 06 Jan 2020 13:39:48 +0000
+
 mutter (3.34.2-2) unstable; urgency=medium
 
   * d/p/EGL-Include-EGL-eglmesaext.h.patch: Cherry pick from master. This
