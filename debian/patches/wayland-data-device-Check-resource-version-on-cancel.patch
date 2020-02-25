@@ -1,0 +1,44 @@
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Thu, 20 Feb 2020 19:02:40 +0100
+Subject: wayland/data-device: Check resource version on cancel
+
+For clarity, check the resource version needs the "cancelled" message in
+the actual vmethod rather than from the caller function.
+
+(cherry picked from commit 963108a9a6a0a3a811945da5354eafe0b86ffde2)
+
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/merge_requests/1073
+Origin: upstream, 3.34.5, commit:c65db40178e0a729ef993972915d97ffc961f613
+---
+ src/wayland/meta-wayland-data-device.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/src/wayland/meta-wayland-data-device.c b/src/wayland/meta-wayland-data-device.c
+index f12face..144751f 100644
+--- a/src/wayland/meta-wayland-data-device.c
++++ b/src/wayland/meta-wayland-data-device.c
+@@ -608,11 +608,7 @@ destroy_data_offer (struct wl_resource *resource)
+               if (wl_resource_get_version (offer->resource) <
+                   WL_DATA_OFFER_ACTION_SINCE_VERSION)
+                 meta_wayland_data_source_notify_finish (offer->source);
+-              else if (meta_wayland_data_source_get_drop_performed (offer->source) &&
+-                       meta_wayland_data_source_get_resource(offer->source) &&
+-                       wl_resource_get_version(
+-                       meta_wayland_data_source_get_resource(offer->source)) >=
+-                       WL_DATA_SOURCE_DND_FINISHED_SINCE_VERSION)
++              else if (meta_wayland_data_source_get_drop_performed (offer->source))
+                 meta_wayland_source_cancel (offer->source);
+             }
+           else
+@@ -1388,7 +1384,10 @@ meta_wayland_source_cancel (MetaWaylandDataSource *source)
+   MetaWaylandDataSourcePrivate *priv =
+     meta_wayland_data_source_get_instance_private (source);
+ 
+-  if (priv->resource)
++  if (!priv->resource)
++    return;
++
++  if (wl_resource_get_version(priv->resource) >= WL_DATA_SOURCE_DND_FINISHED_SINCE_VERSION)
+     wl_data_source_send_cancelled (priv->resource);
+ }
+ 

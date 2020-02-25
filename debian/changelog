@@ -1,3 +1,13 @@
+mutter (3.34.4-1) unstable; urgency=medium
+
+  * Team upload
+  * d/gbp.conf: Follow debian/unstable branch
+  * New upstream release
+  * d/patches: Apply post-release fixes up to 3.34.4-5-g2709a4ffb
+  * Standards-Version: 4.5.0 (no changes required)
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 25 Feb 2020 16:26:10 +0000
+
 mutter (3.34.3-1) unstable; urgency=medium
 
   * New upstream release

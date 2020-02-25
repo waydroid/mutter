@@ -247,7 +247,8 @@ process_mode_set (MetaKmsImpl     *impl,
   if (ret != 0)
     {
       g_set_error (error, G_IO_ERROR, g_io_error_from_errno (-ret),
-                   "Failed to set mode on CRTC %u: %s",
+                   "Failed to set mode %s on CRTC %u: %s",
+                   mode_set->drm_mode ? mode_set->drm_mode->name : "off",
                    meta_kms_crtc_get_id (crtc),
                    g_strerror (-ret));
       return FALSE;
@@ -321,6 +322,13 @@ retry_page_flip_data_free (RetryPageFlipData *retry_page_flip_data)
 {
   g_assert (!retry_page_flip_data->page_flip_data);
   g_free (retry_page_flip_data);
+}
+
+static CachedModeSet *
+get_cached_mode_set (MetaKmsImplSimple *impl_simple,
+                     MetaKmsCrtc       *crtc)
+{
+  return g_hash_table_lookup (impl_simple->cached_mode_sets, crtc);
 }
 
 static float
@@ -644,14 +652,30 @@ process_page_flip (MetaKmsImpl      *impl,
 
   if (ret == -EBUSY)
     {
-      float refresh_rate;
+      CachedModeSet *cached_mode_set;
 
-      refresh_rate = get_cached_crtc_refresh_rate (impl_simple, crtc);
-      schedule_retry_page_flip (impl_simple,
-                                crtc,
-                                plane_assignment->fb_id,
-                                refresh_rate,
-                                page_flip_data);
+      cached_mode_set = get_cached_mode_set (impl_simple, crtc);
+      if (cached_mode_set)
+        {
+          drmModeModeInfo *drm_mode;
+          float refresh_rate;
+
+          drm_mode = cached_mode_set->drm_mode;
+          refresh_rate = meta_calculate_drm_mode_refresh_rate (drm_mode);
+          schedule_retry_page_flip (impl_simple,
+                                    crtc,
+                                    plane_assignment->fb_id,
+                                    refresh_rate,
+                                    page_flip_data);
+        }
+      else
+        {
+          g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                       "Page flip of %u failed, and no mode set available",
+                       meta_kms_crtc_get_id (crtc));
+          meta_kms_page_flip_data_unref (page_flip_data);
+          return FALSE;
+        }
     }
   else if (ret == -EINVAL)
     {
