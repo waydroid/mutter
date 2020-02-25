@@ -1,0 +1,63 @@
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Thu, 20 Feb 2020 10:25:46 +0100
+Subject: wayland/data-device: Fix crash with offer from X11 client
+
+If a data offer comes from an X11 client, the Wayland resource would be
+NULL, causing a crash in `data_offer_choose_action()` trying to get the
+resource version.
+
+So instead of doing the version check in `data_offer_choose_action()`,
+do it early when creating the data source.
+
+(cherry picked from commit f9326cfa3d5f0fd9f63f561d6dfbb92a8f6fb34a)
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/issues/1057
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/merge_requests/1073
+Origin: upstream, 3.34.5, commit:2709a4ffb19878cdaf5d001a7be5e717c17bf607
+---
+ src/wayland/meta-wayland-data-device.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/src/wayland/meta-wayland-data-device.c b/src/wayland/meta-wayland-data-device.c
+index 144751f..b289bc9 100644
+--- a/src/wayland/meta-wayland-data-device.c
++++ b/src/wayland/meta-wayland-data-device.c
+@@ -143,16 +143,8 @@ data_offer_choose_action (MetaWaylandDataOffer *offer)
+       WL_DATA_OFFER_ACTION_SINCE_VERSION)
+     return WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY;
+ 
+-  if (wl_resource_get_version (meta_wayland_data_source_get_resource (source)) <
+-      WL_DATA_SOURCE_ACTION_SINCE_VERSION)
+-    {
+-      actions = user_action = WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY;
+-    }
+-  else
+-    {
+-      actions = meta_wayland_data_source_get_actions (source);
+-      user_action = meta_wayland_data_source_get_user_action (source);
+-    }
++  actions = meta_wayland_data_source_get_actions (source);
++  user_action = meta_wayland_data_source_get_user_action (source);
+ 
+   available_actions = actions & offer->dnd_actions;
+ 
+@@ -2187,11 +2179,19 @@ meta_wayland_data_source_new (struct wl_resource *resource)
+ {
+   MetaWaylandDataSource *source =
+    g_object_new (META_TYPE_WAYLAND_DATA_SOURCE, NULL);
++  MetaWaylandDataSourcePrivate *priv =
++    meta_wayland_data_source_get_instance_private (source);
+ 
+   meta_wayland_data_source_set_resource (source, resource);
+   wl_resource_set_implementation (resource, &data_source_interface,
+                                   source, destroy_data_source);
+ 
++  if (wl_resource_get_version (resource) < WL_DATA_SOURCE_ACTION_SINCE_VERSION)
++    {
++      priv->dnd_actions = priv->user_dnd_action =
++        WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY;
++    }
++
+   return source;
+ }
+ 

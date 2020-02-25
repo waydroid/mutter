@@ -243,6 +243,8 @@ meta_shaped_texture_dispose (GObject *object)
   meta_shaped_texture_set_mask_texture (stex, NULL);
   meta_shaped_texture_reset_pipelines (stex);
 
+  g_clear_pointer (&stex->opaque_region, cairo_region_destroy);
+
   g_clear_pointer (&stex->snippet, cogl_object_unref);
 
   G_OBJECT_CLASS (meta_shaped_texture_parent_class)->dispose (object);
@@ -458,16 +460,11 @@ set_cogl_texture (MetaShapedTexture *stex,
 {
   int width, height;
 
-  g_return_if_fail (META_IS_SHAPED_TEXTURE (stex));
-
-  if (stex->texture)
-    cogl_object_unref (stex->texture);
-
-  stex->texture = cogl_tex;
+  cogl_clear_object (&stex->texture);
 
   if (cogl_tex != NULL)
     {
-      cogl_object_ref (cogl_tex);
+      stex->texture = cogl_object_ref (cogl_tex);
       width = cogl_texture_get_width (COGL_TEXTURE (cogl_tex));
       height = cogl_texture_get_height (COGL_TEXTURE (cogl_tex));
     }
@@ -936,6 +933,9 @@ meta_shaped_texture_set_texture (MetaShapedTexture *stex,
                                  CoglTexture       *texture)
 {
   g_return_if_fail (META_IS_SHAPED_TEXTURE (stex));
+
+  if (stex->texture == texture)
+    return;
 
   set_cogl_texture (stex, texture);
 }

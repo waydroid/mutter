@@ -1,0 +1,37 @@
+From: =?utf-8?q?Florian_M=C3=BCllner?= <fmuellner@gnome.org>
+Date: Mon, 3 Feb 2020 22:58:38 +0100
+Subject: window: Ignore requests to be placed on non-existent workspaces
+
+When an X11 window requests an initial workspace, we currently trust
+it that the workspace actually exists. However dynamic workspaces
+make this easy to get wrong for applications: They make it likely
+for the number of workspaces to change between application starts,
+and if the app blindly applies its saved state on startup, it will
+trigger an assertion.
+
+Make sure that we pass valid parameters to set_workspace_state(),
+and simply let the workspace assignment fall through to the default
+handling otherwise.
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/issues/1029
+Origin: upstream, 3.34.5, commit:c3d2f3f39976e1aab3481ecc6e505f114d3babd3
+---
+ src/core/window.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/window.c b/src/core/window.c
+index ac81879..a64ccb0 100644
+--- a/src/core/window.c
++++ b/src/core/window.c
+@@ -1289,7 +1289,10 @@ _meta_window_shared_new (MetaDisplay         *display,
+                                                                      window->initial_workspace);
+         }
+ 
+-      set_workspace_state (window, on_all_workspaces, workspace);
++      /* Ignore when a window requests to be placed on a non-existent workspace
++       */
++      if (on_all_workspaces || workspace != NULL)
++        set_workspace_state (window, on_all_workspaces, workspace);
+     }
+ 
+   /* override-redirect windows are subtly different from other windows
