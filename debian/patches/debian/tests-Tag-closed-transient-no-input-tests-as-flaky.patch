@@ -12,10 +12,10 @@ Forwarded: not-needed
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/src/tests/meson.build b/src/tests/meson.build
-index f5a132f..5d49cba 100644
+index 8ca075f..89bd00f 100644
 --- a/src/tests/meson.build
 +++ b/src/tests/meson.build
-@@ -136,8 +136,12 @@ stacking_tests = [
+@@ -144,8 +144,12 @@ stacking_tests = [
  ]
  
  foreach stacking_test: stacking_tests

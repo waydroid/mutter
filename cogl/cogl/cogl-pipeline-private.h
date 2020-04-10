@@ -49,24 +49,11 @@
 
 #include <glib.h>
 
-#if defined(HAVE_COGL_GL) || defined(HAVE_COGL_GLES2)
-
-#define COGL_PIPELINE_PROGEND_GLSL 0
-#define COGL_PIPELINE_VERTEND_GLSL 0
-#define COGL_PIPELINE_FRAGEND_GLSL 0
-
-#define COGL_PIPELINE_N_PROGENDS    1
-#define COGL_PIPELINE_N_VERTENDS    1
-#define COGL_PIPELINE_N_FRAGENDS    1
-
-#else /* defined(HAVE_COGL_GL) || defined(HAVE_COGL_GLES2) */
+#if !(defined(HAVE_COGL_GL) || defined(HAVE_COGL_GLES2))
 
 #error No drivers defined
 
 #endif /* defined(HAVE_COGL_GL) || defined(HAVE_COGL_GLES2) */
-
-#define COGL_PIPELINE_PROGEND_DEFAULT    0
-#define COGL_PIPELINE_PROGEND_UNDEFINED  3
 
 /* XXX: should I rename these as
  * COGL_PIPELINE_STATE_INDEX_XYZ... ?
@@ -75,15 +62,12 @@ typedef enum
 {
   /* sparse state */
   COGL_PIPELINE_STATE_COLOR_INDEX,
-  COGL_PIPELINE_STATE_BLEND_ENABLE_INDEX,
   COGL_PIPELINE_STATE_LAYERS_INDEX,
-  COGL_PIPELINE_STATE_LIGHTING_INDEX,
   COGL_PIPELINE_STATE_ALPHA_FUNC_INDEX,
   COGL_PIPELINE_STATE_ALPHA_FUNC_REFERENCE_INDEX,
   COGL_PIPELINE_STATE_BLEND_INDEX,
   COGL_PIPELINE_STATE_USER_SHADER_INDEX,
   COGL_PIPELINE_STATE_DEPTH_INDEX,
-  COGL_PIPELINE_STATE_FOG_INDEX,
   COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE_INDEX,
   COGL_PIPELINE_STATE_POINT_SIZE_INDEX,
   COGL_PIPELINE_STATE_PER_VERTEX_POINT_SIZE_INDEX,
@@ -114,13 +98,9 @@ typedef enum _CoglPipelineState
 {
   COGL_PIPELINE_STATE_COLOR =
     1L<<COGL_PIPELINE_STATE_COLOR_INDEX,
-  COGL_PIPELINE_STATE_BLEND_ENABLE =
-    1L<<COGL_PIPELINE_STATE_BLEND_ENABLE_INDEX,
   COGL_PIPELINE_STATE_LAYERS =
     1L<<COGL_PIPELINE_STATE_LAYERS_INDEX,
 
-  COGL_PIPELINE_STATE_LIGHTING =
-    1L<<COGL_PIPELINE_STATE_LIGHTING_INDEX,
   COGL_PIPELINE_STATE_ALPHA_FUNC =
     1L<<COGL_PIPELINE_STATE_ALPHA_FUNC_INDEX,
   COGL_PIPELINE_STATE_ALPHA_FUNC_REFERENCE =
@@ -131,8 +111,6 @@ typedef enum _CoglPipelineState
     1L<<COGL_PIPELINE_STATE_USER_SHADER_INDEX,
   COGL_PIPELINE_STATE_DEPTH =
     1L<<COGL_PIPELINE_STATE_DEPTH_INDEX,
-  COGL_PIPELINE_STATE_FOG =
-    1L<<COGL_PIPELINE_STATE_FOG_INDEX,
   COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE =
     1L<<COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE_INDEX,
   COGL_PIPELINE_STATE_POINT_SIZE =
@@ -166,22 +144,18 @@ typedef enum _CoglPipelineState
 
 #define COGL_PIPELINE_STATE_AFFECTS_BLENDING \
   (COGL_PIPELINE_STATE_COLOR | \
-   COGL_PIPELINE_STATE_BLEND_ENABLE | \
    COGL_PIPELINE_STATE_LAYERS | \
-   COGL_PIPELINE_STATE_LIGHTING | \
    COGL_PIPELINE_STATE_BLEND | \
    COGL_PIPELINE_STATE_USER_SHADER | \
    COGL_PIPELINE_STATE_VERTEX_SNIPPETS | \
    COGL_PIPELINE_STATE_FRAGMENT_SNIPPETS)
 
 #define COGL_PIPELINE_STATE_NEEDS_BIG_STATE \
-  (COGL_PIPELINE_STATE_LIGHTING | \
-   COGL_PIPELINE_STATE_ALPHA_FUNC | \
+  (COGL_PIPELINE_STATE_ALPHA_FUNC | \
    COGL_PIPELINE_STATE_ALPHA_FUNC_REFERENCE | \
    COGL_PIPELINE_STATE_BLEND | \
    COGL_PIPELINE_STATE_USER_SHADER | \
    COGL_PIPELINE_STATE_DEPTH | \
-   COGL_PIPELINE_STATE_FOG | \
    COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE | \
    COGL_PIPELINE_STATE_POINT_SIZE | \
    COGL_PIPELINE_STATE_PER_VERTEX_POINT_SIZE | \
@@ -192,33 +166,12 @@ typedef enum _CoglPipelineState
 
 #define COGL_PIPELINE_STATE_MULTI_PROPERTY \
   (COGL_PIPELINE_STATE_LAYERS | \
-   COGL_PIPELINE_STATE_LIGHTING | \
    COGL_PIPELINE_STATE_BLEND | \
    COGL_PIPELINE_STATE_DEPTH | \
-   COGL_PIPELINE_STATE_FOG | \
    COGL_PIPELINE_STATE_CULL_FACE | \
    COGL_PIPELINE_STATE_UNIFORMS | \
    COGL_PIPELINE_STATE_VERTEX_SNIPPETS | \
    COGL_PIPELINE_STATE_FRAGMENT_SNIPPETS)
-
-typedef enum
-{
-  COGL_PIPELINE_LIGHTING_STATE_PROPERTY_AMBIENT = 1,
-  COGL_PIPELINE_LIGHTING_STATE_PROPERTY_DIFFUSE,
-  COGL_PIPELINE_LIGHTING_STATE_PROPERTY_SPECULAR,
-  COGL_PIPELINE_LIGHTING_STATE_PROPERTY_EMISSION,
-  COGL_PIPELINE_LIGHTING_STATE_PROPERTY_SHININESS
-} CoglPipelineLightingStateProperty;
-
-typedef struct
-{
-  /* Standard OpenGL lighting model attributes */
-  float ambient[4];
-  float diffuse[4];
-  float specular[4];
-  float emission[4];
-  float shininess;
-} CoglPipelineLightingState;
 
 typedef struct
 {
@@ -226,15 +179,6 @@ typedef struct
   CoglPipelineAlphaFunc alpha_func;
   float		        alpha_func_reference;
 } CoglPipelineAlphaFuncState;
-
-typedef enum _CoglPipelineBlendEnable
-{
-  /* XXX: we want to detect users mistakenly using TRUE or FALSE
-   * so start the enum at 2. */
-  COGL_PIPELINE_BLEND_ENABLE_ENABLED = 2,
-  COGL_PIPELINE_BLEND_ENABLE_DISABLED,
-  COGL_PIPELINE_BLEND_ENABLE_AUTOMATIC
-} CoglPipelineBlendEnable;
 
 typedef struct
 {
@@ -249,16 +193,6 @@ typedef struct
   GLint     blend_src_factor_rgb;
   GLint     blend_dst_factor_rgb;
 } CoglPipelineBlendState;
-
-typedef struct
-{
-  gboolean        enabled;
-  CoglColor       color;
-  CoglFogMode     mode;
-  float           density;
-  float           z_near;
-  float           z_far;
-} CoglPipelineFogState;
 
 typedef struct
 {
@@ -282,12 +216,10 @@ typedef struct
 
 typedef struct
 {
-  CoglPipelineLightingState lighting_state;
   CoglPipelineAlphaFuncState alpha_state;
   CoglPipelineBlendState blend_state;
   CoglHandle user_program;
   CoglDepthState depth_state;
-  CoglPipelineFogState fog_state;
   float point_size;
   unsigned int non_zero_point_size : 1;
   unsigned int per_vertex_point_size : 1;
@@ -401,10 +333,6 @@ struct _CoglPipeline
    * pipelines with only a few layers... */
   CoglPipelineLayer    *short_layers_cache[3];
 
-  /* The deprecated cogl_pipeline_get_layers() API returns a
-   * const GList of layers, which we track here... */
-  GList                *deprecated_get_layers_list;
-
   /* XXX: consider adding an authorities cache to speed up sparse
    * property value lookups:
    * CoglPipeline *authorities_cache[COGL_PIPELINE_N_SPARSE_PROPERTIES];
@@ -421,13 +349,6 @@ struct _CoglPipeline
 
   /* Determines if pipeline->big_state is valid */
   unsigned int          has_big_state:1;
-
-  /* By default blending is enabled automatically depending on the
-   * unlit color, the lighting colors or the texture format. The user
-   * can override this to explicitly enable or disable blending.
-   *
-   * This is a sparse property */
-  unsigned int          blend_enable:3;
 
   /* There are many factors that can determine if we need to enable
    * blending, this holds our final decision */
@@ -447,7 +368,6 @@ struct _CoglPipeline
   unsigned int          unknown_color_alpha:1;
 
   unsigned int          layers_cache_dirty:1;
-  unsigned int          deprecated_get_layers_list_dirty:1;
 
 #ifdef COGL_DEBUG_ENABLED
   /* For debugging purposes it's possible to associate a static const
@@ -455,12 +375,6 @@ struct _CoglPipeline
    * where the pipeline originates from */
   unsigned int          has_static_breadcrumb:1;
 #endif
-
-  /* There are multiple fragment and vertex processing backends for
-   * CoglPipeline, glsl, arbfp and fixed that are bundled under a
-   * "progend". This identifies the backend being used for the
-   * pipeline. */
-  unsigned int          progend:3;
 };
 
 typedef struct _CoglPipelineFragend
@@ -471,14 +385,12 @@ typedef struct _CoglPipelineFragend
   gboolean (*add_layer) (CoglPipeline *pipeline,
                          CoglPipelineLayer *layer,
                          unsigned long layers_difference);
-  gboolean (*passthrough) (CoglPipeline *pipeline);
   gboolean (*end) (CoglPipeline *pipeline,
                    unsigned long pipelines_difference);
 
   void (*pipeline_pre_change_notify) (CoglPipeline *pipeline,
                                       CoglPipelineState change,
                                       const CoglColor *new_color);
-  void (*pipeline_set_parent_notify) (CoglPipeline *pipeline);
   void (*layer_pre_change_notify) (CoglPipeline *owner,
                                    CoglPipelineLayer *layer,
                                    CoglPipelineLayerState change);
@@ -506,8 +418,6 @@ typedef struct _CoglPipelineVertend
 
 typedef struct
 {
-  int vertend;
-  int fragend;
   gboolean (*start) (CoglPipeline *pipeline);
   void (*end) (CoglPipeline *pipeline,
                unsigned long pipelines_difference);
@@ -523,17 +433,9 @@ typedef struct
   void (* pre_paint) (CoglPipeline *pipeline, CoglFramebuffer *framebuffer);
 } CoglPipelineProgend;
 
-typedef enum
-{
-  COGL_PIPELINE_PROGRAM_TYPE_GLSL = 1,
-} CoglPipelineProgramType;
-
-extern const CoglPipelineFragend *
-_cogl_pipeline_fragends[COGL_PIPELINE_N_FRAGENDS];
-extern const CoglPipelineVertend *
-_cogl_pipeline_vertends[COGL_PIPELINE_N_VERTENDS];
-extern const CoglPipelineProgend *
-_cogl_pipeline_progends[];
+extern const CoglPipelineFragend *_cogl_pipeline_fragend;
+extern const CoglPipelineVertend *_cogl_pipeline_vertend;
+extern const CoglPipelineProgend *_cogl_pipeline_progend;
 
 void
 _cogl_pipeline_init_default_pipeline (void);
@@ -658,12 +560,6 @@ typedef struct _CoglPipelineFlushOptions
   uint32_t disable_layers;
   CoglTexture *layer0_override_texture;
 } CoglPipelineFlushOptions;
-
-void
-_cogl_use_fragment_program (GLuint gl_program, CoglPipelineProgramType type);
-
-void
-_cogl_use_vertex_program (GLuint gl_program, CoglPipelineProgramType type);
 
 unsigned int
 _cogl_get_n_args_for_combine_func (CoglPipelineCombineFunc func);
@@ -850,16 +746,6 @@ void
 _cogl_pipeline_apply_overrides (CoglPipeline *pipeline,
                                 CoglPipelineFlushOptions *options);
 
-CoglPipelineBlendEnable
-_cogl_pipeline_get_blend_enabled (CoglPipeline *pipeline);
-
-void
-_cogl_pipeline_set_blend_enabled (CoglPipeline *pipeline,
-                                  CoglPipelineBlendEnable enable);
-
-gboolean
-_cogl_pipeline_get_fog_enabled (CoglPipeline *pipeline);
-
 #ifdef COGL_DEBUG_ENABLED
 void
 _cogl_pipeline_set_static_breadcrumb (CoglPipeline *pipeline,
@@ -889,7 +775,7 @@ _cogl_pipeline_get_layer_combine_constant (CoglPipeline *pipeline,
                                            int layer_index,
                                            float *constant);
 
-void
+COGL_EXPORT void
 _cogl_pipeline_prune_to_n_layers (CoglPipeline *pipeline, int n);
 
 
@@ -897,13 +783,10 @@ _cogl_pipeline_prune_to_n_layers (CoglPipeline *pipeline, int n);
  * API to support the deprecate cogl_pipeline_layer_xyz functions...
  */
 
-const GList *
-_cogl_pipeline_get_layers (CoglPipeline *pipeline);
-
 typedef gboolean (*CoglPipelineInternalLayerCallback) (CoglPipelineLayer *layer,
                                                        void *user_data);
 
-void
+COGL_EXPORT void
 _cogl_pipeline_foreach_layer_internal (CoglPipeline *pipeline,
                                        CoglPipelineInternalLayerCallback callback,
                                        void *user_data);

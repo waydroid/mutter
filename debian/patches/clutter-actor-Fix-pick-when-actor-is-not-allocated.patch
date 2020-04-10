@@ -1,0 +1,30 @@
+From: Andre Moreira Magalhaes <andre@endlessm.com>
+Date: Tue, 31 Mar 2020 21:11:19 +0000
+Subject: clutter/actor: Fix pick when actor is not allocated
+
+When selecting the pick regions for an actor we were not considering
+whether the actor was allocated and that was causing issues where the
+preferred width/height of the actor was used when deciding whether
+the actor should be considered as a pick target.
+
+Check if the actor has a valid allocation, in addition to being mapped
+and being in pick mode, in clutter_actor_should_pick_paint().
+
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1169
+Applied-upstream: 3.36.2, commit:82f3bdd14e0081dff60e9fed51376fc4cbf8b201
+---
+ clutter/clutter/clutter-actor.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/clutter/clutter/clutter-actor.c b/clutter/clutter/clutter-actor.c
+index 56eaad6..b82d847 100644
+--- a/clutter/clutter/clutter-actor.c
++++ b/clutter/clutter/clutter-actor.c
+@@ -2410,6 +2410,7 @@ clutter_actor_should_pick_paint (ClutterActor *self)
+   g_return_val_if_fail (CLUTTER_IS_ACTOR (self), FALSE);
+ 
+   if (CLUTTER_ACTOR_IS_MAPPED (self) &&
++      clutter_actor_has_allocation (self) &&
+       (_clutter_context_get_pick_mode () == CLUTTER_PICK_ALL ||
+        CLUTTER_ACTOR_IS_REACTIVE (self)))
+     return TRUE;

@@ -26,6 +26,14 @@
 #include "backends/native/meta-kms-types.h"
 #include "backends/native/meta-kms-update.h"
 
+typedef struct _MetaKmsFeedback
+{
+  MetaKmsFeedbackResult result;
+
+  GList *failed_planes;
+  GError *error;
+} MetaKmsFeedback;
+
 typedef struct _MetaKmsProperty
 {
   uint32_t prop_id;
@@ -40,8 +48,15 @@ typedef struct _MetaKmsPlaneAssignment
   uint32_t fb_id;
   MetaFixed16Rectangle src_rect;
   MetaFixed16Rectangle dst_rect;
+  MetaKmsAssignPlaneFlag flags;
 
   GList *plane_properties;
+
+  struct {
+    gboolean is_valid;
+    int x;
+    int y;
+  } cursor_hotspot;
 } MetaKmsPlaneAssignment;
 
 typedef struct _MetaKmsModeSet
@@ -77,6 +92,17 @@ typedef struct _MetaKmsPageFlip
   gpointer custom_page_flip_user_data;
 } MetaKmsPageFlip;
 
+void meta_kms_plane_feedback_free (MetaKmsPlaneFeedback *plane_feedback);
+
+MetaKmsPlaneFeedback * meta_kms_plane_feedback_new_take_error (MetaKmsPlane *plane,
+                                                               MetaKmsCrtc  *crtc,
+                                                               GError       *error);
+
+MetaKmsFeedback * meta_kms_feedback_new_passed (void);
+
+MetaKmsFeedback * meta_kms_feedback_new_failed (GList  *failed_planes,
+                                                GError *error);
+
 void meta_kms_update_seal (MetaKmsUpdate *update);
 
 gboolean meta_kms_update_is_sealed (MetaKmsUpdate *update);
@@ -109,5 +135,8 @@ GList * meta_kms_update_get_page_flips (MetaKmsUpdate *update);
 GList * meta_kms_update_get_connector_properties (MetaKmsUpdate *update);
 
 GList * meta_kms_update_get_crtc_gammas (MetaKmsUpdate *update);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MetaKmsPlaneFeedback,
+                               meta_kms_plane_feedback_free)
 
 #endif /* META_KMS_UPDATE_PRIVATE_H */

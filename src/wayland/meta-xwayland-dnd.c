@@ -171,7 +171,7 @@ xdnd_send_enter (MetaXWaylandDnd *dnd,
       /* We have more than 3 mimetypes, we must set up
        * the mimetype list as a XdndTypeList property.
        */
-      Atom *atomlist;
+      g_autofree Atom *atomlist = NULL;
       gint i = 0;
 
       xev.xclient.data.l[1] |= 1;
@@ -471,7 +471,7 @@ meta_x11_drag_dest_focus_in (MetaWaylandDataDevice *data_device,
   MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
   MetaXWaylandDnd *dnd = compositor->xwayland_manager.dnd;
 
-  dnd->dnd_dest = surface->window->xwindow;
+  dnd->dnd_dest = meta_wayland_surface_get_window (surface)->xwindow;
   xdnd_send_enter (dnd, dnd->dnd_dest);
 }
 
@@ -519,7 +519,7 @@ meta_x11_drag_dest_update (MetaWaylandDataDevice *data_device,
   MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
   MetaXWaylandDnd *dnd = compositor->xwayland_manager.dnd;
   MetaWaylandSeat *seat = compositor->seat;
-  ClutterPoint pos;
+  graphene_point_t pos;
 
   clutter_input_device_get_coords (seat->pointer->device, NULL, &pos);
   xdnd_send_position (dnd, dnd->dnd_dest,
@@ -602,7 +602,7 @@ pick_drop_surface (MetaWaylandCompositor *compositor,
 {
   MetaDisplay *display = meta_get_display ();
   MetaWindow *focus_window = NULL;
-  ClutterPoint pos;
+  graphene_point_t pos;
 
   clutter_event_get_coords (event, &pos.x, &pos.y);
   focus_window = meta_stack_get_default_focus_window_at_point (display->stack,
@@ -619,6 +619,7 @@ repick_drop_surface (MetaWaylandCompositor *compositor,
   Display *xdisplay = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
   MetaXWaylandDnd *dnd = compositor->xwayland_manager.dnd;
   MetaWaylandSurface *focus = NULL;
+  MetaWindow *focus_window;
 
   focus = pick_drop_surface (compositor, event);
   if (dnd->focus_surface == focus)
@@ -626,15 +627,20 @@ repick_drop_surface (MetaWaylandCompositor *compositor,
 
   dnd->focus_surface = focus;
 
-  if (focus &&
-      focus->window->client_type == META_WINDOW_CLIENT_TYPE_WAYLAND)
+  if (focus)
+    focus_window = meta_wayland_surface_get_window (focus);
+  else
+    focus_window = NULL;
+
+  if (focus_window &&
+      focus_window->client_type == META_WINDOW_CLIENT_TYPE_WAYLAND)
     {
       XMapRaised (xdisplay, dnd->dnd_window);
       XMoveResizeWindow (xdisplay, dnd->dnd_window,
-                         focus->window->rect.x,
-                         focus->window->rect.y,
-                         focus->window->rect.width,
-                         focus->window->rect.height);
+                         focus_window->rect.x,
+                         focus_window->rect.y,
+                         focus_window->rect.width,
+                         focus_window->rect.height);
     }
   else
     {
@@ -797,7 +803,7 @@ meta_xwayland_dnd_handle_client_message (MetaWaylandCompositor *compositor,
       else if (event->message_type == xdnd_atoms[ATOM_DND_POSITION])
         {
           ClutterEvent *motion;
-          ClutterPoint pos;
+          graphene_point_t pos;
           uint32_t action = 0;
 
           dnd->client_message_timestamp = event->data.l[3];

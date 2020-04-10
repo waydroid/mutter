@@ -535,9 +535,13 @@ typedef enum /*< prefix=CLUTTER_ACTOR >*/
  * ClutterOffscreenRedirect:
  * @CLUTTER_OFFSCREEN_REDIRECT_AUTOMATIC_FOR_OPACITY: Only redirect
  *   the actor if it is semi-transparent and its has_overlaps()
- *   virtual returns %TRUE. This is the default.
+ *   virtual returns %TRUE.
  * @CLUTTER_OFFSCREEN_REDIRECT_ALWAYS: Always redirect the actor to an
  *   offscreen buffer even if it is fully opaque.
+ * @CLUTTER_OFFSCREEN_REDIRECT_ON_IDLE: Only redirect the actor if it is the
+ *   most efficient thing to do based on its recent repaint behaviour. That
+ *   means when its contents are changing less frequently than it's being used
+ *   on stage.
  *
  * Possible flags to pass to clutter_actor_set_offscreen_redirect().
  *
@@ -545,8 +549,9 @@ typedef enum /*< prefix=CLUTTER_ACTOR >*/
  */
 typedef enum /*< prefix=CLUTTER_OFFSCREEN_REDIRECT >*/
 {
-  CLUTTER_OFFSCREEN_REDIRECT_AUTOMATIC_FOR_OPACITY = 1<<0,
-  CLUTTER_OFFSCREEN_REDIRECT_ALWAYS = 1<<1
+  CLUTTER_OFFSCREEN_REDIRECT_AUTOMATIC_FOR_OPACITY = 1 << 0,
+  CLUTTER_OFFSCREEN_REDIRECT_ALWAYS                = 1 << 1,
+  CLUTTER_OFFSCREEN_REDIRECT_ON_IDLE               = 1 << 2
 } ClutterOffscreenRedirect;
 
 /**
@@ -673,12 +678,15 @@ typedef enum /*< prefix=CLUTTER_BIND >*/
  *   has queued a redraw before this paint. This implies that the effect
  *   should call clutter_actor_continue_paint() to chain to the next
  *   effect and can not cache any results from a previous paint.
+ * @CLUTTER_EFFECT_PAINT_BYPASS_EFFECT: The effect should not be used
+ *   on this frame, but it will be asked to paint the actor still.
  *
  * Flags passed to the ‘paint’ or ‘pick’ method of #ClutterEffect.
  */
 typedef enum /*< prefix=CLUTTER_EFFECT_PAINT >*/
 {
-  CLUTTER_EFFECT_PAINT_ACTOR_DIRTY = (1 << 0)
+  CLUTTER_EFFECT_PAINT_ACTOR_DIRTY   = (1 << 0),
+  CLUTTER_EFFECT_PAINT_BYPASS_EFFECT = (1 << 1)
 } ClutterEffectPaintFlags;
 
 /**
@@ -970,8 +978,6 @@ typedef enum
 /**
  * ClutterFeatureFlags:
  * @CLUTTER_FEATURE_SWAP_THROTTLE: Set if backend throttles buffer swaps.
- * @CLUTTER_FEATURE_TEXTURE_YUV: Set if YUV based textures supported.
- * @CLUTTER_FEATURE_TEXTURE_READ_PIXELS: Set if texture pixels can be read.
  * @CLUTTER_FEATURE_STAGE_STATIC: Set if stage size if fixed (i.e framebuffer)
  * @CLUTTER_FEATURE_STAGE_CURSOR: Set if stage has a graphical cursor.
  * @CLUTTER_FEATURE_SHADERS_GLSL: Set if the backend supports GLSL shaders.
@@ -987,8 +993,6 @@ typedef enum
 typedef enum
 {
   CLUTTER_FEATURE_SWAP_THROTTLE          = (1 << 3),
-  CLUTTER_FEATURE_TEXTURE_YUV            = (1 << 4),
-  CLUTTER_FEATURE_TEXTURE_READ_PIXELS    = (1 << 5),
   CLUTTER_FEATURE_STAGE_STATIC           = (1 << 6),
   CLUTTER_FEATURE_STAGE_CURSOR           = (1 << 8),
   CLUTTER_FEATURE_SHADERS_GLSL           = (1 << 9),
@@ -1187,29 +1191,6 @@ typedef enum /*< prefix=CLUTTER_PAN >*/
   CLUTTER_PAN_AXIS_AUTO
 } ClutterPanAxis;
 
-
-/**
- * ClutterTableAlignment:
- * @CLUTTER_TABLE_ALIGNMENT_START: Align the child to the top or to the
- *   left of a cell in the table, depending on the axis
- * @CLUTTER_TABLE_ALIGNMENT_CENTER: Align the child to the center of
- *   a cell in the table
- * @CLUTTER_TABLE_ALIGNMENT_END: Align the child to the bottom or to the
- *   right of a cell in the table, depending on the axis
- *
- * The alignment policies available on each axis of the #ClutterTableLayout
- *
- * Since: 1.4
- *
- * Deprecated: 1.22: Use the alignment properties of #ClutterActor
- */
-typedef enum
-{
-  CLUTTER_TABLE_ALIGNMENT_START,
-  CLUTTER_TABLE_ALIGNMENT_CENTER,
-  CLUTTER_TABLE_ALIGNMENT_END
-} ClutterTableAlignment;
-
 /**
  * ClutterTextureFlags:
  * @CLUTTER_TEXTURE_NONE: No flags
@@ -1217,8 +1198,7 @@ typedef enum
  * @CLUTTER_TEXTURE_RGB_FLAG_PREMULT: Unused flag
  * @CLUTTER_TEXTURE_YUV_FLAG_YUV2: Unused flag
  *
- * Flags for clutter_texture_set_from_rgb_data() and
- * clutter_texture_set_from_yuv_data().
+ * Flags for clutter_texture_set_from_rgb_data().
  *
  * Since: 0.4
  *

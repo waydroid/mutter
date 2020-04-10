@@ -315,9 +315,11 @@ meta_input_settings_native_set_keyboard_repeat (MetaInputSettings *settings,
                                                 guint              delay,
                                                 guint              interval)
 {
-  ClutterDeviceManager *manager = clutter_device_manager_get_default ();
+  ClutterSeat *seat;
 
-  meta_device_manager_native_set_keyboard_repeat (manager, enabled, delay, interval);
+  seat = clutter_backend_get_default_seat (clutter_get_default_backend ());
+  meta_seat_native_set_keyboard_repeat (META_SEAT_NATIVE (seat),
+                                        enabled, delay, interval);
 }
 
 static void
@@ -399,6 +401,13 @@ is_mouse_device (ClutterInputDevice *device)
 }
 
 static gboolean
+meta_input_settings_native_is_touchpad_device (MetaInputSettings  *settings,
+                                               ClutterInputDevice *device)
+{
+  return has_udev_property (device, "ID_INPUT_TOUCHPAD");
+}
+
+static gboolean
 meta_input_settings_native_is_trackball_device (MetaInputSettings  *settings,
                                                 ClutterInputDevice *device)
 {
@@ -468,9 +477,9 @@ meta_input_settings_native_set_tablet_keep_aspect (MetaInputSettings  *settings,
 
           backend = meta_get_backend ();
           monitor_manager = meta_backend_get_monitor_manager (backend);
-	  meta_monitor_manager_get_screen_size (monitor_manager,
-						&width,
-						&height);
+          meta_monitor_manager_get_screen_size (monitor_manager,
+                                                &width,
+                                                &height);
         }
 
       aspect_ratio = (double) width / height;
@@ -561,6 +570,60 @@ meta_input_settings_native_set_stylus_button_map (MetaInputSettings          *se
 }
 
 static void
+meta_input_settings_native_set_mouse_middle_click_emulation (MetaInputSettings  *settings,
+                                                             ClutterInputDevice *device,
+                                                             gboolean            enabled)
+{
+  struct libinput_device *libinput_device;
+
+  if (!is_mouse_device (device))
+    return;
+
+  libinput_device = meta_input_device_native_get_libinput_device (device);
+  if (!libinput_device)
+    return;
+
+  if (libinput_device_config_middle_emulation_is_available (libinput_device))
+    libinput_device_config_middle_emulation_set_enabled (libinput_device, enabled);
+}
+
+static void
+meta_input_settings_native_set_touchpad_middle_click_emulation (MetaInputSettings  *settings,
+                                                                ClutterInputDevice *device,
+                                                                gboolean            enabled)
+{
+  struct libinput_device *libinput_device;
+
+  if (!meta_input_settings_native_is_touchpad_device (settings, device))
+    return;
+
+  libinput_device = meta_input_device_native_get_libinput_device (device);
+  if (!libinput_device)
+    return;
+
+  if (libinput_device_config_middle_emulation_is_available (libinput_device))
+    libinput_device_config_middle_emulation_set_enabled (libinput_device, enabled);
+}
+
+static void
+meta_input_settings_native_set_trackball_middle_click_emulation (MetaInputSettings  *settings,
+                                                                 ClutterInputDevice *device,
+                                                                 gboolean            enabled)
+{
+  struct libinput_device *libinput_device;
+
+  if (!meta_input_settings_native_is_trackball_device (settings, device))
+    return;
+
+  libinput_device = meta_input_device_native_get_libinput_device (device);
+  if (!libinput_device)
+    return;
+
+  if (libinput_device_config_middle_emulation_is_available (libinput_device))
+    libinput_device_config_middle_emulation_set_enabled (libinput_device, enabled);
+}
+
+static void
 meta_input_settings_native_class_init (MetaInputSettingsNativeClass *klass)
 {
   MetaInputSettingsClass *input_settings_class = META_INPUT_SETTINGS_CLASS (klass);
@@ -588,6 +651,10 @@ meta_input_settings_native_class_init (MetaInputSettingsNativeClass *klass)
 
   input_settings_class->set_stylus_pressure = meta_input_settings_native_set_stylus_pressure;
   input_settings_class->set_stylus_button_map = meta_input_settings_native_set_stylus_button_map;
+
+  input_settings_class->set_mouse_middle_click_emulation = meta_input_settings_native_set_mouse_middle_click_emulation;
+  input_settings_class->set_touchpad_middle_click_emulation = meta_input_settings_native_set_touchpad_middle_click_emulation;
+  input_settings_class->set_trackball_middle_click_emulation = meta_input_settings_native_set_trackball_middle_click_emulation;
 
   input_settings_class->has_two_finger_scroll = meta_input_settings_native_has_two_finger_scroll;
   input_settings_class->is_trackball_device = meta_input_settings_native_is_trackball_device;

@@ -1,0 +1,44 @@
+From: Georges Basile Stavracas Neto <georges.stavracas@gmail.com>
+Date: Tue, 31 Mar 2020 22:01:53 +0000
+Subject: tests/actor-pick: Allocate actor before picking
+
+Picking now only happens on allocated actors, but the
+callback in the actor-pick test is not waiting for the
+stage to run an allocation cycle. Ideally, we'd wait
+for this cycle, but for now, forcing an allocation works
+as well.
+
+Allocate the overlay actor in the actor-pick test.
+
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1169
+Applied-upstream: 3.36.2, commit:6f9b5edd4deeb412e644122ce2f15b3d593bd07a
+---
+ src/tests/clutter/conform/actor-pick.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/tests/clutter/conform/actor-pick.c b/src/tests/clutter/conform/actor-pick.c
+index 53ac8ec..dcee964 100644
+--- a/src/tests/clutter/conform/actor-pick.c
++++ b/src/tests/clutter/conform/actor-pick.c
+@@ -67,6 +67,9 @@ on_timeout (gpointer data)
+         }
+       else if (test_num == 2)
+         {
++          ClutterActorBox over_actor_box =
++            CLUTTER_ACTOR_BOX_INIT (0, 0, STAGE_WIDTH, STAGE_HEIGHT);
++
+           /* Make the actor visible but set a clip so that only some
+              of the actors are accessible */
+           clutter_actor_show (over_actor);
+@@ -76,6 +79,11 @@ on_timeout (gpointer data)
+                                   state->actor_width * (ACTORS_X - 4),
+                                   state->actor_height * (ACTORS_Y - 4));
+ 
++          /* Only allocated actors can be picked, so force an allocation
++           * of the overlay actor here.
++           */
++          clutter_actor_allocate (over_actor, &over_actor_box, 0);
++
+           if (g_test_verbose ())
+             g_print ("Clipped covering actor:\n");
+         }

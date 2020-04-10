@@ -72,23 +72,11 @@ meta_surface_actor_wayland_is_visible (MetaSurfaceActor *actor)
 }
 
 static gboolean
-meta_surface_actor_wayland_should_unredirect (MetaSurfaceActor *actor)
+meta_surface_actor_wayland_is_opaque (MetaSurfaceActor *actor)
 {
-  return FALSE;
-}
+  MetaShapedTexture *stex = meta_surface_actor_get_texture (actor);
 
-static void
-meta_surface_actor_wayland_set_unredirected (MetaSurfaceActor *actor,
-                                             gboolean          unredirected)
-{
-  /* Do nothing. In the future, we'll use KMS to set this
-   * up as a hardware overlay or something. */
-}
-
-static gboolean
-meta_surface_actor_wayland_is_unredirected (MetaSurfaceActor *actor)
-{
-  return FALSE;
+  return meta_shaped_texture_is_opaque (stex);
 }
 
 void
@@ -98,24 +86,14 @@ meta_surface_actor_wayland_add_frame_callbacks (MetaSurfaceActorWayland *self,
   wl_list_insert_list (&self->frame_callback_list, frame_callbacks);
 }
 
-static MetaWindow *
-meta_surface_actor_wayland_get_window (MetaSurfaceActor *actor)
-{
-  MetaSurfaceActorWayland *self = META_SURFACE_ACTOR_WAYLAND (actor);
-  MetaWaylandSurface *surface = meta_surface_actor_wayland_get_surface (self);
-
-  if (!surface)
-    return NULL;
-
-  return surface->window;
-}
-
 static void
-meta_surface_actor_wayland_paint (ClutterActor *actor)
+meta_surface_actor_wayland_paint (ClutterActor        *actor,
+                                  ClutterPaintContext *paint_context)
 {
   MetaSurfaceActorWayland *self = META_SURFACE_ACTOR_WAYLAND (actor);
 
-  if (self->surface)
+  if (self->surface &&
+      !meta_surface_actor_is_obscured (META_SURFACE_ACTOR (actor)))
     {
       MetaWaylandCompositor *compositor = self->surface->compositor;
 
@@ -123,7 +101,8 @@ meta_surface_actor_wayland_paint (ClutterActor *actor)
       wl_list_init (&self->frame_callback_list);
     }
 
-  CLUTTER_ACTOR_CLASS (meta_surface_actor_wayland_parent_class)->paint (actor);
+  CLUTTER_ACTOR_CLASS (meta_surface_actor_wayland_parent_class)->paint (actor,
+                                                                        paint_context);
 }
 
 static void
@@ -162,12 +141,7 @@ meta_surface_actor_wayland_class_init (MetaSurfaceActorWaylandClass *klass)
   surface_actor_class->process_damage = meta_surface_actor_wayland_process_damage;
   surface_actor_class->pre_paint = meta_surface_actor_wayland_pre_paint;
   surface_actor_class->is_visible = meta_surface_actor_wayland_is_visible;
-
-  surface_actor_class->should_unredirect = meta_surface_actor_wayland_should_unredirect;
-  surface_actor_class->set_unredirected = meta_surface_actor_wayland_set_unredirected;
-  surface_actor_class->is_unredirected = meta_surface_actor_wayland_is_unredirected;
-
-  surface_actor_class->get_window = meta_surface_actor_wayland_get_window;
+  surface_actor_class->is_opaque = meta_surface_actor_wayland_is_opaque;
 
   object_class->dispose = meta_surface_actor_wayland_dispose;
 }

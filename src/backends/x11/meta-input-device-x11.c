@@ -52,7 +52,7 @@ struct _MetaInputDeviceX11Class
 
 G_DEFINE_TYPE (MetaInputDeviceX11,
                meta_input_device_x11,
-               CLUTTER_TYPE_INPUT_DEVICE)
+               META_TYPE_INPUT_DEVICE)
 
 static void
 meta_input_device_x11_constructed (GObject *object)
@@ -92,6 +92,30 @@ static gboolean
 meta_input_device_x11_is_grouped (ClutterInputDevice *device,
                                   ClutterInputDevice *other_device)
 {
+#ifdef HAVE_LIBWACOM
+  MetaInputDeviceX11 *device_x11 = META_INPUT_DEVICE_X11 (device);
+  MetaInputDeviceX11 *other_device_x11 = META_INPUT_DEVICE_X11 (other_device);
+
+  if (device_x11->wacom_device &&
+      other_device_x11->wacom_device &&
+      libwacom_compare (device_x11->wacom_device,
+                        other_device_x11->wacom_device,
+                        WCOMPARE_NORMAL) == 0)
+    return TRUE;
+#endif
+
+  if (clutter_input_device_get_vendor_id (device) &&
+      clutter_input_device_get_product_id (device) &&
+      clutter_input_device_get_vendor_id (other_device) &&
+      clutter_input_device_get_product_id (other_device))
+    {
+      if (strcmp (clutter_input_device_get_vendor_id (device),
+                  clutter_input_device_get_vendor_id (other_device)) == 0 &&
+          strcmp (clutter_input_device_get_product_id (device),
+                  clutter_input_device_get_product_id (other_device)) == 0)
+        return TRUE;
+    }
+
   return FALSE;
 }
 
@@ -101,15 +125,11 @@ meta_input_device_x11_finalize (GObject *object)
 #ifdef HAVE_LIBWACOM
   MetaInputDeviceX11 *device_xi2 = META_INPUT_DEVICE_X11 (object);
 
-  if (device_xi2->wacom_device)
-    libwacom_destroy (device_xi2->wacom_device);
-
   if (device_xi2->group_modes)
     g_array_unref (device_xi2->group_modes);
-
-  if (device_xi2->inhibit_pointer_query_timer)
-    g_source_remove (device_xi2->inhibit_pointer_query_timer);
 #endif
+
+  g_clear_handle_id (&device_xi2->inhibit_pointer_query_timer, g_source_remove);
 
   G_OBJECT_CLASS (meta_input_device_x11_parent_class)->finalize (object);
 }
@@ -119,23 +139,25 @@ meta_input_device_x11_get_group_n_modes (ClutterInputDevice *device,
                                          int                 group)
 {
 #ifdef HAVE_LIBWACOM
-  MetaInputDeviceX11 *device_xi2 = META_INPUT_DEVICE_X11 (device);
+  WacomDevice *wacom_device;
 
-  if (device_xi2->wacom_device)
+  wacom_device = meta_input_device_get_wacom_device (META_INPUT_DEVICE (device));
+
+  if (wacom_device)
     {
       if (group == 0)
         {
-          if (libwacom_has_ring (device_xi2->wacom_device))
-            return libwacom_get_ring_num_modes (device_xi2->wacom_device);
-          else if (libwacom_get_num_strips (device_xi2->wacom_device) >= 1)
-            return libwacom_get_strips_num_modes (device_xi2->wacom_device);
+          if (libwacom_has_ring (wacom_device))
+            return libwacom_get_ring_num_modes (wacom_device);
+          else if (libwacom_get_num_strips (wacom_device) >= 1)
+            return libwacom_get_strips_num_modes (wacom_device);
         }
       else if (group == 1)
         {
-          if (libwacom_has_ring2 (device_xi2->wacom_device))
-            return libwacom_get_ring2_num_modes (device_xi2->wacom_device);
-          else if (libwacom_get_num_strips (device_xi2->wacom_device) >= 2)
-            return libwacom_get_strips_num_modes (device_xi2->wacom_device);
+          if (libwacom_has_ring2 (wacom_device))
+            return libwacom_get_ring2_num_modes (wacom_device);
+          else if (libwacom_get_num_strips (wacom_device) >= 2)
+            return libwacom_get_strips_num_modes (wacom_device);
         }
     }
 #endif
@@ -148,18 +170,30 @@ static int
 meta_input_device_x11_get_button_group (ClutterInputDevice *device,
                                         uint32_t            button)
 {
-  MetaInputDeviceX11 *device_xi2 = META_INPUT_DEVICE_X11 (device);
+  WacomDevice *wacom_device;
 
-  if (device_xi2->wacom_device)
+  wacom_device = meta_input_device_get_wacom_device (META_INPUT_DEVICE (device));
+
+  if (wacom_device)
     {
-      if (button >= libwacom_get_num_buttons (device_xi2->wacom_device))
+      WacomButtonFlags flags;
+
+      if (button >= libwacom_get_num_buttons (wacom_device))
         return -1;
 
-      return libwacom_get_button_led_group (device_xi2->wacom_device,
-                                            'A' + button);
+      flags = libwacom_get_button_flag (wacom_device, 'A' + button);
+
+      if (flags &
+          (WACOM_BUTTON_RING_MODESWITCH |
+           WACOM_BUTTON_TOUCHSTRIP_MODESWITCH))
+        return 0;
+      if (flags &
+          (WACOM_BUTTON_RING2_MODESWITCH |
+           WACOM_BUTTON_TOUCHSTRIP2_MODESWITCH))
+        return 1;
     }
-  else
-    return -1;
+
+  return -1;
 }
 #endif
 
@@ -359,18 +393,6 @@ meta_input_device_x11_get_pointer_location (ClutterInputDevice *device,
 }
 
 #ifdef HAVE_LIBWACOM
-void
-meta_input_device_x11_ensure_wacom_info (ClutterInputDevice  *device,
-                                         WacomDeviceDatabase *wacom_db)
-{
-  MetaInputDeviceX11 *device_xi2 = META_INPUT_DEVICE_X11 (device);
-  const gchar *node_path;
-
-  node_path = clutter_input_device_get_device_node (device);
-  device_xi2->wacom_device = libwacom_new_from_path (wacom_db, node_path,
-                                                     WFALLBACK_NONE, NULL);
-}
-
 uint32_t
 meta_input_device_x11_get_pad_group_mode (ClutterInputDevice *device,
                                           uint32_t            group)
@@ -383,6 +405,57 @@ meta_input_device_x11_get_pad_group_mode (ClutterInputDevice *device,
   return g_array_index (device_xi2->group_modes, uint32_t, group);
 }
 
+static gboolean
+pad_switch_mode (ClutterInputDevice *device,
+                 uint32_t            button,
+                 uint32_t            group,
+                 uint32_t           *mode)
+{
+  MetaInputDeviceX11 *device_x11 = META_INPUT_DEVICE_X11 (device);
+  uint32_t n_buttons, n_modes, button_group, next_mode, i;
+  GList *switch_buttons = NULL;
+
+  n_buttons = libwacom_get_num_buttons (device_x11->wacom_device);
+
+  for (i = 0; i < n_buttons; i++)
+    {
+      button_group = meta_input_device_x11_get_button_group (device, i);
+      if (button_group == group)
+        switch_buttons = g_list_prepend (switch_buttons, GINT_TO_POINTER (button));
+    }
+
+  switch_buttons = g_list_reverse (switch_buttons);
+  n_modes = clutter_input_device_get_group_n_modes (device, group);
+
+  if (g_list_length (switch_buttons) > 1)
+    {
+      /* If there's multiple switch buttons, we don't toggle but assign a mode
+       * to each of those buttons.
+       */
+      next_mode = g_list_index (switch_buttons, GINT_TO_POINTER (button));
+    }
+  else if (switch_buttons)
+    {
+      uint32_t cur_mode;
+
+      /* If there is a single button, have it toggle across modes */
+      cur_mode = g_array_index (device_x11->group_modes, uint32_t, group);
+      next_mode = (cur_mode + 1) % n_modes;
+    }
+  else
+    {
+      return FALSE;
+    }
+
+  g_list_free (switch_buttons);
+
+  if (next_mode < 0 || next_mode > n_modes)
+    return FALSE;
+
+  *mode = next_mode;
+  return TRUE;
+}
+
 void
 meta_input_device_x11_update_pad_state (ClutterInputDevice *device,
                                         uint32_t            button,
@@ -392,26 +465,26 @@ meta_input_device_x11_update_pad_state (ClutterInputDevice *device,
 {
   MetaInputDeviceX11 *device_xi2 = META_INPUT_DEVICE_X11 (device);
   uint32_t button_group, *group_mode;
-  gboolean is_mode_switch = FALSE;
 
   button_group = meta_input_device_x11_get_button_group (device, button);
-  is_mode_switch = button_group >= 0;
 
-  /* Assign all non-mode-switch buttons to group 0 so far */
-  button_group = MAX (0, button_group);
-
-  if (button_group >= device_xi2->group_modes->len)
-    return;
+  if (button_group < 0 || button_group >= device_xi2->group_modes->len)
+    {
+      if (group)
+        *group = 0;
+      if (mode)
+        *mode = 0;
+      return;
+    }
 
   group_mode = &g_array_index (device_xi2->group_modes, uint32_t, button_group);
 
-  if (is_mode_switch && state)
+  if (state)
     {
-      uint32_t next, n_modes;
+      uint32_t next_mode;
 
-      n_modes = clutter_input_device_get_group_n_modes (device, button_group);
-      next = (*group_mode + 1) % n_modes;
-      *group_mode = next;
+      if (pad_switch_mode (device, button, button_group, &next_mode))
+        *group_mode = next_mode;
     }
 
   if (group)

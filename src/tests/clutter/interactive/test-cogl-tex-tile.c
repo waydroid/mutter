@@ -83,9 +83,14 @@ G_DEFINE_TYPE_WITH_PRIVATE (TestCoglbox, test_coglbox, CLUTTER_TYPE_ACTOR);
  *--------------------------------------------------*/
 
 static void
-test_coglbox_paint (ClutterActor *self)
+test_coglbox_paint (ClutterActor        *self,
+                    ClutterPaintContext *paint_context)
 {
   TestCoglboxPrivate *priv = TEST_COGLBOX_GET_PRIVATE (self);
+  CoglFramebuffer *framebuffer =
+    clutter_paint_context_get_framebuffer (paint_context);
+  CoglContext *ctx = cogl_framebuffer_get_context (framebuffer);
+  CoglPipeline *pipeline;
   gfloat texcoords[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
   gfloat angle;
   gfloat frac;
@@ -108,18 +113,24 @@ test_coglbox_paint (ClutterActor *self)
 
   priv = TEST_COGLBOX_GET_PRIVATE (self);
 
-  cogl_push_matrix ();
+  cogl_framebuffer_push_matrix (framebuffer);
 
-  cogl_set_source_color4ub (0x66, 0x66, 0xdd, 0xff);
-  cogl_rectangle (0, 0, 400, 400);
+  pipeline = cogl_pipeline_new (ctx);
+  cogl_pipeline_set_color4ub (pipeline, 0x66, 0x66, 0xdd, 0xff);
+  cogl_framebuffer_draw_rectangle (framebuffer, pipeline, 0, 0, 400, 400);
+  cogl_object_unref (pipeline);
 
-  cogl_translate (100, 100, 0);
-  cogl_set_source_texture (priv->cogl_tex_id);
-  cogl_rectangle_with_texture_coords (0, 0, 200, 213,
-                                      texcoords[0], texcoords[1],
-                                      texcoords[2], texcoords[3]);
+  cogl_framebuffer_translate (framebuffer, 100, 100, 0);
 
-  cogl_pop_matrix();
+  pipeline = cogl_pipeline_new (ctx);
+  cogl_pipeline_set_layer_texture (pipeline, 0, priv->cogl_tex_id);
+  cogl_framebuffer_draw_textured_rectangle (framebuffer, pipeline,
+                                            0, 0, 200, 213,
+                                            texcoords[0], texcoords[1],
+                                            texcoords[2], texcoords[3]);
+  cogl_object_unref (pipeline);
+
+  cogl_framebuffer_pop_matrix (framebuffer);
 }
 
 static void
@@ -134,7 +145,7 @@ test_coglbox_dispose (GObject *object)
   TestCoglboxPrivate *priv;
 
   priv = TEST_COGLBOX_GET_PRIVATE (object);
-  cogl_handle_unref (priv->cogl_tex_id);
+  cogl_object_unref (priv->cogl_tex_id);
 
   G_OBJECT_CLASS (test_coglbox_parent_class)->dispose (object);
 }

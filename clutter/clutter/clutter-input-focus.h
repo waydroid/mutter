@@ -41,7 +41,7 @@ struct _ClutterInputFocusClass
 
   void (* request_surrounding) (ClutterInputFocus *focus);
   void (* delete_surrounding)  (ClutterInputFocus *focus,
-                                guint              offset,
+                                int                offset,
                                 guint              len);
   void (* commit_text) (ClutterInputFocus *focus,
                         const gchar       *text);
@@ -57,8 +57,8 @@ gboolean clutter_input_focus_is_focused (ClutterInputFocus *focus);
 CLUTTER_EXPORT
 void clutter_input_focus_reset (ClutterInputFocus *focus);
 CLUTTER_EXPORT
-void clutter_input_focus_set_cursor_location (ClutterInputFocus *focus,
-                                              const ClutterRect *rect);
+void clutter_input_focus_set_cursor_location (ClutterInputFocus     *focus,
+                                              const graphene_rect_t *rect);
 
 CLUTTER_EXPORT
 void clutter_input_focus_set_surrounding (ClutterInputFocus *focus,

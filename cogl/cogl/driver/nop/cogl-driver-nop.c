@@ -48,14 +48,26 @@ _cogl_driver_update_features (CoglContext *ctx,
   /* _cogl_gpu_info_init (ctx, &ctx->gpu); */
 
   memset (ctx->private_features, 0, sizeof (ctx->private_features));
-  ctx->feature_flags = 0;
 
   return TRUE;
+}
+
+static gboolean
+_cogl_driver_nop_context_init (CoglContext *context)
+{
+  return TRUE;
+}
+
+static void
+_cogl_driver_nop_context_deinit (CoglContext *context)
+{
 }
 
 const CoglDriverVtable
 _cogl_driver_nop =
   {
+    _cogl_driver_nop_context_init,
+    _cogl_driver_nop_context_deinit,
     NULL, /* pixel_format_from_gl_internal */
     NULL, /* pixel_format_to_gl */
     _cogl_driver_update_features,
@@ -65,6 +77,7 @@ _cogl_driver_nop =
     _cogl_framebuffer_nop_clear,
     _cogl_framebuffer_nop_query_bits,
     _cogl_framebuffer_nop_finish,
+    _cogl_framebuffer_nop_flush,
     _cogl_framebuffer_nop_discard_buffers,
     _cogl_framebuffer_nop_draw_attributes,
     _cogl_framebuffer_nop_draw_indexed_attributes,

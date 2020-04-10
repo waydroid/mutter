@@ -42,10 +42,6 @@
 #include "cogl-poll-private.h"
 #include "cogl-gtype-private.h"
 
-#ifdef COGL_HAS_X11_SUPPORT
-#include "cogl-xlib-renderer.h"
-#endif
-
 static void _cogl_onscreen_free (CoglOnscreen *onscreen);
 
 COGL_OBJECT_DEFINE_WITH_CODE_GTYPE (Onscreen, onscreen,
@@ -160,9 +156,6 @@ _cogl_onscreen_free (CoglOnscreen *onscreen)
   while ((frame_info = g_queue_pop_tail (&onscreen->pending_frame_infos)))
     cogl_object_unref (frame_info);
   g_queue_clear (&onscreen->pending_frame_infos);
-
-  if (framebuffer->context->window_buffer == COGL_FRAMEBUFFER (onscreen))
-    framebuffer->context->window_buffer = NULL;
 
   winsys->onscreen_deinit (onscreen);
   g_return_if_fail (onscreen->winsys == NULL);
@@ -336,7 +329,6 @@ cogl_onscreen_swap_buffers_with_damage (CoglOnscreen *onscreen,
     }
 
   onscreen->frame_counter++;
-  framebuffer->mid_scene = FALSE;
 }
 
 void
@@ -393,7 +385,6 @@ cogl_onscreen_swap_region (CoglOnscreen *onscreen,
     }
 
   onscreen->frame_counter++;
-  framebuffer->mid_scene = FALSE;
 }
 
 int
@@ -413,54 +404,16 @@ cogl_onscreen_get_buffer_age (CoglOnscreen *onscreen)
 }
 
 #ifdef COGL_HAS_X11_SUPPORT
-void
-cogl_x11_onscreen_set_foreign_window_xid (CoglOnscreen *onscreen,
-                                          uint32_t xid,
-                                          CoglOnscreenX11MaskCallback update,
-                                          void *user_data)
-{
-  /* We don't wan't applications to get away with being lazy here and not
-   * passing an update callback... */
-  g_return_if_fail (update);
-
-  onscreen->foreign_xid = xid;
-  onscreen->foreign_update_mask_callback = update;
-  onscreen->foreign_update_mask_data = user_data;
-}
-
 uint32_t
 cogl_x11_onscreen_get_window_xid (CoglOnscreen *onscreen)
 {
   CoglFramebuffer *framebuffer = COGL_FRAMEBUFFER (onscreen);
+  const CoglWinsysVtable *winsys = _cogl_framebuffer_get_winsys (framebuffer);
 
-  if (onscreen->foreign_xid)
-    return onscreen->foreign_xid;
-  else
-    {
-      const CoglWinsysVtable *winsys = _cogl_framebuffer_get_winsys (framebuffer);
+  /* This should only be called for x11 onscreens */
+  g_return_val_if_fail (winsys->onscreen_x11_get_window_xid != NULL, 0);
 
-      /* This should only be called for x11 onscreens */
-      g_return_val_if_fail (winsys->onscreen_x11_get_window_xid != NULL, 0);
-
-      return winsys->onscreen_x11_get_window_xid (onscreen);
-    }
-}
-
-uint32_t
-cogl_x11_onscreen_get_visual_xid (CoglOnscreen *onscreen)
-{
-  CoglContext *ctx = COGL_FRAMEBUFFER (onscreen)->context;
-  XVisualInfo *visinfo;
-  uint32_t id;
-
-  /* This should only be called for xlib based onscreens */
-  visinfo = cogl_xlib_renderer_get_visual_info (ctx->display->renderer);
-  if (visinfo == NULL)
-    return 0;
-
-  id = (uint32_t)visinfo->visualid;
-
-  return id;
+  return winsys->onscreen_x11_get_window_xid (onscreen);
 }
 #endif /* COGL_HAS_X11_SUPPORT */
 
@@ -483,78 +436,6 @@ cogl_onscreen_remove_frame_callback (CoglOnscreen *onscreen,
   g_return_if_fail (closure);
 
   _cogl_closure_disconnect (closure);
-}
-
-typedef struct _SwapBufferCallbackState
-{
-  CoglSwapBuffersNotify callback;
-  void *user_data;
-} SwapBufferCallbackState;
-
-static void
-destroy_swap_buffers_callback_state (void *user_data)
-{
-  g_slice_free (SwapBufferCallbackState, user_data);
-}
-
-static void
-shim_swap_buffers_callback (CoglOnscreen *onscreen,
-                            CoglFrameEvent event,
-                            CoglFrameInfo *info,
-                            void *user_data)
-{
-  SwapBufferCallbackState *state = user_data;
-
-  /* XXX: Note that technically it is a change in semantics for this
-   * interface to forward _SYNC events here and also makes the api
-   * name somewhat missleading.
-   *
-   * In practice though this interface is currently used by
-   * applications for throttling, not because they are strictly
-   * interested in knowing when a frame has been presented and so
-   * forwarding _SYNC events should serve them better.
-   */
-  if (event == COGL_FRAME_EVENT_SYNC)
-    state->callback (COGL_FRAMEBUFFER (onscreen), state->user_data);
-}
-
-unsigned int
-cogl_onscreen_add_swap_buffers_callback (CoglOnscreen *onscreen,
-                                         CoglSwapBuffersNotify callback,
-                                         void *user_data)
-{
-  CoglContext *ctx = COGL_FRAMEBUFFER (onscreen)->context;
-  SwapBufferCallbackState *state = g_slice_new (SwapBufferCallbackState);
-  CoglFrameClosure *closure;
-  unsigned int id = ctx->next_swap_callback_id++;
-
-  state->callback = callback;
-  state->user_data = user_data;
-
-  closure =
-    cogl_onscreen_add_frame_callback (onscreen,
-                                      shim_swap_buffers_callback,
-                                      state,
-                                      destroy_swap_buffers_callback_state);
-
-  g_hash_table_insert (ctx->swap_callback_closures,
-                       GINT_TO_POINTER (id),
-                       closure);
-
-  return id;
-}
-
-void
-cogl_onscreen_remove_swap_buffers_callback (CoglOnscreen *onscreen,
-                                            unsigned int id)
-{
-  CoglContext *ctx = COGL_FRAMEBUFFER (onscreen)->context;
-  CoglFrameClosure *closure = g_hash_table_lookup (ctx->swap_callback_closures,
-                                                   GINT_TO_POINTER (id));
-
-  g_return_if_fail (closure);
-
-  cogl_onscreen_remove_frame_callback (onscreen, closure);
 }
 
 void

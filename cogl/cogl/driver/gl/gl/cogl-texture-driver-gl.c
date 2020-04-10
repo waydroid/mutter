@@ -43,10 +43,10 @@
 #include "cogl-pipeline.h"
 #include "cogl-context-private.h"
 #include "cogl-object-private.h"
-#include "cogl-primitives.h"
 #include "driver/gl/cogl-pipeline-opengl-private.h"
 #include "driver/gl/cogl-util-gl-private.h"
 #include "driver/gl/cogl-texture-gl-private.h"
+#include "driver/gl/cogl-bitmap-gl-private.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -65,7 +65,7 @@ _cogl_texture_driver_gen (CoglContext *ctx,
 
   GE (ctx, glGenTextures (1, &tex));
 
-  _cogl_bind_gl_texture_transient (gl_target, tex, FALSE);
+  _cogl_bind_gl_texture_transient (gl_target, tex);
 
   switch (gl_target)
     {
@@ -171,7 +171,6 @@ _cogl_texture_driver_prep_gl_for_pixels_download (CoglContext *ctx,
 static gboolean
 _cogl_texture_driver_upload_subregion_to_gl (CoglContext *ctx,
                                              CoglTexture *texture,
-                                             gboolean is_foreign,
                                              int src_x,
                                              int src_y,
                                              int dst_x,
@@ -188,12 +187,17 @@ _cogl_texture_driver_upload_subregion_to_gl (CoglContext *ctx,
   GLuint gl_handle;
   uint8_t *data;
   CoglPixelFormat source_format = cogl_bitmap_get_format (source_bmp);
-  int bpp = _cogl_pixel_format_get_bytes_per_pixel (source_format);
+  int bpp;
   gboolean status = TRUE;
   GError *internal_error = NULL;
   int level_width;
   int level_height;
 
+  g_return_val_if_fail (source_format != COGL_PIXEL_FORMAT_ANY, FALSE);
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (source_format) == 1,
+                        FALSE);
+
+  bpp = cogl_pixel_format_get_bytes_per_pixel (source_format, 0);
   cogl_texture_get_gl_texture (texture, &gl_handle, &gl_target);
 
   data = _cogl_bitmap_gl_bind (source_bmp, COGL_BUFFER_ACCESS_READ, 0, &internal_error);
@@ -215,7 +219,7 @@ _cogl_texture_driver_upload_subregion_to_gl (CoglContext *ctx,
                                   src_y,
                                   bpp);
 
-  _cogl_bind_gl_texture_transient (gl_target, gl_handle, is_foreign);
+  _cogl_bind_gl_texture_transient (gl_target, gl_handle);
 
   /* Clear any GL errors */
   _cogl_gl_util_clear_gl_errors (ctx);
@@ -285,7 +289,6 @@ static gboolean
 _cogl_texture_driver_upload_to_gl (CoglContext *ctx,
                                    GLenum gl_target,
                                    GLuint gl_handle,
-                                   gboolean is_foreign,
                                    CoglBitmap *source_bmp,
                                    GLint internal_gl_format,
                                    GLuint source_gl_format,
@@ -294,9 +297,15 @@ _cogl_texture_driver_upload_to_gl (CoglContext *ctx,
 {
   uint8_t *data;
   CoglPixelFormat source_format = cogl_bitmap_get_format (source_bmp);
-  int bpp = _cogl_pixel_format_get_bytes_per_pixel (source_format);
+  int bpp;
   gboolean status = TRUE;
   GError *internal_error = NULL;
+
+  g_return_val_if_fail (source_format != COGL_PIXEL_FORMAT_ANY, FALSE);
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (source_format) == 1,
+                        FALSE);
+
+  bpp = cogl_pixel_format_get_bytes_per_pixel (source_format, 0);
 
   data = _cogl_bitmap_gl_bind (source_bmp,
                                COGL_BUFFER_ACCESS_READ,
@@ -317,7 +326,7 @@ _cogl_texture_driver_upload_to_gl (CoglContext *ctx,
                                   cogl_bitmap_get_rowstride (source_bmp),
                                   0, 0, 0, bpp);
 
-  _cogl_bind_gl_texture_transient (gl_target, gl_handle, is_foreign);
+  _cogl_bind_gl_texture_transient (gl_target, gl_handle);
 
   /* Clear any GL errors */
   _cogl_gl_util_clear_gl_errors (ctx);
@@ -387,23 +396,6 @@ _cogl_texture_driver_size_supported (CoglContext *ctx,
   return new_width != 0;
 }
 
-static gboolean
-_cogl_texture_driver_allows_foreign_gl_target (CoglContext *ctx,
-                                               GLenum gl_target)
-{
-  /* GL_ARB_texture_rectangle textures are supported if they are
-     created from foreign because some chipsets have trouble with
-     GL_ARB_texture_non_power_of_two. There is no Cogl call to create
-     them directly to emphasize the fact that they don't work fully
-     (for example, no mipmapping and complicated shader support) */
-
-  /* Allow 2-dimensional or rectangle textures only */
-  if (gl_target != GL_TEXTURE_2D && gl_target != GL_TEXTURE_RECTANGLE_ARB)
-    return FALSE;
-
-  return TRUE;
-}
-
 static CoglPixelFormat
 _cogl_texture_driver_find_best_gl_get_data_format
                                             (CoglContext *context,
@@ -427,6 +419,5 @@ _cogl_texture_driver_gl =
     _cogl_texture_driver_prep_gl_for_pixels_download,
     _cogl_texture_driver_gl_get_tex_image,
     _cogl_texture_driver_size_supported,
-    _cogl_texture_driver_allows_foreign_gl_target,
     _cogl_texture_driver_find_best_gl_get_data_format
   };

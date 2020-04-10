@@ -129,8 +129,8 @@ meta_wayland_cursor_surface_assigned (MetaWaylandSurfaceRole *surface_role)
 }
 
 static void
-meta_wayland_cursor_surface_pre_commit (MetaWaylandSurfaceRole  *surface_role,
-                                        MetaWaylandPendingState *pending)
+meta_wayland_cursor_surface_pre_apply_state (MetaWaylandSurfaceRole  *surface_role,
+                                             MetaWaylandSurfaceState *pending)
 {
   MetaWaylandCursorSurface *cursor_surface =
     META_WAYLAND_CURSOR_SURFACE (surface_role);
@@ -147,8 +147,8 @@ meta_wayland_cursor_surface_pre_commit (MetaWaylandSurfaceRole  *surface_role,
 }
 
 static void
-meta_wayland_cursor_surface_commit (MetaWaylandSurfaceRole  *surface_role,
-                                    MetaWaylandPendingState *pending)
+meta_wayland_cursor_surface_apply_state (MetaWaylandSurfaceRole  *surface_role,
+                                         MetaWaylandSurfaceState *pending)
 {
   MetaWaylandCursorSurface *cursor_surface =
     META_WAYLAND_CURSOR_SURFACE (surface_role);
@@ -186,18 +186,18 @@ meta_wayland_cursor_surface_is_on_logical_monitor (MetaWaylandSurfaceRole *role,
     META_WAYLAND_CURSOR_SURFACE (surface->role);
   MetaWaylandCursorSurfacePrivate *priv =
     meta_wayland_cursor_surface_get_instance_private (cursor_surface);
-  ClutterPoint point;
-  ClutterRect logical_monitor_rect;
+  graphene_point_t point;
+  graphene_rect_t logical_monitor_rect;
 
   if (!priv->cursor_renderer)
     return FALSE;
 
   logical_monitor_rect =
-    meta_rectangle_to_clutter_rect (&logical_monitor->rect);
+    meta_rectangle_to_graphene_rect (&logical_monitor->rect);
 
   point = meta_cursor_renderer_get_position (priv->cursor_renderer);
 
-  return clutter_rect_contains_point (&logical_monitor_rect, &point);
+  return graphene_rect_contains_point (&logical_monitor_rect, &point);
 }
 
 static void
@@ -277,8 +277,9 @@ meta_wayland_cursor_surface_class_init (MetaWaylandCursorSurfaceClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   surface_role_class->assigned = meta_wayland_cursor_surface_assigned;
-  surface_role_class->pre_commit = meta_wayland_cursor_surface_pre_commit;
-  surface_role_class->commit = meta_wayland_cursor_surface_commit;
+  surface_role_class->pre_apply_state =
+    meta_wayland_cursor_surface_pre_apply_state;
+  surface_role_class->apply_state = meta_wayland_cursor_surface_apply_state;
   surface_role_class->is_on_logical_monitor =
     meta_wayland_cursor_surface_is_on_logical_monitor;
 
@@ -360,9 +361,8 @@ meta_wayland_cursor_surface_set_renderer (MetaWaylandCursorSurface *cursor_surfa
 
   if (priv->cursor_renderer)
     {
-      g_signal_handler_disconnect (priv->cursor_renderer,
-                                   priv->cursor_painted_handler_id);
-      priv->cursor_painted_handler_id = 0;
+      g_clear_signal_handler (&priv->cursor_painted_handler_id,
+                              priv->cursor_renderer);
       g_object_unref (priv->cursor_renderer);
     }
   if (renderer)

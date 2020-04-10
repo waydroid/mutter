@@ -132,4 +132,10 @@ void meta_output_unassign_crtc (MetaOutput *output);
 META_EXPORT_TEST
 MetaCrtc * meta_output_get_assigned_crtc (MetaOutput *output);
 
+MetaMonitorTransform meta_output_logical_to_crtc_transform (MetaOutput           *output,
+                                                            MetaMonitorTransform  transform);
+
+MetaMonitorTransform meta_output_crtc_to_logical_transform (MetaOutput           *output,
+                                                            MetaMonitorTransform  transform);
+
 #endif /* META_OUTPUT_H */

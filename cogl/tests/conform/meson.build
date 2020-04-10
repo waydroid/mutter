@@ -25,7 +25,7 @@ cogl_test_conformance_sources = [
   'test-point-sprite.c',
   'test-no-gl-header.c',
   'test-version.c',
-  'test-euler-quaternion.c',
+  'test-euler.c',
   'test-layer-remove.c',
   'test-alpha-test.c',
   'test-map-buffer-range.c',
@@ -45,8 +45,6 @@ cogl_test_conformance_sources = [
 ]
 
 #unported = [
-#  "test-fixed.c",
-#  "test-materials.c",
 #  "test-viewport.c",
 #  "test-multitexture.c",
 #  "test-npot-texture.c",
@@ -54,9 +52,6 @@ cogl_test_conformance_sources = [
 #  "test-readpixels.c",
 #  "test-texture-mipmaps.c",
 #  "test-texture-pixmap-x11.c",",
-#  "test-vertex-buffer-contiguous.c",
-#  "test-vertex-buffer-interleved.c",
-#  "test-vertex-buffer-mutability.c",
 #]
 
 cogl_test_conformance_includes = [

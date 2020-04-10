@@ -57,6 +57,7 @@ typedef struct _CoglMaterial	      CoglMaterial;
 typedef struct _CoglMaterialLayer     CoglMaterialLayer;
 
 #define COGL_TYPE_MATERIAL (cogl_material_get_type ())
+COGL_EXPORT
 GType cogl_material_get_type (void);
 
 #define COGL_MATERIAL(OBJECT) ((CoglMaterial *)OBJECT)
@@ -150,74 +151,8 @@ typedef enum
  * Deprecated: 1.16: Use cogl_pipeline_new() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_new)
-CoglMaterial *
+COGL_EXPORT CoglMaterial *
 cogl_material_new (void);
-
-/**
- * cogl_material_copy:
- * @source: a #CoglMaterial object to copy
- *
- * Creates a new material with the configuration copied from the
- * source material.
- *
- * We would strongly advise developers to always aim to use
- * cogl_material_copy() instead of cogl_material_new() whenever there will
- * be any similarity between two materials. Copying a material helps Cogl
- * keep track of a materials ancestry which we may use to help minimize GPU
- * state changes.
- *
- * Returns: a pointer to the newly allocated #CoglMaterial
- *
- * Since: 1.2
- * Deprecated: 1.16: Use cogl_pipeline_copy() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_copy)
-CoglMaterial *
-cogl_material_copy (CoglMaterial *source);
-
-/**
- * cogl_material_ref:
- * @material: a #CoglMaterial object.
- *
- * Increment the reference count for a #CoglMaterial.
- *
- * Return value: the @material.
- *
- * Since: 1.0
- *
- * Deprecated: 1.2: Use cogl_object_ref() instead
- */
-COGL_DEPRECATED
-CoglHandle
-cogl_material_ref (CoglHandle material);
-
-/**
- * cogl_material_unref:
- * @material: a #CoglMaterial object.
- *
- * Decrement the reference count for a #CoglMaterial.
- *
- * Since: 1.0
- *
- * Deprecated: 1.2: Use cogl_object_unref() instead
- */
-COGL_DEPRECATED
-void
-cogl_material_unref (CoglHandle material);
-
-/**
- * cogl_is_material:
- * @handle: A CoglHandle
- *
- * Gets whether the given handle references an existing material object.
- *
- * Return value: %TRUE if the handle references a #CoglMaterial,
- *   %FALSE otherwise
- * Deprecated: 1.16: Use cogl_is_pipeline() instead
- */
-COGL_DEPRECATED_FOR (cogl_is_pipeline)
-gboolean
-cogl_is_material (CoglHandle handle);
 
 /**
  * cogl_material_set_color:
@@ -237,7 +172,7 @@ cogl_is_material (CoglHandle handle);
  * Deprecated: 1.16: Use cogl_pipeline_set_color() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_color)
-void
+COGL_EXPORT void
 cogl_material_set_color (CoglMaterial    *material,
                          const CoglColor *color);
 
@@ -257,244 +192,12 @@ cogl_material_set_color (CoglMaterial    *material,
  * Deprecated: 1.16: Use cogl_pipeline_set_color4ub() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_color4ub)
-void
+COGL_EXPORT void
 cogl_material_set_color4ub (CoglMaterial *material,
 			    uint8_t red,
                             uint8_t green,
                             uint8_t blue,
                             uint8_t alpha);
-
-/**
- * cogl_material_set_color4f:
- * @material: A #CoglMaterial object
- * @red: The red component
- * @green: The green component
- * @blue: The blue component
- * @alpha: The alpha component
- *
- * Sets the basic color of the material, used when no lighting is enabled.
- *
- * The default value is (1.0, 1.0, 1.0, 1.0)
- *
- * Since: 1.0
- * Deprecated: 1.16: Use cogl_pipeline_set_color4f() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_set_color4f)
-void
-cogl_material_set_color4f (CoglMaterial *material,
-                           float         red,
-                           float         green,
-                           float         blue,
-                           float         alpha);
-
-/**
- * cogl_material_get_color:
- * @material: A #CoglMaterial object
- * @color: (out): The location to store the color
- *
- * Retrieves the current material color.
- *
- * Since: 1.0
- * Deprecated: 1.16: Use cogl_pipeline_get_color() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_get_color)
-void
-cogl_material_get_color (CoglMaterial *material,
-                         CoglColor    *color);
-
-/**
- * cogl_material_set_ambient:
- * @material: A #CoglMaterial object
- * @ambient: The components of the desired ambient color
- *
- * Sets the material's ambient color, in the standard OpenGL lighting
- * model. The ambient color affects the overall color of the object.
- *
- * Since the diffuse color will be intense when the light hits the surface
- * directly, the ambient will be most apparent where the light hits at a
- * slant.
- *
- * The default value is (0.2, 0.2, 0.2, 1.0)
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_set_ambient (CoglMaterial    *material,
-			   const CoglColor *ambient);
-
-/**
- * cogl_material_get_ambient:
- * @material: A #CoglMaterial object
- * @ambient: The location to store the ambient color
- *
- * Retrieves the current ambient color for @material
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_get_ambient (CoglMaterial *material,
-                           CoglColor    *ambient);
-
-/**
- * cogl_material_set_diffuse:
- * @material: A #CoglMaterial object
- * @diffuse: The components of the desired diffuse color
- *
- * Sets the material's diffuse color, in the standard OpenGL lighting
- * model. The diffuse color is most intense where the light hits the
- * surface directly - perpendicular to the surface.
- *
- * The default value is (0.8, 0.8, 0.8, 1.0)
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_set_diffuse (CoglMaterial    *material,
-			   const CoglColor *diffuse);
-
-/**
- * cogl_material_get_diffuse:
- * @material: A #CoglMaterial object
- * @diffuse: The location to store the diffuse color
- *
- * Retrieves the current diffuse color for @material
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_get_diffuse (CoglMaterial *material,
-                           CoglColor    *diffuse);
-
-/**
- * cogl_material_set_ambient_and_diffuse:
- * @material: A #CoglMaterial object
- * @color: The components of the desired ambient and diffuse colors
- *
- * Conveniently sets the diffuse and ambient color of @material at the same
- * time. See cogl_material_set_ambient() and cogl_material_set_diffuse().
- *
- * The default ambient color is (0.2, 0.2, 0.2, 1.0)
- *
- * The default diffuse color is (0.8, 0.8, 0.8, 1.0)
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_set_ambient_and_diffuse (CoglMaterial    *material,
-				       const CoglColor *color);
-
-/**
- * cogl_material_set_specular:
- * @material: A #CoglMaterial object
- * @specular: The components of the desired specular color
- *
- * Sets the material's specular color, in the standard OpenGL lighting
- * model. The intensity of the specular color depends on the viewport
- * position, and is brightest along the lines of reflection.
- *
- * The default value is (0.0, 0.0, 0.0, 1.0)
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_set_specular (CoglMaterial    *material,
-			    const CoglColor *specular);
-
-/**
- * cogl_material_get_specular:
- * @material: A #CoglMaterial object
- * @specular: The location to store the specular color
- *
- * Retrieves the materials current specular color.
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_get_specular (CoglMaterial *material,
-                            CoglColor    *specular);
-
-/**
- * cogl_material_set_shininess:
- * @material: A #CoglMaterial object
- * @shininess: The desired shininess; must be >= 0.0
- *
- * Sets the shininess of the material, in the standard OpenGL lighting
- * model, which determines the size of the specular highlights. A
- * higher @shininess will produce smaller highlights which makes the
- * object appear more shiny.
- *
- * The default value is 0.0
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_set_shininess (CoglMaterial *material,
-			     float         shininess);
-
-/**
- * cogl_material_get_shininess:
- * @material: A #CoglMaterial object
- *
- * Retrieves the materials current emission color.
- *
- * Return value: The materials current shininess value
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-float
-cogl_material_get_shininess (CoglMaterial *material);
-
-/**
- * cogl_material_set_emission:
- * @material: A #CoglMaterial object
- * @emission: The components of the desired emissive color
- *
- * Sets the material's emissive color, in the standard OpenGL lighting
- * model. It will look like the surface is a light source emitting this
- * color.
- *
- * The default value is (0.0, 0.0, 0.0, 1.0)
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_set_emission (CoglMaterial    *material,
-			    const CoglColor *emission);
-
-/**
- * cogl_material_get_emission:
- * @material: A #CoglMaterial object
- * @emission: The location to store the emission color
- *
- * Retrieves the materials current emission color.
- *
- * Since: 1.0
- * Deprecated: 1.16: Use the #CoglSnippet shader api for lighting
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-void
-cogl_material_get_emission (CoglMaterial *material,
-                            CoglColor    *emission);
 
 /**
  * CoglMaterialAlphaFunc:
@@ -549,7 +252,7 @@ typedef enum
  * Deprecated: 1.16: Use cogl_pipeline_set_alpha_test_function() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_alpha_test_function)
-void
+COGL_EXPORT void
 cogl_material_set_alpha_test_function (CoglMaterial         *material,
 				       CoglMaterialAlphaFunc alpha_func,
 				       float                 alpha_reference);
@@ -640,7 +343,7 @@ cogl_material_set_alpha_test_function (CoglMaterial         *material,
  * Deprecated: 1.16: Use cogl_pipeline_set_blend() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_blend)
-gboolean
+COGL_EXPORT gboolean
 cogl_material_set_blend (CoglMaterial *material,
                          const char   *blend_string,
                          GError      **error);
@@ -657,7 +360,7 @@ cogl_material_set_blend (CoglMaterial *material,
  * Deprecated: 1.16: Use cogl_pipeline_set_blend_constant() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_blend_constant)
-void
+COGL_EXPORT void
 cogl_material_set_blend_constant (CoglMaterial *material,
                                   const CoglColor *constant_color);
 
@@ -678,42 +381,9 @@ cogl_material_set_blend_constant (CoglMaterial *material,
  * Deprecated: 1.16: Use cogl_pipeline_set_point_size() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_point_size)
-void
+COGL_EXPORT void
 cogl_material_set_point_size (CoglMaterial *material,
                               float         point_size);
-
-/**
- * cogl_material_get_point_size:
- * @material: a #CoglHandle to a material.
- *
- * Get the size of points drawn when %COGL_VERTICES_MODE_POINTS is
- * used with the vertex buffer API.
- *
- * Return value: the point size of the material.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use cogl_pipeline_get_point_size() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_get_point_size)
-float
-cogl_material_get_point_size (CoglMaterial *material);
-
-/**
- * cogl_material_get_user_program:
- * @material: a #CoglMaterial object.
- *
- * Queries what user program has been associated with the given
- * @material using cogl_material_set_user_program().
- *
- * Return value: (transfer none): The current user program
- *   or %COGL_INVALID_HANDLE.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use #CoglSnippet api instead instead
- */
-COGL_DEPRECATED_FOR (cogl_snippet_)
-CoglHandle
-cogl_material_get_user_program (CoglMaterial *material);
 
 /**
  * cogl_material_set_user_program:
@@ -735,7 +405,6 @@ cogl_material_get_user_program (CoglMaterial *material);
  *                     "!!ARBfp1.0\n"
  *                     "MOV result.color,fragment.color;\n"
  *                     "END\n");
- * cogl_shader_compile (shader);
  *
  * program = cogl_create_program ();
  * cogl_program_attach_shader (program, shader);
@@ -759,7 +428,7 @@ cogl_material_get_user_program (CoglMaterial *material);
  * Deprecated: 1.16: Use #CoglSnippet api instead instead
  */
 COGL_DEPRECATED_FOR (cogl_snippet_)
-void
+COGL_EXPORT void
 cogl_material_set_user_program (CoglMaterial *material,
                                 CoglHandle program);
 
@@ -784,24 +453,10 @@ cogl_material_set_user_program (CoglMaterial *material,
  * Deprecated: 1.16: Use cogl_pipeline_set_layer() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_layer)
-void
+COGL_EXPORT void
 cogl_material_set_layer (CoglMaterial *material,
 			 int           layer_index,
 			 CoglHandle    texture);
-
-/**
- * cogl_material_remove_layer:
- * @material: A #CoglMaterial object
- * @layer_index: Specifies the layer you want to remove
- *
- * This function removes a layer from your material
- * Deprecated: 1.16: Use cogl_pipeline_remove_layer() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_remove_layer)
-void
-cogl_material_remove_layer (CoglMaterial *material,
-			    int           layer_index);
-
 
 /**
  * cogl_material_set_layer_combine:
@@ -897,7 +552,7 @@ cogl_material_remove_layer (CoglMaterial *material,
  * Deprecated: 1.16: Use cogl_pipeline_set_layer_combine() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_layer_combine)
-gboolean
+COGL_EXPORT gboolean
 cogl_material_set_layer_combine (CoglMaterial *material,
 				 int           layer_index,
 				 const char   *blend_string,
@@ -918,7 +573,7 @@ cogl_material_set_layer_combine (CoglMaterial *material,
  * instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_layer_combine_constant)
-void
+COGL_EXPORT void
 cogl_material_set_layer_combine_constant (CoglMaterial    *material,
                                           int              layer_index,
                                           const CoglColor *constant);
@@ -934,130 +589,10 @@ cogl_material_set_layer_combine_constant (CoglMaterial    *material,
  * Deprecated: 1.16: Use cogl_pipeline_set_layer_matrix() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_layer_matrix)
-void
+COGL_EXPORT void
 cogl_material_set_layer_matrix (CoglMaterial     *material,
 				int               layer_index,
 				const CoglMatrix *matrix);
-
-/**
- * cogl_material_get_layers:
- * @material: A #CoglMaterial object
- *
- * This function lets you access a material's internal list of layers
- * for iteration.
- *
- * <note>You should avoid using this API if possible since it was only
- * made public by mistake and will be deprecated when we have
- * suitable alternative.</note>
- *
- * <note>It's important to understand that the list returned may not
- * remain valid if you modify the material or any of the layers in any
- * way and so you would have to re-get the list in that
- * situation.</note>
- *
- * Return value: (element-type CoglMaterialLayer) (transfer none): A
- *    list of #CoglMaterialLayer<!-- -->'s that can be passed to the
- *    cogl_material_layer_* functions. The list is owned by Cogl and it
- *    should not be modified or freed
- *    Deprecated: 1.16: Use cogl_pipeline_get_layers() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_get_layers)
-const GList *
-cogl_material_get_layers (CoglMaterial *material);
-
-/**
- * cogl_material_get_n_layers:
- * @material: A #CoglMaterial object
- *
- * Retrieves the number of layers defined for the given @material
- *
- * Return value: the number of layers
- *
- * Since: 1.0
- * Deprecated: 1.16: Use cogl_pipeline_get_n_layers() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_get_n_layers)
-int
-cogl_material_get_n_layers (CoglMaterial *material);
-
-/**
- * CoglMaterialLayerType:
- * @COGL_MATERIAL_LAYER_TYPE_TEXTURE: The layer represents a
- *   <link linkend="cogl-Textures">texture</link>
- *
- * Available types of layers for a #CoglMaterial. This enumeration
- * might be expanded in later versions.
- *
- * Since: 1.0
- */
-typedef enum
-{
-  COGL_MATERIAL_LAYER_TYPE_TEXTURE
-} CoglMaterialLayerType;
-
-
-/**
- * cogl_material_layer_get_type:
- * @layer: A #CoglMaterialLayer object
- *
- * Retrieves the type of the layer
- *
- * Currently there is only one type of layer defined:
- * %COGL_MATERIAL_LAYER_TYPE_TEXTURE, but considering we may add purely GLSL
- * based layers in the future, you should write code that checks the type
- * first.
- *
- * Return value: the type of the layer
- * Deprecated: 1.16: No replacement
- */
-COGL_DEPRECATED
-CoglMaterialLayerType
-cogl_material_layer_get_type (CoglMaterialLayer *layer);
-
-/**
- * cogl_material_layer_get_texture:
- * @layer: A #CoglMaterialLayer object
- *
- * Extracts a texture handle for a specific layer.
- *
- * <note>In the future Cogl may support purely GLSL based layers; for those
- * layers this function which will likely return %COGL_INVALID_HANDLE if you
- * try to get the texture handle from them. Considering this scenario, you
- * should call cogl_material_layer_get_type() first in order check it is of
- * type %COGL_MATERIAL_LAYER_TYPE_TEXTURE before calling this function.</note>
- *
- * Return value: (transfer none): a #CoglHandle for the texture inside the layer
- * Deprecated: 1.16: No replacement
- */
-COGL_DEPRECATED
-CoglHandle
-cogl_material_layer_get_texture (CoglMaterialLayer *layer);
-
-/**
- * cogl_material_layer_get_min_filter:
- * @layer: a #CoglHandle for a material layer
- *
- * Queries the currently set downscaling filter for a material layer
- *
- * Return value: the current downscaling filter
- * Deprecated: 1.16: No replacement
- */
-COGL_DEPRECATED
-CoglMaterialFilter
-cogl_material_layer_get_min_filter (CoglMaterialLayer *layer);
-
-/**
- * cogl_material_layer_get_mag_filter:
- * @layer: A #CoglMaterialLayer object
- *
- * Queries the currently set downscaling filter for a material later
- *
- * Return value: the current downscaling filter
- * Deprecated: 1.16: No replacement
- */
-COGL_DEPRECATED
-CoglMaterialFilter
-cogl_material_layer_get_mag_filter (CoglMaterialLayer *layer);
 
 /**
  * cogl_material_set_layer_filters:
@@ -1071,7 +606,7 @@ cogl_material_layer_get_mag_filter (CoglMaterialLayer *layer);
  * Deprecated: 1.16: Use cogl_pipeline_set_layer_filters() instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_layer_filters)
-void
+COGL_EXPORT void
 cogl_material_set_layer_filters (CoglMaterial      *material,
                                  int                layer_index,
                                  CoglMaterialFilter min_filter,
@@ -1091,299 +626,17 @@ cogl_material_set_layer_filters (CoglMaterial      *material,
  * have 1.0,1.0. If @enable is %FALSE then the coordinates will be
  * fixed for the entire point.
  *
- * This function will only work if %COGL_FEATURE_POINT_SPRITE is
- * available. If the feature is not available then the function will
- * return %FALSE and set @error.
- *
  * Return value: %TRUE if the function succeeds, %FALSE otherwise.
  * Since: 1.4
  * Deprecated: 1.16: Use cogl_pipeline_set_layer_point_sprite_coords_enabled()
  *                  instead
  */
 COGL_DEPRECATED_FOR (cogl_pipeline_set_layer_point_sprite_coords_enabled)
-gboolean
+COGL_EXPORT gboolean
 cogl_material_set_layer_point_sprite_coords_enabled (CoglMaterial *material,
                                                      int           layer_index,
                                                      gboolean      enable,
                                                      GError      **error);
-
-/**
- * cogl_material_get_layer_point_sprite_coords_enabled:
- * @material: a #CoglHandle to a material.
- * @layer_index: the layer number to check.
- *
- * Gets whether point sprite coordinate generation is enabled for this
- * texture layer.
- *
- * Return value: whether the texture coordinates will be replaced with
- * point sprite coordinates.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use cogl_pipeline_get_layer_point_sprite_coords_enabled()
- *                  instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_get_layer_point_sprite_coords_enabled)
-gboolean
-cogl_material_get_layer_point_sprite_coords_enabled (CoglMaterial *material,
-                                                     int           layer_index);
-
-/**
- * cogl_material_get_layer_wrap_mode_s:
- * @material: A #CoglMaterial object
- * @layer_index: the layer number to change.
- *
- * Returns the wrap mode for the 's' coordinate of texture lookups on this
- * layer.
- *
- * Return value: the wrap mode for the 's' coordinate of texture lookups on
- * this layer.
- *
- * Since: 1.6
- * Deprecated: 1.16: Use cogl_pipeline_get_layer_wrap_mode_s() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_get_layer_wrap_mode_s)
-CoglMaterialWrapMode
-cogl_material_get_layer_wrap_mode_s (CoglMaterial *material,
-                                     int           layer_index);
-
-/**
- * cogl_material_set_layer_wrap_mode_s:
- * @material: A #CoglMaterial object
- * @layer_index: the layer number to change.
- * @mode: the new wrap mode
- *
- * Sets the wrap mode for the 's' coordinate of texture lookups on this layer.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use cogl_pipeline_set_layer_wrap_mode_s() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_set_layer_wrap_mode_s)
-void
-cogl_material_set_layer_wrap_mode_s (CoglMaterial        *material,
-                                     int                  layer_index,
-                                     CoglMaterialWrapMode mode);
-
-/**
- * cogl_material_get_layer_wrap_mode_t:
- * @material: A #CoglMaterial object
- * @layer_index: the layer number to change.
- *
- * Returns the wrap mode for the 't' coordinate of texture lookups on this
- * layer.
- *
- * Return value: the wrap mode for the 't' coordinate of texture lookups on
- * this layer.
- *
- * Since: 1.6
- * Deprecated: 1.16: Use cogl_pipeline_get_layer_wrap_mode_t() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_get_layer_wrap_mode_t)
-CoglMaterialWrapMode
-cogl_material_get_layer_wrap_mode_t (CoglMaterial *material,
-                                     int           layer_index);
-
-
-/**
- * cogl_material_set_layer_wrap_mode_t:
- * @material: A #CoglMaterial object
- * @layer_index: the layer number to change.
- * @mode: the new wrap mode
- *
- * Sets the wrap mode for the 't' coordinate of texture lookups on this layer.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use cogl_pipeline_set_layer_wrap_mode_t() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_set_layer_wrap_mode_t)
-void
-cogl_material_set_layer_wrap_mode_t (CoglMaterial        *material,
-                                     int                  layer_index,
-                                     CoglMaterialWrapMode mode);
-
-/**
- * cogl_material_get_layer_wrap_mode_p:
- * @material: A #CoglMaterial object
- * @layer_index: the layer number to change.
- *
- * Returns the wrap mode for the 'p' coordinate of texture lookups on this
- * layer.
- *
- * Return value: the wrap mode for the 'p' coordinate of texture lookups on
- * this layer.
- *
- * Since: 1.6
- * Deprecated: 1.16: Use cogl_pipeline_get_layer_wrap_mode_p() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_get_layer_wrap_mode_p)
-CoglMaterialWrapMode
-cogl_material_get_layer_wrap_mode_p (CoglMaterial *material,
-                                     int           layer_index);
-
-/**
- * cogl_material_set_layer_wrap_mode_p:
- * @material: A #CoglMaterial object
- * @layer_index: the layer number to change.
- * @mode: the new wrap mode
- *
- * Sets the wrap mode for the 'p' coordinate of texture lookups on
- * this layer. 'p' is the third coordinate.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use cogl_pipeline_set_layer_wrap_mode_p() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_set_layer_wrap_mode_p)
-void
-cogl_material_set_layer_wrap_mode_p (CoglMaterial        *material,
-                                     int                  layer_index,
-                                     CoglMaterialWrapMode mode);
-
-/**
- * cogl_material_set_layer_wrap_mode:
- * @material: A #CoglMaterial object
- * @layer_index: the layer number to change.
- * @mode: the new wrap mode
- *
- * Sets the wrap mode for all three coordinates of texture lookups on
- * this layer. This is equivalent to calling
- * cogl_material_set_layer_wrap_mode_s(),
- * cogl_material_set_layer_wrap_mode_t() and
- * cogl_material_set_layer_wrap_mode_p() separately.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use cogl_pipeline_set_layer_wrap_mode() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_set_layer_wrap_mode)
-void
-cogl_material_set_layer_wrap_mode (CoglMaterial        *material,
-                                   int                  layer_index,
-                                   CoglMaterialWrapMode mode);
-
-/**
- * cogl_material_layer_get_wrap_mode_s:
- * @layer: A #CoglMaterialLayer object
- *
- * Gets the wrap mode for the 's' coordinate of texture lookups on this layer.
- *
- * Return value: the wrap mode value for the s coordinate.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use cogl_pipeline_layer_get_wrap_mode_s() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_layer_get_wrap_mode_s)
-CoglMaterialWrapMode
-cogl_material_layer_get_wrap_mode_s (CoglMaterialLayer *layer);
-
-/**
- * cogl_material_layer_get_wrap_mode_t:
- * @layer: A #CoglMaterialLayer object
- *
- * Gets the wrap mode for the 't' coordinate of texture lookups on this layer.
- *
- * Return value: the wrap mode value for the t coordinate.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use cogl_pipeline_layer_get_wrap_mode_t() instead
- */
-
-COGL_DEPRECATED_FOR (cogl_pipeline_layer_get_wrap_mode_t)
-CoglMaterialWrapMode
-cogl_material_layer_get_wrap_mode_t (CoglMaterialLayer *layer);
-
-/**
- * cogl_material_layer_get_wrap_mode_p:
- * @layer: A #CoglMaterialLayer object
- *
- * Gets the wrap mode for the 'p' coordinate of texture lookups on
- * this layer. 'p' is the third coordinate.
- *
- * Return value: the wrap mode value for the p coordinate.
- *
- * Since: 1.4
- * Deprecated: 1.16: Use cogl_pipeline_layer_get_wrap_mode_p() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_layer_get_wrap_mode_p)
-CoglMaterialWrapMode
-cogl_material_layer_get_wrap_mode_p (CoglMaterialLayer *layer);
-
-/**
- * cogl_material_set_depth_state: (skip)
- * @material: A #CoglMaterial object
- * @state: A #CoglDepthState struct
- * @error: A #GError to report failures to setup the given @state.
- *
- * This commits all the depth state configured in @state struct to the
- * given @material. The configuration values are copied into the
- * material so there is no requirement to keep the #CoglDepthState
- * struct around if you don't need it any more.
- *
- * Note: Since some platforms do not support the depth range feature
- * it is possible for this function to fail and report an @error.
- *
- * Returns: TRUE if the GPU supports all the given @state else %FALSE
- *          and returns an @error.
- *
- * Since: 1.8
- * Stability: Unstable
- * Deprecated: 1.16: Use cogl_pipeline_set_depth_state() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_set_depth_state)
-gboolean
-cogl_material_set_depth_state (CoglMaterial *material,
-                               const CoglDepthState *state,
-                               GError **error);
-
-/**
- * cogl_material_get_depth_state: (skip)
- * @material: A #CoglMaterial object
- * @state_out: A destination #CoglDepthState struct
- *
- * Retrieves the current depth state configuration for the given
- * @pipeline as previously set using cogl_pipeline_set_depth_state().
- *
- * Since: 2.0
- * Stability: Unstable
- * Deprecated: 1.16: Use cogl_pipeline_get_depth_state() instead
- */
-COGL_DEPRECATED_FOR (cogl_pipeline_get_depth_state)
-void
-cogl_material_get_depth_state (CoglMaterial *material,
-                               CoglDepthState *state_out);
-
-/**
- * CoglMaterialLayerCallback:
- * @material: The #CoglMaterial whos layers are being iterated
- * @layer_index: The current layer index
- * @user_data: The private data passed to cogl_material_foreach_layer()
- *
- * The callback prototype used with cogl_material_foreach_layer() for
- * iterating all the layers of a @material.
- *
- * Since: 1.4
- * Stability: Unstable
- * Deprecated: 1.16
- */
-typedef gboolean (*CoglMaterialLayerCallback) (CoglMaterial *material,
-                                               int layer_index,
-                                               void *user_data);
-
-/**
- * cogl_material_foreach_layer:
- * @material: A #CoglMaterial object
- * @callback: (scope call): A #CoglMaterialLayerCallback to be called for each
- *            layer index
- * @user_data: Private data that will be passed to the callback
- *
- * Iterates all the layer indices of the given @material.
- *
- * Since: 1.4
- * Stability: Unstable
- * Deprecated: 1.16: No replacement
- */
-COGL_DEPRECATED
-void
-cogl_material_foreach_layer (CoglMaterial *material,
-                             CoglMaterialLayerCallback callback,
-                             void *user_data);
 
 G_END_DECLS
 

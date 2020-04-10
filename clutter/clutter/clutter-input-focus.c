@@ -89,8 +89,8 @@ clutter_input_focus_reset (ClutterInputFocus *focus)
 }
 
 void
-clutter_input_focus_set_cursor_location (ClutterInputFocus *focus,
-                                         const ClutterRect *rect)
+clutter_input_focus_set_cursor_location (ClutterInputFocus     *focus,
+                                         const graphene_rect_t *rect)
 {
   ClutterInputFocusPrivate *priv;
 
@@ -217,7 +217,7 @@ clutter_input_focus_commit (ClutterInputFocus *focus,
 
 void
 clutter_input_focus_delete_surrounding (ClutterInputFocus *focus,
-                                        guint              offset,
+                                        int                offset,
                                         guint              len)
 {
   g_return_if_fail (CLUTTER_IS_INPUT_FOCUS (focus));

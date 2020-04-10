@@ -119,6 +119,7 @@ write_mimetypes_cb (GOutputStream *stream,
 
   g_output_stream_write_bytes_finish (stream, res, &error);
   g_output_stream_close (stream, NULL, NULL);
+  g_object_unref (stream);
 
   if (error)
     {
@@ -297,6 +298,7 @@ source_new_cb (GObject      *object,
     {
       meta_selection_set_owner (selection, selection_type, source);
       g_set_object (&x11_display->selection.owners[selection_type], source);
+      g_object_unref (source);
     }
   else if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
     {
@@ -440,10 +442,22 @@ void
 meta_x11_selection_shutdown (MetaX11Display *x11_display)
 {
   MetaDisplay *display = meta_get_display ();
+  guint i;
 
   g_signal_handlers_disconnect_by_func (meta_display_get_selection (display),
                                         owner_changed_cb,
                                         x11_display);
+
+  for (i = 0; i < META_N_SELECTION_TYPES; i++)
+    {
+      g_clear_object (&x11_display->selection.owners[i]);
+      if (x11_display->selection.cancellables[i])
+        {
+          g_cancellable_cancel (x11_display->selection.cancellables[i]);
+          g_clear_object (&x11_display->selection.cancellables[i]);
+        }
+    }
+
   if (x11_display->selection.xwindow != None)
     {
       XDestroyWindow (x11_display->xdisplay, x11_display->selection.xwindow);

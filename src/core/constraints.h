@@ -29,8 +29,11 @@
 
 void meta_window_constrain (MetaWindow          *window,
                             MetaMoveResizeFlags  flags,
-                            int                  resize_gravity,
+                            MetaGravity          resize_gravity,
                             const MetaRectangle *orig,
-                            MetaRectangle       *new);
+                            MetaRectangle       *new,
+                            MetaRectangle       *intermediate,
+                            int                 *rel_x,
+                            int                 *rel_y);
 
 #endif /* META_CONSTRAINTS_H */

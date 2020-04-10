@@ -118,9 +118,10 @@ clutter_image_init (ClutterImage *self)
 }
 
 static void
-clutter_image_paint_content (ClutterContent   *content,
-                             ClutterActor     *actor,
-                             ClutterPaintNode *root)
+clutter_image_paint_content (ClutterContent      *content,
+                             ClutterActor        *actor,
+                             ClutterPaintNode    *root,
+                             ClutterPaintContext *paint_context)
 {
   ClutterImagePrivate *priv = CLUTTER_IMAGE (content)->priv;
   ClutterPaintNode *node;
@@ -129,7 +130,7 @@ clutter_image_paint_content (ClutterContent   *content,
     return;
 
   node = clutter_actor_create_texture_paint_node (actor, priv->texture);
-  clutter_paint_node_set_name (node, "Image Content");
+  clutter_paint_node_set_static_name (node, "Image Content");
   clutter_paint_node_add_child (root, node);
   clutter_paint_node_unref (node);
 }

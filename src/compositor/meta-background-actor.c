@@ -193,7 +193,12 @@ set_clip_region (MetaBackgroundActor *self,
 {
   g_clear_pointer (&self->clip_region, cairo_region_destroy);
   if (clip_region)
-    self->clip_region = cairo_region_copy (clip_region);
+    {
+      if (cairo_region_is_empty (clip_region))
+        self->clip_region = cairo_region_reference (clip_region);
+      else
+        self->clip_region = cairo_region_copy (clip_region);
+    }
 }
 
 static void
@@ -202,7 +207,12 @@ set_unobscured_region (MetaBackgroundActor *self,
 {
   g_clear_pointer (&self->unobscured_region, cairo_region_destroy);
   if (unobscured_region)
-    self->unobscured_region = cairo_region_copy (unobscured_region);
+    {
+      if (cairo_region_is_empty (unobscured_region))
+        self->unobscured_region = cairo_region_reference (unobscured_region);
+      else
+        self->unobscured_region = cairo_region_copy (unobscured_region);
+    }
 }
 
 static void
@@ -337,6 +347,7 @@ make_pipeline (PipelineFlags pipeline_flags)
 
 static void
 setup_pipeline (MetaBackgroundActor   *self,
+                ClutterPaintContext   *paint_context,
                 cairo_rectangle_int_t *actor_pixel_rect)
 {
   PipelineFlags pipeline_flags = 0;
@@ -436,9 +447,11 @@ setup_pipeline (MetaBackgroundActor   *self,
                              color_component,
                              opacity / 255.);
 
-  fb = cogl_get_draw_framebuffer ();
+  fb = clutter_paint_context_get_framebuffer (paint_context);
   if (!self->force_bilinear &&
       meta_actor_painting_untransformed (fb,
+                                         actor_pixel_rect->width,
+                                         actor_pixel_rect->height,
                                          actor_pixel_rect->width,
                                          actor_pixel_rect->height,
                                          NULL, NULL))
@@ -507,7 +520,8 @@ meta_background_actor_get_paint_volume (ClutterActor       *actor,
 }
 
 static void
-meta_background_actor_paint (ClutterActor *actor)
+meta_background_actor_paint (ClutterActor        *actor,
+                             ClutterPaintContext *paint_context)
 {
   MetaBackgroundActor *self = META_BACKGROUND_ACTOR (actor);
   ClutterActorBox actor_box;
@@ -525,14 +539,14 @@ meta_background_actor_paint (ClutterActor *actor)
   actor_pixel_rect.width = actor_box.x2 - actor_box.x1;
   actor_pixel_rect.height = actor_box.y2 - actor_box.y1;
 
-  setup_pipeline (self, &actor_pixel_rect);
+  setup_pipeline (self, paint_context, &actor_pixel_rect);
   set_glsl_parameters (self, &actor_pixel_rect);
 
   /* Limit to how many separate rectangles we'll draw; beyond this just
    * fall back and draw the whole thing */
 #define MAX_RECTS 64
 
-  fb = cogl_get_draw_framebuffer ();
+  fb = clutter_paint_context_get_framebuffer (paint_context);
 
   /* Now figure out what to actually paint.
    */

@@ -78,13 +78,14 @@ typedef enum
   META_MOVE_RESIZE_USER_ACTION = 1 << 1,
   META_MOVE_RESIZE_MOVE_ACTION = 1 << 2,
   META_MOVE_RESIZE_RESIZE_ACTION = 1 << 3,
-  META_MOVE_RESIZE_WAYLAND_RESIZE = 1 << 4,
+  META_MOVE_RESIZE_WAYLAND_FINISH_MOVE_RESIZE = 1 << 4,
   META_MOVE_RESIZE_STATE_CHANGED = 1 << 5,
   META_MOVE_RESIZE_UNMAXIMIZE = 1 << 6,
   META_MOVE_RESIZE_UNFULLSCREEN = 1 << 7,
   META_MOVE_RESIZE_FORCE_MOVE = 1 << 8,
   META_MOVE_RESIZE_WAYLAND_STATE_CHANGED = 1 << 9,
   META_MOVE_RESIZE_FORCE_UPDATE_MONITOR = 1 << 10,
+  META_MOVE_RESIZE_PLACEMENT_CHANGED = 1 << 11,
 } MetaMoveResizeFlags;
 
 typedef enum
@@ -141,12 +142,19 @@ typedef struct _MetaPlacementRule
   int offset_y;
   int width;
   int height;
+
+  gboolean is_reactive;
+
+  MetaRectangle parent_rect;
 } MetaPlacementRule;
 
 typedef enum _MetaPlacementState
 {
   META_PLACEMENT_STATE_UNCONSTRAINED,
-  META_PLACEMENT_STATE_CONSTRAINED,
+  META_PLACEMENT_STATE_CONSTRAINED_PENDING,
+  META_PLACEMENT_STATE_CONSTRAINED_CONFIGURED,
+  META_PLACEMENT_STATE_CONSTRAINED_FINISHED,
+  META_PLACEMENT_STATE_INVALIDATED,
 } MetaPlacementState;
 
 typedef enum
@@ -534,10 +542,22 @@ struct _MetaWindow
   /* Bypass compositor hints */
   guint bypass_compositor;
 
-  MetaPlacementRule *placement_rule;
-  MetaPlacementState placement_state;
-  int constrained_placement_rule_offset_x;
-  int constrained_placement_rule_offset_y;
+  struct {
+    MetaPlacementRule *rule;
+    MetaPlacementState state;
+
+    struct {
+      int x;
+      int y;
+      int rel_x;
+      int rel_y;
+    } pending;
+
+    struct {
+      int rel_x;
+      int rel_y;
+    } current;
+  } placement;
 
   guint unmanage_idle_id;
 };
@@ -561,9 +581,12 @@ struct _MetaWindowClass
                                   MetaGrabOp  op);
   void (*current_workspace_changed) (MetaWindow *window);
   void (*move_resize_internal)   (MetaWindow                *window,
-                                  int                        gravity,
+                                  MetaGravity                gravity,
                                   MetaRectangle              unconstrained_rect,
                                   MetaRectangle              constrained_rect,
+                                  MetaRectangle              temporary_rect,
+                                  int                        rel_x,
+                                  int                        rel_y,
                                   MetaMoveResizeFlags        flags,
                                   MetaMoveResizeResultFlags *result);
   gboolean (*update_struts)      (MetaWindow *window);
@@ -578,6 +601,8 @@ struct _MetaWindowClass
                                   MetaWindowUpdateMonitorFlags  flags);
   void (*main_monitor_changed)   (MetaWindow *window,
                                   const MetaLogicalMonitor *old);
+  void (*adjust_fullscreen_monitor_rect) (MetaWindow    *window,
+                                          MetaRectangle *monitor_rect);
   void (*force_restore_shortcuts) (MetaWindow         *window,
                                    ClutterInputDevice *source);
   gboolean (*shortcuts_inhibited) (MetaWindow         *window,
@@ -586,6 +611,8 @@ struct _MetaWindowClass
   gboolean (*is_stackable)        (MetaWindow *window);
   gboolean (*can_ping)            (MetaWindow *window);
   gboolean (*are_updates_frozen)  (MetaWindow *window);
+
+  MetaStackLayer (*calculate_layer) (MetaWindow *window);
 
   void (* map)   (MetaWindow *window);
   void (* unmap) (MetaWindow *window);
@@ -650,11 +677,14 @@ void        meta_window_update_fullscreen_monitors (MetaWindow         *window,
 
 gboolean    meta_window_has_fullscreen_monitors (MetaWindow *window);
 
+void        meta_window_adjust_fullscreen_monitor_rect (MetaWindow    *window,
+                                                        MetaRectangle *monitor_rect);
+
 void        meta_window_resize_frame_with_gravity (MetaWindow  *window,
                                                    gboolean     user_op,
                                                    int          w,
                                                    int          h,
-                                                   int          gravity);
+                                                   MetaGravity  gravity);
 
 /* Return whether the window should be currently mapped */
 gboolean    meta_window_should_be_showing   (MetaWindow  *window);
@@ -667,7 +697,7 @@ void        meta_window_update_struts      (MetaWindow  *window);
  * request.
  */
 void        meta_window_get_gravity_position (MetaWindow  *window,
-                                              int          gravity,
+                                              MetaGravity  gravity,
                                               int         *x,
                                               int         *y);
 /* Get geometry for saving in the session; x/y are gravity
@@ -687,6 +717,8 @@ void     meta_window_set_focused_internal (MetaWindow *window,
 gboolean meta_window_is_focusable (MetaWindow *window);
 
 gboolean meta_window_can_ping (MetaWindow *window);
+
+MetaStackLayer meta_window_calculate_layer (MetaWindow *window);
 
 void     meta_window_current_workspace_changed (MetaWindow *window);
 
@@ -732,6 +764,7 @@ void meta_window_update_keyboard_resize (MetaWindow *window,
                                          gboolean    update_cursor);
 void meta_window_update_keyboard_move   (MetaWindow *window);
 
+MetaStackLayer meta_window_get_default_layer (MetaWindow *window);
 void meta_window_update_layer (MetaWindow *window);
 
 void meta_window_recalc_features    (MetaWindow *window);
@@ -774,6 +807,8 @@ void meta_window_set_gtk_dbus_properties  (MetaWindow *window,
                                            const char *menubar_path,
                                            const char *application_object_path,
                                            const char *window_object_path);
+
+gboolean meta_window_has_transient_type   (MetaWindow *window);
 
 void meta_window_set_transient_for        (MetaWindow *window,
                                            MetaWindow *parent);
@@ -821,7 +856,7 @@ void meta_window_update_resize (MetaWindow *window,
 
 void meta_window_move_resize_internal (MetaWindow          *window,
                                        MetaMoveResizeFlags  flags,
-                                       int                  gravity,
+                                       MetaGravity          gravity,
                                        MetaRectangle        frame_rect);
 
 void meta_window_grab_op_began (MetaWindow *window, MetaGrabOp op);

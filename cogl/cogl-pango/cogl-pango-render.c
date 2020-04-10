@@ -50,6 +50,7 @@
 #include <pango/pangocairo.h>
 #include <pango/pango-renderer.h>
 #include <cairo.h>
+#include <cairo-ft.h>
 
 #include "cogl/cogl-debug.h"
 #include "cogl/cogl-context-private.h"
@@ -455,34 +456,6 @@ cogl_pango_show_layout (CoglFramebuffer *fb,
 }
 
 void
-cogl_pango_render_layout_subpixel (PangoLayout *layout,
-                                   int x,
-                                   int y,
-                                   const CoglColor *color,
-                                   int flags)
-{
-  cogl_pango_show_layout (cogl_get_draw_framebuffer (),
-                          layout,
-                          x / (float) PANGO_SCALE,
-                          y / (float) PANGO_SCALE,
-                          color);
-}
-
-void
-cogl_pango_render_layout (PangoLayout *layout,
-                          int x,
-                          int y,
-                          const CoglColor *color,
-                          int flags)
-{
-  cogl_pango_render_layout_subpixel (layout,
-                                     x * PANGO_SCALE,
-                                     y * PANGO_SCALE,
-                                     color,
-                                     flags);
-}
-
-void
 cogl_pango_show_layout_line (CoglFramebuffer *fb,
                              PangoLayoutLine *line,
                              float x,
@@ -520,19 +493,6 @@ cogl_pango_show_layout_line (CoglFramebuffer *fb,
 }
 
 void
-cogl_pango_render_layout_line (PangoLayoutLine *line,
-                               int x,
-                               int y,
-                               const CoglColor *color)
-{
-  cogl_pango_show_layout_line (cogl_get_draw_framebuffer (),
-                               line,
-                               x / (float) PANGO_SCALE,
-                               y / (float) PANGO_SCALE,
-                               color);
-}
-
-void
 _cogl_pango_renderer_clear_glyph_cache (CoglPangoRenderer *renderer)
 {
   cogl_pango_glyph_cache_clear (renderer->mipmap_caches.glyph_cache);
@@ -565,6 +525,24 @@ cogl_pango_renderer_get_cached_glyph (PangoRenderer *renderer,
 
   return cogl_pango_glyph_cache_lookup (caches->glyph_cache,
                                         create, font, glyph);
+}
+
+static gboolean
+font_has_color_glyphs (const PangoFont *font)
+{
+  cairo_scaled_font_t *scaled_font;
+  gboolean has_color = FALSE;
+
+  scaled_font = pango_cairo_font_get_scaled_font ((PangoCairoFont *) font);
+
+  if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_FT)
+    {
+      FT_Face ft_face = cairo_ft_scaled_font_lock_face (scaled_font);
+      has_color = (FT_HAS_COLOR (ft_face) != 0);
+      cairo_ft_scaled_font_unlock_face (scaled_font);
+    }
+
+  return has_color;
 }
 
 static void
@@ -641,6 +619,8 @@ cogl_pango_renderer_set_dirty_glyph (PangoFont *font,
                            cairo_image_surface_get_data (surface));
 
   cairo_surface_destroy (surface);
+
+  value->has_color = font_has_color_glyphs (font);
 }
 
 static void
@@ -739,6 +719,7 @@ cogl_pango_renderer_set_color_for_part (PangoRenderer   *renderer,
                                         PangoRenderPart  part)
 {
   PangoColor *pango_color = pango_renderer_get_color (renderer, part);
+  uint16_t alpha = pango_renderer_get_alpha (renderer, part);
   CoglPangoRenderer *priv = COGL_PANGO_RENDERER (renderer);
 
   if (pango_color)
@@ -749,7 +730,7 @@ cogl_pango_renderer_set_color_for_part (PangoRenderer   *renderer,
                                 pango_color->red >> 8,
                                 pango_color->green >> 8,
                                 pango_color->blue >> 8,
-                                0xff);
+                                alpha ? alpha >> 8 : 0xff);
 
       _cogl_pango_display_list_set_color_override (priv->display_list, &color);
     }
@@ -861,14 +842,13 @@ cogl_pango_renderer_draw_glyphs (PangoRenderer    *renderer,
   CoglPangoGlyphCacheValue *cache_value;
   int i;
 
-  cogl_pango_renderer_set_color_for_part (renderer,
-					  PANGO_RENDER_PART_FOREGROUND);
-
   for (i = 0; i < glyphs->num_glyphs; i++)
     {
       PangoGlyphInfo *gi = glyphs->glyphs + i;
       float x, y;
 
+      cogl_pango_renderer_set_color_for_part (renderer,
+                                              PANGO_RENDER_PART_FOREGROUND);
       cogl_pango_renderer_get_device_units (renderer,
 					    xi + gi->geometry.x_offset,
 					    yi + gi->geometry.y_offset,
@@ -924,6 +904,19 @@ cogl_pango_renderer_draw_glyphs (PangoRenderer    *renderer,
 	    {
 	      x += (float)(cache_value->draw_x);
 	      y += (float)(cache_value->draw_y);
+
+              /* Do not override color if the glyph/font provide its own */
+              if (cache_value->has_color)
+                {
+                  CoglColor color;
+                  uint16_t alpha;
+
+                  alpha = pango_renderer_get_alpha (renderer,
+                                                    PANGO_RENDER_PART_FOREGROUND);
+                  cogl_color_init_from_4ub (&color, 0xff, 0xff, 0xff,
+					    alpha ? alpha >> 8 : 0xff);
+                  _cogl_pango_display_list_set_color_override (priv->display_list, &color);
+                }
 
               cogl_pango_renderer_draw_glyph (priv, cache_value, x, y);
 	    }

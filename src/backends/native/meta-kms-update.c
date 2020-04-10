@@ -37,6 +37,86 @@ struct _MetaKmsUpdate
   GList *crtc_gammas;
 };
 
+void
+meta_kms_plane_feedback_free (MetaKmsPlaneFeedback *plane_feedback)
+{
+  g_error_free (plane_feedback->error);
+  g_free (plane_feedback);
+}
+
+MetaKmsPlaneFeedback *
+meta_kms_plane_feedback_new_take_error (MetaKmsPlane *plane,
+                                        MetaKmsCrtc  *crtc,
+                                        GError       *error)
+{
+  MetaKmsPlaneFeedback *plane_feedback;
+
+  plane_feedback = g_new0 (MetaKmsPlaneFeedback, 1);
+  *plane_feedback = (MetaKmsPlaneFeedback) {
+    .plane = plane,
+    .crtc = crtc,
+    .error = error,
+  };
+
+  return plane_feedback;
+}
+
+MetaKmsFeedback *
+meta_kms_feedback_new_passed (void)
+{
+  MetaKmsFeedback *feedback;
+
+  feedback = g_new0 (MetaKmsFeedback, 1);
+  *feedback = (MetaKmsFeedback) {
+    .result = META_KMS_FEEDBACK_PASSED,
+  };
+
+  return feedback;
+}
+
+MetaKmsFeedback *
+meta_kms_feedback_new_failed (GList  *failed_planes,
+                              GError *error)
+{
+  MetaKmsFeedback *feedback;
+
+  feedback = g_new0 (MetaKmsFeedback, 1);
+  *feedback = (MetaKmsFeedback) {
+    .result = META_KMS_FEEDBACK_FAILED,
+    .error = error,
+    .failed_planes = failed_planes,
+  };
+
+  return feedback;
+}
+
+void
+meta_kms_feedback_free (MetaKmsFeedback *feedback)
+{
+  g_list_free_full (feedback->failed_planes,
+                    (GDestroyNotify) meta_kms_plane_feedback_free);
+  g_clear_error (&feedback->error);
+  g_free (feedback);
+}
+
+MetaKmsFeedbackResult
+meta_kms_feedback_get_result (MetaKmsFeedback *feedback)
+{
+  return feedback->result;
+}
+
+GList *
+meta_kms_feedback_get_failed_planes (MetaKmsFeedback *feedback)
+{
+  return feedback->failed_planes;
+}
+
+const GError *
+meta_kms_feedback_get_error (MetaKmsFeedback *feedback)
+{
+  return feedback->error;
+}
+
 static MetaKmsProperty *
 meta_kms_property_new (uint32_t prop_id,
                        uint64_t value)
@@ -75,12 +155,13 @@ meta_kms_mode_set_free (MetaKmsModeSet *mode_set)
 }
 
 MetaKmsPlaneAssignment *
-meta_kms_update_assign_plane (MetaKmsUpdate        *update,
-                              MetaKmsCrtc          *crtc,
-                              MetaKmsPlane         *plane,
-                              uint32_t              fb_id,
-                              MetaFixed16Rectangle  src_rect,
-                              MetaFixed16Rectangle  dst_rect)
+meta_kms_update_assign_plane (MetaKmsUpdate          *update,
+                              MetaKmsCrtc            *crtc,
+                              MetaKmsPlane           *plane,
+                              uint32_t                fb_id,
+                              MetaFixed16Rectangle    src_rect,
+                              MetaFixed16Rectangle    dst_rect,
+                              MetaKmsAssignPlaneFlag  flags)
 {
   MetaKmsPlaneAssignment *plane_assignment;
 
@@ -94,6 +175,30 @@ meta_kms_update_assign_plane (MetaKmsUpdate        *update,
     .fb_id = fb_id,
     .src_rect = src_rect,
     .dst_rect = dst_rect,
+    .flags = flags,
+  };
+
+  update->plane_assignments = g_list_prepend (update->plane_assignments,
+                                              plane_assignment);
+
+  return plane_assignment;
+}
+
+MetaKmsPlaneAssignment *
+meta_kms_update_unassign_plane (MetaKmsUpdate *update,
+                                MetaKmsCrtc   *crtc,
+                                MetaKmsPlane  *plane)
+{
+  MetaKmsPlaneAssignment *plane_assignment;
+
+  g_assert (!meta_kms_update_is_sealed (update));
+
+  plane_assignment = g_new0 (MetaKmsPlaneAssignment, 1);
+  *plane_assignment = (MetaKmsPlaneAssignment) {
+    .update = update,
+    .crtc = crtc,
+    .plane = plane,
+    .fb_id = 0,
   };
 
   update->plane_assignments = g_list_prepend (update->plane_assignments,
@@ -233,6 +338,16 @@ meta_kms_plane_assignment_set_plane_property (MetaKmsPlaneAssignment *plane_assi
 
   plane_assignment->plane_properties =
     g_list_prepend (plane_assignment->plane_properties, plane_prop);
+}
+
+void
+meta_kms_plane_assignment_set_cursor_hotspot (MetaKmsPlaneAssignment *plane_assignment,
+                                              int                     x,
+                                              int                     y)
+{
+  plane_assignment->cursor_hotspot.is_valid = TRUE;
+  plane_assignment->cursor_hotspot.x = x;
+  plane_assignment->cursor_hotspot.y = y;
 }
 
 MetaKmsPlaneAssignment *

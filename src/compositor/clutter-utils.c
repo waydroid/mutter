@@ -66,17 +66,18 @@ round_to_fixed (float x)
  * in @x_origin and @y_origin.
  */
 gboolean
-meta_actor_vertices_are_untransformed (ClutterVertex *verts,
-                                       float          widthf,
-                                       float          heightf,
-                                       int           *x_origin,
-                                       int           *y_origin)
+meta_actor_vertices_are_untransformed (graphene_point3d_t *verts,
+                                       float               widthf,
+                                       float               heightf,
+                                       int                *x_origin,
+                                       int                *y_origin)
 {
   int width, height;
   int v0x, v0y, v1x, v1y, v2x, v2y, v3x, v3y;
   int x, y;
 
-  width = round_to_fixed (widthf); height = round_to_fixed (heightf);
+  width = round_to_fixed (widthf);
+  height = round_to_fixed (heightf);
 
   v0x = round_to_fixed (verts[0].x); v0y = round_to_fixed (verts[0].y);
   v1x = round_to_fixed (verts[1].x); v1y = round_to_fixed (verts[1].y);
@@ -110,27 +111,12 @@ meta_actor_vertices_are_untransformed (ClutterVertex *verts,
   return TRUE;
 }
 
-/* Check if an actor is "untransformed" - which actually means transformed by
- * at most a integer-translation. The integer translation, if any, is returned.
- */
-gboolean
-meta_actor_is_untransformed (ClutterActor *actor,
-                             int          *x_origin,
-                             int          *y_origin)
-{
-  gfloat widthf, heightf;
-  ClutterVertex verts[4];
-
-  clutter_actor_get_size (actor, &widthf, &heightf);
-  clutter_actor_get_abs_allocation_vertices (actor, verts);
-
-  return meta_actor_vertices_are_untransformed (verts, widthf, heightf, x_origin, y_origin);
-}
-
 /**
  * meta_actor_painting_untransformed:
  * @paint_width: the width of the painted area
  * @paint_height: the height of the painted area
+ * @sample_width: the width of the sampled area of the texture
+ * @sample_height: the height of the sampled area of the texture
  * @x_origin: if the transform is only an integer translation
  *  then the X coordinate of the location of the origin under the transformation
  *  from drawing space to screen pixel space is returned here.
@@ -149,11 +135,13 @@ gboolean
 meta_actor_painting_untransformed (CoglFramebuffer *fb,
                                    int              paint_width,
                                    int              paint_height,
+                                   int              sample_width,
+                                   int              sample_height,
                                    int             *x_origin,
                                    int             *y_origin)
 {
   CoglMatrix modelview, projection, modelview_projection;
-  ClutterVertex vertices[4];
+  graphene_point3d_t vertices[4];
   float viewport[4];
   int i;
 
@@ -182,13 +170,19 @@ meta_actor_painting_untransformed (CoglFramebuffer *fb,
   for (i = 0; i < 4; i++)
     {
       float w = 1;
-      cogl_matrix_transform_point (&modelview_projection, &vertices[i].x, &vertices[i].y, &vertices[i].z, &w);
+      cogl_matrix_transform_point (&modelview_projection,
+                                   &vertices[i].x,
+                                   &vertices[i].y,
+                                   &vertices[i].z,
+                                   &w);
       vertices[i].x = MTX_GL_SCALE_X (vertices[i].x, w,
                                       viewport[2], viewport[0]);
       vertices[i].y = MTX_GL_SCALE_Y (vertices[i].y, w,
                                       viewport[3], viewport[1]);
     }
 
-  return meta_actor_vertices_are_untransformed (vertices, paint_width, paint_height, x_origin, y_origin);
+  return meta_actor_vertices_are_untransformed (vertices,
+                                                sample_width, sample_height,
+                                                x_origin, y_origin);
 }
 

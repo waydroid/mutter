@@ -158,9 +158,7 @@ cogl_matrix_stack_translate (CoglMatrixStack *stack,
 
   entry = _cogl_matrix_stack_push_operation (stack, COGL_MATRIX_OP_TRANSLATE);
 
-  entry->x = x;
-  entry->y = y;
-  entry->z = z;
+  graphene_point3d_init (&entry->translate, x, y, z);
 }
 
 void
@@ -175,38 +173,18 @@ cogl_matrix_stack_rotate (CoglMatrixStack *stack,
   entry = _cogl_matrix_stack_push_operation (stack, COGL_MATRIX_OP_ROTATE);
 
   entry->angle = angle;
-  entry->x = x;
-  entry->y = y;
-  entry->z = z;
+  graphene_vec3_init (&entry->axis, x, y, z);
 }
 
 void
-cogl_matrix_stack_rotate_quaternion (CoglMatrixStack *stack,
-                                     const CoglQuaternion *quaternion)
-{
-  CoglMatrixEntryRotateQuaternion *entry;
-
-  entry = _cogl_matrix_stack_push_operation (stack,
-                                             COGL_MATRIX_OP_ROTATE_QUATERNION);
-
-  entry->values[0] = quaternion->w;
-  entry->values[1] = quaternion->x;
-  entry->values[2] = quaternion->y;
-  entry->values[3] = quaternion->z;
-}
-
-void
-cogl_matrix_stack_rotate_euler (CoglMatrixStack *stack,
-                                 const CoglEuler *euler)
+cogl_matrix_stack_rotate_euler (CoglMatrixStack        *stack,
+                                const graphene_euler_t *euler)
 {
   CoglMatrixEntryRotateEuler *entry;
 
   entry = _cogl_matrix_stack_push_operation (stack,
                                              COGL_MATRIX_OP_ROTATE_EULER);
-
-  entry->heading = euler->heading;
-  entry->pitch = euler->pitch;
-  entry->roll = euler->roll;
+  graphene_euler_init_from_euler (&entry->euler, euler);
 }
 
 void
@@ -357,7 +335,6 @@ cogl_matrix_entry_unref (CoglMatrixEntry *entry)
         case COGL_MATRIX_OP_LOAD_IDENTITY:
         case COGL_MATRIX_OP_TRANSLATE:
         case COGL_MATRIX_OP_ROTATE:
-        case COGL_MATRIX_OP_ROTATE_QUATERNION:
         case COGL_MATRIX_OP_ROTATE_EULER:
         case COGL_MATRIX_OP_SCALE:
           break;
@@ -498,7 +475,6 @@ initialized:
         case COGL_MATRIX_OP_LOAD_IDENTITY:
         case COGL_MATRIX_OP_TRANSLATE:
         case COGL_MATRIX_OP_ROTATE:
-        case COGL_MATRIX_OP_ROTATE_QUATERNION:
         case COGL_MATRIX_OP_ROTATE_EULER:
         case COGL_MATRIX_OP_SCALE:
         case COGL_MATRIX_OP_MULTIPLY:
@@ -560,9 +536,9 @@ initialized:
             CoglMatrixEntryTranslate *translate =
               (CoglMatrixEntryTranslate *)children[i];
             cogl_matrix_translate (matrix,
-                                   translate->x,
-                                   translate->y,
-                                   translate->z);
+                                   translate->translate.x,
+                                   translate->translate.y,
+                                   translate->translate.z);
             continue;
           }
         case COGL_MATRIX_OP_ROTATE:
@@ -571,31 +547,17 @@ initialized:
               (CoglMatrixEntryRotate *)children[i];
             cogl_matrix_rotate (matrix,
                                 rotate->angle,
-                                rotate->x,
-                                rotate->y,
-                                rotate->z);
+                                graphene_vec3_get_x (&rotate->axis),
+                                graphene_vec3_get_y (&rotate->axis),
+                                graphene_vec3_get_z (&rotate->axis));
             continue;
           }
         case COGL_MATRIX_OP_ROTATE_EULER:
           {
             CoglMatrixEntryRotateEuler *rotate =
               (CoglMatrixEntryRotateEuler *)children[i];
-            CoglEuler euler;
-            cogl_euler_init (&euler,
-                             rotate->heading,
-                             rotate->pitch,
-                             rotate->roll);
             cogl_matrix_rotate_euler (matrix,
-                                      &euler);
-            continue;
-          }
-        case COGL_MATRIX_OP_ROTATE_QUATERNION:
-          {
-            CoglMatrixEntryRotateQuaternion *rotate =
-              (CoglMatrixEntryRotateQuaternion *)children[i];
-            CoglQuaternion quaternion;
-            cogl_quaternion_init_from_array (&quaternion, rotate->values);
-            cogl_matrix_rotate_quaternion (matrix, &quaternion);
+                                      &rotate->euler);
             continue;
           }
         case COGL_MATRIX_OP_SCALE:
@@ -790,9 +752,9 @@ cogl_matrix_entry_calculate_translation (CoglMatrixEntry *entry0,
 
       translate = (CoglMatrixEntryTranslate *)node0;
 
-      *x = *x - translate->x;
-      *y = *y - translate->y;
-      *z = *z - translate->z;
+      *x = *x - translate->translate.x;
+      *y = *y - translate->translate.y;
+      *z = *z - translate->translate.z;
     }
   for (head1 = common_ancestor1->next; head1; head1 = head1->next)
     {
@@ -805,9 +767,9 @@ cogl_matrix_entry_calculate_translation (CoglMatrixEntry *entry0,
 
       translate = (CoglMatrixEntryTranslate *)node1;
 
-      *x = *x + translate->x;
-      *y = *y + translate->y;
-      *z = *z + translate->z;
+      *x = *x + translate->translate.x;
+      *y = *y + translate->translate.y;
+      *z = *z + translate->translate.z;
     }
 
   return TRUE;
@@ -817,127 +779,6 @@ gboolean
 cogl_matrix_entry_is_identity (CoglMatrixEntry *entry)
 {
   return entry ? entry->op == COGL_MATRIX_OP_LOAD_IDENTITY : FALSE;
-}
-
-static void
-_cogl_matrix_flush_to_gl_builtin (CoglContext *ctx,
-                                  gboolean is_identity,
-                                  CoglMatrix *matrix,
-                                  CoglMatrixMode mode)
-{
-  g_assert (_cogl_has_private_feature (ctx, COGL_PRIVATE_FEATURE_GL_FIXED));
-
-#ifdef HAVE_COGL_GL
-  if (ctx->flushed_matrix_mode != mode)
-    {
-      GLenum gl_mode = 0;
-
-      switch (mode)
-        {
-        case COGL_MATRIX_MODELVIEW:
-          gl_mode = GL_MODELVIEW;
-          break;
-
-        case COGL_MATRIX_PROJECTION:
-          gl_mode = GL_PROJECTION;
-          break;
-
-        case COGL_MATRIX_TEXTURE:
-          gl_mode = GL_TEXTURE;
-          break;
-        }
-
-      GE (ctx, glMatrixMode (gl_mode));
-      ctx->flushed_matrix_mode = mode;
-    }
-
-  if (is_identity)
-    GE (ctx, glLoadIdentity ());
-  else
-    GE (ctx, glLoadMatrixf (cogl_matrix_get_array (matrix)));
-#endif
-}
-
-void
-_cogl_matrix_entry_flush_to_gl_builtins (CoglContext *ctx,
-                                         CoglMatrixEntry *entry,
-                                         CoglMatrixMode mode,
-                                         CoglFramebuffer *framebuffer,
-                                         gboolean disable_flip)
-{
-  g_assert (_cogl_has_private_feature (ctx, COGL_PRIVATE_FEATURE_GL_FIXED));
-
-#ifdef HAVE_COGL_GL
-  {
-    gboolean needs_flip;
-    CoglMatrixEntryCache *cache;
-
-    if (mode == COGL_MATRIX_PROJECTION)
-      {
-        /* Because Cogl defines texture coordinates to have a top left
-         * origin and because offscreen framebuffers may be used for
-         * rendering to textures we always render upside down to
-         * offscreen buffers. Also for some backends we need to render
-         * onscreen buffers upside-down too.
-         */
-        if (disable_flip)
-          needs_flip = FALSE;
-        else
-          needs_flip = cogl_is_offscreen (framebuffer);
-
-        cache = &ctx->builtin_flushed_projection;
-      }
-    else
-      {
-        needs_flip = FALSE;
-
-        if (mode == COGL_MATRIX_MODELVIEW)
-          cache = &ctx->builtin_flushed_modelview;
-        else
-          cache = NULL;
-      }
-
-    /* We don't need to do anything if the state is the same */
-    if (!cache ||
-        _cogl_matrix_entry_cache_maybe_update (cache, entry, needs_flip))
-      {
-        gboolean is_identity;
-        CoglMatrix matrix;
-
-        if (entry->op == COGL_MATRIX_OP_LOAD_IDENTITY)
-          is_identity = TRUE;
-        else
-          {
-            is_identity = FALSE;
-            cogl_matrix_entry_get (entry, &matrix);
-          }
-
-        if (needs_flip)
-          {
-            CoglMatrix flipped_matrix;
-
-            cogl_matrix_multiply (&flipped_matrix,
-                                  &ctx->y_flip_matrix,
-                                  is_identity ?
-                                  &ctx->identity_matrix :
-                                  &matrix);
-
-            _cogl_matrix_flush_to_gl_builtin (ctx,
-                                              /* not identity */
-                                              FALSE,
-                                              &flipped_matrix,
-                                              mode);
-          }
-        else
-          {
-            _cogl_matrix_flush_to_gl_builtin (ctx,
-                                              is_identity,
-                                              &matrix,
-                                              mode);
-          }
-      }
-  }
-#endif
 }
 
 gboolean
@@ -970,9 +811,8 @@ cogl_matrix_entry_equal (CoglMatrixEntry *entry0,
             /* We could perhaps use an epsilon to compare here?
              * I expect the false negatives are probaly never going to
              * be a problem and this is a bit cheaper. */
-            if (translate0->x != translate1->x ||
-                translate0->y != translate1->y ||
-                translate0->z != translate1->z)
+            if (!graphene_point3d_equal (&translate0->translate,
+                                         &translate1->translate))
               return FALSE;
           }
           break;
@@ -983,22 +823,8 @@ cogl_matrix_entry_equal (CoglMatrixEntry *entry0,
             CoglMatrixEntryRotate *rotate1 =
               (CoglMatrixEntryRotate *)entry1;
             if (rotate0->angle != rotate1->angle ||
-                rotate0->x != rotate1->x ||
-                rotate0->y != rotate1->y ||
-                rotate0->z != rotate1->z)
+                !graphene_vec3_equal (&rotate0->axis, &rotate1->axis))
               return FALSE;
-          }
-          break;
-        case COGL_MATRIX_OP_ROTATE_QUATERNION:
-          {
-            CoglMatrixEntryRotateQuaternion *rotate0 =
-              (CoglMatrixEntryRotateQuaternion *)entry0;
-            CoglMatrixEntryRotateQuaternion *rotate1 =
-              (CoglMatrixEntryRotateQuaternion *)entry1;
-            int i;
-            for (i = 0; i < 4; i++)
-              if (rotate0->values[i] != rotate1->values[i])
-                return FALSE;
           }
           break;
         case COGL_MATRIX_OP_ROTATE_EULER:
@@ -1008,9 +834,7 @@ cogl_matrix_entry_equal (CoglMatrixEntry *entry0,
             CoglMatrixEntryRotateEuler *rotate1 =
               (CoglMatrixEntryRotateEuler *)entry1;
 
-            if (rotate0->heading != rotate1->heading ||
-                rotate0->pitch != rotate1->pitch ||
-                rotate0->roll != rotate1->roll)
+            if (!graphene_euler_equal (&rotate0->euler, &rotate1->euler))
               return FALSE;
           }
           break;
@@ -1086,9 +910,9 @@ cogl_debug_matrix_entry_print (CoglMatrixEntry *entry)
             CoglMatrixEntryTranslate *translate =
               (CoglMatrixEntryTranslate *)entry;
             g_print ("  TRANSLATE X=%f Y=%f Z=%f\n",
-                     translate->x,
-                     translate->y,
-                     translate->z);
+                     translate->translate.x,
+                     translate->translate.y,
+                     translate->translate.z);
             continue;
           }
         case COGL_MATRIX_OP_ROTATE:
@@ -1097,20 +921,9 @@ cogl_debug_matrix_entry_print (CoglMatrixEntry *entry)
               (CoglMatrixEntryRotate *)entry;
             g_print ("  ROTATE ANGLE=%f X=%f Y=%f Z=%f\n",
                      rotate->angle,
-                     rotate->x,
-                     rotate->y,
-                     rotate->z);
-            continue;
-          }
-        case COGL_MATRIX_OP_ROTATE_QUATERNION:
-          {
-            CoglMatrixEntryRotateQuaternion *rotate =
-              (CoglMatrixEntryRotateQuaternion *)entry;
-            g_print ("  ROTATE QUATERNION w=%f x=%f y=%f z=%f\n",
-                     rotate->values[0],
-                     rotate->values[1],
-                     rotate->values[2],
-                     rotate->values[3]);
+                     graphene_vec3_get_x (&rotate->axis),
+                     graphene_vec3_get_y (&rotate->axis),
+                     graphene_vec3_get_z (&rotate->axis));
             continue;
           }
         case COGL_MATRIX_OP_ROTATE_EULER:
@@ -1118,9 +931,9 @@ cogl_debug_matrix_entry_print (CoglMatrixEntry *entry)
             CoglMatrixEntryRotateEuler *rotate =
               (CoglMatrixEntryRotateEuler *)entry;
             g_print ("  ROTATE EULER heading=%f pitch=%f roll=%f\n",
-                     rotate->heading,
-                     rotate->pitch,
-                     rotate->roll);
+                     graphene_euler_get_y (&rotate->euler),
+                     graphene_euler_get_x (&rotate->euler),
+                     graphene_euler_get_z (&rotate->euler));
             continue;
           }
         case COGL_MATRIX_OP_SCALE:

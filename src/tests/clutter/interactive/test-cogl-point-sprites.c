@@ -95,20 +95,23 @@ generate_round_texture (void)
 }
 
 static void
-paint_cb (ClutterActor *stage, Data *data)
+paint_cb (ClutterActor        *stage,
+          ClutterPaintContext *paint_context,
+          Data                *data)
 {
+  CoglFramebuffer *framebuffer =
+    clutter_paint_context_get_framebuffer (paint_context);
   CoglMatrix old_matrix, new_matrix;
   int i;
   float diff_time;
-  CoglHandle vbo;
 
-  cogl_get_projection_matrix (&old_matrix);
+  cogl_framebuffer_get_projection_matrix (framebuffer, &old_matrix);
   /* Use an orthogonal projection from -1 -> 1 in both axes */
   cogl_matrix_init_identity (&new_matrix);
-  cogl_set_projection_matrix (&new_matrix);
+  cogl_framebuffer_set_projection_matrix (framebuffer, &new_matrix);
 
-  cogl_push_matrix ();
-  cogl_set_modelview_matrix (&new_matrix);
+  cogl_framebuffer_push_matrix (framebuffer);
+  cogl_framebuffer_set_modelview_matrix (framebuffer, &new_matrix);
 
   /* Update all of the firework's positions */
   for (i = 0; i < N_FIREWORKS; i++)
@@ -195,24 +198,8 @@ paint_cb (ClutterActor *stage, Data *data)
       g_timer_reset (data->last_spark_time);
     }
 
-  vbo = cogl_vertex_buffer_new (N_SPARKS);
-  cogl_vertex_buffer_add (vbo, "gl_Vertex", 2,
-                          COGL_ATTRIBUTE_TYPE_FLOAT, FALSE,
-                          sizeof (Spark),
-                          &data->sparks[0].x);
-  cogl_vertex_buffer_add (vbo, "gl_Color", 4,
-                          COGL_ATTRIBUTE_TYPE_UNSIGNED_BYTE, TRUE,
-                          sizeof (Spark),
-                          &data->sparks[0].color.red);
-  cogl_vertex_buffer_submit (vbo);
-
-  cogl_set_source (data->material);
-  cogl_vertex_buffer_draw (vbo, COGL_VERTICES_MODE_POINTS, 0, N_SPARKS);
-
-  cogl_handle_unref (vbo);
-
-  cogl_set_projection_matrix (&old_matrix);
-  cogl_pop_matrix ();
+  cogl_framebuffer_set_projection_matrix (framebuffer, &old_matrix);
+  cogl_framebuffer_pop_matrix (framebuffer);
 }
 
 static gboolean
@@ -242,7 +229,7 @@ test_cogl_point_sprites_main (int argc, char *argv[])
 
   tex = generate_round_texture ();
   cogl_material_set_layer (data.material, 0, tex);
-  cogl_handle_unref (tex);
+  cogl_object_unref (tex);
 
   if (!cogl_material_set_layer_point_sprite_coords_enabled (data.material,
                                                             0, TRUE,

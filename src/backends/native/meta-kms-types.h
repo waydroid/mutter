@@ -33,6 +33,8 @@ typedef struct _MetaKmsUpdate MetaKmsUpdate;
 typedef struct _MetaKmsPlaneAssignment MetaKmsPlaneAssignment;
 typedef struct _MetaKmsModeSet MetaKmsModeSet;
 
+typedef struct _MetaKmsFeedback MetaKmsFeedback;
+
 typedef struct _MetaKmsPageFlipFeedback MetaKmsPageFlipFeedback;
 
 typedef struct _MetaKmsImpl MetaKmsImpl;
@@ -55,5 +57,7 @@ typedef enum _MetaKmsDeviceFlag
   META_KMS_DEVICE_FLAG_BOOT_VGA = 1 << 0,
   META_KMS_DEVICE_FLAG_PLATFORM_DEVICE = 1 << 1,
 } MetaKmsDeviceFlag;
+
+typedef enum _MetaKmsPlaneType MetaKmsPlaneType;
 
 #endif /* META_KMS_IMPL_TYPES_H */

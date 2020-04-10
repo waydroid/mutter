@@ -73,6 +73,7 @@ typedef struct _CoglTexturePixmapX11 CoglTexturePixmapX11;
  *
  * Returns: a #GType that can be used with the GLib type system.
  */
+COGL_EXPORT
 GType cogl_texture_pixmap_x11_get_gtype (void);
 
 typedef enum
@@ -106,6 +107,7 @@ typedef enum
   COGL_TEXTURE_PIXMAP_X11_ERROR_X11,
 } CoglTexturePixmapX11Error;
 
+COGL_EXPORT
 uint32_t cogl_texture_pixmap_x11_error_quark (void);
 
 /**
@@ -126,7 +128,7 @@ uint32_t cogl_texture_pixmap_x11_error_quark (void);
  * Since: 1.10
  * Stability: Unstable
  */
-CoglTexturePixmapX11 *
+COGL_EXPORT CoglTexturePixmapX11 *
 cogl_texture_pixmap_x11_new (CoglContext *context,
                              uint32_t pixmap,
                              gboolean automatic_updates,
@@ -165,7 +167,7 @@ cogl_texture_pixmap_x11_new (CoglContext *context,
  * Since: 1.20
  * Stability: Unstable
  */
-CoglTexturePixmapX11 *
+COGL_EXPORT CoglTexturePixmapX11 *
 cogl_texture_pixmap_x11_new_left (CoglContext *context,
                                   uint32_t pixmap,
                                   gboolean automatic_updates,
@@ -185,7 +187,7 @@ cogl_texture_pixmap_x11_new_left (CoglContext *context,
  * Since: 1.20
  * Stability: Unstable
  */
-CoglTexturePixmapX11 *
+COGL_EXPORT CoglTexturePixmapX11 *
 cogl_texture_pixmap_x11_new_right (CoglTexturePixmapX11 *left_texture);
 
 /**
@@ -203,7 +205,7 @@ cogl_texture_pixmap_x11_new_right (CoglTexturePixmapX11 *left_texture);
  * Since: 1.4
  * Stability: Unstable
  */
-void
+COGL_EXPORT void
 cogl_texture_pixmap_x11_update_area (CoglTexturePixmapX11 *texture,
                                      int x,
                                      int y,
@@ -226,33 +228,8 @@ cogl_texture_pixmap_x11_update_area (CoglTexturePixmapX11 *texture,
  * Since: 1.4
  * Stability: Unstable
  */
-gboolean
+COGL_EXPORT gboolean
 cogl_texture_pixmap_x11_is_using_tfp_extension (CoglTexturePixmapX11 *texture);
-
-/**
- * cogl_texture_pixmap_x11_set_damage_object:
- * @texture: A #CoglTexturePixmapX11 instance
- * @damage: A X11 Damage object or 0
- * @report_level: The report level which describes how to interpret
- *   the damage events. This should match the level that the damage
- *   object was created with.
- *
- * Sets the damage object that will be used to track automatic updates
- * to the @texture. Damage tracking can be disabled by passing 0 for
- * @damage. Otherwise this damage will replace the one used if %TRUE
- * was passed for automatic_updates to cogl_texture_pixmap_x11_new().
- *
- * Note that Cogl will subtract from the damage region as it processes
- * damage events.
- *
- * Since: 1.4
- * Stability: Unstable
- */
-void
-cogl_texture_pixmap_x11_set_damage_object (CoglTexturePixmapX11 *texture,
-                                           uint32_t damage,
-                                           CoglTexturePixmapX11ReportLevel
-                                                                  report_level);
 
 /**
  * cogl_is_texture_pixmap_x11:
@@ -266,7 +243,7 @@ cogl_texture_pixmap_x11_set_damage_object (CoglTexturePixmapX11 *texture,
  * Since: 1.4
  * Stability: Unstable
  */
-gboolean
+COGL_EXPORT gboolean
 cogl_is_texture_pixmap_x11 (void *object);
 
 G_END_DECLS

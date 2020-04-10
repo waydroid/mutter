@@ -363,11 +363,7 @@ apply_edge_resistance (MetaWindow                *window,
         resistance_data->timeout_edge_pos < new_pos)))
     {
       resistance_data->timeout_setup = FALSE;
-      if (resistance_data->timeout_id != 0)
-        {
-          g_source_remove (resistance_data->timeout_id);
-          resistance_data->timeout_id = 0;
-        }
+      g_clear_handle_id (&resistance_data->timeout_id, g_source_remove);
     }
 
   /* Get the range of indices in the edge array that we move past/to. */
@@ -784,18 +780,14 @@ meta_display_cleanup_edges (MetaDisplay *display)
   edge_data->bottom_edges = NULL;
 
   /* Cleanup the timeouts */
-  if (edge_data->left_data.timeout_setup   &&
-      edge_data->left_data.timeout_id   != 0)
-    g_source_remove (edge_data->left_data.timeout_id);
-  if (edge_data->right_data.timeout_setup  &&
-      edge_data->right_data.timeout_id  != 0)
-    g_source_remove (edge_data->right_data.timeout_id);
-  if (edge_data->top_data.timeout_setup    &&
-      edge_data->top_data.timeout_id    != 0)
-    g_source_remove (edge_data->top_data.timeout_id);
-  if (edge_data->bottom_data.timeout_setup &&
-      edge_data->bottom_data.timeout_id != 0)
-    g_source_remove (edge_data->bottom_data.timeout_id);
+  if (edge_data->left_data.timeout_setup)
+    g_clear_handle_id (&edge_data->left_data.timeout_id, g_source_remove);
+  if (edge_data->right_data.timeout_setup)
+    g_clear_handle_id (&edge_data->right_data.timeout_id, g_source_remove);
+  if (edge_data->top_data.timeout_setup)
+    g_clear_handle_id (&edge_data->top_data.timeout_id, g_source_remove);
+  if (edge_data->bottom_data.timeout_setup)
+    g_clear_handle_id (&edge_data->bottom_data.timeout_id, g_source_remove);
 
   g_free (display->grab_edge_resistance_data);
   display->grab_edge_resistance_data = NULL;
@@ -1263,7 +1255,7 @@ void
 meta_window_edge_resistance_for_resize (MetaWindow  *window,
                                         int         *new_width,
                                         int         *new_height,
-                                        int          gravity,
+                                        MetaGravity  gravity,
                                         GSourceFunc  timeout_func,
                                         gboolean     snap,
                                         gboolean     is_keyboard_op)

@@ -39,7 +39,7 @@
 #include <X11/Xutil.h>  /* Just for the definition of the various gravities */
 
 #include "clutter/clutter.h"
-#include "cogl/cogl-trace.h"
+#include "cogl/cogl.h"
 #include "meta/common.h"
 #include "meta/main.h"
 
@@ -335,6 +335,8 @@ topic_name (MetaDebugTopic topic)
       return "EDGE_RESISTANCE";
     case META_DEBUG_DBUS:
       return "DBUS";
+    case META_DEBUG_INPUT:
+      return "INPUT";
     case META_DEBUG_VERBOSE:
       return "VERBOSE";
     }
@@ -525,42 +527,42 @@ meta_unsigned_long_hash  (gconstpointer v)
 }
 
 const char*
-meta_gravity_to_string (int gravity)
+meta_gravity_to_string (MetaGravity gravity)
 {
   switch (gravity)
     {
-    case NorthWestGravity:
-      return "NorthWestGravity";
+    case META_GRAVITY_NORTH_WEST:
+      return "META_GRAVITY_NORTH_WEST";
       break;
-    case NorthGravity:
-      return "NorthGravity";
+    case META_GRAVITY_NORTH:
+      return "META_GRAVITY_NORTH";
       break;
-    case NorthEastGravity:
-      return "NorthEastGravity";
+    case META_GRAVITY_NORTH_EAST:
+      return "META_GRAVITY_NORTH_EAST";
       break;
-    case WestGravity:
-      return "WestGravity";
+    case META_GRAVITY_WEST:
+      return "META_GRAVITY_WEST";
       break;
-    case CenterGravity:
-      return "CenterGravity";
+    case META_GRAVITY_CENTER:
+      return "META_GRAVITY_CENTER";
       break;
-    case EastGravity:
-      return "EastGravity";
+    case META_GRAVITY_EAST:
+      return "META_GRAVITY_EAST";
       break;
-    case SouthWestGravity:
-      return "SouthWestGravity";
+    case META_GRAVITY_SOUTH_WEST:
+      return "META_GRAVITY_SOUTH_WEST";
       break;
-    case SouthGravity:
-      return "SouthGravity";
+    case META_GRAVITY_SOUTH:
+      return "META_GRAVITY_SOUTH";
       break;
-    case SouthEastGravity:
-      return "SouthEastGravity";
+    case META_GRAVITY_SOUTH_EAST:
+      return "META_GRAVITY_SOUTH_EAST";
       break;
-    case StaticGravity:
-      return "StaticGravity";
+    case META_GRAVITY_STATIC:
+      return "META_GRAVITY_STATIC";
       break;
     default:
-      return "NorthWestGravity";
+      return "META_GRAVITY_NORTH_WEST";
       break;
     }
 }
@@ -762,16 +764,12 @@ unref_later (MetaLater *later)
 static void
 destroy_later (MetaLater *later)
 {
-  if (later->source)
-    {
-      g_source_remove (later->source);
-      later->source = 0;
-    }
+  g_clear_handle_id (&later->source, g_source_remove);
   later->func = NULL;
   unref_later (later);
 }
 
-#ifdef HAVE_TRACING
+#ifdef COGL_HAS_TRACING
 static const char *
 later_type_to_string (MetaLaterType when)
 {
@@ -1028,6 +1026,23 @@ meta_generate_random_id (GRand *rand,
     id[i] = (char) g_rand_int_range (rand, 32, 127);
 
   return id;
+}
+
+
+void
+meta_add_clutter_debug_flags (ClutterDebugFlag     debug_flags,
+                              ClutterDrawDebugFlag draw_flags,
+                              ClutterPickDebugFlag pick_flags)
+{
+  clutter_add_debug_flags (debug_flags, draw_flags, pick_flags);
+}
+
+void
+meta_remove_clutter_debug_flags (ClutterDebugFlag     debug_flags,
+                                 ClutterDrawDebugFlag draw_flags,
+                                 ClutterPickDebugFlag pick_flags)
+{
+  clutter_remove_debug_flags (debug_flags, draw_flags, pick_flags);
 }
 
 /* eof util.c */

@@ -22,6 +22,7 @@
 #include <glib-object.h>
 
 #include "backends/meta-backend-types.h"
+#include "core/util-private.h"
 
 enum _MetaMonitorTransform
 {
@@ -48,9 +49,24 @@ meta_monitor_transform_is_rotated (MetaMonitorTransform transform)
 static inline gboolean
 meta_monitor_transform_is_flipped (MetaMonitorTransform transform)
 {
-  return (transform >= META_MONITOR_TRANSFORM_FLIPPED);
+  return (abs(transform) >= META_MONITOR_TRANSFORM_FLIPPED);
 }
 
 MetaMonitorTransform meta_monitor_transform_invert (MetaMonitorTransform transform);
+
+META_EXPORT_TEST
+MetaMonitorTransform meta_monitor_transform_transform (MetaMonitorTransform transform,
+                                                       MetaMonitorTransform other);
+
+MetaMonitorTransform meta_monitor_transform_relative_transform (MetaMonitorTransform transform,
+                                                                MetaMonitorTransform other);
+
+void meta_monitor_transform_transform_point (MetaMonitorTransform  transform,
+                                             int                   area_width,
+                                             int                   area_height,
+                                             int                   x,
+                                             int                   y,
+                                             int                  *out_x,
+                                             int                  *out_y);
 
 #endif /* META_MONITOR_TRANSFORM_H */

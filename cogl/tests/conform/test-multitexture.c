@@ -99,7 +99,9 @@ make_texture (guchar ref)
 }
 
 static void
-on_paint (ClutterActor *actor, TestState *state)
+on_paint (ClutterActor        *actor,
+          ClutterPaintContext *paint_context,
+          TestState           *state)
 {
   CoglHandle tex0, tex1;
   CoglHandle material;
@@ -149,9 +151,9 @@ on_paint (ClutterActor *actor, TestState *state)
   cogl_rectangle_with_multitexture_coords (0, 0, QUAD_WIDTH, QUAD_WIDTH,
                                            tex_coords, 8);
 
-  cogl_handle_unref (material);
-  cogl_handle_unref (tex0);
-  cogl_handle_unref (tex1);
+  cogl_object_unref (material);
+  cogl_object_unref (tex0);
+  cogl_object_unref (tex1);
 
   /* See what we got... */
 
@@ -199,7 +201,7 @@ test_multitexture (TestUtilsGTestFixture *fixture,
 
   clutter_main ();
 
-  g_source_remove (idle_source);
+  g_clear_handle_id (&idle_source, g_source_remove);
 
   if (cogl_test_verbose ())
     g_print ("OK\n");

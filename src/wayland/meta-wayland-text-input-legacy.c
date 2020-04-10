@@ -94,17 +94,24 @@ meta_wayland_text_input_focus_request_surrounding (ClutterInputFocus *focus)
 
 static void
 meta_wayland_text_input_focus_delete_surrounding (ClutterInputFocus *focus,
-                                                  guint              cursor,
+                                                  int                offset,
                                                   guint              len)
 {
   MetaWaylandGtkTextInput *text_input;
+  uint32_t before_length;
+  uint32_t after_length;
   struct wl_resource *resource;
 
   text_input = META_WAYLAND_GTK_TEXT_INPUT_FOCUS (focus)->text_input;
+  before_length = ABS (MIN (offset, 0));
+  after_length = MAX (0, offset + len);
+  g_warn_if_fail (ABS (offset) <= len);
 
   wl_resource_for_each (resource, &text_input->focus_resource_list)
     {
-      gtk_text_input_send_delete_surrounding_text (resource, cursor, len);
+      gtk_text_input_send_delete_surrounding_text (resource,
+                                                   before_length,
+                                                   after_length);
     }
 }
 
@@ -475,7 +482,7 @@ text_input_commit_state (struct wl_client   *client,
 
   if (text_input->pending_state & META_WAYLAND_PENDING_STATE_INPUT_RECT)
     {
-      ClutterRect cursor_rect;
+      graphene_rect_t cursor_rect;
       float x1, y1, x2, y2;
       cairo_rectangle_int_t rect;
 
@@ -487,7 +494,7 @@ text_input_commit_state (struct wl_client   *client,
                                                      rect.y + rect.height,
                                                      &x2, &y2);
 
-      clutter_rect_init (&cursor_rect, x1, y1, x2 - x1, y2 - y1);
+      graphene_rect_init (&cursor_rect, x1, y1, x2 - x1, y2 - y1);
       clutter_input_focus_set_cursor_location (text_input->input_focus,
                                                &cursor_rect);
     }

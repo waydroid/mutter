@@ -50,10 +50,14 @@ CLUTTER_EXPORT
 void                    clutter_paint_node_unref                        (ClutterPaintNode      *node);
 
 CLUTTER_EXPORT
-void                    clutter_paint_node_paint                        (ClutterPaintNode      *node);
+void                    clutter_paint_node_paint                        (ClutterPaintNode      *node,
+                                                                         ClutterPaintContext   *paint_context);
 
 CLUTTER_EXPORT
 void                    clutter_paint_node_set_name                     (ClutterPaintNode      *node,
+                                                                         const char            *name);
+CLUTTER_EXPORT
+void                    clutter_paint_node_set_static_name              (ClutterPaintNode      *node,
                                                                          const char            *name);
 
 CLUTTER_EXPORT

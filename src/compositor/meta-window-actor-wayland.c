@@ -91,23 +91,14 @@ meta_window_actor_wayland_rebuild_surface_tree (MetaWindowActor *actor)
                    actor);
 }
 
-MetaWindowActor *
-meta_window_actor_wayland_from_surface (MetaWaylandSurface *surface)
-{
-  if (surface->window)
-    return meta_window_actor_from_window (surface->window);
-  else if (surface->sub.parent)
-    return meta_window_actor_wayland_from_surface (surface->sub.parent);
-  else
-    return NULL;
-}
-
 static void
 meta_window_actor_wayland_assign_surface_actor (MetaWindowActor  *actor,
                                                 MetaSurfaceActor *surface_actor)
 {
   MetaWindowActorClass *parent_class =
     META_WINDOW_ACTOR_CLASS (meta_window_actor_wayland_parent_class);
+
+  g_warn_if_fail (!meta_window_actor_get_surface (actor));
 
   parent_class->assign_surface_actor (actor, surface_actor);
 
@@ -143,9 +134,46 @@ meta_window_actor_wayland_queue_destroy (MetaWindowActor *actor)
 }
 
 static void
+meta_window_actor_wayland_set_frozen (MetaWindowActor *actor,
+                                      gboolean         frozen)
+{
+}
+
+static gboolean
+meta_window_actor_wayland_get_paint_volume (ClutterActor       *actor,
+                                            ClutterPaintVolume *volume)
+{
+  MetaSurfaceActor *surface;
+
+  surface = meta_window_actor_get_surface (META_WINDOW_ACTOR (actor));
+  if (surface)
+    {
+      ClutterActor *surface_actor = CLUTTER_ACTOR (surface);
+      const ClutterPaintVolume *child_volume;
+
+      child_volume = clutter_actor_get_transformed_paint_volume (surface_actor,
+                                                                 actor);
+      if (!child_volume)
+        return FALSE;
+
+      clutter_paint_volume_union (volume, child_volume);
+    }
+
+  return TRUE;
+}
+
+static void
+meta_window_actor_wayland_update_regions (MetaWindowActor *actor)
+{
+}
+
+static void
 meta_window_actor_wayland_class_init (MetaWindowActorWaylandClass *klass)
 {
   MetaWindowActorClass *window_actor_class = META_WINDOW_ACTOR_CLASS (klass);
+  ClutterActorClass *actor_class = CLUTTER_ACTOR_CLASS (klass);
+
+  actor_class->get_paint_volume = meta_window_actor_wayland_get_paint_volume;
 
   window_actor_class->assign_surface_actor = meta_window_actor_wayland_assign_surface_actor;
   window_actor_class->frame_complete = meta_window_actor_wayland_frame_complete;
@@ -153,6 +181,8 @@ meta_window_actor_wayland_class_init (MetaWindowActorWaylandClass *klass)
   window_actor_class->pre_paint = meta_window_actor_wayland_pre_paint;
   window_actor_class->post_paint = meta_window_actor_wayland_post_paint;
   window_actor_class->queue_destroy = meta_window_actor_wayland_queue_destroy;
+  window_actor_class->set_frozen = meta_window_actor_wayland_set_frozen;
+  window_actor_class->update_regions = meta_window_actor_wayland_update_regions;
 }
 
 static void

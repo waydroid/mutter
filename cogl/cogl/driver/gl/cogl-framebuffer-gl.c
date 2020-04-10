@@ -36,6 +36,7 @@
 #include "cogl-texture-private.h"
 #include "driver/gl/cogl-util-gl-private.h"
 #include "driver/gl/cogl-framebuffer-gl-private.h"
+#include "driver/gl/cogl-bitmap-gl-private.h"
 #include "driver/gl/cogl-buffer-gl-private.h"
 #include "driver/gl/cogl-texture-gl-private.h"
 
@@ -104,6 +105,9 @@
 #endif
 #ifndef GL_PACK_INVERT_MESA
 #define GL_PACK_INVERT_MESA 0x8758
+#endif
+#ifndef GL_PACK_REVERSE_ROW_ORDER_ANGLE
+#define GL_PACK_REVERSE_ROW_ORDER_ANGLE 0x93A4
 #endif
 #ifndef GL_BACK_LEFT
 #define GL_BACK_LEFT				0x0402
@@ -278,9 +282,7 @@ _cogl_framebuffer_gl_bind (CoglFramebuffer *framebuffer, GLenum target)
       const CoglWinsysVtable *winsys =
         _cogl_framebuffer_get_winsys (framebuffer);
       winsys->onscreen_bind (COGL_ONSCREEN (framebuffer));
-      /* glBindFramebuffer is an an extension with OpenGL ES 1.1 */
-      if (cogl_has_feature (ctx, COGL_FEATURE_ID_OFFSCREEN))
-        GE (ctx, glBindFramebuffer (target, 0));
+      GE (ctx, glBindFramebuffer (target, 0));
 
       /* Initialise the glDrawBuffer state the first time the context
        * is bound to the default framebuffer. If the winsys is using a
@@ -437,20 +439,6 @@ _cogl_framebuffer_gl_flush_state (CoglFramebuffer *draw_buffer,
 
   ctx->current_draw_buffer_state_flushed |= state;
   ctx->current_draw_buffer_changes &= ~state;
-}
-
-static CoglTexture *
-create_depth_texture (CoglContext *ctx,
-                      int width,
-                      int height)
-{
-  CoglTexture2D *depth_texture =
-    cogl_texture_2d_new_with_size (ctx, width, height);
-
-  cogl_texture_set_components (COGL_TEXTURE (depth_texture),
-                               COGL_TEXTURE_COMPONENTS_DEPTH);
-
-  return COGL_TEXTURE (depth_texture);
 }
 
 static CoglTexture *
@@ -743,28 +731,6 @@ try_creating_fbo (CoglContext *ctx,
 }
 
 gboolean
-_cogl_framebuffer_try_creating_gl_fbo (CoglContext *ctx,
-                                       CoglTexture *texture,
-                                       int texture_level,
-                                       int texture_level_width,
-                                       int texture_level_height,
-                                       CoglTexture *depth_texture,
-                                       CoglFramebufferConfig *config,
-                                       CoglOffscreenAllocateFlags flags,
-                                       CoglGLFramebuffer *gl_framebuffer)
-{
-  return try_creating_fbo (ctx,
-                           texture,
-                           texture_level,
-                           texture_level_width,
-                           texture_level_height,
-                           depth_texture,
-                           config,
-                           flags,
-                           gl_framebuffer);
-}
-
-gboolean
 _cogl_offscreen_gl_allocate (CoglOffscreen *offscreen,
                              GError **error)
 {
@@ -784,24 +750,6 @@ _cogl_offscreen_gl_allocate (CoglOffscreen *offscreen,
                                 &level_width,
                                 &level_height,
                                 NULL);
-
-  if (fb->config.depth_texture_enabled &&
-      offscreen->depth_texture == NULL)
-    {
-      offscreen->depth_texture =
-        create_depth_texture (ctx,
-                              level_width,
-                              level_height);
-
-      if (!cogl_texture_allocate (offscreen->depth_texture, error))
-        {
-          cogl_object_unref (offscreen->depth_texture);
-          offscreen->depth_texture = NULL;
-          return FALSE;
-        }
-
-      _cogl_texture_associate_framebuffer (offscreen->depth_texture, fb);
-    }
 
   /* XXX: The framebuffer_object spec isn't clear in defining whether attaching
    * a texture as a renderbuffer with mipmap filtering enabled while the
@@ -898,7 +846,7 @@ _cogl_offscreen_gl_allocate (CoglOffscreen *offscreen,
     {
       fb->samples_per_pixel = gl_framebuffer->samples_per_pixel;
 
-      if (!offscreen->create_flags & COGL_OFFSCREEN_DISABLE_DEPTH_AND_STENCIL)
+      if (!(offscreen->create_flags & COGL_OFFSCREEN_DISABLE_DEPTH_AND_STENCIL))
         {
           /* Record that the last set of flags succeeded so that we can
              try that set first next time */
@@ -1084,6 +1032,12 @@ _cogl_framebuffer_gl_finish (CoglFramebuffer *framebuffer)
 }
 
 void
+_cogl_framebuffer_gl_flush (CoglFramebuffer *framebuffer)
+{
+  GE (framebuffer->context, glFlush ());
+}
+
+void
 _cogl_framebuffer_gl_discard_buffers (CoglFramebuffer *framebuffer,
                                       unsigned long buffers)
 {
@@ -1223,8 +1177,11 @@ _cogl_framebuffer_gl_read_pixels_into_bitmap (CoglFramebuffer *framebuffer,
   GLenum gl_intformat;
   GLenum gl_format;
   GLenum gl_type;
+  GLenum gl_pack_enum = GL_FALSE;
   gboolean pack_invert_set;
   int status = FALSE;
+
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (format) == 1, FALSE);
 
   _cogl_framebuffer_flush_state (framebuffer,
                                  framebuffer,
@@ -1251,7 +1208,12 @@ _cogl_framebuffer_gl_read_pixels_into_bitmap (CoglFramebuffer *framebuffer,
       (source & COGL_READ_PIXELS_NO_FLIP) == 0 &&
       !cogl_is_offscreen (framebuffer))
     {
-      GE (ctx, glPixelStorei (GL_PACK_INVERT_MESA, TRUE));
+      if (ctx->driver == COGL_DRIVER_GLES2)
+        gl_pack_enum = GL_PACK_REVERSE_ROW_ORDER_ANGLE;
+      else
+        gl_pack_enum = GL_PACK_INVERT_MESA;
+
+      GE (ctx, glPixelStorei (gl_pack_enum, TRUE));
       pack_invert_set = TRUE;
     }
   else
@@ -1300,7 +1262,7 @@ _cogl_framebuffer_gl_read_pixels_into_bitmap (CoglFramebuffer *framebuffer,
       if (!tmp_bmp)
         goto EXIT;
 
-      bpp = _cogl_pixel_format_get_bytes_per_pixel (read_format);
+      bpp = cogl_pixel_format_get_bytes_per_pixel (read_format, 0);
       rowstride = cogl_bitmap_get_rowstride (tmp_bmp);
 
       ctx->texture_driver->prep_gl_for_pixels_download (ctx,
@@ -1357,7 +1319,7 @@ _cogl_framebuffer_gl_read_pixels_into_bitmap (CoglFramebuffer *framebuffer,
       else
         shared_bmp = cogl_object_ref (bitmap);
 
-      bpp = _cogl_pixel_format_get_bytes_per_pixel (bmp_format);
+      bpp = cogl_pixel_format_get_bytes_per_pixel (bmp_format, 0);
 
       ctx->texture_driver->prep_gl_for_pixels_download (ctx,
                                                         rowstride,
@@ -1445,7 +1407,7 @@ EXIT:
    * to interfere with other Cogl components so all other code can assume that
    * we leave the pack_invert state off. */
   if (pack_invert_set)
-    GE (ctx, glPixelStorei (GL_PACK_INVERT_MESA, FALSE));
+    GE (ctx, glPixelStorei (gl_pack_enum, FALSE));
 
   return status;
 }

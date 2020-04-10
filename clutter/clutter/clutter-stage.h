@@ -84,8 +84,9 @@ struct _ClutterStageClass
   gboolean (* delete_event) (ClutterStage *stage,
                              ClutterEvent *event);
 
-  void (* paint_view) (ClutterStage     *stage,
-                       ClutterStageView *view);
+  void (* paint_view) (ClutterStage         *stage,
+                       ClutterStageView     *view,
+                       const cairo_region_t *redraw_clip);
 
   /*< private >*/
   /* padding for future expansion */
@@ -116,26 +117,6 @@ struct _ClutterPerspective
 };
 
 /**
- * ClutterFog:
- * @z_near: starting distance from the viewer to the near clipping
- *   plane (always positive)
- * @z_far: final distance from the viewer to the far clipping
- *   plane (always positive)
- *
- * Fog settings used to create the depth cueing effect.
- *
- * Since: 0.6
- *
- * Deprecated: 1.10: The fog-related API in #ClutterStage has been
- *   deprecated as well.
- */
-struct _ClutterFog
-{
-  gfloat z_near;
-  gfloat z_far;
-};
-
-/**
  * ClutterFrameInfo: (skip)
  */
 struct _ClutterFrameInfo
@@ -153,8 +134,6 @@ typedef struct _ClutterCapture
 
 CLUTTER_EXPORT
 GType clutter_perspective_get_type (void) G_GNUC_CONST;
-CLUTTER_DEPRECATED
-GType clutter_fog_get_type (void) G_GNUC_CONST;
 CLUTTER_EXPORT
 GType clutter_stage_get_type (void) G_GNUC_CONST;
 
@@ -185,11 +164,6 @@ CLUTTER_EXPORT
 void            clutter_stage_get_minimum_size                  (ClutterStage          *stage,
                                                                  guint                 *width,
                                                                  guint                 *height);
-CLUTTER_EXPORT
-void            clutter_stage_set_no_clear_hint                 (ClutterStage          *stage,
-                                                                 gboolean               no_clear);
-CLUTTER_EXPORT
-gboolean        clutter_stage_get_no_clear_hint                 (ClutterStage          *stage);
 CLUTTER_EXPORT
 void            clutter_stage_set_use_alpha                     (ClutterStage          *stage,
                                                                  gboolean               use_alpha);
@@ -223,8 +197,8 @@ gboolean        clutter_stage_event                             (ClutterStage   
 CLUTTER_EXPORT
 ClutterActor *  clutter_stage_get_actor_at_pos                  (ClutterStage          *stage,
                                                                  ClutterPickMode        pick_mode,
-                                                                 gint                   x,
-                                                                 gint                   y);
+                                                                 float                  x,
+                                                                 float                  y);
 CLUTTER_EXPORT
 guchar *        clutter_stage_read_pixels                       (ClutterStage          *stage,
                                                                  gint                   x,
@@ -232,9 +206,6 @@ guchar *        clutter_stage_read_pixels                       (ClutterStage   
                                                                  gint                   width,
                                                                  gint                   height);
 
-CLUTTER_EXPORT
-void            clutter_stage_get_redraw_clip_bounds            (ClutterStage          *stage,
-                                                                 cairo_rectangle_int_t *clip);
 CLUTTER_EXPORT
 void            clutter_stage_ensure_viewport                   (ClutterStage          *stage);
 CLUTTER_EXPORT
@@ -262,8 +233,8 @@ CLUTTER_EXPORT
 gboolean clutter_stage_capture (ClutterStage          *stage,
                                 gboolean               paint,
                                 cairo_rectangle_int_t *rect,
-                                ClutterCapture       **captures,
-                                int                   *n_captures);
+                                ClutterCapture       **out_captures,
+                                int                   *out_n_captures);
 CLUTTER_EXPORT
 ClutterStageView * clutter_stage_get_view_at (ClutterStage *stage,
                                               float         x,

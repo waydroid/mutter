@@ -44,7 +44,6 @@
 #include "cogl-framebuffer-private.h"
 #include "cogl-gtype-private.h"
 #include "driver/gl/cogl-texture-2d-gl-private.h"
-#include "driver/gl/cogl-pipeline-opengl-private.h"
 #ifdef COGL_HAS_EGL_SUPPORT
 #include "winsys/cogl-winsys-egl-private.h"
 #endif
@@ -109,8 +108,6 @@ _cogl_texture_2d_create_base (CoglContext *ctx,
   tex_2d->is_get_data_supported = TRUE;
 
   tex_2d->gl_target = GL_TEXTURE_2D;
-
-  tex_2d->is_foreign = FALSE;
 
   ctx->driver_vtable->texture_2d_init (tex_2d);
 
@@ -204,11 +201,12 @@ cogl_texture_2d_new_from_data (CoglContext *ctx,
   CoglTexture2D *tex_2d;
 
   g_return_val_if_fail (format != COGL_PIXEL_FORMAT_ANY, NULL);
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (format) == 1, NULL);
   g_return_val_if_fail (data != NULL, NULL);
 
   /* Rowstride from width if not given */
   if (rowstride == 0)
-    rowstride = width * _cogl_pixel_format_get_bytes_per_pixel (format);
+    rowstride = width * cogl_pixel_format_get_bytes_per_pixel (format, 0);
 
   /* Wrap the data into a bitmap */
   bmp = cogl_bitmap_new_for_data (ctx,
@@ -486,12 +484,6 @@ _cogl_texture_2d_get_gl_format (CoglTexture *tex)
   return COGL_TEXTURE_2D (tex)->gl_internal_format;
 }
 
-static gboolean
-_cogl_texture_2d_is_foreign (CoglTexture *tex)
-{
-  return COGL_TEXTURE_2D (tex)->is_foreign;
-}
-
 static const CoglTextureVtable
 cogl_texture_2d_vtable =
   {
@@ -513,6 +505,5 @@ cogl_texture_2d_vtable =
     _cogl_texture_2d_gl_flush_legacy_texobj_wrap_modes,
     _cogl_texture_2d_get_format,
     _cogl_texture_2d_get_gl_format,
-    _cogl_texture_2d_is_foreign,
     _cogl_texture_2d_set_auto_mipmap
   };

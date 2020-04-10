@@ -88,7 +88,6 @@ typedef struct _CoglOnscreenXlib
 {
   Window xwin;
   int x, y;
-  gboolean is_foreign_xwin;
   CoglOutput *output;
 } CoglOnscreenXlib;
 
@@ -142,7 +141,6 @@ typedef struct _CoglTexturePixmapGLX
                                   winsys_feature)                       \
   { major_version, minor_version,                                       \
       0, namespaces, extension_names,                                   \
-      feature_flags,                                                    \
       0,                                                                \
       winsys_feature, \
       cogl_glx_feature_ ## name ## _funcs },
@@ -525,7 +523,6 @@ notify_resize (CoglContext *context,
 
   glx_onscreen->pending_resize_notify++;
 
-  if (!xlib_onscreen->is_foreign_xwin)
     {
       int x, y;
 
@@ -708,8 +705,6 @@ update_base_winsys_features (CoglRenderer *renderer)
                              split_extensions,
                              glx_renderer))
       {
-        glx_renderer->legacy_feature_flags |=
-          winsys_feature_data[i].feature_flags;
         if (winsys_feature_data[i].winsys_feature)
           COGL_FLAGS_SET (glx_renderer->base_winsys_features,
                           winsys_feature_data[i].winsys_feature,
@@ -830,40 +825,8 @@ update_winsys_features (CoglContext *context, GError **error)
           glx_renderer->base_winsys_features,
           sizeof (context->winsys_features));
 
-  context->feature_flags |= glx_renderer->legacy_feature_flags;
-
-  context->feature_flags |= COGL_FEATURE_ONSCREEN_MULTIPLE;
-  COGL_FLAGS_SET (context->features,
-                  COGL_FEATURE_ID_ONSCREEN_MULTIPLE, TRUE);
-
   if (glx_renderer->glXCopySubBuffer || context->glBlitFramebuffer)
-    {
-      CoglGpuInfo *info = &context->gpu;
-      CoglGpuInfoArchitecture arch = info->architecture;
-
-      COGL_FLAGS_SET (context->winsys_features, COGL_WINSYS_FEATURE_SWAP_REGION, TRUE);
-
-      /*
-       * "The "drisw" binding in Mesa for loading sofware renderers is
-       * broken, and neither glBlitFramebuffer nor glXCopySubBuffer
-       * work correctly."
-       * - ajax
-       * - https://bugzilla.gnome.org/show_bug.cgi?id=674208
-       *
-       * This is broken in software Mesa at least as of 7.10 and got
-       * fixed in Mesa 10.1
-       */
-
-      if (info->driver_package == COGL_GPU_INFO_DRIVER_PACKAGE_MESA &&
-          info->driver_package_version < COGL_VERSION_ENCODE (10, 1, 0) &&
-          (arch == COGL_GPU_INFO_ARCHITECTURE_LLVMPIPE ||
-           arch == COGL_GPU_INFO_ARCHITECTURE_SOFTPIPE ||
-           arch == COGL_GPU_INFO_ARCHITECTURE_SWRAST))
-	{
-	  COGL_FLAGS_SET (context->winsys_features,
-			  COGL_WINSYS_FEATURE_SWAP_REGION, FALSE);
-	}
-    }
+    COGL_FLAGS_SET (context->winsys_features, COGL_WINSYS_FEATURE_SWAP_REGION, TRUE);
 
   /* Note: glXCopySubBuffer and glBlitFramebuffer won't be throttled
    * by the SwapInterval so we have to throttle swap_region requests
@@ -1354,48 +1317,9 @@ _cogl_winsys_onscreen_init (CoglOnscreen *onscreen,
     }
 
   /* FIXME: We need to explicitly Select for ConfigureNotify events.
-   * For foreign windows we need to be careful not to mess up any
-   * existing event mask.
    * We need to document that for windows we create then toolkits
    * must be careful not to clear event mask bits that we select.
    */
-
-  /* XXX: Note we ignore the user's original width/height when
-   * given a foreign X window. */
-  if (onscreen->foreign_xid)
-    {
-      Status status;
-      CoglXlibTrapState state;
-      XWindowAttributes attr;
-      int xerror;
-
-      xwin = onscreen->foreign_xid;
-
-      _cogl_xlib_renderer_trap_errors (display->renderer, &state);
-
-      status = XGetWindowAttributes (xlib_renderer->xdpy, xwin, &attr);
-      XSync (xlib_renderer->xdpy, False);
-      xerror = _cogl_xlib_renderer_untrap_errors (display->renderer, &state);
-      if (status == 0 || xerror)
-        {
-          char message[1000];
-          XGetErrorText (xlib_renderer->xdpy, xerror, message, sizeof(message));
-          g_set_error (error, COGL_WINSYS_ERROR,
-                       COGL_WINSYS_ERROR_CREATE_ONSCREEN,
-                       "Unable to query geometry of foreign xid 0x%08lX: %s",
-                       xwin, message);
-          return FALSE;
-        }
-
-      _cogl_framebuffer_winsys_update_size (framebuffer,
-                                            attr.width, attr.height);
-
-      /* Make sure the app selects for the events we require... */
-      onscreen->foreign_update_mask_callback (onscreen,
-                                              COGL_ONSCREEN_X11_EVENT_MASK,
-                                              onscreen->foreign_update_mask_data);
-    }
-  else
     {
       int width;
       int height;
@@ -1466,7 +1390,6 @@ _cogl_winsys_onscreen_init (CoglOnscreen *onscreen,
   glx_onscreen = onscreen->winsys;
 
   xlib_onscreen->xwin = xwin;
-  xlib_onscreen->is_foreign_xwin = onscreen->foreign_xid ? TRUE : FALSE;
 
   /* Try and create a GLXWindow to use with extensions dependent on
    * GLX versions >= 1.3 that don't accept regular X Windows as GLX
@@ -1555,7 +1478,7 @@ _cogl_winsys_onscreen_deinit (CoglOnscreen *onscreen)
       glx_onscreen->glxwin = None;
     }
 
-  if (!xlib_onscreen->is_foreign_xwin && xlib_onscreen->xwin != None)
+  if (xlib_onscreen->xwin != None)
     {
       XDestroyWindow (xlib_renderer->xdpy, xlib_onscreen->xwin);
       xlib_onscreen->xwin = None;
@@ -1594,10 +1517,9 @@ _cogl_winsys_onscreen_bind (CoglOnscreen *onscreen)
   _cogl_xlib_renderer_trap_errors (context->display->renderer, &old_state);
 
   COGL_NOTE (WINSYS,
-             "MakeContextCurrent dpy: %p, window: 0x%x (%s), context: %p",
+             "MakeContextCurrent dpy: %p, window: 0x%x, context: %p",
              xlib_renderer->xdpy,
              (unsigned int) drawable,
-             xlib_onscreen->is_foreign_xwin ? "foreign" : "native",
              glx_display->glx_context);
 
   glx_renderer->glXMakeContextCurrent (xlib_renderer->xdpy,
@@ -1926,24 +1848,23 @@ _cogl_winsys_onscreen_swap_region (CoglOnscreen *onscreen,
   if (have_counter)
     glx_onscreen->last_swap_vsync_counter = end_frame_vsync_counter;
 
-  if (!xlib_onscreen->is_foreign_xwin)
-    {
-      CoglOutput *output;
+  {
+    CoglOutput *output;
 
-      x_min = CLAMP (x_min, 0, framebuffer_width);
-      x_max = CLAMP (x_max, 0, framebuffer_width);
-      y_min = CLAMP (y_min, 0, framebuffer_width);
-      y_max = CLAMP (y_max, 0, framebuffer_height);
+    x_min = CLAMP (x_min, 0, framebuffer_width);
+    x_max = CLAMP (x_max, 0, framebuffer_width);
+    y_min = CLAMP (y_min, 0, framebuffer_width);
+    y_max = CLAMP (y_max, 0, framebuffer_height);
 
-      output =
-        _cogl_xlib_renderer_output_for_rectangle (context->display->renderer,
-                                                  xlib_onscreen->x + x_min,
-                                                  xlib_onscreen->y + y_min,
-                                                  x_max - x_min,
-                                                  y_max - y_min);
+    output =
+      _cogl_xlib_renderer_output_for_rectangle (context->display->renderer,
+                                                xlib_onscreen->x + x_min,
+                                                xlib_onscreen->y + y_min,
+                                                x_max - x_min,
+                                                y_max - y_min);
 
-      set_frame_info_output (onscreen, output);
-    }
+    set_frame_info_output (onscreen, output);
+  }
 
   /* XXX: we don't get SwapComplete events based on how we implement
    * the _swap_region() API but if cogl-onscreen.c knows we are
@@ -2223,19 +2144,15 @@ get_fbconfig_for_depth (CoglContext *context,
 
       stencil = value;
 
-      /* glGenerateMipmap is defined in the offscreen extension */
-      if (cogl_has_feature (context, COGL_FEATURE_ID_OFFSCREEN))
-        {
-          glx_renderer->glXGetFBConfigAttrib (dpy,
-                                              fbconfigs[i],
-                                              GLX_BIND_TO_MIPMAP_TEXTURE_EXT,
-                                              &value);
+      glx_renderer->glXGetFBConfigAttrib (dpy,
+                                          fbconfigs[i],
+                                          GLX_BIND_TO_MIPMAP_TEXTURE_EXT,
+                                          &value);
 
-          if (value < mipmap)
-            continue;
+      if (value < mipmap)
+        continue;
 
-          mipmap =  value;
-        }
+      mipmap = value;
 
       *fbconfig_ret = fbconfigs[i];
       *can_mipmap_ret = mipmap;
@@ -2554,7 +2471,7 @@ _cogl_winsys_texture_pixmap_x11_update (CoglTexturePixmapX11 *tex_pixmap,
 
       COGL_NOTE (TEXTURE_PIXMAP, "Rebinding GLXPixmap for %p", tex_pixmap);
 
-      _cogl_bind_gl_texture_transient (gl_target, gl_handle, FALSE);
+      _cogl_bind_gl_texture_transient (gl_target, gl_handle);
 
       if (texture_info->pixmap_bound)
         glx_renderer->glXReleaseTexImage (xlib_renderer->xdpy,
@@ -2659,16 +2576,8 @@ static CoglWinsysVtable _cogl_winsys_vtable =
  * c99 initializers for insane platforms they can initialize
  * the members by name in a function.
  */
-const CoglWinsysVtable *
+COGL_EXPORT const CoglWinsysVtable *
 _cogl_winsys_glx_get_vtable (void)
 {
   return &_cogl_winsys_vtable;
-}
-
-GLXContext
-cogl_glx_context_get_glx_context (CoglContext *context)
-{
-  CoglGLXDisplay *glx_display = context->display->winsys;
-
-  return glx_display->glx_context;
 }

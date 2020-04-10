@@ -15,6 +15,8 @@
 #include "clutter/x11/clutter-x11.h"
 #endif
 
+#include "test-utils.h"
+
 #define NHANDS  6
 
 typedef struct SuperOH
@@ -28,11 +30,9 @@ typedef struct SuperOH
   gint stage_height;
   gfloat radius;
 
-  ClutterBehaviour *scaler_1;
-  ClutterBehaviour *scaler_2;
   ClutterTimeline *timeline;
 
-  guint frame_id;
+  gulong frame_id;
 
   gboolean *paint_guards;
 } SuperOH;
@@ -143,20 +143,15 @@ frame_cb (ClutterTimeline *timeline,
     }
 }
 
-static gdouble
-my_sine_wave (ClutterAlpha *alpha,
-              gpointer      dummy G_GNUC_UNUSED)
-{
-  ClutterTimeline *timeline = clutter_alpha_get_timeline (alpha);
-  gdouble progress = clutter_timeline_get_progress (timeline);
-
-  return sin (progress * G_PI);
-}
-
 static void
-hand_pre_paint (ClutterActor *actor,
-                gpointer      user_data)
+hand_pre_paint (ClutterActor        *actor,
+                ClutterPaintContext *paint_context,
+                gpointer             user_data)
 {
+  CoglFramebuffer *framebuffer =
+    clutter_paint_context_get_framebuffer (paint_context);
+  CoglContext *ctx = cogl_framebuffer_get_context (framebuffer);
+  CoglPipeline *pipeline;
   SuperOH *oh = user_data;
   gfloat w, h;
   int actor_num;
@@ -168,16 +163,24 @@ hand_pre_paint (ClutterActor *actor,
 
   clutter_actor_get_size (actor, &w, &h);
 
-  cogl_set_source_color4ub (255, 0, 0, 128);
-  cogl_rectangle (0, 0, w / 2, h / 2);
+  pipeline = cogl_pipeline_new (ctx);
+  cogl_pipeline_set_color4ub (pipeline, 255, 0, 0, 128);
+  cogl_framebuffer_draw_rectangle (framebuffer, pipeline,
+                                   0, 0, w / 2, h / 2);
+  cogl_object_unref (pipeline);
 
   oh->paint_guards[actor_num] = TRUE;
 }
 
 static void
-hand_post_paint (ClutterActor *actor,
-                 gpointer      user_data)
+hand_post_paint (ClutterActor        *actor,
+                 ClutterPaintContext *paint_context,
+                 gpointer             user_data)
 {
+  CoglFramebuffer *framebuffer =
+    clutter_paint_context_get_framebuffer (paint_context);
+  CoglContext *ctx = cogl_framebuffer_get_context (framebuffer);
+  CoglPipeline *pipeline;
   SuperOH *oh = user_data;
   gfloat w, h;
   int actor_num;
@@ -189,8 +192,11 @@ hand_post_paint (ClutterActor *actor,
 
   clutter_actor_get_size (actor, &w, &h);
 
-  cogl_set_source_color4ub (0, 255, 0, 128);
-  cogl_rectangle (w / 2, h / 2, w, h);
+  pipeline = cogl_pipeline_new (ctx);
+  cogl_pipeline_set_color4ub (pipeline, 0, 255, 0, 128);
+  cogl_framebuffer_draw_rectangle (framebuffer, pipeline,
+                                   w / 2, h / 2, w, h);
+  cogl_object_unref (pipeline);
 
   oh->paint_guards[actor_num] = FALSE;
 }
@@ -199,7 +205,7 @@ static void
 stop_and_quit (ClutterActor *actor,
                SuperOH      *oh)
 {
-  g_signal_handler_disconnect (oh->timeline, oh->frame_id);
+  g_clear_signal_handler (&oh->frame_id, oh->timeline);
   clutter_timeline_stop (oh->timeline);
 
   clutter_main_quit ();
@@ -208,7 +214,6 @@ stop_and_quit (ClutterActor *actor,
 G_MODULE_EXPORT int
 test_paint_wrapper_main (int argc, char *argv[])
 {
-  ClutterAlpha *alpha;
   ClutterActor *stage;
   ClutterColor  stage_color = { 0x61, 0x64, 0x8c, 0xff };
   SuperOH      *oh;
@@ -260,16 +265,10 @@ test_paint_wrapper_main (int argc, char *argv[])
   oh->frame_id =
     g_signal_connect (oh->timeline, "new-frame", G_CALLBACK (frame_cb), oh);
 
-  /* Set up some behaviours to handle scaling  */
-  alpha = clutter_alpha_new_with_func (oh->timeline, my_sine_wave, NULL, NULL);
-
-  oh->scaler_1 = clutter_behaviour_scale_new (alpha, 0.5, 0.5, 1.0, 1.0);
-  oh->scaler_2 = clutter_behaviour_scale_new (alpha, 1.0, 1.0, 0.5, 0.5);
-
-  real_hand = clutter_texture_new_from_file (TESTS_DATADIR 
-                                             G_DIR_SEPARATOR_S
-                                             "redhand.png",
-                                             &error);
+  real_hand = clutter_test_utils_create_texture_from_file (TESTS_DATADIR
+                                                           G_DIR_SEPARATOR_S
+                                                           "redhand.png",
+                                                           &error);
   if (real_hand == NULL)
     {
       g_error ("image load failed: %s", error->message);
@@ -334,11 +333,6 @@ test_paint_wrapper_main (int argc, char *argv[])
 
       /* Add to our group group */
       clutter_container_add_actor (CLUTTER_CONTAINER (oh->group), oh->hand[i]);
-
-      if (i % 2)
-	clutter_behaviour_apply (oh->scaler_1, oh->hand[i]);
-      else
-	clutter_behaviour_apply (oh->scaler_2, oh->hand[i]);
     }
 
   oh->paint_guards = g_malloc0 (sizeof (gboolean) * n_hands);
@@ -359,8 +353,6 @@ test_paint_wrapper_main (int argc, char *argv[])
 
   clutter_main ();
 
-  g_object_unref (oh->scaler_1);
-  g_object_unref (oh->scaler_2);
   g_object_unref (oh->timeline);
   g_free (oh->paint_guards);
   g_free (oh->hand);

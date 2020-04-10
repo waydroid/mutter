@@ -308,8 +308,7 @@ _cogl_pipeline_layer_pre_paint (CoglPipelineLayer *layerr);
 void
 _cogl_pipeline_layer_get_wrap_modes (CoglPipelineLayer *layer,
                                      CoglSamplerCacheWrapMode *wrap_mode_s,
-                                     CoglSamplerCacheWrapMode *wrap_mode_t,
-                                     CoglSamplerCacheWrapMode *wrap_mode_r);
+                                     CoglSamplerCacheWrapMode *wrap_mode_t);
 
 void
 _cogl_pipeline_layer_get_filters (CoglPipelineLayer *layer,
@@ -333,7 +332,7 @@ typedef enum
 CoglPipelineLayerType
 _cogl_pipeline_layer_get_type (CoglPipelineLayer *layer);
 
-CoglTexture *
+COGL_EXPORT CoglTexture *
 _cogl_pipeline_layer_get_texture (CoglPipelineLayer *layer);
 
 CoglTexture *
@@ -350,9 +349,6 @@ _cogl_pipeline_layer_get_wrap_mode_s (CoglPipelineLayer *layer);
 
 CoglPipelineWrapMode
 _cogl_pipeline_layer_get_wrap_mode_t (CoglPipelineLayer *layer);
-
-CoglPipelineWrapMode
-_cogl_pipeline_layer_get_wrap_mode_p (CoglPipelineLayer *layer);
 
 void
 _cogl_pipeline_layer_copy_differences (CoglPipelineLayer *dest,

@@ -29,6 +29,7 @@
 #include "backends/meta-monitor-manager-private.h"
 #include "backends/meta-settings-private.h"
 #include "backends/meta-output.h"
+#include "core/boxes-private.h"
 
 #define SCALE_FACTORS_PER_INTEGER 4
 #define SCALE_FACTORS_STEPS (1.0 / (float) SCALE_FACTORS_PER_INTEGER)
@@ -64,6 +65,8 @@ typedef struct _MetaMonitorPrivate
   MetaMonitorMode *current_mode;
 
   MetaMonitorSpec *spec;
+
+  MetaLogicalMonitor *logical_monitor;
 
   /*
    * The primary or first output for this monitor, 0 if we can't figure out.
@@ -455,14 +458,8 @@ meta_monitor_logical_to_crtc_transform (MetaMonitor          *monitor,
                                         MetaMonitorTransform  transform)
 {
   MetaOutput *output = meta_monitor_get_main_output (monitor);
-  MetaMonitorTransform new_transform;
 
-  new_transform = (transform + output->panel_orientation_transform) %
-                  META_MONITOR_TRANSFORM_FLIPPED;
-  if (meta_monitor_transform_is_flipped (transform))
-    new_transform += META_MONITOR_TRANSFORM_FLIPPED;
-
-  return new_transform;
+  return meta_output_logical_to_crtc_transform (output, transform);
 }
 
 MetaMonitorTransform
@@ -470,15 +467,8 @@ meta_monitor_crtc_to_logical_transform (MetaMonitor          *monitor,
                                         MetaMonitorTransform  transform)
 {
   MetaOutput *output = meta_monitor_get_main_output (monitor);
-  MetaMonitorTransform new_transform;
 
-  new_transform = (transform + META_MONITOR_TRANSFORM_FLIPPED -
-                   output->panel_orientation_transform) %
-                  META_MONITOR_TRANSFORM_FLIPPED;
-  if (meta_monitor_transform_is_flipped (transform))
-    new_transform += META_MONITOR_TRANSFORM_FLIPPED;
-
-  return new_transform;
+  return meta_output_crtc_to_logical_transform (output, transform);
 }
 
 static void
@@ -642,7 +632,7 @@ meta_monitor_normal_generate_modes (MetaMonitorNormal *monitor_normal)
         monitor_priv->preferred_mode = mode;
 
       crtc = meta_output_get_assigned_crtc (output);
-      if (crtc && crtc_mode == crtc->current_mode)
+      if (crtc && crtc->config && crtc_mode == crtc->config->mode)
         monitor_priv->current_mode = mode;
     }
 }
@@ -689,10 +679,17 @@ meta_monitor_normal_derive_layout (MetaMonitor   *monitor,
 {
   MetaOutput *output;
   MetaCrtc *crtc;
+  MetaCrtcConfig *crtc_config;
 
   output = meta_monitor_get_main_output (monitor);
   crtc = meta_output_get_assigned_crtc (output);
-  *layout = crtc->rect;
+  crtc_config = crtc->config;
+
+  g_return_if_fail (crtc_config);
+
+  meta_rectangle_from_graphene_rect (&crtc_config->layout,
+                                     META_ROUNDING_STRATEGY_ROUND,
+                                     layout);
 }
 
 static gboolean
@@ -886,7 +883,8 @@ is_monitor_mode_assigned (MetaMonitor     *monitor,
 
       crtc = meta_output_get_assigned_crtc (output);
       if (monitor_crtc_mode->crtc_mode &&
-          (!crtc || crtc->current_mode != monitor_crtc_mode->crtc_mode))
+          (!crtc || !crtc->config ||
+           crtc->config->mode != monitor_crtc_mode->crtc_mode))
         return FALSE;
       else if (!monitor_crtc_mode->crtc_mode && crtc)
         return FALSE;
@@ -1330,32 +1328,39 @@ meta_monitor_tiled_derive_layout (MetaMonitor   *monitor,
   MetaMonitorPrivate *monitor_priv =
     meta_monitor_get_instance_private (monitor);
   GList *l;
-  int min_x, min_y, max_x, max_y;
+  float min_x, min_y, max_x, max_y;
 
-  min_x = INT_MAX;
-  min_y = INT_MAX;
-  max_x = 0;
-  max_y = 0;
+  min_x = FLT_MAX;
+  min_y = FLT_MAX;
+  max_x = 0.0;
+  max_y = 0.0;
   for (l = monitor_priv->outputs; l; l = l->next)
     {
       MetaOutput *output = l->data;
       MetaCrtc *crtc;
+      MetaCrtcConfig *crtc_config;
+      graphene_rect_t *crtc_layout;
 
       crtc = meta_output_get_assigned_crtc (output);
       if (!crtc)
         continue;
 
-      min_x = MIN (crtc->rect.x, min_x);
-      min_y = MIN (crtc->rect.y, min_y);
-      max_x = MAX (crtc->rect.x + crtc->rect.width, max_x);
-      max_y = MAX (crtc->rect.y + crtc->rect.height, max_y);
+      crtc_config = crtc->config;
+      g_return_if_fail (crtc_config);
+
+      crtc_layout = &crtc_config->layout;
+
+      min_x = MIN (crtc_layout->origin.x, min_x);
+      min_y = MIN (crtc_layout->origin.y, min_y);
+      max_x = MAX (crtc_layout->origin.x + crtc_layout->size.width, max_x);
+      max_y = MAX (crtc_layout->origin.y + crtc_layout->size.height, max_y);
     }
 
   *layout = (MetaRectangle) {
-    .x = min_x,
-    .y = min_y,
-    .width = max_x - min_x,
-    .height = max_y - min_y
+    .x = roundf (min_x),
+    .y = roundf (min_y),
+    .width = roundf (max_x - min_x),
+    .height = roundf (max_y - min_y)
   };
 }
 
@@ -1438,16 +1443,9 @@ meta_monitor_get_spec (MetaMonitor *monitor)
 MetaLogicalMonitor *
 meta_monitor_get_logical_monitor (MetaMonitor *monitor)
 {
-  MetaOutput *output;
-  MetaCrtc *crtc;
+  MetaMonitorPrivate *priv = meta_monitor_get_instance_private (monitor);
 
-  output = meta_monitor_get_main_output (monitor);
-  crtc = meta_output_get_assigned_crtc (output);
-
-  if (crtc)
-    return crtc->logical_monitor;
-  else
-    return NULL;
+  return priv->logical_monitor;
 }
 
 MetaMonitorMode *
@@ -1514,7 +1512,7 @@ is_current_mode_known (MetaMonitor *monitor)
   output = meta_monitor_get_main_output (monitor);
   crtc = meta_output_get_assigned_crtc (output);
 
-  return meta_monitor_is_active (monitor) == (crtc && crtc->current_mode);
+  return meta_monitor_is_active (monitor) == (crtc && crtc->config);
 }
 
 void
@@ -1884,4 +1882,13 @@ meta_monitor_get_display_name (MetaMonitor *monitor)
     meta_monitor_get_instance_private (monitor);
 
   return monitor_priv->display_name;
+}
+
+void
+meta_monitor_set_logical_monitor (MetaMonitor        *monitor,
+                                  MetaLogicalMonitor *logical_monitor)
+{
+  MetaMonitorPrivate *priv = meta_monitor_get_instance_private (monitor);
+
+  priv->logical_monitor = logical_monitor;
 }

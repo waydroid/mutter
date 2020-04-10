@@ -42,8 +42,6 @@
 #include "driver/gl/cogl-util-gl-private.h"
 #include "driver/gl/cogl-pipeline-opengl-private.h"
 
-#ifdef COGL_PIPELINE_PROGEND_GLSL
-
 #include "cogl-context-private.h"
 #include "cogl-object-private.h"
 #include "cogl-pipeline-cache.h"
@@ -73,22 +71,16 @@ typedef struct
   void *getter_func;
   UpdateUniformFunc update_func;
   CoglPipelineState change;
-
-  /* This builtin is only necessary if the following private feature
-   * is not implemented in the driver */
-  CoglPrivateFeature feature_replacement;
 } BuiltinUniformData;
 
 static BuiltinUniformData builtin_uniforms[] =
   {
     { "cogl_point_size_in",
       cogl_pipeline_get_point_size, update_float_uniform,
-      COGL_PIPELINE_STATE_POINT_SIZE,
-      COGL_PRIVATE_FEATURE_BUILTIN_POINT_SIZE_UNIFORM },
+      COGL_PIPELINE_STATE_POINT_SIZE },
     { "_cogl_alpha_test_ref",
       cogl_pipeline_get_alpha_test_reference, update_float_uniform,
-      COGL_PIPELINE_STATE_ALPHA_FUNC_REFERENCE,
-      COGL_PRIVATE_FEATURE_ALPHA_TEST }
+      COGL_PIPELINE_STATE_ALPHA_FUNC_REFERENCE },
   };
 
 const CoglPipelineProgend _cogl_pipeline_glsl_progend;
@@ -464,9 +456,7 @@ update_builtin_uniforms (CoglContext *context,
     return;
 
   for (i = 0; i < G_N_ELEMENTS (builtin_uniforms); i++)
-    if (!_cogl_has_private_feature (context,
-                                    builtin_uniforms[i].feature_replacement) &&
-        (program_state->dirty_builtin_uniforms & (1 << i)) &&
+    if ((program_state->dirty_builtin_uniforms & (1 << i)) &&
         program_state->builtin_uniform_locations[i] != -1)
       builtin_uniforms[i].update_func (pipeline,
                                        program_state
@@ -640,15 +630,6 @@ _cogl_pipeline_progend_glsl_flush_uniforms (CoglPipeline *pipeline,
 static gboolean
 _cogl_pipeline_progend_glsl_start (CoglPipeline *pipeline)
 {
-  CoglHandle user_program;
-
-  _COGL_GET_CONTEXT (ctx, FALSE);
-
-  user_program = cogl_pipeline_get_user_program (pipeline);
-  if (user_program &&
-      _cogl_program_get_language (user_program) != COGL_SHADER_LANGUAGE_GLSL)
-    return FALSE;
-
   return TRUE;
 }
 
@@ -744,8 +725,6 @@ _cogl_pipeline_progend_glsl_end (CoglPipeline *pipeline,
 
               _cogl_shader_compile_real (shader, pipeline);
 
-              g_assert (shader->language == COGL_SHADER_LANGUAGE_GLSL);
-
               GE( ctx, glAttachShader (program_state->program,
                                        shader->gl_handle) );
             }
@@ -773,8 +752,18 @@ _cogl_pipeline_progend_glsl_end (CoglPipeline *pipeline,
 
   gl_program = program_state->program;
 
-  _cogl_use_fragment_program (gl_program, COGL_PIPELINE_PROGRAM_TYPE_GLSL);
-  _cogl_use_vertex_program (gl_program, COGL_PIPELINE_PROGRAM_TYPE_GLSL);
+  if (ctx->current_gl_program != gl_program)
+    {
+      _cogl_gl_util_clear_gl_errors (ctx);
+      ctx->glUseProgram (gl_program);
+      if (_cogl_gl_util_get_error (ctx) == GL_NO_ERROR)
+        ctx->current_gl_program = gl_program;
+      else
+        {
+          GE( ctx, glUseProgram (0) );
+          ctx->current_gl_program = 0;
+        }
+    }
 
   state.unit = 0;
   state.gl_program = gl_program;
@@ -807,11 +796,9 @@ _cogl_pipeline_progend_glsl_end (CoglPipeline *pipeline,
       clear_flushed_matrix_stacks (program_state);
 
       for (i = 0; i < G_N_ELEMENTS (builtin_uniforms); i++)
-        if (!_cogl_has_private_feature
-            (ctx, builtin_uniforms[i].feature_replacement))
-          GE_RET( program_state->builtin_uniform_locations[i], ctx,
-                  glGetUniformLocation (gl_program,
-                                        builtin_uniforms[i].uniform_name) );
+        GE_RET( program_state->builtin_uniform_locations[i], ctx,
+                glGetUniformLocation (gl_program,
+                                      builtin_uniforms[i].uniform_name) );
 
       GE_RET( program_state->modelview_uniform, ctx,
               glGetUniformLocation (gl_program,
@@ -864,9 +851,7 @@ _cogl_pipeline_progend_glsl_pre_change_notify (CoglPipeline *pipeline,
       int i;
 
       for (i = 0; i < G_N_ELEMENTS (builtin_uniforms); i++)
-        if (!_cogl_has_private_feature
-            (ctx, builtin_uniforms[i].feature_replacement) &&
-            (change & builtin_uniforms[i].change))
+        if (change & builtin_uniforms[i].change)
           {
             CoglPipelineProgramState *program_state
               = get_program_state (pipeline);
@@ -1057,13 +1042,9 @@ update_float_uniform (CoglPipeline *pipeline,
 
 const CoglPipelineProgend _cogl_pipeline_glsl_progend =
   {
-    COGL_PIPELINE_VERTEND_GLSL,
-    COGL_PIPELINE_FRAGEND_GLSL,
     _cogl_pipeline_progend_glsl_start,
     _cogl_pipeline_progend_glsl_end,
     _cogl_pipeline_progend_glsl_pre_change_notify,
     _cogl_pipeline_progend_glsl_layer_pre_change_notify,
     _cogl_pipeline_progend_glsl_pre_paint
   };
-
-#endif /* COGL_PIPELINE_PROGEND_GLSL */

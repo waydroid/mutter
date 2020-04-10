@@ -33,6 +33,10 @@ typedef struct _MetaWindowX11Private MetaWindowX11Private;
 struct _MetaWindowX11Class
 {
   MetaWindowClass parent_class;
+
+  void (*freeze_commits) (MetaWindow *window);
+  void (*thaw_commits)   (MetaWindow *window);
+  gboolean (*always_update_shape) (MetaWindow *window);
 };
 
 struct _MetaWindowX11
@@ -72,6 +76,9 @@ struct _MetaWindowX11Private
   MetaIconCache icon_cache;
   Pixmap wm_hints_pixmap;
   Pixmap wm_hints_mask;
+
+  /* Freeze/thaw on resize (for Xwayland) */
+  gboolean thaw_after_paint;
 };
 
 G_END_DECLS

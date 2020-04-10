@@ -15,7 +15,9 @@ static const ClutterColor stage_color = { 0x0, 0x0, 0x0, 0xff };
 
 
 static void
-on_paint (ClutterActor *actor, void *state)
+on_paint (ClutterActor        *actor,
+          ClutterPaintContext *paint_context,
+          void                *state)
 {
   float saved_viewport[4];
   CoglMatrix saved_projection;
@@ -81,7 +83,7 @@ on_paint (ClutterActor *actor, void *state)
   g_free (pixels);
 
   cogl_pop_framebuffer ();
-  cogl_handle_unref (offscreen);
+  cogl_object_unref (offscreen);
 
   /* Now verify reading back from an onscreen framebuffer...
    */
@@ -122,7 +124,7 @@ on_paint (ClutterActor *actor, void *state)
 
   g_free (pixelsc);
 
-  cogl_handle_unref (tex);
+  cogl_object_unref (tex);
 
   /* Restore the viewport and matrices state */
   cogl_set_viewport (saved_viewport[0],
@@ -165,12 +167,10 @@ test_readpixels (TestUtilsGTestFixture *fixture,
   clutter_actor_show (stage);
   clutter_main ();
 
-  g_source_remove (idle_source);
+  g_clear_handle_id (&idle_source, g_source_remove);
 
   /* Remove all of the actors from the stage */
-  clutter_container_foreach (CLUTTER_CONTAINER (stage),
-                             (ClutterCallback) clutter_actor_destroy,
-                             NULL);
+  clutter_actor_remove_all_children (stage);
 
   if (cogl_test_verbose ())
     g_print ("OK\n");

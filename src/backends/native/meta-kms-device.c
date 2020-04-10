@@ -43,6 +43,8 @@ struct _MetaKmsDevice
   GList *crtcs;
   GList *connectors;
   GList *planes;
+
+  MetaKmsDeviceCaps caps;
 };
 
 G_DEFINE_TYPE (MetaKmsDevice, meta_kms_device, G_TYPE_OBJECT);
@@ -71,6 +73,23 @@ meta_kms_device_get_flags (MetaKmsDevice *device)
   return device->flags;
 }
 
+gboolean
+meta_kms_device_get_cursor_size (MetaKmsDevice *device,
+                                 uint64_t      *out_cursor_width,
+                                 uint64_t      *out_cursor_height)
+{
+  if (device->caps.has_cursor_size)
+    {
+      *out_cursor_width = device->caps.cursor_width;
+      *out_cursor_height = device->caps.cursor_height;
+      return TRUE;
+    }
+  else
+    {
+      return FALSE;
+    }
+}
+
 GList *
 meta_kms_device_get_connectors (MetaKmsDevice *device)
 {
@@ -89,9 +108,10 @@ meta_kms_device_get_planes (MetaKmsDevice *device)
   return device->planes;
 }
 
-MetaKmsPlane *
-meta_kms_device_get_primary_plane_for (MetaKmsDevice *device,
-                                       MetaKmsCrtc   *crtc)
+static MetaKmsPlane *
+get_plane_with_type_for (MetaKmsDevice    *device,
+                         MetaKmsCrtc      *crtc,
+                         MetaKmsPlaneType  type)
 {
   GList *l;
 
@@ -99,7 +119,7 @@ meta_kms_device_get_primary_plane_for (MetaKmsDevice *device,
     {
       MetaKmsPlane *plane = l->data;
 
-      if (meta_kms_plane_get_plane_type (plane) != META_KMS_PLANE_TYPE_PRIMARY)
+      if (meta_kms_plane_get_plane_type (plane) != type)
         continue;
 
       if (meta_kms_plane_is_usable_with (plane, crtc))
@@ -107,6 +127,20 @@ meta_kms_device_get_primary_plane_for (MetaKmsDevice *device,
     }
 
   return NULL;
+}
+
+MetaKmsPlane *
+meta_kms_device_get_primary_plane_for (MetaKmsDevice *device,
+                                       MetaKmsCrtc   *crtc)
+{
+  return get_plane_with_type_for (device, crtc, META_KMS_PLANE_TYPE_PRIMARY);
+}
+
+MetaKmsPlane *
+meta_kms_device_get_cursor_plane_for (MetaKmsDevice *device,
+                                      MetaKmsCrtc   *crtc)
+{
+  return get_plane_with_type_for (device, crtc, META_KMS_PLANE_TYPE_CURSOR);
 }
 
 void
@@ -140,24 +174,26 @@ meta_kms_device_predict_states_in_impl (MetaKmsDevice *device,
   meta_kms_impl_device_predict_states (impl_device, update);
 }
 
-static gboolean
+static gpointer
 dispatch_in_impl (MetaKmsImpl  *impl,
                   gpointer      user_data,
                   GError      **error)
 {
   MetaKmsImplDevice *impl_device = META_KMS_IMPL_DEVICE (user_data);
+  gboolean ret;
 
-  return meta_kms_impl_device_dispatch (impl_device, error);
+  ret = meta_kms_impl_device_dispatch (impl_device, error);
+  return GINT_TO_POINTER (ret);
 }
 
-static gboolean
+static gpointer
 dispatch_idle_in_impl (MetaKmsImpl  *impl,
                        gpointer      user_data,
                        GError      **error)
 {
   meta_kms_impl_dispatch_idle (impl);
 
-  return TRUE;
+  return GINT_TO_POINTER (TRUE);
 }
 
 int
@@ -185,6 +221,22 @@ meta_kms_device_dispatch_sync (MetaKmsDevice  *device,
   return meta_kms_flush_callbacks (device->kms);
 }
 
+void
+meta_kms_device_add_fake_plane_in_impl (MetaKmsDevice    *device,
+                                        MetaKmsPlaneType  plane_type,
+                                        MetaKmsCrtc      *crtc)
+{
+  MetaKmsImplDevice *impl_device = device->impl_device;
+  MetaKmsPlane *plane;
+
+  meta_assert_in_kms_impl (device->kms);
+
+  plane = meta_kms_impl_device_add_fake_plane (impl_device,
+                                               plane_type,
+                                               crtc);
+  device->planes = g_list_append (device->planes, plane);
+}
+
 typedef struct _CreateImplDeviceData
 {
   MetaKmsDevice *device;
@@ -194,9 +246,10 @@ typedef struct _CreateImplDeviceData
   GList *out_crtcs;
   GList *out_connectors;
   GList *out_planes;
+  MetaKmsDeviceCaps out_caps;
 } CreateImplDeviceData;
 
-static gboolean
+static gpointer
 create_impl_device_in_impl (MetaKmsImpl  *impl,
                             gpointer      user_data,
                             GError      **error)
@@ -212,8 +265,9 @@ create_impl_device_in_impl (MetaKmsImpl  *impl,
   data->out_crtcs = meta_kms_impl_device_copy_crtcs (impl_device);
   data->out_connectors = meta_kms_impl_device_copy_connectors (impl_device);
   data->out_planes = meta_kms_impl_device_copy_planes (impl_device);
+  data->out_caps = *meta_kms_impl_device_get_caps (impl_device);
 
-  return TRUE;
+  return GINT_TO_POINTER (TRUE);
 }
 
 MetaKmsDevice *
@@ -254,6 +308,7 @@ meta_kms_device_new (MetaKms            *kms,
   device->crtcs = data.out_crtcs;
   device->connectors = data.out_connectors;
   device->planes = data.out_planes;
+  device->caps = data.out_caps;
 
   return device;
 }
@@ -265,7 +320,7 @@ typedef struct _FreeImplDeviceData
   int out_fd;
 } FreeImplDeviceData;
 
-static gboolean
+static gpointer
 free_impl_device_in_impl (MetaKmsImpl  *impl,
                           gpointer      user_data,
                           GError      **error)
@@ -279,7 +334,7 @@ free_impl_device_in_impl (MetaKmsImpl  *impl,
 
   data->out_fd = fd;
 
-  return TRUE;
+  return GINT_TO_POINTER (TRUE);
 }
 
 static void
@@ -304,7 +359,7 @@ meta_kms_device_finalize (GObject *object)
         .impl_device = device->impl_device,
       };
       if (!meta_kms_run_impl_task_sync (device->kms, free_impl_device_in_impl, &data,
-                                       &error))
+                                        &error))
         {
           g_warning ("Failed to close KMS impl device: %s", error->message);
           g_error_free (error);

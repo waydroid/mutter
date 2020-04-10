@@ -5,6 +5,7 @@
 #include <cogl/cogl.h>
 
 #include <clutter/clutter.h>
+#include "test-utils.h"
 
 /* layout actor, by Lucas Rocha */
 
@@ -334,7 +335,7 @@ my_thing_allocate (ClutterActor           *self,
           if (clutter_actor_is_scaled (child) ||
               clutter_actor_is_rotated (child))
             {
-              ClutterVertex v1 = { 0, }, v2 = { 0, };
+              graphene_point3d_t v1 = { 0, }, v2 = { 0, };
               ClutterActorBox transformed_box = { 0, };
 
               /* origin */
@@ -629,10 +630,10 @@ test_layout_main (int argc, char *argv[])
   clutter_actor_set_position (box, 20, 20);
   clutter_actor_set_size (box, 350, -1);
 
-  icon = clutter_texture_new_from_file (TESTS_DATADIR
-                                        G_DIR_SEPARATOR_S
-                                        "redhand.png",
-                                        &error);
+  icon = clutter_test_utils_create_texture_from_file (TESTS_DATADIR
+                                                      G_DIR_SEPARATOR_S
+                                                      "redhand.png",
+                                                      &error);
   if (error)
     g_error ("Unable to load 'redhand.png': %s", error->message);
 

@@ -246,11 +246,7 @@ meta_x11_display_dispose (GObject *object)
       x11_display->gdk_display = NULL;
     }
 
-  if (x11_display->display_close_idle)
-    {
-      g_source_remove (x11_display->display_close_idle);
-      x11_display->display_close_idle = 0;
-    }
+  g_clear_handle_id (&x11_display->display_close_idle, g_source_remove);
 
   g_free (x11_display->name);
   x11_display->name = NULL;
@@ -608,6 +604,7 @@ set_supported_hint (MetaX11Display *x11_display)
     x11_display->atom__GTK_FRAME_EXTENTS,
     x11_display->atom__GTK_SHOW_WINDOW_MENU,
     x11_display->atom__GTK_EDGE_CONSTRAINTS,
+    x11_display->atom__GTK_WORKAREAS,
   };
 
   XChangeProperty (x11_display->xdisplay,
@@ -918,6 +915,56 @@ set_workspace_names (MetaX11Display *x11_display)
 }
 
 static void
+set_workspace_work_area_hint (MetaWorkspace  *workspace,
+                              MetaX11Display *x11_display)
+{
+  MetaMonitorManager *monitor_manager;
+  GList *logical_monitors;
+  GList *l;
+  int num_monitors;
+  unsigned long *data;
+  unsigned long *tmp;
+  g_autofree char *workarea_name;
+  Atom workarea_atom;
+
+  monitor_manager = meta_backend_get_monitor_manager (meta_get_backend ());
+  logical_monitors = meta_monitor_manager_get_logical_monitors (monitor_manager);
+  num_monitors = meta_monitor_manager_get_num_logical_monitors (monitor_manager);
+
+  data = g_new (unsigned long, num_monitors * 4);
+  tmp = data;
+
+  for (l = logical_monitors; l; l = l->next)
+    {
+      MetaRectangle area;
+
+      meta_workspace_get_work_area_for_logical_monitor (workspace, l->data, &area);
+
+      tmp[0] = area.x;
+      tmp[1] = area.y;
+      tmp[2] = area.width;
+      tmp[3] = area.height;
+
+      tmp += 4;
+    }
+
+  workarea_name = g_strdup_printf ("_GTK_WORKAREAS_D%d",
+                                   meta_workspace_index (workspace));
+
+  workarea_atom = XInternAtom (x11_display->xdisplay, workarea_name, False);
+
+  meta_x11_error_trap_push (x11_display);
+  XChangeProperty (x11_display->xdisplay,
+                   x11_display->xroot,
+                   workarea_atom,
+                   XA_CARDINAL, 32, PropModeReplace,
+                   (guchar*) data, num_monitors * 4);
+  meta_x11_error_trap_pop (x11_display);
+
+  g_free (data);
+}
+
+static void
 set_work_area_hint (MetaDisplay    *display,
                     MetaX11Display *x11_display)
 {
@@ -936,6 +983,8 @@ set_work_area_hint (MetaDisplay    *display,
       MetaWorkspace *workspace = l->data;
 
       meta_workspace_get_work_area_all_monitors (workspace, &area);
+      set_workspace_work_area_hint (workspace, x11_display);
+
       tmp[0] = area.x;
       tmp[1] = area.y;
       tmp[2] = area.width;
@@ -1405,6 +1454,12 @@ int
 meta_x11_display_get_screen_number (MetaX11Display *x11_display)
 {
   return DefaultScreen (x11_display->xdisplay);
+}
+
+MetaDisplay *
+meta_x11_display_get_display (MetaX11Display *x11_display)
+{
+  return x11_display->display;
 }
 
 /**
@@ -1931,8 +1986,8 @@ meta_x11_display_set_input_focus_xwindow (MetaX11Display *x11_display,
   if (meta_display_timestamp_too_old (x11_display->display, &timestamp))
     return;
 
-  serial = XNextRequest (x11_display->xdisplay);
   meta_x11_display_set_input_focus_internal (x11_display, window, timestamp);
+  serial = XNextRequest (x11_display->xdisplay);
   meta_x11_display_update_focus_window (x11_display, window, serial, TRUE);
   meta_display_update_focus_window (x11_display->display, NULL);
   meta_display_remove_autoraise_callback (x11_display->display);

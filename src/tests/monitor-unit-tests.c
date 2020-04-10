@@ -175,8 +175,8 @@ typedef struct _MonitorTestCaseCrtcExpect
 {
   MetaMonitorTransform transform;
   int current_mode;
-  int x;
-  int y;
+  float x;
+  float y;
 } MonitorTestCaseCrtcExpect;
 
 typedef struct _MonitorTestCaseExpect
@@ -313,6 +313,7 @@ static MonitorTestCase initial_test_case = {
       },
       {
         .current_mode = 0,
+        .x = 1024,
       }
     },
     .n_crtcs = 2,
@@ -341,6 +342,8 @@ static void
 create_monitor_test_clients (void)
 {
   GError *error = NULL;
+
+  test_wait_for_x11_display ();
 
   meta_x11_display_set_alarm_filter (meta_get_display ()->x11_display,
                                      monitor_tests_alarm_filter, NULL);
@@ -509,12 +512,17 @@ check_current_monitor_mode (MetaMonitor         *monitor,
     }
   else
     {
+      MetaCrtcConfig *crtc_config;
       MetaLogicalMonitor *logical_monitor;
 
       g_assert_nonnull (crtc);
-      g_assert (monitor_crtc_mode->crtc_mode == crtc->current_mode);
 
-      logical_monitor = crtc->logical_monitor;
+      crtc_config  = crtc->config;
+      g_assert_nonnull (crtc_config);
+
+      g_assert (monitor_crtc_mode->crtc_mode == crtc_config->mode);
+
+      logical_monitor = meta_monitor_get_logical_monitor (monitor);
       g_assert_nonnull (logical_monitor);
     }
 
@@ -612,7 +620,8 @@ check_logical_monitor (MonitorTestCase               *test_case,
             }
 
           crtc = meta_output_get_assigned_crtc (output);
-          g_assert (!crtc || crtc->logical_monitor == logical_monitor);
+          g_assert (!crtc ||
+                    meta_monitor_get_logical_monitor (monitor) == logical_monitor);
           g_assert_cmpint (logical_monitor->is_presentation,
                            ==,
                            output->is_presentation);
@@ -621,42 +630,6 @@ check_logical_monitor (MonitorTestCase               *test_case,
 
   if (logical_monitor == monitor_manager->primary_logical_monitor)
     g_assert_nonnull (primary_output);
-}
-
-static void
-get_compensated_crtc_position (MetaCrtc *crtc,
-                               int      *x,
-                               int      *y)
-{
-  MetaLogicalMonitor *logical_monitor;
-  MetaBackend *backend = meta_get_backend ();
-  MetaRenderer *renderer = meta_backend_get_renderer (backend);
-  GList *views;
-  GList *l;
-
-  logical_monitor = crtc->logical_monitor;
-  g_assert_nonnull (logical_monitor);
-
-  views = meta_renderer_get_views (renderer);
-  for (l = views; l; l = l->next)
-    {
-      MetaRendererView *view = l->data;
-      MetaRectangle view_layout;
-
-      clutter_stage_view_get_layout (CLUTTER_STAGE_VIEW (view),
-                                     &view_layout);
-
-      if (meta_rectangle_equal (&view_layout,
-                                &logical_monitor->rect))
-        {
-          *x = crtc->rect.x - view_layout.x;
-          *y = crtc->rect.y - view_layout.y;
-          return;
-        }
-    }
-
-  *x = crtc->rect.x;
-  *y = crtc->rect.y;
 }
 
 static void
@@ -853,50 +826,33 @@ check_monitor_configuration (MonitorTestCase *test_case)
   for (l = crtcs, i = 0; l; l = l->next, i++)
     {
       MetaCrtc *crtc = l->data;
+      MetaCrtcConfig *crtc_config = crtc->config;
 
       if (test_case->expect.crtcs[i].current_mode == -1)
         {
-          g_assert_null (crtc->current_mode);
+          g_assert_null (crtc_config);
         }
       else
         {
-          MetaLogicalMonitor *logical_monitor = crtc->logical_monitor;
           MetaCrtcMode *expected_current_mode;
-          int crtc_x, crtc_y;
+
+          g_assert_nonnull (crtc_config);
 
           expected_current_mode =
             g_list_nth_data (meta_gpu_get_modes (gpu),
                              test_case->expect.crtcs[i].current_mode);
-          g_assert (crtc->current_mode == expected_current_mode);
+          g_assert (crtc_config->mode == expected_current_mode);
 
-          g_assert_cmpuint (crtc->transform,
+          g_assert_cmpuint (crtc_config->transform,
                             ==,
                             test_case->expect.crtcs[i].transform);
 
-          if (meta_is_stage_views_enabled ())
-            {
-              get_compensated_crtc_position (crtc, &crtc_x, &crtc_y);
-
-              g_assert_cmpint (crtc_x, ==, test_case->expect.crtcs[i].x);
-              g_assert_cmpint (crtc_y, ==, test_case->expect.crtcs[i].y);
-            }
-          else
-            {
-              int expect_crtc_x;
-              int expect_crtc_y;
-
-              g_assert_cmpuint (logical_monitor->transform,
-                                ==,
-                                crtc->transform);
-
-              expect_crtc_x = (test_case->expect.crtcs[i].x +
-                               logical_monitor->rect.x);
-              expect_crtc_y = (test_case->expect.crtcs[i].y +
-                               logical_monitor->rect.y);
-
-              g_assert_cmpint (crtc->rect.x, ==, expect_crtc_x);
-              g_assert_cmpint (crtc->rect.y, ==, expect_crtc_y);
-            }
+          g_assert_cmpfloat_with_epsilon (crtc_config->layout.origin.x,
+                                          test_case->expect.crtcs[i].x,
+                                          FLT_EPSILON);
+          g_assert_cmpfloat_with_epsilon (crtc_config->layout.origin.y,
+                                          test_case->expect.crtcs[i].y,
+                                          FLT_EPSILON);
         }
     }
 
@@ -945,19 +901,9 @@ create_monitor_test_setup (MonitorTestCase *test_case,
   for (i = 0; i < test_case->setup.n_crtcs; i++)
     {
       MetaCrtc *crtc;
-      int current_mode_index;
-      MetaCrtcMode *current_mode;
-
-      current_mode_index = test_case->setup.crtcs[i].current_mode;
-      if (current_mode_index == -1)
-        current_mode = NULL;
-      else
-        current_mode = g_list_nth_data (test_setup->modes, current_mode_index);
 
       crtc = g_object_new (META_TYPE_CRTC, NULL);
       crtc->crtc_id = i + 1;
-      crtc->current_mode = current_mode;
-      crtc->transform = META_MONITOR_TRANSFORM_NORMAL;
       crtc->all_transforms = ALL_TRANSFORMS;
 
       test_setup->crtcs = g_list_append (test_setup->crtcs, crtc);
@@ -1258,6 +1204,7 @@ meta_test_monitor_one_off_linear_config (void)
       },
       {
         .current_mode = 0,
+        .x = 1024,
       }
     },
     .n_crtcs = 2,
@@ -1966,6 +1913,7 @@ meta_test_monitor_hidpi_linear_config (void)
         },
         {
           .current_mode = 1,
+          .x = 640,
         }
       },
       .n_crtcs = 2,
@@ -2118,6 +2066,8 @@ meta_test_monitor_suggested_config (void)
       .crtcs = {
         {
           .current_mode = 0,
+          .x = 1024,
+          .y = 758,
         },
         {
           .current_mode = 1,
@@ -2386,6 +2336,7 @@ meta_test_monitor_lid_switch_config (void)
         },
         {
           .current_mode = 0,
+          .x = 1024,
         }
       },
       .n_crtcs = 2,
@@ -2417,6 +2368,7 @@ meta_test_monitor_lid_switch_config (void)
   test_case.expect.screen_width = 1024;
   test_case.expect.monitors[0].current_mode = -1;
   test_case.expect.crtcs[0].current_mode = -1;
+  test_case.expect.crtcs[1].x = 0;
 
   check_monitor_configuration (&test_case);
 
@@ -2436,6 +2388,7 @@ meta_test_monitor_lid_switch_config (void)
 
   test_case.expect.crtcs[0].current_mode = 0;
   test_case.expect.crtcs[1].current_mode = 0;
+  test_case.expect.crtcs[1].x = 1024;
 
   check_monitor_configuration (&test_case);
 }
@@ -2584,7 +2537,9 @@ meta_test_monitor_lid_opened_config (void)
   test_case.expect.screen_width = 1024 * 2;
   test_case.expect.monitors[0].current_mode = 0;
   test_case.expect.crtcs[0].current_mode = 0;
+  test_case.expect.crtcs[0].x = 1024;
   test_case.expect.crtcs[1].current_mode = 0;
+  test_case.expect.crtcs[1].x = 0;
 
   check_monitor_configuration (&test_case);
 }
@@ -2831,6 +2786,7 @@ meta_test_monitor_lid_closed_with_hotplugged_external (void)
   test_case.expect.n_monitors = 2;
   test_case.expect.n_logical_monitors = 2;
   test_case.expect.crtcs[1].current_mode = 0;
+  test_case.expect.crtcs[1].x = 1024;
   test_case.expect.screen_width = 1024 * 2;
 
   test_setup = create_monitor_test_setup (&test_case,
@@ -2844,6 +2800,7 @@ meta_test_monitor_lid_closed_with_hotplugged_external (void)
   test_case.expect.logical_monitors[0].monitors[0] = 1,
   test_case.expect.n_logical_monitors = 1;
   test_case.expect.crtcs[0].current_mode = -1;
+  test_case.expect.crtcs[1].x = 0;
   test_case.expect.screen_width = 1024;
 
   test_setup = create_monitor_test_setup (&test_case,
@@ -2867,6 +2824,7 @@ meta_test_monitor_lid_closed_with_hotplugged_external (void)
   test_case.expect.logical_monitors[1].monitors[0] = 1,
   test_case.expect.n_logical_monitors = 2;
   test_case.expect.crtcs[0].current_mode = 0;
+  test_case.expect.crtcs[1].x = 1024;
   test_case.expect.screen_width = 1024 * 2;
 
   test_setup = create_monitor_test_setup (&test_case,
@@ -3301,6 +3259,7 @@ meta_test_monitor_custom_vertical_config (void)
         },
         {
           .current_mode = 1,
+          .y = 768,
         }
       },
       .n_crtcs = 2,
@@ -3440,6 +3399,7 @@ meta_test_monitor_custom_primary_config (void)
         },
         {
           .current_mode = 1,
+          .x = 1024,
         }
       },
       .n_crtcs = 2,
@@ -3952,7 +3912,7 @@ meta_test_monitor_custom_tiled_config (void)
         },
         {
           .current_mode = 0,
-          .x = 400,
+          .x = 200,
           .y = 0
         }
       },
@@ -4555,6 +4515,7 @@ meta_test_monitor_custom_first_rotated_config (void)
         },
         {
           .current_mode = 0,
+          .x = 768,
         }
       },
       .n_crtcs = 2,
@@ -4685,10 +4646,12 @@ meta_test_monitor_custom_second_rotated_config (void)
       .crtcs = {
         {
           .current_mode = 0,
+          .y = 256,
         },
         {
           .current_mode = 0,
-          .transform = META_MONITOR_TRANSFORM_90
+          .transform = META_MONITOR_TRANSFORM_90,
+          .x = 1024,
         }
       },
       .n_crtcs = 2,
@@ -4859,16 +4822,18 @@ meta_test_monitor_custom_second_rotated_tiled_config (void)
       .crtcs = {
         {
           .current_mode = 0,
+          .y = 256,
         },
         {
           .current_mode = 1,
           .transform = META_MONITOR_TRANSFORM_90,
-          .x = 0,
+          .x = 1024,
           .y = 400,
         },
         {
           .current_mode = 1,
-          .transform = META_MONITOR_TRANSFORM_90
+          .transform = META_MONITOR_TRANSFORM_90,
+          .x = 1024,
         }
       },
       .n_crtcs = 3,
@@ -5008,10 +4973,12 @@ meta_test_monitor_custom_second_rotated_nonnative_config (void)
       .crtcs = {
         {
           .current_mode = 0,
+          .y = 256,
         },
         {
           .current_mode = 0,
-          .transform = META_MONITOR_TRANSFORM_NORMAL
+          .transform = META_MONITOR_TRANSFORM_NORMAL,
+          .x = 1024,
         }
       },
       .n_crtcs = 2,
@@ -5423,6 +5390,7 @@ meta_test_monitor_custom_lid_switch_config (void)
   test_case.expect.n_outputs = 2;
   test_case.expect.crtcs[0].transform = META_MONITOR_TRANSFORM_NORMAL;
   test_case.expect.crtcs[1].current_mode = 0;
+  test_case.expect.crtcs[1].x = 1024;
   test_case.expect.crtcs[1].transform = META_MONITOR_TRANSFORM_270;
   test_case.expect.logical_monitors[0].layout =
     (MetaRectangle) { .width = 1024, .height = 768 };
@@ -5440,6 +5408,7 @@ meta_test_monitor_custom_lid_switch_config (void)
 
   test_case.expect.crtcs[0].current_mode = -1;
   test_case.expect.crtcs[1].transform = META_MONITOR_TRANSFORM_90;
+  test_case.expect.crtcs[1].x = 0;
   test_case.expect.monitors[0].current_mode = -1;
   test_case.expect.logical_monitors[0].layout =
     (MetaRectangle) { .width = 768, .height = 1024 };
@@ -5460,6 +5429,7 @@ meta_test_monitor_custom_lid_switch_config (void)
   test_case.expect.crtcs[0].transform = META_MONITOR_TRANSFORM_NORMAL;
   test_case.expect.crtcs[1].current_mode = 0;
   test_case.expect.crtcs[1].transform = META_MONITOR_TRANSFORM_270;
+  test_case.expect.crtcs[1].x = 1024;
   test_case.expect.monitors[0].current_mode = 0;
   test_case.expect.logical_monitors[0].layout =
     (MetaRectangle) { .width = 1024, .height = 768 };

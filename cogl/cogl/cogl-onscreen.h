@@ -55,6 +55,7 @@ typedef struct _CoglOnscreen CoglOnscreen;
  *
  * Returns: a #GType that can be used with the GLib type system.
  */
+COGL_EXPORT
 GType cogl_onscreen_get_gtype (void);
 
 /**
@@ -71,71 +72,10 @@ GType cogl_onscreen_get_gtype (void);
  * Since: 1.8
  * Stability: unstable
  */
-CoglOnscreen *
+COGL_EXPORT CoglOnscreen *
 cogl_onscreen_new (CoglContext *context, int width, int height);
 
 #ifdef COGL_HAS_X11
-typedef void (*CoglOnscreenX11MaskCallback) (CoglOnscreen *onscreen,
-                                             uint32_t event_mask,
-                                             void *user_data);
-
-/**
- * cogl_x11_onscreen_set_foreign_window_xid:
- * @onscreen: The unallocated framebuffer to associated with an X
- *            window.
- * @xid: The XID of an existing X window
- * @update: (scope async): A callback that notifies of updates to what Cogl
- *          requires to be in the core X protocol event mask.
- * @user_data: user data passed to @update
- *
- * Ideally we would recommend that you let Cogl be responsible for
- * creating any X window required to back an onscreen framebuffer but
- * if you really need to target a window created manually this
- * function can be called before @onscreen has been allocated to set a
- * foreign XID for your existing X window.
- *
- * Since Cogl needs, for example, to track changes to the size of an X
- * window it requires that certain events be selected for via the core
- * X protocol. This requirement may also be changed asynchronously so
- * you must pass in an @update callback to inform you of Cogl's
- * required event mask.
- *
- * For example if you are using Xlib you could use this API roughly
- * as follows:
- * [{
- * static void
- * my_update_cogl_x11_event_mask (CoglOnscreen *onscreen,
- *                                uint32_t event_mask,
- *                                void *user_data)
- * {
- *   XSetWindowAttributes attrs;
- *   MyData *data = user_data;
- *   attrs.event_mask = event_mask | data->my_event_mask;
- *   XChangeWindowAttributes (data->xdpy,
- *                            data->xwin,
- *                            CWEventMask,
- *                            &attrs);
- * }
- *
- * {
- *   *snip*
- *   cogl_x11_onscreen_set_foreign_window_xid (onscreen,
- *                                             data->xwin,
- *                                             my_update_cogl_x11_event_mask,
- *                                             data);
- *   *snip*
- * }
- * }]
- *
- * Since: 2.0
- * Stability: Unstable
- */
-void
-cogl_x11_onscreen_set_foreign_window_xid (CoglOnscreen *onscreen,
-                                          uint32_t xid,
-                                          CoglOnscreenX11MaskCallback update,
-                                          void *user_data);
-
 /**
  * cogl_x11_onscreen_get_window_xid:
  * @onscreen: A #CoglOnscreen framebuffer
@@ -153,13 +93,9 @@ cogl_x11_onscreen_set_foreign_window_xid (CoglOnscreen *onscreen,
  * Since: 1.10
  * Stability: unstable
  */
-uint32_t
+COGL_EXPORT uint32_t
 cogl_x11_onscreen_get_window_xid (CoglOnscreen *onscreen);
 
-/* XXX: we should maybe remove this, since nothing currently uses
- * it and the current implementation looks dubious. */
-uint32_t
-cogl_x11_onscreen_get_visual_xid (CoglOnscreen *onscreen);
 #endif /* COGL_HAS_X11 */
 
 /**
@@ -190,7 +126,7 @@ cogl_x11_onscreen_get_visual_xid (CoglOnscreen *onscreen);
  * Since: 2.0
  * Stability: Unstable
  */
-void
+COGL_EXPORT void
 cogl_onscreen_show (CoglOnscreen *onscreen);
 
 /**
@@ -215,7 +151,7 @@ cogl_onscreen_show (CoglOnscreen *onscreen);
  * Since: 2.0
  * Stability: Unstable
  */
-void
+COGL_EXPORT void
 cogl_onscreen_hide (CoglOnscreen *onscreen);
 
 /**
@@ -239,7 +175,7 @@ cogl_onscreen_hide (CoglOnscreen *onscreen);
  * Since: 1.10
  * Stability: unstable
  */
-void
+COGL_EXPORT void
 cogl_onscreen_swap_buffers (CoglOnscreen *onscreen);
 
 
@@ -292,7 +228,7 @@ cogl_onscreen_swap_buffers (CoglOnscreen *onscreen);
  * Since: 1.14
  * Stability: stable
  */
-int
+COGL_EXPORT int
 cogl_onscreen_get_buffer_age (CoglOnscreen *onscreen);
 
 /**
@@ -343,7 +279,7 @@ cogl_onscreen_get_buffer_age (CoglOnscreen *onscreen);
  * Since: 1.16
  * Stability: unstable
  */
-void
+COGL_EXPORT void
 cogl_onscreen_swap_buffers_with_damage (CoglOnscreen *onscreen,
                                         const int *rectangles,
                                         int n_rectangles);
@@ -368,7 +304,7 @@ cogl_onscreen_swap_buffers_with_damage (CoglOnscreen *onscreen,
  * Since: 1.10
  * Stability: unstable
  */
-void
+COGL_EXPORT void
 cogl_onscreen_swap_region (CoglOnscreen *onscreen,
                            const int *rectangles,
                            int n_rectangles);
@@ -453,6 +389,7 @@ typedef struct _CoglClosure CoglFrameClosure;
  *
  * Returns: a #GType that can be used with the GLib type system.
  */
+COGL_EXPORT
 GType cogl_frame_closure_get_gtype (void);
 
 /**
@@ -492,7 +429,7 @@ GType cogl_frame_closure_get_gtype (void);
  * Since: 1.14
  * Stability: unstable
  */
-CoglFrameClosure *
+COGL_EXPORT CoglFrameClosure *
 cogl_onscreen_add_frame_callback (CoglOnscreen *onscreen,
                                   CoglFrameCallback callback,
                                   void *user_data,
@@ -514,61 +451,9 @@ cogl_onscreen_add_frame_callback (CoglOnscreen *onscreen,
  * Since: 1.14
  * Stability: unstable
  */
-void
+COGL_EXPORT void
 cogl_onscreen_remove_frame_callback (CoglOnscreen *onscreen,
                                      CoglFrameClosure *closure);
-
-typedef void (*CoglSwapBuffersNotify) (CoglFramebuffer *framebuffer,
-                                       void *user_data);
-
-/**
- * cogl_onscreen_add_swap_buffers_callback:
- * @onscreen: A #CoglOnscreen framebuffer
- * @callback: (scope notified): A callback function to call when a swap
- *            has completed
- * @user_data: (closure): A private pointer to be passed to @callback
- *
- * Installs a @callback function that should be called whenever a swap buffers
- * request (made using cogl_onscreen_swap_buffers()) for the given
- * @onscreen completes.
- *
- * <note>Applications should check for the %COGL_FEATURE_ID_SWAP_BUFFERS_EVENT
- * feature before using this API. It's currently undefined when and if
- * registered callbacks will be called if this feature is not supported.</note>
- *
- * We recommend using this mechanism when available to manually throttle your
- * applications so your application will be able to avoid long blocks in the
- * driver caused by throttling when you request to swap buffers too quickly.
- *
- * Return value: a unique identifier that can be used to remove to remove
- *               the callback later.
- * Since: 1.10
- * Stability: unstable
- * Deprecated: 1.14: Use cogl_onscreen_add_frame_callback() instead
- */
-COGL_DEPRECATED_FOR (cogl_onscreen_add_frame_callback)
-unsigned int
-cogl_onscreen_add_swap_buffers_callback (CoglOnscreen *onscreen,
-                                         CoglSwapBuffersNotify callback,
-                                         void *user_data);
-
-/**
- * cogl_onscreen_remove_swap_buffers_callback:
- * @onscreen: A #CoglOnscreen framebuffer
- * @id: An identifier returned from cogl_onscreen_add_swap_buffers_callback()
- *
- * Removes a callback that was previously registered
- * using cogl_onscreen_add_swap_buffers_callback().
- *
- * Since: 1.10
- * Stability: unstable
- * Deprecated: 1.14: Use cogl_onscreen_remove_frame_callback() instead
- */
-
-COGL_DEPRECATED_FOR (cogl_onscreen_remove_frame_callback)
-void
-cogl_onscreen_remove_swap_buffers_callback (CoglOnscreen *onscreen,
-                                            unsigned int id);
 
 /**
  * cogl_onscreen_set_resizable:
@@ -599,7 +484,7 @@ cogl_onscreen_remove_swap_buffers_callback (CoglOnscreen *onscreen,
  *
  * Since: 2.0
  */
-void
+COGL_EXPORT void
 cogl_onscreen_set_resizable (CoglOnscreen *onscreen,
                              gboolean resizable);
 
@@ -626,7 +511,7 @@ cogl_onscreen_set_resizable (CoglOnscreen *onscreen,
  *               resizable or not.
  * Since: 2.0
  */
-gboolean
+COGL_EXPORT gboolean
 cogl_onscreen_get_resizable (CoglOnscreen *onscreen);
 
 /**
@@ -677,6 +562,7 @@ typedef struct _CoglClosure CoglOnscreenResizeClosure;
  *
  * Returns: a #GType that can be used with the GLib type system.
  */
+COGL_EXPORT
 GType cogl_onscreen_resize_closure_get_gtype (void);
 
 /**
@@ -711,7 +597,7 @@ GType cogl_onscreen_resize_closure_get_gtype (void);
  *               remove the callback and associated @user_data later.
  * Since: 2.0
  */
-CoglOnscreenResizeClosure *
+COGL_EXPORT CoglOnscreenResizeClosure *
 cogl_onscreen_add_resize_callback (CoglOnscreen *onscreen,
                                    CoglOnscreenResizeCallback callback,
                                    void *user_data,
@@ -727,7 +613,7 @@ cogl_onscreen_add_resize_callback (CoglOnscreen *onscreen,
  *
  * Since: 2.0
  */
-void
+COGL_EXPORT void
 cogl_onscreen_remove_resize_callback (CoglOnscreen *onscreen,
                                       CoglOnscreenResizeClosure *closure);
 
@@ -791,6 +677,7 @@ typedef struct _CoglClosure CoglOnscreenDirtyClosure;
  *
  * Returns: a #GType that can be used with the GLib type system.
  */
+COGL_EXPORT
 GType cogl_onscreen_dirty_closure_get_gtype (void);
 
 /**
@@ -823,7 +710,7 @@ GType cogl_onscreen_dirty_closure_get_gtype (void);
  * Since: 1.16
  * Stability: unstable
  */
-CoglOnscreenDirtyClosure *
+COGL_EXPORT CoglOnscreenDirtyClosure *
 cogl_onscreen_add_dirty_callback (CoglOnscreen *onscreen,
                                   CoglOnscreenDirtyCallback callback,
                                   void *user_data,
@@ -845,7 +732,7 @@ cogl_onscreen_add_dirty_callback (CoglOnscreen *onscreen,
  * Since: 1.16
  * Stability: unstable
  */
-void
+COGL_EXPORT void
 cogl_onscreen_remove_dirty_callback (CoglOnscreen *onscreen,
                                      CoglOnscreenDirtyClosure *closure);
 
@@ -860,7 +747,7 @@ cogl_onscreen_remove_dirty_callback (CoglOnscreen *onscreen,
  * Since: 1.10
  * Stability: unstable
  */
-gboolean
+COGL_EXPORT gboolean
 cogl_is_onscreen (void *object);
 
 /**
@@ -875,7 +762,7 @@ cogl_is_onscreen (void *object);
  * Since: 1.14
  * Stability: unstable
  */
-int64_t
+COGL_EXPORT int64_t
 cogl_onscreen_get_frame_counter (CoglOnscreen *onscreen);
 
 G_END_DECLS

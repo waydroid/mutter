@@ -135,7 +135,7 @@ struct _AnchorCoord
     } fraction;
 
     /* Use when is_fractional == FALSE */
-    ClutterVertex units;
+    graphene_point3d_t units;
   } v;
 };
 
@@ -163,7 +163,7 @@ struct _SizeRequest
 struct _ClutterLayoutInfo
 {
   /* fixed position coordinates */
-  ClutterPoint fixed_pos;
+  graphene_point_t fixed_pos;
 
   ClutterMargin margin;
 
@@ -173,8 +173,8 @@ struct _ClutterLayoutInfo
   guint x_expand : 1;
   guint y_expand : 1;
 
-  ClutterSize minimum;
-  ClutterSize natural;
+  graphene_size_t minimum;
+  graphene_size_t natural;
 };
 
 const ClutterLayoutInfo *       _clutter_actor_get_layout_info_or_defaults      (ClutterActor *self);
@@ -203,13 +203,13 @@ struct _ClutterTransformInfo
   AnchorCoord anchor;
 
   /* translation */
-  ClutterVertex translation;
+  graphene_point3d_t translation;
 
   /* z_position */
   gfloat z_position;
 
   /* transformation center */
-  ClutterPoint pivot;
+  graphene_point_t pivot;
   gfloat pivot_z;
 
   CoglMatrix transform;
@@ -315,7 +315,6 @@ void                            _clutter_actor_queue_relayout_on_clones         
 void                            _clutter_actor_queue_only_relayout                      (ClutterActor *actor);
 void                            _clutter_actor_queue_update_resource_scale_recursive    (ClutterActor *actor);
 
-CoglFramebuffer *               _clutter_actor_get_active_framebuffer                   (ClutterActor *actor);
 gboolean                        _clutter_actor_get_real_resource_scale                  (ClutterActor *actor,
                                                                                          float        *resource_scale);
 

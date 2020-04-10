@@ -39,6 +39,7 @@
 #include <stddef.h>
 
 #include <cogl/cogl-defines.h>
+#include <cogl/cogl-macros.h>
 
 #include <glib.h>
 #include <glib-object.h>
@@ -80,50 +81,13 @@ typedef struct { \
  */
 typedef void * CoglHandle;
 
-/**
- * COGL_INVALID_HANDLE:
- *
- * A COGL handle that is not valid, used for unitialized handles as well as
- * error conditions.
- */
-#define COGL_INVALID_HANDLE NULL
-
 #define COGL_TYPE_HANDLE        (cogl_handle_get_type ())
-GType
+COGL_EXPORT GType
 cogl_handle_get_type (void) G_GNUC_CONST;
 
-/**
- * cogl_handle_ref:
- * @handle: a #CoglHandle
- *
- * Increases the reference count of @handle by 1
- *
- * Return value: (transfer none): the handle, with its reference count increased
- */
-CoglHandle
-cogl_handle_ref (CoglHandle handle);
-
-/**
- * cogl_handle_unref:
- * @handle: a #CoglHandle
- *
- * Drecreases the reference count of @handle by 1; if the reference
- * count reaches 0, the resources allocated by @handle will be freed
- */
-void
-cogl_handle_unref (CoglHandle handle);
-
 /* We forward declare this in cogl-types to avoid circular dependencies
- * between cogl-matrix.h, cogl-euler.h and cogl-quaterion.h */
+ * between cogl-matrix.h and cogl-quaterion.h */
 typedef struct _CoglMatrix      CoglMatrix;
-
-/* Same as above we forward declared CoglQuaternion to avoid
- * circular dependencies. */
-typedef struct _CoglQuaternion CoglQuaternion;
-
-/* Same as above we forward declared CoglEuler to avoid
- * circular dependencies. */
-typedef struct _CoglEuler CoglEuler;
 
 /**
  * CoglAngle:
@@ -138,6 +102,14 @@ typedef int32_t CoglAngle;
 typedef struct _CoglColor               CoglColor;
 typedef struct _CoglTextureVertex       CoglTextureVertex;
 
+/**
+ * CoglDmaBufHandle: (skip)
+ *
+ * An opaque type that tracks the lifetime of a DMA buffer fd. Release
+ * with cogl_dma_buf_handle_free().
+ */
+typedef struct _CoglDmaBufHandle CoglDmaBufHandle;
+
 /* Enum declarations */
 
 #define COGL_A_BIT              (1 << 4)
@@ -146,52 +118,6 @@ typedef struct _CoglTextureVertex       CoglTextureVertex;
 #define COGL_PREMULT_BIT        (1 << 7)
 #define COGL_DEPTH_BIT          (1 << 8)
 #define COGL_STENCIL_BIT        (1 << 9)
-
-/**
- * CoglFeatureFlags:
- * @COGL_FEATURE_TEXTURE_YUV: ycbcr conversion support
- * @COGL_FEATURE_TEXTURE_READ_PIXELS: glReadPixels() support
- * @COGL_FEATURE_OFFSCREEN: FBO support
- * @COGL_FEATURE_OFFSCREEN_MULTISAMPLE: Multisample support on FBOs
- * @COGL_FEATURE_FOUR_CLIP_PLANES: At least 4 clip planes available
- * @COGL_FEATURE_STENCIL_BUFFER: Stencil buffer support
- * @COGL_FEATURE_VBOS: VBO support
- * @COGL_FEATURE_PBOS: PBO support
- * @COGL_FEATURE_UNSIGNED_INT_INDICES: Set if
- *     %COGL_INDICES_TYPE_UNSIGNED_INT is supported in
- *     cogl_vertex_buffer_indices_new().
- * @COGL_FEATURE_DEPTH_RANGE: cogl_material_set_depth_range() support
- * @COGL_FEATURE_POINT_SPRITE: Whether
- *     cogl_material_set_layer_point_sprite_coords_enabled() is supported.
- * @COGL_FEATURE_MAP_BUFFER_FOR_READ: Whether cogl_buffer_map() is
- *     supported with CoglBufferAccess including read support.
- * @COGL_FEATURE_MAP_BUFFER_FOR_WRITE: Whether cogl_buffer_map() is
- *     supported with CoglBufferAccess including write support.
- * @COGL_FEATURE_DEPTH_TEXTURE: Whether #CoglFramebuffer support rendering the
- *     depth buffer to a texture.
- *
- * Flags for the supported features.
- *
- * Since: 0.8
- */
-typedef enum
-{
-  COGL_FEATURE_TEXTURE_YUV            = (1 << 3),
-  COGL_FEATURE_TEXTURE_READ_PIXELS    = (1 << 4),
-  COGL_FEATURE_OFFSCREEN              = (1 << 6),
-  COGL_FEATURE_OFFSCREEN_MULTISAMPLE  = (1 << 7),
-  COGL_FEATURE_FOUR_CLIP_PLANES       = (1 << 9),
-  COGL_FEATURE_STENCIL_BUFFER         = (1 << 10),
-  COGL_FEATURE_VBOS		      = (1 << 11),
-  COGL_FEATURE_PBOS		      = (1 << 12),
-  COGL_FEATURE_UNSIGNED_INT_INDICES   = (1 << 13),
-  COGL_FEATURE_DEPTH_RANGE            = (1 << 14),
-  COGL_FEATURE_POINT_SPRITE           = (1 << 18),
-  COGL_FEATURE_MAP_BUFFER_FOR_READ    = (1 << 21),
-  COGL_FEATURE_MAP_BUFFER_FOR_WRITE   = (1 << 22),
-  COGL_FEATURE_ONSCREEN_MULTIPLE      = (1 << 23),
-  COGL_FEATURE_DEPTH_TEXTURE          = (1 << 24)
-} CoglFeatureFlags;
 
 /**
  * CoglBufferTarget:
@@ -284,41 +210,6 @@ typedef enum
 } CoglTextureFlags;
 
 /**
- * CoglFogMode:
- * @COGL_FOG_MODE_LINEAR: Calculates the fog blend factor as:
- * |[
- *   f = end - eye_distance / end - start
- * ]|
- * @COGL_FOG_MODE_EXPONENTIAL: Calculates the fog blend factor as:
- * |[
- *   f = e ^ -(density * eye_distance)
- * ]|
- * @COGL_FOG_MODE_EXPONENTIAL_SQUARED: Calculates the fog blend factor as:
- * |[
- *   f = e ^ -(density * eye_distance)^2
- * ]|
- *
- * The fog mode determines the equation used to calculate the fogging blend
- * factor while fogging is enabled. The simplest %COGL_FOG_MODE_LINEAR mode
- * determines f as:
- *
- * |[
- *   f = end - eye_distance / end - start
- * ]|
- *
- * Where eye_distance is the distance of the current fragment in eye
- * coordinates from the origin.
- *
- * Since: 1.0
- */
-typedef enum
-{
-  COGL_FOG_MODE_LINEAR,
-  COGL_FOG_MODE_EXPONENTIAL,
-  COGL_FOG_MODE_EXPONENTIAL_SQUARED
-} CoglFogMode;
-
-/**
  * COGL_BLEND_STRING_ERROR:
  *
  * #GError domain for blend string parser errors
@@ -386,7 +277,7 @@ typedef enum /*< prefix=COGL_ERROR >*/
   COGL_SYSTEM_ERROR_NO_MEMORY
 } CoglSystemError;
 
-uint32_t
+COGL_EXPORT uint32_t
 _cogl_system_error_quark (void);
 
 /**

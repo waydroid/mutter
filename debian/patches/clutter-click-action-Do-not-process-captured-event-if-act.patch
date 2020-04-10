@@ -1,0 +1,36 @@
+From: Andre Moreira Magalhaes <andre@endlessm.com>
+Date: Thu, 2 Apr 2020 16:12:43 +0000
+Subject: clutter/click-action: Do not process captured event if action is
+ disabled
+
+Disabling a click action after a button-press but before a
+button-release is captured makes ClutterClickAction connect to
+captured-event and never disconnect.
+
+This change fixes it by making sure the captured-event is only
+processed if the action is still enabled, otherwise releasing
+the action (reset state) and propagating the event.
+
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1170
+Applied-upstream: 3.36.2, commit:95c1baf3d18fe8e50de402b7af4c29d9ae993d19
+---
+ clutter/clutter/clutter-click-action.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/clutter/clutter/clutter-click-action.c b/clutter/clutter/clutter-click-action.c
+index 6b523b0..cb35d72 100644
+--- a/clutter/clutter/clutter-click-action.c
++++ b/clutter/clutter/clutter-click-action.c
+@@ -346,6 +346,12 @@ on_captured_event (ClutterActor       *stage,
+   ClutterModifierType modifier_state;
+   gboolean has_button = TRUE;
+ 
++  if (!clutter_actor_meta_get_enabled (CLUTTER_ACTOR_META (action)))
++    {
++      clutter_click_action_release (action);
++      return CLUTTER_EVENT_PROPAGATE;
++    }
++
+   actor = clutter_actor_meta_get_actor (CLUTTER_ACTOR_META (action));
+ 
+   switch (clutter_event_type (event))

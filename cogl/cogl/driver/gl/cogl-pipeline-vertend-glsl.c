@@ -42,8 +42,6 @@
 #include "driver/gl/cogl-util-gl-private.h"
 #include "driver/gl/cogl-pipeline-opengl-private.h"
 
-#ifdef COGL_PIPELINE_VERTEND_GLSL
-
 #include "cogl-context-private.h"
 #include "cogl-object-private.h"
 #include "cogl-pipeline-state-private.h"
@@ -307,8 +305,7 @@ _cogl_pipeline_vertend_glsl_start (CoglPipeline *pipeline,
   if (cogl_pipeline_get_per_vertex_point_size (pipeline))
     g_string_append (shader_state->header,
                      "attribute float cogl_point_size_in;\n");
-  else if (!_cogl_has_private_feature
-           (ctx, COGL_PRIVATE_FEATURE_BUILTIN_POINT_SIZE_UNIFORM))
+  else
     {
       /* There is no builtin uniform for the point size on GLES2 so we
          need to copy it from the custom uniform in the vertex shader
@@ -543,19 +540,6 @@ _cogl_pipeline_vertend_glsl_end (CoglPipeline *pipeline,
       shader_state->gl_shader = shader;
     }
 
-#ifdef HAVE_COGL_GL
-  if (_cogl_has_private_feature
-      (ctx, COGL_PRIVATE_FEATURE_BUILTIN_POINT_SIZE_UNIFORM) &&
-      (pipelines_difference & COGL_PIPELINE_STATE_POINT_SIZE))
-    {
-      CoglPipeline *authority =
-        _cogl_pipeline_get_authority (pipeline, COGL_PIPELINE_STATE_POINT_SIZE);
-
-      if (authority->big_state->point_size > 0.0f)
-        GE( ctx, glPointSize (authority->big_state->point_size) );
-    }
-#endif /* HAVE_COGL_GL */
-
   return TRUE;
 }
 
@@ -653,11 +637,7 @@ UNIT_TEST (check_point_size_shader,
    * size */
   if (shader_states[0])
     {
-      if (_cogl_has_private_feature
-          (test_ctx, COGL_PRIVATE_FEATURE_BUILTIN_POINT_SIZE_UNIFORM))
-        g_assert (shader_states[0] == shader_states[1]);
-      else
-        g_assert (shader_states[0] != shader_states[1]);
+      g_assert (shader_states[0] != shader_states[1]);
     }
 
   /* The second and third pipelines should always have the same shader
@@ -668,5 +648,3 @@ UNIT_TEST (check_point_size_shader,
   /* The fourth pipeline should be exactly the same as the first */
   g_assert (shader_states[0] == shader_states[3]);
 }
-
-#endif /* COGL_PIPELINE_VERTEND_GLSL */

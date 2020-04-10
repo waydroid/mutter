@@ -62,6 +62,29 @@ meta_output_get_assigned_crtc (MetaOutput *output)
   return priv->crtc;
 }
 
+MetaMonitorTransform
+meta_output_logical_to_crtc_transform (MetaOutput           *output,
+                                       MetaMonitorTransform  transform)
+{
+  MetaMonitorTransform panel_orientation_transform;
+
+  panel_orientation_transform = output->panel_orientation_transform;
+  return meta_monitor_transform_transform (transform,
+                                           panel_orientation_transform);
+}
+
+MetaMonitorTransform
+meta_output_crtc_to_logical_transform (MetaOutput           *output,
+                                       MetaMonitorTransform  transform)
+{
+  MetaMonitorTransform inverted_panel_orientation_transform;
+
+  inverted_panel_orientation_transform =
+    meta_monitor_transform_invert (output->panel_orientation_transform);
+  return meta_monitor_transform_transform (transform,
+                                           inverted_panel_orientation_transform);
+}
+
 static void
 meta_output_dispose (GObject *object)
 {

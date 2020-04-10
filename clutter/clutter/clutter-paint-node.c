@@ -171,8 +171,6 @@ clutter_paint_node_real_finalize (ClutterPaintNode *node)
 {
   ClutterPaintNode *iter;
 
-  g_free (node->name);
-
   if (node->operations != NULL)
     {
       guint i;
@@ -202,18 +200,21 @@ clutter_paint_node_real_finalize (ClutterPaintNode *node)
 }
 
 static gboolean
-clutter_paint_node_real_pre_draw (ClutterPaintNode *node)
+clutter_paint_node_real_pre_draw (ClutterPaintNode    *node,
+                                  ClutterPaintContext *paint_context)
 {
   return FALSE;
 }
 
 static void
-clutter_paint_node_real_draw (ClutterPaintNode *node)
+clutter_paint_node_real_draw (ClutterPaintNode    *node,
+                              ClutterPaintContext *paint_context)
 {
 }
 
 static void
-clutter_paint_node_real_post_draw (ClutterPaintNode *node)
+clutter_paint_node_real_post_draw (ClutterPaintNode    *node,
+                                   ClutterPaintContext *paint_context)
 {
 }
 
@@ -294,7 +295,8 @@ clutter_paint_node_get_type (void)
  *
  * The @name will be used for debugging purposes.
  *
- * The @node will copy the passed string.
+ * The @node will intern @name using g_intern_string(). If you have access to a
+ * static string, use clutter_paint_node_set_static_name() instead.
  *
  * Since: 1.10
  */
@@ -304,8 +306,22 @@ clutter_paint_node_set_name (ClutterPaintNode *node,
 {
   g_return_if_fail (CLUTTER_IS_PAINT_NODE (node));
 
-  g_free (node->name);
-  node->name = g_strdup (name);
+  node->name = g_intern_string (name);
+}
+
+/**
+ * clutter_paint_node_set_static_name: (skip)
+ *
+ * Like clutter_paint_node_set_name() but uses a static or interned string
+ * containing the name.
+ */
+void
+clutter_paint_node_set_static_name (ClutterPaintNode *node,
+                                    const char       *name)
+{
+  g_return_if_fail (CLUTTER_IS_PAINT_NODE (node));
+
+  node->name = name;
 }
 
 /**
@@ -997,29 +1013,30 @@ clutter_paint_node_add_primitive (ClutterPaintNode *node,
  * its children, if any.
  */
 void
-clutter_paint_node_paint (ClutterPaintNode *node)
+clutter_paint_node_paint (ClutterPaintNode    *node,
+                          ClutterPaintContext *paint_context)
 {
   ClutterPaintNodeClass *klass = CLUTTER_PAINT_NODE_GET_CLASS (node);
   ClutterPaintNode *iter;
   gboolean res;
 
-  res = klass->pre_draw (node);
+  res = klass->pre_draw (node, paint_context);
 
   if (res)
     {
-      klass->draw (node);
+      klass->draw (node, paint_context);
     }
 
   for (iter = node->first_child;
        iter != NULL;
        iter = iter->next_sibling)
     {
-      clutter_paint_node_paint (iter);
+      clutter_paint_node_paint (iter, paint_context);
     }
 
   if (res)
     {
-      klass->post_draw (node);
+      klass->post_draw (node, paint_context);
     }
 }
 
@@ -1177,8 +1194,6 @@ _clutter_paint_node_create (GType gtype)
 {
   g_return_val_if_fail (g_type_is_a (gtype, CLUTTER_TYPE_PAINT_NODE), NULL);
 
-  _clutter_paint_node_init_types ();
-
   return (gpointer) g_type_create_instance (gtype);
 }
 
@@ -1199,9 +1214,10 @@ clutter_paint_node_get_root (ClutterPaintNode *node)
  * @node: a #ClutterPaintNode
  *
  * Retrieves the #CoglFramebuffer that @node will draw
- * into.
+ * into, if it the root node has a custom framebuffer set.
  *
- * Returns: (transfer none): a #CoglFramebuffer
+ * Returns: (transfer none): a #CoglFramebuffer or %NULL if no custom one is
+ * set.
  */
 CoglFramebuffer *
 clutter_paint_node_get_framebuffer (ClutterPaintNode *node)
@@ -1209,12 +1225,9 @@ clutter_paint_node_get_framebuffer (ClutterPaintNode *node)
   ClutterPaintNode *root = clutter_paint_node_get_root (node);
   ClutterPaintNodeClass *klass;
 
-  if (root == NULL)
-    return NULL;
-
   klass = CLUTTER_PAINT_NODE_GET_CLASS (root);
   if (klass->get_framebuffer != NULL)
     return klass->get_framebuffer (root);
-
-  return cogl_get_draw_framebuffer ();
+  else
+    return NULL;
 }

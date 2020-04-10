@@ -27,21 +27,16 @@
 #include "backends/native/meta-kms-types.h"
 #include "backends/meta-monitor-transform.h"
 
-typedef enum _MetaKmsPlaneType
+enum _MetaKmsPlaneType
 {
   META_KMS_PLANE_TYPE_PRIMARY,
   META_KMS_PLANE_TYPE_CURSOR,
   META_KMS_PLANE_TYPE_OVERLAY,
-} MetaKmsPlaneType;
+};
 
 #define META_TYPE_KMS_PLANE meta_kms_plane_get_type ()
 G_DECLARE_FINAL_TYPE (MetaKmsPlane, meta_kms_plane,
                       META, KMS_PLANE, GObject)
-
-MetaKmsPlane * meta_kms_plane_new (MetaKmsPlaneType         type,
-                                   MetaKmsImplDevice       *impl_device,
-                                   drmModePlane            *drm_plane,
-                                   drmModeObjectProperties *drm_plane_props);
 
 MetaKmsDevice * meta_kms_plane_get_device (MetaKmsPlane *plane);
 

@@ -37,13 +37,9 @@ struct _MetaX11SelectionOutputStreamPrivate
 {
   MetaX11Display *x11_display;
   Window xwindow;
-  char *selection;
   Atom xselection;
-  char *target;
   Atom xtarget;
-  char *property;
   Atom xproperty;
-  const char *type;
   Atom xtype;
   int format;
   gulong timestamp;
@@ -57,6 +53,7 @@ struct _MetaX11SelectionOutputStreamPrivate
 
   guint incr : 1;
   guint delete_pending : 1;
+  guint pipe_error : 1;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (MetaX11SelectionOutputStream,
@@ -171,6 +168,25 @@ get_element_size (int format)
     }
 }
 
+static gboolean
+meta_x11_selection_output_stream_check_pipe (MetaX11SelectionOutputStream  *stream,
+                                             GError                       **error)
+{
+  MetaX11SelectionOutputStreamPrivate *priv =
+    meta_x11_selection_output_stream_get_instance_private (stream);
+
+  if (priv->pipe_error)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   G_IO_ERROR_BROKEN_PIPE,
+                   "Connection with client was broken");
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
 static void
 meta_x11_selection_output_stream_perform_flush (MetaX11SelectionOutputStream *stream)
 {
@@ -178,6 +194,7 @@ meta_x11_selection_output_stream_perform_flush (MetaX11SelectionOutputStream *st
     meta_x11_selection_output_stream_get_instance_private (stream);
   Display *xdisplay;
   size_t element_size, n_elements;
+  int error_code;
 
   g_assert (!priv->delete_pending);
 
@@ -234,18 +251,28 @@ meta_x11_selection_output_stream_perform_flush (MetaX11SelectionOutputStream *st
   g_cond_broadcast (&priv->cond);
   g_mutex_unlock (&priv->mutex);
 
-  /* XXX: handle failure here and report EPIPE for future operations on the stream? */
-  if (meta_x11_error_trap_pop_with_return (priv->x11_display))
-    g_warning ("Failed to flush selection output stream");
+  error_code = meta_x11_error_trap_pop_with_return (priv->x11_display);
 
-  if (priv->pending_task)
+  if (error_code != Success)
+    {
+      char error_str[100];
+
+      XGetErrorText (xdisplay, error_code, error_str, sizeof (error_str));
+      g_task_return_new_error (priv->pending_task,
+                               G_IO_ERROR,
+                               G_IO_ERROR_BROKEN_PIPE,
+                               "Failed to flush selection output stream: %s",
+                               error_str);
+      g_clear_object (&priv->pending_task);
+      priv->pipe_error = TRUE;
+    }
+  else if (priv->pending_task)
     {
       size_t result;
 
       result = GPOINTER_TO_SIZE (g_task_get_task_data (priv->pending_task));
       g_task_return_int (priv->pending_task, result);
-      g_object_unref (priv->pending_task);
-      priv->pending_task = NULL;
+      g_clear_object (&priv->pending_task);
     }
 }
 
@@ -274,6 +301,9 @@ meta_x11_selection_output_stream_write (GOutputStream  *output_stream,
   MetaX11SelectionOutputStreamPrivate *priv =
     meta_x11_selection_output_stream_get_instance_private (stream);
 
+  if (!meta_x11_selection_output_stream_check_pipe (stream, error))
+    return -1;
+
   g_mutex_lock (&priv->mutex);
   g_byte_array_append (priv->data, buffer, count);
   g_mutex_unlock (&priv->mutex);
@@ -301,11 +331,18 @@ meta_x11_selection_output_stream_write_async (GOutputStream       *output_stream
     META_X11_SELECTION_OUTPUT_STREAM (output_stream);
   MetaX11SelectionOutputStreamPrivate *priv =
     meta_x11_selection_output_stream_get_instance_private (stream);
+  GError *error = NULL;
   GTask *task;
 
   task = g_task_new (stream, cancellable, callback, user_data);
   g_task_set_source_tag (task, meta_x11_selection_output_stream_write_async);
   g_task_set_priority (task, io_priority);
+
+  if (!meta_x11_selection_output_stream_check_pipe (stream, &error))
+    {
+      g_task_return_error (task, error);
+      return;
+    }
 
   g_mutex_lock (&priv->mutex);
   g_byte_array_append (priv->data, buffer, count);
@@ -373,6 +410,8 @@ meta_x11_selection_output_stream_flush (GOutputStream  *output_stream,
   MetaX11SelectionOutputStreamPrivate *priv =
     meta_x11_selection_output_stream_get_instance_private (stream);
 
+  if (!meta_x11_selection_output_stream_check_pipe (stream, error))
+    return FALSE;
   if (!meta_x11_selection_output_request_flush (stream))
     return TRUE;
 
@@ -398,11 +437,18 @@ meta_x11_selection_output_stream_flush_async (GOutputStream       *output_stream
     META_X11_SELECTION_OUTPUT_STREAM (output_stream);
   MetaX11SelectionOutputStreamPrivate *priv =
     meta_x11_selection_output_stream_get_instance_private (stream);
+  GError *error = NULL;
   GTask *task;
 
   task = g_task_new (stream, cancellable, callback, user_data);
   g_task_set_source_tag (task, meta_x11_selection_output_stream_flush_async);
   g_task_set_priority (task, io_priority);
+
+  if (!meta_x11_selection_output_stream_check_pipe (stream, &error))
+    {
+      g_task_return_error (task, error);
+      return;
+    }
 
   if (!meta_x11_selection_output_stream_can_flush (stream))
     {
@@ -515,10 +561,6 @@ meta_x11_selection_output_stream_finalize (GObject *object)
   g_cond_clear (&priv->cond);
   g_mutex_clear (&priv->mutex);
 
-  g_free (priv->selection);
-  g_free (priv->target);
-  g_free (priv->property);
-
   G_OBJECT_CLASS (meta_x11_selection_output_stream_parent_class)->finalize (object);
 }
 
@@ -606,14 +648,10 @@ meta_x11_selection_output_stream_new (MetaX11Display *x11_display,
 
   priv->x11_display = x11_display;
   priv->xwindow = requestor;
-  priv->selection = g_strdup (selection);
-  priv->xselection = XInternAtom (x11_display->xdisplay, priv->selection, False);
-  priv->target = g_strdup (target);
-  priv->xtarget = XInternAtom (x11_display->xdisplay, priv->target, False);
-  priv->property = g_strdup (property);
-  priv->xproperty = XInternAtom (x11_display->xdisplay, priv->property, False);
-  priv->type = g_strdup (type);
-  priv->xtype = XInternAtom (x11_display->xdisplay, priv->type, False);
+  priv->xselection = XInternAtom (x11_display->xdisplay, selection, False);
+  priv->xtarget = XInternAtom (x11_display->xdisplay, target, False);
+  priv->xproperty = XInternAtom (x11_display->xdisplay, property, False);
+  priv->xtype = XInternAtom (x11_display->xdisplay, type, False);
   priv->format = format;
   priv->timestamp = timestamp;
 

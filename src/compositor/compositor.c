@@ -61,12 +61,11 @@
 #include "backends/x11/meta-event-x11.h"
 #include "backends/x11/meta-stage-x11.h"
 #include "clutter/clutter-mutter.h"
-#include "cogl/cogl-trace.h"
+#include "cogl/cogl.h"
 #include "compositor/meta-window-actor-x11.h"
 #include "compositor/meta-window-actor-wayland.h"
 #include "compositor/meta-window-actor-private.h"
 #include "compositor/meta-window-group-private.h"
-#include "core/core.h"
 #include "core/display-private.h"
 #include "core/frame.h"
 #include "core/util-private.h"
@@ -211,9 +210,14 @@ get_compositor_for_display (MetaDisplay *display)
 ClutterActor *
 meta_get_stage_for_display (MetaDisplay *display)
 {
-  MetaCompositor *compositor = get_compositor_for_display (display);
-  MetaCompositorPrivate *priv =
-    meta_compositor_get_instance_private (compositor);
+  MetaCompositor *compositor;
+  MetaCompositorPrivate *priv;
+
+  g_return_val_if_fail (display, NULL);
+
+  compositor = get_compositor_for_display (display);
+  g_return_val_if_fail (compositor, NULL);
+  priv = meta_compositor_get_instance_private (compositor);
 
   return priv->stage;
 }
@@ -227,9 +231,14 @@ meta_get_stage_for_display (MetaDisplay *display)
 ClutterActor *
 meta_get_window_group_for_display (MetaDisplay *display)
 {
-  MetaCompositor *compositor = get_compositor_for_display (display);
-  MetaCompositorPrivate *priv =
-    meta_compositor_get_instance_private (compositor);
+  MetaCompositor *compositor;
+  MetaCompositorPrivate *priv;
+
+  g_return_val_if_fail (display, NULL);
+
+  compositor = get_compositor_for_display (display);
+  g_return_val_if_fail (compositor, NULL);
+  priv = meta_compositor_get_instance_private (compositor);
 
   return priv->window_group;
 }
@@ -243,9 +252,14 @@ meta_get_window_group_for_display (MetaDisplay *display)
 ClutterActor *
 meta_get_top_window_group_for_display (MetaDisplay *display)
 {
-  MetaCompositor *compositor = get_compositor_for_display (display);
-  MetaCompositorPrivate *priv =
-    meta_compositor_get_instance_private (compositor);
+  MetaCompositor *compositor;
+  MetaCompositorPrivate *priv;
+
+  g_return_val_if_fail (display, NULL);
+
+  compositor = get_compositor_for_display (display);
+  g_return_val_if_fail (compositor, NULL);
+  priv = meta_compositor_get_instance_private (compositor);
 
   return priv->top_window_group;
 }
@@ -259,9 +273,14 @@ meta_get_top_window_group_for_display (MetaDisplay *display)
 ClutterActor *
 meta_get_feedback_group_for_display (MetaDisplay *display)
 {
-  MetaCompositor *compositor = get_compositor_for_display (display);
-  MetaCompositorPrivate *priv =
-    meta_compositor_get_instance_private (compositor);
+  MetaCompositor *compositor;
+  MetaCompositorPrivate *priv;
+
+  g_return_val_if_fail (display, NULL);
+
+  compositor = get_compositor_for_display (display);
+  g_return_val_if_fail (compositor, NULL);
+  priv = meta_compositor_get_instance_private (compositor);
 
   return priv->feedback_group;
 }
@@ -275,9 +294,14 @@ meta_get_feedback_group_for_display (MetaDisplay *display)
 GList *
 meta_get_window_actors (MetaDisplay *display)
 {
-  MetaCompositor *compositor = get_compositor_for_display (display);
-  MetaCompositorPrivate *priv =
-    meta_compositor_get_instance_private (compositor);
+  MetaCompositor *compositor;
+  MetaCompositorPrivate *priv;
+
+  g_return_val_if_fail (display, NULL);
+
+  compositor = get_compositor_for_display (display);
+  g_return_val_if_fail (compositor, NULL);
+  priv = meta_compositor_get_instance_private (compositor);
 
   return priv->windows;
 }
@@ -534,9 +558,6 @@ meta_compositor_manage (MetaCompositor *compositor)
   MetaDisplay *display = priv->display;
   MetaBackend *backend = meta_get_backend ();
 
-  if (display->x11_display)
-    meta_x11_display_set_cm_selection (display->x11_display);
-
   priv->stage = meta_backend_get_stage (backend);
 
   priv->stage_presented_id =
@@ -567,8 +588,6 @@ meta_compositor_manage (MetaCompositor *compositor)
   clutter_actor_add_child (priv->stage, priv->feedback_group);
 
   META_COMPOSITOR_GET_CLASS (compositor)->manage (compositor);
-
-  meta_compositor_redirect_x11_windows (compositor);
 
   priv->plugin_mgr = meta_plugin_manager_new (compositor);
 }
@@ -607,6 +626,7 @@ meta_compositor_add_window (MetaCompositor    *compositor,
 
   window_actor = g_object_new (window_actor_type,
                                "meta-window", window,
+                               "show-on-set-parent", FALSE,
                                NULL);
 
   if (window->layer == META_LAYER_OVERRIDE_REDIRECT)
@@ -678,7 +698,7 @@ meta_compositor_window_shape_changed (MetaCompositor *compositor,
   if (!window_actor)
     return;
 
-  meta_window_actor_update_shape (window_actor);
+  meta_window_actor_x11_update_shape (META_WINDOW_ACTOR_X11 (window_actor));
 }
 
 void
@@ -1151,18 +1171,6 @@ meta_post_paint_func (gpointer data)
 }
 
 static void
-on_shadow_factory_changed (MetaShadowFactory *factory,
-                           MetaCompositor    *compositor)
-{
-  MetaCompositorPrivate *priv =
-    meta_compositor_get_instance_private (compositor);
-  GList *l;
-
-  for (l = priv->windows; l; l = l->next)
-    meta_window_actor_invalidate_shadow (l->data);
-}
-
-static void
 meta_compositor_set_property (GObject      *object,
                               guint         prop_id,
                               const GValue *value,
@@ -1211,11 +1219,6 @@ meta_compositor_init (MetaCompositor *compositor)
   ClutterBackend *clutter_backend = meta_backend_get_clutter_backend (backend);
 
   priv->context = clutter_backend->cogl_context;
-
-  g_signal_connect (meta_shadow_factory_get_default (),
-                    "changed",
-                    G_CALLBACK (on_shadow_factory_changed),
-                    compositor);
 
   priv->pre_paint_func_id =
     clutter_threads_add_repaint_func_full (CLUTTER_REPAINT_FLAGS_PRE_PAINT,

@@ -55,13 +55,15 @@
 #include "clutter-backend-private.h"
 #include "clutter-config.h"
 #include "clutter-debug.h"
-#include "clutter-device-manager-private.h"
 #include "clutter-event-private.h"
 #include "clutter-feature.h"
+#include "clutter-input-device-private.h"
 #include "clutter-input-pointer-a11y-private.h"
+#include "clutter-graphene.h"
 #include "clutter-main.h"
 #include "clutter-master-clock.h"
 #include "clutter-mutter.h"
+#include "clutter-paint-node-private.h"
 #include "clutter-private.h"
 #include "clutter-settings-private.h"
 #include "clutter-stage-manager.h"
@@ -969,6 +971,9 @@ clutter_init_real (GError **error)
   if (clutter_enable_accessibility)
     cally_accessibility_init ();
 
+  /* Initialize types required for paint nodes */
+  _clutter_paint_node_init_types ();
+
   return CLUTTER_INIT_SUCCESS;
 }
 
@@ -1522,7 +1527,7 @@ event_click_count_generate (ClutterEvent *event)
         previous_y = event->button.y;
         previous_time = event->button.time;
 
-        /* fallthrough */
+        G_GNUC_FALLTHROUGH;
       case CLUTTER_BUTTON_RELEASE:
         event->button.click_count = click_count;
         break;
@@ -1775,7 +1780,7 @@ _clutter_process_event_details (ClutterActor        *stage,
 
             emit_crossing_event (event, device);
 
-            actor = _clutter_input_device_update (device, NULL, FALSE);
+            actor = clutter_input_device_update (device, NULL, FALSE);
             if (actor != stage)
               {
                 ClutterEvent *crossing;
@@ -1833,13 +1838,10 @@ _clutter_process_event_details (ClutterActor        *stage,
           {
             if (_clutter_is_input_pointer_a11y_enabled (device))
               {
-                ClutterInputDevice *core_pointer;
                 gfloat x, y;
 
                 clutter_event_get_coords (event, &x, &y);
-                core_pointer = clutter_device_manager_get_core_device (device->device_manager,
-                                                                       CLUTTER_POINTER_DEVICE);
-                _clutter_input_pointer_a11y_on_motion_event (core_pointer, x, y);
+                _clutter_input_pointer_a11y_on_motion_event (device, x, y);
               }
           }
 #endif /* CLUTTER_WINDOWING_X11 */
@@ -1870,7 +1872,7 @@ _clutter_process_event_details (ClutterActor        *stage,
             break;
           }
 
-      /* fallthrough from motion */
+        G_GNUC_FALLTHROUGH;
       case CLUTTER_BUTTON_PRESS:
       case CLUTTER_BUTTON_RELEASE:
 #ifdef CLUTTER_WINDOWING_X11
@@ -1878,12 +1880,7 @@ _clutter_process_event_details (ClutterActor        *stage,
           {
             if (_clutter_is_input_pointer_a11y_enabled (device) && (event->type != CLUTTER_MOTION))
               {
-                ClutterInputDevice *core_pointer;
-
-                core_pointer = clutter_device_manager_get_core_device (device->device_manager,
-                                                                       CLUTTER_POINTER_DEVICE);
-
-                _clutter_input_pointer_a11y_on_button_event (core_pointer,
+                _clutter_input_pointer_a11y_on_button_event (device,
                                                              event->button.button,
                                                              event->type == CLUTTER_BUTTON_PRESS);
               }
@@ -1942,7 +1939,7 @@ _clutter_process_event_details (ClutterActor        *stage,
                * get the actor underneath
                */
               if (device != NULL)
-                actor = _clutter_input_device_update (device, NULL, TRUE);
+                actor = clutter_input_device_update (device, NULL, TRUE);
               else
                 {
                   CLUTTER_NOTE (EVENT, "No device found: picking");
@@ -2015,7 +2012,7 @@ _clutter_process_event_details (ClutterActor        *stage,
             break;
           }
 
-      /* fallthrough from motion */
+        G_GNUC_FALLTHROUGH;
       case CLUTTER_TOUCH_BEGIN:
       case CLUTTER_TOUCH_CANCEL:
       case CLUTTER_TOUCH_END:
@@ -2059,7 +2056,7 @@ _clutter_process_event_details (ClutterActor        *stage,
                 }
 
               if (device != NULL)
-                actor = _clutter_input_device_update (device, sequence, TRUE);
+                actor = clutter_input_device_update (device, sequence, TRUE);
               else
                 {
                   CLUTTER_NOTE (EVENT, "No device found: picking");
@@ -2194,6 +2191,8 @@ clutter_base_init (void)
 
       /* initialise the Big Clutter Lock™ if necessary */
       clutter_threads_init_default ();
+
+      clutter_graphene_init ();
     }
 }
 
@@ -2308,8 +2307,7 @@ clutter_threads_remove_repaint_func (guint handle_id)
  * that it does not block, otherwise the frame time budget may be lost.
  *
  * A repaint function is useful to ensure that an update of the scenegraph
- * is performed before the scenegraph is repainted; for instance, uploading
- * a frame from a video into a #ClutterTexture. By default, a repaint
+ * is performed before the scenegraph is repainted. By default, a repaint
  * function added using this function will be invoked prior to the frame
  * being processed.
  *
@@ -2358,8 +2356,7 @@ clutter_threads_add_repaint_func (GSourceFunc    func,
  * that it does not block, otherwise the frame time budget may be lost.
  *
  * A repaint function is useful to ensure that an update of the scenegraph
- * is performed before the scenegraph is repainted; for instance, uploading
- * a frame from a video into a #ClutterTexture. The @flags passed to this
+ * is performed before the scenegraph is repainted. The @flags passed to this
  * function will determine the section of the frame processing that will
  * result in @func being called.
  *
@@ -2600,6 +2597,36 @@ clutter_check_windowing_backend (const char *backend_type)
   else
 #endif
   return FALSE;
+}
+
+/**
+ * clutter_add_debug_flags: (skip)
+ *
+ * Adds the debug flags passed to the list of debug flags.
+ */
+void
+clutter_add_debug_flags (ClutterDebugFlag     debug_flags,
+                         ClutterDrawDebugFlag draw_flags,
+                         ClutterPickDebugFlag pick_flags)
+{
+  clutter_debug_flags |= debug_flags;
+  clutter_paint_debug_flags |= draw_flags;
+  clutter_pick_debug_flags |= pick_flags;
+}
+
+/**
+ * clutter_remove_debug_flags: (skip)
+ *
+ * Removes the debug flags passed from the list of debug flags.
+ */
+void
+clutter_remove_debug_flags (ClutterDebugFlag     debug_flags,
+                            ClutterDrawDebugFlag draw_flags,
+                            ClutterPickDebugFlag pick_flags)
+{
+  clutter_debug_flags &= ~debug_flags;
+  clutter_paint_debug_flags &= ~draw_flags;
+  clutter_pick_debug_flags &= ~pick_flags;
 }
 
 void

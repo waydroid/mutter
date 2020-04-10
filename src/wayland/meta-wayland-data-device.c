@@ -143,16 +143,8 @@ data_offer_choose_action (MetaWaylandDataOffer *offer)
       WL_DATA_OFFER_ACTION_SINCE_VERSION)
     return WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY;
 
-  if (wl_resource_get_version (meta_wayland_data_source_get_resource (source)) <
-      WL_DATA_SOURCE_ACTION_SINCE_VERSION)
-    {
-      actions = user_action = WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY;
-    }
-  else
-    {
-      actions = meta_wayland_data_source_get_actions (source);
-      user_action = meta_wayland_data_source_get_user_action (source);
-    }
+  actions = meta_wayland_data_source_get_actions (source);
+  user_action = meta_wayland_data_source_get_user_action (source);
 
   available_actions = actions & offer->dnd_actions;
 
@@ -608,11 +600,7 @@ destroy_data_offer (struct wl_resource *resource)
               if (wl_resource_get_version (offer->resource) <
                   WL_DATA_OFFER_ACTION_SINCE_VERSION)
                 meta_wayland_data_source_notify_finish (offer->source);
-              else if (meta_wayland_data_source_get_drop_performed (offer->source) &&
-                       meta_wayland_data_source_get_resource(offer->source) &&
-                       wl_resource_get_version(
-                       meta_wayland_data_source_get_resource(offer->source)) >=
-                       WL_DATA_SOURCE_DND_FINISHED_SINCE_VERSION)
+              else if (meta_wayland_data_source_get_drop_performed (offer->source))
                 meta_wayland_source_cancel (offer->source);
             }
           else
@@ -817,8 +805,8 @@ destroy_drag_focus (struct wl_listener *listener, void *data)
 
   grab->drag_focus_data_device = NULL;
 
-  g_signal_handler_disconnect (grab->drag_focus,
-                               grab->drag_focus_destroy_handler_id);
+  g_clear_signal_handler (&grab->drag_focus_destroy_handler_id,
+                          grab->drag_focus);
   grab->drag_focus = NULL;
 }
 
@@ -889,8 +877,8 @@ meta_wayland_drag_grab_set_focus (MetaWaylandDragGrab *drag_grab,
   if (drag_grab->drag_focus)
     {
       meta_wayland_surface_drag_dest_focus_out (drag_grab->drag_focus);
-      g_signal_handler_disconnect (drag_grab->drag_focus,
-                                   drag_grab->drag_focus_destroy_handler_id);
+      g_clear_signal_handler (&drag_grab->drag_focus_destroy_handler_id,
+                              drag_grab->drag_focus);
       drag_grab->drag_focus = NULL;
     }
 
@@ -1127,6 +1115,19 @@ static gboolean
 keyboard_drag_grab_key (MetaWaylandKeyboardGrab *grab,
                         const ClutterEvent      *event)
 {
+  if (event->key.keyval == CLUTTER_KEY_Escape)
+    {
+      MetaWaylandDragGrab *drag_grab;
+
+      drag_grab = wl_container_of (grab, drag_grab, keyboard_grab);
+      meta_wayland_data_source_cancel (drag_grab->drag_data_source);
+      meta_dnd_actor_drag_finish (META_DND_ACTOR (drag_grab->feedback_actor), FALSE);
+      drag_grab->feedback_actor = NULL;
+      data_device_end_drag_grab (drag_grab);
+
+      return TRUE;
+    }
+
   return FALSE;
 }
 
@@ -1200,7 +1201,7 @@ meta_wayland_data_device_start_drag (MetaWaylandDataDevice                 *data
 {
   MetaWaylandSeat *seat = wl_container_of (data_device, seat, data_device);
   MetaWaylandDragGrab *drag_grab;
-  ClutterPoint pos, surface_pos;
+  graphene_point_t pos, surface_pos;
   ClutterModifierType modifiers;
   MetaSurfaceActor *surface_actor;
 
@@ -1388,7 +1389,10 @@ meta_wayland_source_cancel (MetaWaylandDataSource *source)
   MetaWaylandDataSourcePrivate *priv =
     meta_wayland_data_source_get_instance_private (source);
 
-  if (priv->resource)
+  if (!priv->resource)
+    return;
+
+  if (wl_resource_get_version(priv->resource) >= WL_DATA_SOURCE_DND_FINISHED_SINCE_VERSION)
     wl_data_source_send_cancelled (priv->resource);
 }
 
@@ -2188,10 +2192,18 @@ meta_wayland_data_source_new (struct wl_resource *resource)
 {
   MetaWaylandDataSource *source =
    g_object_new (META_TYPE_WAYLAND_DATA_SOURCE, NULL);
+  MetaWaylandDataSourcePrivate *priv =
+    meta_wayland_data_source_get_instance_private (source);
 
   meta_wayland_data_source_set_resource (source, resource);
   wl_resource_set_implementation (resource, &data_source_interface,
                                   source, destroy_data_source);
+
+  if (wl_resource_get_version (resource) < WL_DATA_SOURCE_ACTION_SINCE_VERSION)
+    {
+      priv->dnd_actions = priv->user_dnd_action =
+        WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY;
+    }
 
   return source;
 }

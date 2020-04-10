@@ -30,6 +30,7 @@
 #include "backends/native/meta-kms-crtc.h"
 #include "backends/native/meta-kms-impl.h"
 #include "backends/native/meta-kms-page-flip-private.h"
+#include "backends/native/meta-kms-plane-private.h"
 #include "backends/native/meta-kms-plane.h"
 #include "backends/native/meta-kms-private.h"
 #include "backends/native/meta-kms-update.h"
@@ -47,6 +48,8 @@ struct _MetaKmsImplDevice
   GList *crtcs;
   GList *connectors;
   GList *planes;
+
+  MetaKmsDeviceCaps caps;
 };
 
 G_DEFINE_TYPE (MetaKmsImplDevice, meta_kms_impl_device, G_TYPE_OBJECT)
@@ -73,6 +76,12 @@ GList *
 meta_kms_impl_device_copy_planes (MetaKmsImplDevice *impl_device)
 {
   return g_list_copy (impl_device->planes);
+}
+
+const MetaKmsDeviceCaps *
+meta_kms_impl_device_get_caps (MetaKmsImplDevice *impl_device)
+{
+  return &impl_device->caps;
 }
 
 static void
@@ -136,14 +145,16 @@ meta_kms_impl_device_dispatch (MetaKmsImplDevice  *impl_device,
   return TRUE;
 }
 
-static gboolean
+static gpointer
 kms_event_dispatch_in_impl (MetaKmsImpl  *impl,
                             gpointer      user_data,
                             GError      **error)
 {
   MetaKmsImplDevice *impl_device = user_data;
+  gboolean ret;
 
-  return meta_kms_impl_device_dispatch (impl_device, error);
+  ret = meta_kms_impl_device_dispatch (impl_device, error);
+  return GINT_TO_POINTER (ret);
 }
 
 drmModePropertyPtr
@@ -174,6 +185,21 @@ meta_kms_impl_device_find_property (MetaKmsImplDevice       *impl_device,
     }
 
   return NULL;
+}
+
+static void
+init_caps (MetaKmsImplDevice *impl_device)
+{
+  int fd = impl_device->fd;
+  uint64_t cursor_width, cursor_height;
+
+  if (drmGetCap (fd, DRM_CAP_CURSOR_WIDTH, &cursor_width) == 0 &&
+      drmGetCap (fd, DRM_CAP_CURSOR_HEIGHT, &cursor_height) == 0)
+    {
+      impl_device->caps.has_cursor_size = TRUE;
+      impl_device->caps.cursor_width = cursor_width;
+      impl_device->caps.cursor_height = cursor_height;
+    }
 }
 
 static void
@@ -272,6 +298,19 @@ get_plane_type (MetaKmsImplDevice       *impl_device,
     }
 }
 
+MetaKmsPlane *
+meta_kms_impl_device_add_fake_plane (MetaKmsImplDevice *impl_device,
+                                     MetaKmsPlaneType   plane_type,
+                                     MetaKmsCrtc       *crtc)
+{
+  MetaKmsPlane *plane;
+
+  plane = meta_kms_plane_new_fake (plane_type, crtc);
+  impl_device->planes = g_list_append (impl_device->planes, plane);
+
+  return plane;
+}
+
 static void
 init_planes (MetaKmsImplDevice *impl_device)
 {
@@ -326,6 +365,16 @@ meta_kms_impl_device_update_states (MetaKmsImplDevice *impl_device)
   meta_assert_in_kms_impl (meta_kms_impl_get_kms (impl_device->impl));
 
   drm_resources = drmModeGetResources (impl_device->fd);
+  if (!drm_resources)
+    {
+      g_list_free_full (impl_device->planes, g_object_unref);
+      g_list_free_full (impl_device->crtcs, g_object_unref);
+      g_list_free_full (impl_device->connectors, g_object_unref);
+      impl_device->planes = NULL;
+      impl_device->crtcs = NULL;
+      impl_device->connectors = NULL;
+      return;
+    }
 
   update_connectors (impl_device, drm_resources);
 
@@ -381,6 +430,8 @@ meta_kms_impl_device_new (MetaKmsDevice  *device,
   impl_device->device = device;
   impl_device->impl = impl;
   impl_device->fd = fd;
+
+  init_caps (impl_device);
 
   init_crtcs (impl_device, drm_resources);
   init_planes (impl_device);
