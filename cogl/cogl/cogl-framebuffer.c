@@ -52,7 +52,6 @@
 #include "cogl-private.h"
 #include "cogl-primitives-private.h"
 #include "cogl-gtype-private.h"
-#include "driver/gl/cogl-texture-gl-private.h"
 #include "winsys/cogl-winsys-private.h"
 
 extern CoglObjectClass _cogl_onscreen_class;
@@ -68,7 +67,6 @@ COGL_OBJECT_DEFINE_WITH_CODE_GTYPE (Offscreen, offscreen,
                                     _cogl_framebuffer_unref);
 COGL_GTYPE_DEFINE_CLASS (Offscreen, offscreen,
                          COGL_GTYPE_IMPLEMENT_INTERFACE (framebuffer));
-COGL_OBJECT_DEFINE_DEPRECATED_REF_COUNTING (offscreen);
 COGL_GTYPE_DEFINE_INTERFACE (Framebuffer, framebuffer);
 
 /* XXX:
@@ -242,12 +240,6 @@ _cogl_framebuffer_mark_clear_clip_dirty (CoglFramebuffer *framebuffer)
 }
 
 void
-_cogl_framebuffer_mark_mid_scene (CoglFramebuffer *framebuffer)
-{
-  framebuffer->mid_scene = TRUE;
-}
-
-void
 cogl_framebuffer_clear4f (CoglFramebuffer *framebuffer,
                           unsigned long buffers,
                           float red,
@@ -256,10 +248,15 @@ cogl_framebuffer_clear4f (CoglFramebuffer *framebuffer,
                           float alpha)
 {
   CoglClipStack *clip_stack = _cogl_framebuffer_get_clip_stack (framebuffer);
+  gboolean had_depth_and_color_buffer_bits;
   int scissor_x0;
   int scissor_y0;
   int scissor_x1;
   int scissor_y1;
+
+  had_depth_and_color_buffer_bits =
+    (buffers & COGL_BUFFER_BIT_DEPTH) &&
+    (buffers & COGL_BUFFER_BIT_COLOR);
 
   if (!framebuffer->depth_buffer_clear_needed &&
       (buffers & COGL_BUFFER_BIT_DEPTH))
@@ -306,8 +303,7 @@ cogl_framebuffer_clear4f (CoglFramebuffer *framebuffer,
    * Note: Comparing without an epsilon is considered
    * appropriate here.
    */
-  if (buffers & COGL_BUFFER_BIT_COLOR &&
-      buffers & COGL_BUFFER_BIT_DEPTH &&
+  if (had_depth_and_color_buffer_bits &&
       !framebuffer->clear_clip_dirty &&
       framebuffer->clear_color_red == red &&
       framebuffer->clear_color_green == green &&
@@ -377,13 +373,12 @@ cogl_framebuffer_clear4f (CoglFramebuffer *framebuffer,
 
 cleared:
 
-  _cogl_framebuffer_mark_mid_scene (framebuffer);
   _cogl_framebuffer_mark_clear_clip_dirty (framebuffer);
 
   if (buffers & COGL_BUFFER_BIT_DEPTH)
     framebuffer->depth_buffer_clear_needed = FALSE;
 
-  if (buffers & COGL_BUFFER_BIT_COLOR && buffers & COGL_BUFFER_BIT_DEPTH)
+  if (had_depth_and_color_buffer_bits)
     {
       /* For our fast-path for reading back a single pixel of simple
        * scenes where the whole frame is in the journal we need to
@@ -397,18 +392,11 @@ cleared:
 
       /* NB: A clear may be scissored so we need to track the extents
        * that the clear is applicable too... */
-      if (clip_stack)
-        {
-          _cogl_clip_stack_get_bounds (clip_stack,
-                                       &framebuffer->clear_clip_x0,
-                                       &framebuffer->clear_clip_y0,
-                                       &framebuffer->clear_clip_x1,
-                                       &framebuffer->clear_clip_y1);
-        }
-      else
-        {
-          /* FIXME: set degenerate clip */
-        }
+      _cogl_clip_stack_get_bounds (clip_stack,
+                                   &framebuffer->clear_clip_x0,
+                                   &framebuffer->clear_clip_y0,
+                                   &framebuffer->clear_clip_x1,
+                                   &framebuffer->clear_clip_y1);
     }
 }
 
@@ -476,12 +464,20 @@ _cogl_framebuffer_get_clip_stack (CoglFramebuffer *framebuffer)
 }
 
 void
-_cogl_framebuffer_set_clip_stack (CoglFramebuffer *framebuffer,
-                                  CoglClipStack *stack)
+cogl_framebuffer_set_viewport4fv (CoglFramebuffer *framebuffer,
+                                  float *viewport)
 {
-  _cogl_clip_stack_ref (stack);
-  _cogl_clip_stack_unref (framebuffer->clip_stack);
-  framebuffer->clip_stack = stack;
+  if (framebuffer->viewport_x == viewport[0] &&
+      framebuffer->viewport_y == viewport[1] &&
+      framebuffer->viewport_width == viewport[2] &&
+      framebuffer->viewport_height == viewport[3])
+    return;
+
+  framebuffer->viewport_x = viewport[0];
+  framebuffer->viewport_y = viewport[1];
+  framebuffer->viewport_width = viewport[2];
+  framebuffer->viewport_height = viewport[3];
+  framebuffer->viewport_age++;
 }
 
 void
@@ -491,8 +487,6 @@ cogl_framebuffer_set_viewport (CoglFramebuffer *framebuffer,
                                float width,
                                float height)
 {
-  CoglContext *context = framebuffer->context;
-
   g_return_if_fail (width > 0 && height > 0);
 
   if (framebuffer->viewport_x == x &&
@@ -501,16 +495,10 @@ cogl_framebuffer_set_viewport (CoglFramebuffer *framebuffer,
       framebuffer->viewport_height == height)
     return;
 
-  _cogl_framebuffer_flush_journal (framebuffer);
-
   framebuffer->viewport_x = x;
   framebuffer->viewport_y = y;
   framebuffer->viewport_width = width;
   framebuffer->viewport_height = height;
-  framebuffer->viewport_age++;
-
-  if (context->current_draw_buffer == framebuffer)
-    context->current_draw_buffer_changes |= COGL_FRAMEBUFFER_STATE_VIEWPORT;
 }
 
 float
@@ -584,16 +572,6 @@ _cogl_framebuffer_add_dependency (CoglFramebuffer *framebuffer,
 }
 
 void
-_cogl_framebuffer_remove_all_dependencies (CoglFramebuffer *framebuffer)
-{
-  GList *l;
-  for (l = framebuffer->deps; l; l = l->next)
-    cogl_object_unref (l->data);
-  g_list_free (framebuffer->deps);
-  framebuffer->deps = NULL;
-}
-
-void
 _cogl_framebuffer_flush_journal (CoglFramebuffer *framebuffer)
 {
   _cogl_journal_flush (framebuffer->journal);
@@ -605,7 +583,10 @@ _cogl_framebuffer_flush_dependency_journals (CoglFramebuffer *framebuffer)
   GList *l;
   for (l = framebuffer->deps; l; l = l->next)
     _cogl_framebuffer_flush_journal (l->data);
-  _cogl_framebuffer_remove_all_dependencies (framebuffer);
+  for (l = framebuffer->deps; l; l = l->next)
+    cogl_object_unref (l->data);
+  g_list_free (framebuffer->deps);
+  framebuffer->deps = NULL;
 }
 
 CoglOffscreen *
@@ -707,15 +688,6 @@ cogl_framebuffer_allocate (CoglFramebuffer *framebuffer,
 
   if (framebuffer->type == COGL_FRAMEBUFFER_TYPE_ONSCREEN)
     {
-      if (framebuffer->config.depth_texture_enabled)
-        {
-          g_set_error_literal (error, COGL_FRAMEBUFFER_ERROR,
-                               COGL_FRAMEBUFFER_ERROR_ALLOCATE,
-                               "Can't allocate onscreen framebuffer with a "
-                               "texture based depth buffer");
-          return FALSE;
-        }
-
       if (!winsys->onscreen_init (onscreen, error))
         return FALSE;
 
@@ -729,14 +701,6 @@ cogl_framebuffer_allocate (CoglFramebuffer *framebuffer,
   else
     {
       CoglOffscreen *offscreen = COGL_OFFSCREEN (framebuffer);
-
-      if (!cogl_has_feature (ctx, COGL_FEATURE_ID_OFFSCREEN))
-        {
-          g_set_error_literal (error, COGL_SYSTEM_ERROR,
-                               COGL_SYSTEM_ERROR_UNSUPPORTED,
-                               "Offscreen framebuffers not supported by system");
-          return FALSE;
-        }
 
       if (!cogl_texture_allocate (offscreen->texture, error))
         return FALSE;
@@ -1056,38 +1020,7 @@ cogl_framebuffer_set_dither_enabled (CoglFramebuffer *framebuffer,
   if (framebuffer->dither_enabled == dither_enabled)
     return;
 
-  cogl_flush (); /* Currently dithering changes aren't tracked in the journal */
   framebuffer->dither_enabled = dither_enabled;
-
-  if (framebuffer->context->current_draw_buffer == framebuffer)
-    framebuffer->context->current_draw_buffer_changes |=
-      COGL_FRAMEBUFFER_STATE_DITHER;
-}
-
-void
-cogl_framebuffer_set_depth_texture_enabled (CoglFramebuffer *framebuffer,
-                                            gboolean enabled)
-{
-  g_return_if_fail (!framebuffer->allocated);
-
-  framebuffer->config.depth_texture_enabled = enabled;
-}
-
-gboolean
-cogl_framebuffer_get_depth_texture_enabled (CoglFramebuffer *framebuffer)
-{
-  return framebuffer->config.depth_texture_enabled;
-}
-
-CoglTexture *
-cogl_framebuffer_get_depth_texture (CoglFramebuffer *framebuffer)
-{
-  /* lazily allocate the framebuffer... */
-  if (!cogl_framebuffer_allocate (framebuffer, NULL))
-    return NULL;
-
-  g_return_val_if_fail (cogl_is_offscreen (framebuffer), NULL);
-  return COGL_OFFSCREEN(framebuffer)->depth_texture;
 }
 
 int
@@ -1316,10 +1249,13 @@ cogl_framebuffer_read_pixels (CoglFramebuffer *framebuffer,
                               CoglPixelFormat format,
                               uint8_t *pixels)
 {
-  int bpp = _cogl_pixel_format_get_bytes_per_pixel (format);
+  int bpp;
   CoglBitmap *bitmap;
   gboolean ret;
 
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (format) == 1, FALSE);
+
+  bpp = cogl_pixel_format_get_bytes_per_pixel (format, 0);
   bitmap = cogl_bitmap_new_for_data (framebuffer->context,
                                      width, height,
                                      format,
@@ -1461,6 +1397,17 @@ cogl_framebuffer_finish (CoglFramebuffer *framebuffer)
 }
 
 void
+cogl_framebuffer_flush (CoglFramebuffer *framebuffer)
+{
+
+  CoglContext *ctx = framebuffer->context;
+
+  _cogl_framebuffer_flush_journal (framebuffer);
+
+  ctx->driver_vtable->framebuffer_flush (framebuffer);
+}
+
+void
 cogl_framebuffer_push_matrix (CoglFramebuffer *framebuffer)
 {
   CoglMatrixStack *modelview_stack =
@@ -1543,21 +1490,8 @@ cogl_framebuffer_rotate (CoglFramebuffer *framebuffer,
 }
 
 void
-cogl_framebuffer_rotate_quaternion (CoglFramebuffer *framebuffer,
-                                    const CoglQuaternion *quaternion)
-{
-  CoglMatrixStack *modelview_stack =
-    _cogl_framebuffer_get_modelview_stack (framebuffer);
-  cogl_matrix_stack_rotate_quaternion (modelview_stack, quaternion);
-
-  if (framebuffer->context->current_draw_buffer == framebuffer)
-    framebuffer->context->current_draw_buffer_changes |=
-      COGL_FRAMEBUFFER_STATE_MODELVIEW;
-}
-
-void
 cogl_framebuffer_rotate_euler (CoglFramebuffer *framebuffer,
-                               const CoglEuler *euler)
+                               const graphene_euler_t *euler)
 {
   CoglMatrixStack *modelview_stack =
     _cogl_framebuffer_get_modelview_stack (framebuffer);
@@ -1654,30 +1588,6 @@ cogl_framebuffer_orthographic (CoglFramebuffer *framebuffer,
   cogl_matrix_init_identity (&ortho);
   cogl_matrix_orthographic (&ortho, x_1, y_1, x_2, y_2, near, far);
   cogl_matrix_stack_set (projection_stack, &ortho);
-
-  if (framebuffer->context->current_draw_buffer == framebuffer)
-    framebuffer->context->current_draw_buffer_changes |=
-      COGL_FRAMEBUFFER_STATE_PROJECTION;
-}
-
-void
-_cogl_framebuffer_push_projection (CoglFramebuffer *framebuffer)
-{
-  CoglMatrixStack *projection_stack =
-    _cogl_framebuffer_get_projection_stack (framebuffer);
-  cogl_matrix_stack_push (projection_stack);
-
-  if (framebuffer->context->current_draw_buffer == framebuffer)
-    framebuffer->context->current_draw_buffer_changes |=
-      COGL_FRAMEBUFFER_STATE_PROJECTION;
-}
-
-void
-_cogl_framebuffer_pop_projection (CoglFramebuffer *framebuffer)
-{
-  CoglMatrixStack *projection_stack =
-    _cogl_framebuffer_get_projection_stack (framebuffer);
-  cogl_matrix_stack_pop (projection_stack);
 
   if (framebuffer->context->current_draw_buffer == framebuffer)
     framebuffer->context->current_draw_buffer_changes |=
@@ -1816,6 +1726,19 @@ cogl_framebuffer_push_primitive_clip (CoglFramebuffer *framebuffer,
                                      modelview_entry,
                                      projection_entry,
                                      viewport);
+
+  if (framebuffer->context->current_draw_buffer == framebuffer)
+    framebuffer->context->current_draw_buffer_changes |=
+      COGL_FRAMEBUFFER_STATE_CLIP;
+}
+
+void
+cogl_framebuffer_push_region_clip (CoglFramebuffer *framebuffer,
+                                   cairo_region_t  *region)
+{
+  framebuffer->clip_stack =
+    cogl_clip_stack_push_region (framebuffer->clip_stack,
+                                 region);
 
   if (framebuffer->context->current_draw_buffer == framebuffer)
     framebuffer->context->current_draw_buffer_changes |=
@@ -2176,59 +2099,6 @@ _cogl_framebuffer_draw_attributes (CoglFramebuffer *framebuffer,
     }
 }
 
-/* XXX: deprecated */
-void
-cogl_framebuffer_draw_attributes (CoglFramebuffer *framebuffer,
-                                  CoglPipeline *pipeline,
-                                  CoglVerticesMode mode,
-                                  int first_vertex,
-                                  int n_vertices,
-                                  CoglAttribute **attributes,
-                                  int n_attributes)
-{
-  _cogl_framebuffer_draw_attributes (framebuffer,
-                                     pipeline,
-                                     mode,
-                                     first_vertex,
-                                     n_vertices,
-                                     attributes, n_attributes,
-                                     COGL_DRAW_SKIP_LEGACY_STATE);
-}
-
-/* XXX: deprecated */
-void
-cogl_framebuffer_vdraw_attributes (CoglFramebuffer *framebuffer,
-                                   CoglPipeline *pipeline,
-                                   CoglVerticesMode mode,
-                                   int first_vertex,
-                                   int n_vertices,
-                                   ...)
-{
-  va_list ap;
-  int n_attributes;
-  CoglAttribute *attribute;
-  CoglAttribute **attributes;
-  int i;
-
-  va_start (ap, n_vertices);
-  for (n_attributes = 0; va_arg (ap, CoglAttribute *); n_attributes++)
-    ;
-  va_end (ap);
-
-  attributes = g_alloca (sizeof (CoglAttribute *) * n_attributes);
-
-  va_start (ap, n_vertices);
-  for (i = 0; (attribute = va_arg (ap, CoglAttribute *)); i++)
-    attributes[i] = attribute;
-  va_end (ap);
-
-  _cogl_framebuffer_draw_attributes (framebuffer,
-                                     pipeline,
-                                     mode, first_vertex, n_vertices,
-                                     attributes, n_attributes,
-                                     COGL_DRAW_SKIP_LEGACY_STATE);
-}
-
 void
 _cogl_framebuffer_draw_indexed_attributes (CoglFramebuffer *framebuffer,
                                            CoglPipeline *pipeline,
@@ -2268,72 +2138,12 @@ _cogl_framebuffer_draw_indexed_attributes (CoglFramebuffer *framebuffer,
     }
 }
 
-/* XXX: deprecated */
-void
-cogl_framebuffer_draw_indexed_attributes (CoglFramebuffer *framebuffer,
-                                          CoglPipeline *pipeline,
-                                          CoglVerticesMode mode,
-                                          int first_vertex,
-                                          int n_vertices,
-                                          CoglIndices *indices,
-                                          CoglAttribute **attributes,
-                                          int n_attributes)
-{
-  _cogl_framebuffer_draw_indexed_attributes (framebuffer,
-                                             pipeline,
-                                             mode, first_vertex,
-                                             n_vertices, indices,
-                                             attributes, n_attributes,
-                                             COGL_DRAW_SKIP_LEGACY_STATE);
-}
-
-/* XXX: deprecated */
-void
-cogl_framebuffer_vdraw_indexed_attributes (CoglFramebuffer *framebuffer,
-                                           CoglPipeline *pipeline,
-                                           CoglVerticesMode mode,
-                                           int first_vertex,
-                                           int n_vertices,
-                                           CoglIndices *indices,
-                                           ...)
-
-{
-  va_list ap;
-  int n_attributes;
-  CoglAttribute **attributes;
-  int i;
-  CoglAttribute *attribute;
-
-  va_start (ap, indices);
-  for (n_attributes = 0; va_arg (ap, CoglAttribute *); n_attributes++)
-    ;
-  va_end (ap);
-
-  attributes = g_alloca (sizeof (CoglAttribute *) * n_attributes);
-
-  va_start (ap, indices);
-  for (i = 0; (attribute = va_arg (ap, CoglAttribute *)); i++)
-    attributes[i] = attribute;
-  va_end (ap);
-
-  _cogl_framebuffer_draw_indexed_attributes (framebuffer,
-                                             pipeline,
-                                             mode,
-                                             first_vertex,
-                                             n_vertices,
-                                             indices,
-                                             attributes,
-                                             n_attributes,
-                                             COGL_DRAW_SKIP_LEGACY_STATE);
-}
-
 void
 cogl_framebuffer_draw_primitive (CoglFramebuffer *framebuffer,
                                  CoglPipeline *pipeline,
                                  CoglPrimitive *primitive)
 {
-  _cogl_primitive_draw (primitive, framebuffer, pipeline,
-                        COGL_DRAW_SKIP_LEGACY_STATE);
+  _cogl_primitive_draw (primitive, framebuffer, pipeline, 0);
 }
 
 void
@@ -2359,8 +2169,7 @@ cogl_framebuffer_draw_rectangle (CoglFramebuffer *framebuffer,
   _cogl_framebuffer_draw_multitextured_rectangles (framebuffer,
                                                    pipeline,
                                                    &rect,
-                                                   1,
-                                                   TRUE);
+                                                   1);
 }
 
 void
@@ -2391,8 +2200,7 @@ cogl_framebuffer_draw_textured_rectangle (CoglFramebuffer *framebuffer,
   _cogl_framebuffer_draw_multitextured_rectangles (framebuffer,
                                                    pipeline,
                                                    &rect,
-                                                   1,
-                                                   TRUE);
+                                                   1);
 }
 
 void
@@ -2420,8 +2228,7 @@ cogl_framebuffer_draw_multitextured_rectangle (CoglFramebuffer *framebuffer,
   _cogl_framebuffer_draw_multitextured_rectangles (framebuffer,
                                                    pipeline,
                                                    &rect,
-                                                   1,
-                                                   TRUE);
+                                                   1);
 }
 
 void
@@ -2450,8 +2257,7 @@ cogl_framebuffer_draw_rectangles (CoglFramebuffer *framebuffer,
   _cogl_framebuffer_draw_multitextured_rectangles (framebuffer,
                                                    pipeline,
                                                    rects,
-                                                   n_rectangles,
-                                                   TRUE);
+                                                   n_rectangles);
 }
 
 void
@@ -2480,6 +2286,5 @@ cogl_framebuffer_draw_textured_rectangles (CoglFramebuffer *framebuffer,
   _cogl_framebuffer_draw_multitextured_rectangles (framebuffer,
                                                    pipeline,
                                                    rects,
-                                                   n_rectangles,
-                                                   TRUE);
+                                                   n_rectangles);
 }

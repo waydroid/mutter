@@ -30,11 +30,11 @@ meta_screen_cast_window_default_init (MetaScreenCastWindowInterface *iface)
 }
 
 void
-meta_screen_cast_window_get_frame_bounds (MetaScreenCastWindow *screen_cast_window,
-                                          MetaRectangle        *bounds)
+meta_screen_cast_window_get_buffer_bounds (MetaScreenCastWindow *screen_cast_window,
+                                           MetaRectangle        *bounds)
 {
-  META_SCREEN_CAST_WINDOW_GET_IFACE (screen_cast_window)->get_frame_bounds (screen_cast_window,
-                                                                            bounds);
+  META_SCREEN_CAST_WINDOW_GET_IFACE (screen_cast_window)->get_buffer_bounds (screen_cast_window,
+                                                                             bounds);
 }
 
 void
@@ -54,9 +54,9 @@ meta_screen_cast_window_transform_relative_position (MetaScreenCastWindow *scree
 gboolean
 meta_screen_cast_window_transform_cursor_position (MetaScreenCastWindow *screen_cast_window,
                                                    MetaCursorSprite     *cursor_sprite,
-                                                   ClutterPoint         *cursor_position,
+                                                   graphene_point_t     *cursor_position,
                                                    float                *out_cursor_scale,
-                                                   ClutterPoint         *out_relative_cursor_position)
+                                                   graphene_point_t     *out_relative_cursor_position)
 {
   MetaScreenCastWindowInterface *iface =
     META_SCREEN_CAST_WINDOW_GET_IFACE (screen_cast_window);
@@ -76,6 +76,17 @@ meta_screen_cast_window_capture_into (MetaScreenCastWindow *screen_cast_window,
   META_SCREEN_CAST_WINDOW_GET_IFACE (screen_cast_window)->capture_into (screen_cast_window,
                                                                         bounds,
                                                                         data);
+}
+
+gboolean
+meta_screen_cast_window_blit_to_framebuffer (MetaScreenCastWindow *screen_cast_window,
+                                             MetaRectangle        *bounds,
+                                             CoglFramebuffer      *framebuffer)
+{
+  MetaScreenCastWindowInterface *iface =
+    META_SCREEN_CAST_WINDOW_GET_IFACE (screen_cast_window);
+
+  return iface->blit_to_framebuffer (screen_cast_window, bounds, framebuffer);
 }
 
 gboolean

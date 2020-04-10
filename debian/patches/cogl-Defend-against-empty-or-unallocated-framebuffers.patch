@@ -1,0 +1,37 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Thu, 2 Apr 2020 19:30:59 +0100
+Subject: cogl: Defend against empty or unallocated framebuffers
+
+It isn't immediately obvious that this is impossible, because there's some
+"action at a distance" going on with framebuffers that have their size
+set lazily, after their textures get allocated; so let's make this a
+critical warning rather than crashing.
+
+In particular, this works around a crash when gnome-shell tries to blur a
+background that hasn't yet had any space allocated for it - which it seems
+is really an actor layout bug, but more robustness seems good to have.
+
+Workaround for <https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/2538>.
+
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1172
+Signed-off-by: Simon McVittie <smcv@debian.org>
+Applied-upstream: origin, 3.36.2, commit:e339a57ddf87de42e8171a935a7617cd2acf7ef6
+---
+ cogl/cogl/driver/gl/cogl-framebuffer-gl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/cogl/cogl/driver/gl/cogl-framebuffer-gl.c b/cogl/cogl/driver/gl/cogl-framebuffer-gl.c
+index 2848d71..e4d215e 100644
+--- a/cogl/cogl/driver/gl/cogl-framebuffer-gl.c
++++ b/cogl/cogl/driver/gl/cogl-framebuffer-gl.c
+@@ -132,8 +132,8 @@ _cogl_framebuffer_gl_flush_viewport_state (CoglFramebuffer *framebuffer)
+ {
+   float gl_viewport_y;
+ 
+-  g_assert (framebuffer->viewport_width >=0 &&
+-            framebuffer->viewport_height >=0);
++  g_return_if_fail (framebuffer->viewport_width >= 0);
++  g_return_if_fail (framebuffer->viewport_height >= 0);
+ 
+   /* Convert the Cogl viewport y offset to an OpenGL viewport y offset
+    * NB: OpenGL defines its window and viewport origins to be bottom

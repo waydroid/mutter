@@ -99,7 +99,8 @@ G_DEFINE_TYPE (ClutterBlurEffect,
                CLUTTER_TYPE_OFFSCREEN_EFFECT);
 
 static gboolean
-clutter_blur_effect_pre_paint (ClutterEffect *effect)
+clutter_blur_effect_pre_paint (ClutterEffect       *effect,
+                               ClutterPaintContext *paint_context)
 {
   ClutterBlurEffect *self = CLUTTER_BLUR_EFFECT (effect);
   ClutterEffectClass *parent_class;
@@ -124,7 +125,7 @@ clutter_blur_effect_pre_paint (ClutterEffect *effect)
     }
 
   parent_class = CLUTTER_EFFECT_CLASS (clutter_blur_effect_parent_class);
-  if (parent_class->pre_paint (effect))
+  if (parent_class->pre_paint (effect, paint_context))
     {
       ClutterOffscreenEffect *offscreen_effect =
         CLUTTER_OFFSCREEN_EFFECT (effect);
@@ -157,10 +158,12 @@ clutter_blur_effect_pre_paint (ClutterEffect *effect)
 }
 
 static void
-clutter_blur_effect_paint_target (ClutterOffscreenEffect *effect)
+clutter_blur_effect_paint_target (ClutterOffscreenEffect *effect,
+                                  ClutterPaintContext    *paint_context)
 {
   ClutterBlurEffect *self = CLUTTER_BLUR_EFFECT (effect);
-  CoglFramebuffer *framebuffer = cogl_get_draw_framebuffer ();
+  CoglFramebuffer *framebuffer =
+    clutter_paint_context_get_framebuffer (paint_context);
   guint8 paint_opacity;
 
   paint_opacity = clutter_actor_get_paint_opacity (self->actor);
@@ -182,7 +185,7 @@ clutter_blur_effect_modify_paint_volume (ClutterEffect      *effect,
                                          ClutterPaintVolume *volume)
 {
   gfloat cur_width, cur_height;
-  ClutterVertex origin;
+  graphene_point3d_t origin;
 
   clutter_paint_volume_get_origin (volume, &origin);
   cur_width = clutter_paint_volume_get_width (volume);

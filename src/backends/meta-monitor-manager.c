@@ -55,6 +55,7 @@
 #include "backends/meta-output.h"
 #include "backends/x11/meta-monitor-manager-xrandr.h"
 #include "clutter/clutter.h"
+#include "core/main-private.h"
 #include "core/util-private.h"
 #include "meta/main.h"
 #include "meta/meta-x11-errors.h"
@@ -801,8 +802,8 @@ meta_monitor_manager_finalize (GObject *object)
 
   g_list_free_full (manager->logical_monitors, g_object_unref);
 
-  g_signal_handler_disconnect (manager->backend,
-                               manager->experimental_features_changed_handler_id);
+  g_clear_signal_handler (&manager->experimental_features_changed_handler_id,
+                          manager->backend);
 
   G_OBJECT_CLASS (meta_monitor_manager_parent_class)->finalize (object);
 }
@@ -1013,28 +1014,46 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
     {
       MetaCrtc *crtc = l->data;
       GVariantBuilder transforms;
-      int current_mode_index;
+      MetaCrtcConfig *crtc_config;
 
       g_variant_builder_init (&transforms, G_VARIANT_TYPE ("au"));
       for (j = 0; j <= META_MONITOR_TRANSFORM_FLIPPED_270; j++)
         if (crtc->all_transforms & (1 << j))
           g_variant_builder_add (&transforms, "u", j);
 
-      if (crtc->current_mode)
-        current_mode_index = g_list_index (combined_modes, crtc->current_mode);
+      crtc_config = crtc->config;
+
+      if (crtc_config)
+        {
+          int current_mode_index;
+
+          current_mode_index = g_list_index (combined_modes, crtc_config->mode);
+          g_variant_builder_add (&crtc_builder, "(uxiiiiiuaua{sv})",
+                                 i, /* ID */
+                                 (int64_t) crtc->crtc_id,
+                                 (int) roundf (crtc_config->layout.origin.x),
+                                 (int) roundf (crtc_config->layout.origin.y),
+                                 (int) roundf (crtc_config->layout.size.width),
+                                 (int) roundf (crtc_config->layout.size.height),
+                                 current_mode_index,
+                                 (uint32_t) crtc_config->transform,
+                                 &transforms,
+                                 NULL /* properties */);
+        }
       else
-        current_mode_index = -1;
-      g_variant_builder_add (&crtc_builder, "(uxiiiiiuaua{sv})",
-                             i, /* ID */
-                             (gint64)crtc->crtc_id,
-                             (int)crtc->rect.x,
-                             (int)crtc->rect.y,
-                             (int)crtc->rect.width,
-                             (int)crtc->rect.height,
-                             current_mode_index,
-                             (guint32)crtc->transform,
-                             &transforms,
-                             NULL /* properties */);
+        {
+          g_variant_builder_add (&crtc_builder, "(uxiiiiiuaua{sv})",
+                                 i, /* ID */
+                                 (int64_t) crtc->crtc_id,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 -1,
+                                 (uint32_t) META_MONITOR_TRANSFORM_NORMAL,
+                                 &transforms,
+                                 NULL /* properties */);
+        }
     }
 
   for (l = combined_outputs, i = 0; l; l = l->next, i++)
@@ -1231,8 +1250,7 @@ save_config_timeout (gpointer user_data)
 static void
 cancel_persistent_confirmation (MetaMonitorManager *manager)
 {
-  g_source_remove (manager->persistent_timeout_id);
-  manager->persistent_timeout_id = 0;
+  g_clear_handle_id (&manager->persistent_timeout_id, g_source_remove);
 }
 
 static void
@@ -1428,12 +1446,6 @@ meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
 
   g_variant_builder_init (&properties_builder, G_VARIANT_TYPE ("a{sv}"));
   capabilities = meta_monitor_manager_get_capabilities (manager);
-  if ((capabilities & META_MONITOR_MANAGER_CAPABILITY_MIRRORING) == 0)
-    {
-      g_variant_builder_add (&properties_builder, "{sv}",
-                             "supports-mirroring",
-                             g_variant_new_boolean (FALSE));
-    }
 
   g_variant_builder_add (&properties_builder, "{sv}",
                          "layout-mode",
@@ -2505,7 +2517,7 @@ meta_monitor_manager_get_logical_monitor_at (MetaMonitorManager *manager,
     {
       MetaLogicalMonitor *logical_monitor = l->data;
 
-      if (POINT_IN_RECT (x, y, logical_monitor->rect))
+      if (META_POINT_IN_RECT (x, y, logical_monitor->rect))
         return logical_monitor;
     }
 

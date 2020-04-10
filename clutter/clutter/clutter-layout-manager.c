@@ -98,11 +98,11 @@
  * |[
  * {
  *   "type" : "ClutterBox",
- *   "layout-manager" : { "type" : "ClutterTableLayout" },
+ *   "layout-manager" : { "type" : "ClutterGridLayout" },
  *   "children" : [
  *     {
- *       "type" : "ClutterTexture",
- *       "filename" : "image-00.png",
+ *       "type" : "ClutterText",
+ *       "text" : "Some text",
  *
  *       "layout::row" : 0,
  *       "layout::column" : 0,
@@ -112,8 +112,8 @@
  *       "layout::y-expand" : true
  *     },
  *     {
- *       "type" : "ClutterTexture",
- *       "filename" : "image-01.png",
+ *       "type" : "ClutterText",
+ *       "text" : "Some more text",
  *
  *       "layout::row" : 0,
  *       "layout::column" : 1,
@@ -329,9 +329,6 @@ layout_manager_real_begin_animation (ClutterLayoutManager *manager,
   /* let the alpha take ownership of the timeline */
   g_object_unref (timeline);
 
-  g_signal_connect_swapped (timeline, "completed",
-                            G_CALLBACK (clutter_layout_manager_end_animation),
-                            manager);
   g_signal_connect_swapped (timeline, "new-frame",
                             G_CALLBACK (clutter_layout_manager_layout_changed),
                             manager);
@@ -375,9 +372,6 @@ layout_manager_real_end_animation (ClutterLayoutManager *manager)
   if (clutter_timeline_is_playing (timeline))
     clutter_timeline_stop (timeline);
 
-  g_signal_handlers_disconnect_by_func (timeline,
-                                        G_CALLBACK (clutter_layout_manager_end_animation),
-                                        manager);
   g_signal_handlers_disconnect_by_func (timeline,
                                         G_CALLBACK (clutter_layout_manager_layout_changed),
                                         manager);

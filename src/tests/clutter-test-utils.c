@@ -12,6 +12,22 @@ typedef struct {
 
 static ClutterTestEnvironment *test_environ = NULL;
 
+#define DBUS_NAME_WARNING "Lost or failed to acquire name"
+
+static gboolean
+log_func (const gchar    *log_domain,
+          GLogLevelFlags  log_level,
+          const gchar    *message,
+          gpointer        user_data)
+{
+  if ((log_level & G_LOG_LEVEL_WARNING) &&
+      g_strcmp0 (log_domain, "mutter") == 0 &&
+      g_str_has_prefix (message, DBUS_NAME_WARNING))
+    return FALSE;
+
+  return TRUE;
+}
+
 /*
  * clutter_test_init:
  * @argc: (inout): number of arguments in @argv
@@ -106,6 +122,8 @@ static void
 clutter_test_func_wrapper (gconstpointer data_)
 {
   const ClutterTestData *data = data_;
+
+  g_test_log_set_fatal_handler (log_func, NULL);
 
   /* ensure that the previous test state has been cleaned up */
   g_assert_null (test_environ->stage);
@@ -264,7 +282,7 @@ clutter_test_run (void)
 typedef struct {
   ClutterActor *stage;
 
-  ClutterPoint point;
+  graphene_point_t point;
 
   gpointer result;
 
@@ -339,13 +357,13 @@ on_key_press_event (ClutterActor *stage,
  * Since: 1.18
  */
 gboolean
-clutter_test_check_actor_at_point (ClutterActor        *stage,
-                                   const ClutterPoint  *point,
-                                   ClutterActor        *actor,
-                                   ClutterActor       **result)
+clutter_test_check_actor_at_point (ClutterActor            *stage,
+                                   const graphene_point_t  *point,
+                                   ClutterActor            *actor,
+                                   ClutterActor           **result)
 {
   ValidateData *data;
-  guint press_id = 0;
+  gulong press_id = 0;
 
   g_return_val_if_fail (CLUTTER_IS_STAGE (stage), FALSE);
   g_return_val_if_fail (point != NULL, FALSE);
@@ -377,8 +395,7 @@ clutter_test_check_actor_at_point (ClutterActor        *stage,
 
   *result = data->result;
 
-  if (press_id != 0)
-    g_signal_handler_disconnect (stage, press_id);
+  g_clear_signal_handler (&press_id, stage);
 
   g_free (data);
 
@@ -401,15 +418,15 @@ clutter_test_check_actor_at_point (ClutterActor        *stage,
  * Since: 1.18
  */
 gboolean
-clutter_test_check_color_at_point (ClutterActor       *stage,
-                                   const ClutterPoint *point,
-                                   const ClutterColor *color,
-                                   ClutterColor       *result)
+clutter_test_check_color_at_point (ClutterActor           *stage,
+                                   const graphene_point_t *point,
+                                   const ClutterColor     *color,
+                                   ClutterColor           *result)
 {
   ValidateData *data;
   gboolean retval;
   guint8 *buffer;
-  guint press_id = 0;
+  gulong press_id = 0;
 
   g_return_val_if_fail (CLUTTER_IS_STAGE (stage), FALSE);
   g_return_val_if_fail (point != NULL, FALSE);
@@ -439,8 +456,7 @@ clutter_test_check_color_at_point (ClutterActor       *stage,
   while (!data->was_painted)
     g_main_context_iteration (NULL, TRUE);
 
-  if (press_id != 0)
-    g_signal_handler_disconnect (stage, press_id);
+  g_clear_signal_handler (&press_id, stage);
 
   buffer = data->result;
 

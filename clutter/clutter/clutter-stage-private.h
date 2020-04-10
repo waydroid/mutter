@@ -36,9 +36,9 @@ typedef struct _ClutterStageQueueRedrawEntry ClutterStageQueueRedrawEntry;
 /* stage */
 ClutterStageWindow *_clutter_stage_get_default_window    (void);
 
-void                _clutter_stage_paint_view            (ClutterStage                *stage,
-                                                          ClutterStageView            *view,
-                                                          const cairo_rectangle_int_t *clip);
+void                clutter_stage_paint_view             (ClutterStage          *stage,
+                                                          ClutterStageView      *view,
+                                                          const cairo_region_t  *redraw_clip);
 
 void                _clutter_stage_emit_after_paint      (ClutterStage          *stage);
 
@@ -78,19 +78,20 @@ void     _clutter_stage_schedule_update                   (ClutterStage *stage);
 gint64    _clutter_stage_get_update_time                  (ClutterStage *stage);
 void     _clutter_stage_clear_update_time                 (ClutterStage *stage);
 gboolean _clutter_stage_has_full_redraw_queued            (ClutterStage *stage);
+int64_t  _clutter_stage_get_next_presentation_time        (ClutterStage *stage);
 
-void clutter_stage_log_pick (ClutterStage       *stage,
-                             const ClutterPoint *vertices,
-                             ClutterActor       *actor);
+void clutter_stage_log_pick (ClutterStage           *stage,
+                             const graphene_point_t *vertices,
+                             ClutterActor           *actor);
 
-void clutter_stage_push_pick_clip (ClutterStage       *stage,
-                                   const ClutterPoint *vertices);
+void clutter_stage_push_pick_clip (ClutterStage           *stage,
+                                   const graphene_point_t *vertices);
 
 void clutter_stage_pop_pick_clip (ClutterStage *stage);
 
 ClutterActor *_clutter_stage_do_pick (ClutterStage    *stage,
-                                      gint             x,
-                                      gint             y,
+                                      float            x,
+                                      float            y,
                                       ClutterPickMode  mode);
 
 ClutterPaintVolume *_clutter_stage_paint_volume_stack_allocate (ClutterStage *stage);
@@ -103,8 +104,6 @@ ClutterStageQueueRedrawEntry *_clutter_stage_queue_actor_redraw            (Clut
                                                                             ClutterActor                 *actor,
                                                                             const ClutterPaintVolume     *clip);
 void                          _clutter_stage_queue_redraw_entry_invalidate (ClutterStageQueueRedrawEntry *entry);
-
-CoglFramebuffer *_clutter_stage_get_active_framebuffer (ClutterStage *stage);
 
 void            _clutter_stage_add_pointer_drag_actor    (ClutterStage       *stage,
                                                           ClutterInputDevice *device,
@@ -133,15 +132,18 @@ gboolean                _clutter_stage_update_state     (ClutterStage      *stag
 
 void                    _clutter_stage_set_scale_factor (ClutterStage      *stage,
                                                          int                factor);
-gboolean                _clutter_stage_get_max_view_scale_factor_for_rect (ClutterStage *stage,
-                                                                           ClutterRect  *rect,
-                                                                           float        *view_scale);
+gboolean                _clutter_stage_get_max_view_scale_factor_for_rect (ClutterStage    *stage,
+                                                                           graphene_rect_t *rect,
+                                                                           float           *view_scale);
 
 void            _clutter_stage_presented                (ClutterStage      *stage,
                                                          CoglFrameEvent     frame_event,
                                                          ClutterFrameInfo  *frame_info);
 
 GList *         _clutter_stage_peek_stage_views         (ClutterStage *stage);
+
+void            clutter_stage_queue_actor_relayout      (ClutterStage *stage,
+                                                         ClutterActor *actor);
 
 G_END_DECLS
 

@@ -95,21 +95,17 @@ meta_xwayland_keyboard_grab_end (MetaXwaylandKeyboardActiveGrab *active_grab)
   if (!active_grab->surface)
     return;
 
-  g_signal_handler_disconnect (active_grab->surface,
-                               active_grab->surface_destroyed_handler);
+  g_clear_signal_handler (&active_grab->surface_destroyed_handler,
+                          active_grab->surface);
 
-  g_signal_handler_disconnect (active_grab->surface,
-                               active_grab->shortcuts_restored_handler);
+  g_clear_signal_handler (&active_grab->shortcuts_restored_handler,
+                          active_grab->surface);
 
   meta_wayland_surface_restore_shortcuts (active_grab->surface,
                                           active_grab->seat);
 
-  if (active_grab->window_associate_handler)
-    {
-      g_signal_handler_disconnect (active_grab->surface->role,
-                                   active_grab->window_associate_handler);
-      active_grab->window_associate_handler = 0;
-    }
+  g_clear_signal_handler (&active_grab->window_associate_handler,
+                          active_grab->surface->role);
 
   active_grab->surface = NULL;
 }
@@ -232,7 +228,7 @@ static void
 meta_xwayland_keyboard_grab_activate (MetaXwaylandKeyboardActiveGrab *active_grab)
 {
   MetaWaylandSurface *surface = active_grab->surface;
-  MetaWindow *window = surface->window;
+  MetaWindow *window = meta_wayland_surface_get_window (surface);
   MetaWaylandSeat *seat = active_grab->seat;
 
   if (meta_xwayland_grab_is_granted (window))
@@ -243,12 +239,9 @@ meta_xwayland_keyboard_grab_activate (MetaXwaylandKeyboardActiveGrab *active_gra
       if (meta_xwayland_grab_should_lock_focus (window))
         meta_wayland_keyboard_start_grab (seat->keyboard, &active_grab->keyboard_grab);
     }
-  if (active_grab->window_associate_handler)
-    {
-      g_signal_handler_disconnect (active_grab->surface->role,
-                                   active_grab->window_associate_handler);
-      active_grab->window_associate_handler = 0;
-    }
+
+  g_clear_signal_handler (&active_grab->window_associate_handler,
+                          active_grab->surface->role);
 }
 
 static void
@@ -266,7 +259,7 @@ zwp_xwayland_keyboard_grab_manager_grab (struct wl_client   *client,
                                          struct wl_resource *seat_resource)
 {
   MetaWaylandSurface *surface = wl_resource_get_user_data (surface_resource);
-  MetaWindow *window = surface->window;
+  MetaWindow *window = meta_wayland_surface_get_window (surface);
   MetaWaylandSeat *seat = wl_resource_get_user_data (seat_resource);
   MetaXwaylandKeyboardActiveGrab *active_grab;
   struct wl_resource *grab_resource;

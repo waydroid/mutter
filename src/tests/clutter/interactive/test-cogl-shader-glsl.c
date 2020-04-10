@@ -164,18 +164,21 @@ static unsigned int timeout_id = 0;
 static int shader_no = 0;
 
 static void
-paint_cb (ClutterActor *actor)
+paint_cb (ClutterActor        *actor,
+          ClutterPaintContext *paint_context)
 {
+  CoglFramebuffer *framebuffer =
+    clutter_paint_context_get_framebuffer (paint_context);
   float stage_width = clutter_actor_get_width (actor);
   float stage_height = clutter_actor_get_height (actor);
   float image_width = cogl_texture_get_width (redhand);
   float image_height = cogl_texture_get_height (redhand);
 
-  cogl_set_source (material);
-  cogl_rectangle (stage_width/2.0f - image_width/2.0f,
-                  stage_height/2.0f - image_height/2.0f,
-                  stage_width/2.0f + image_width/2.0f,
-                  stage_height/2.0f + image_height/2.0f);
+  cogl_framebuffer_draw_rectangle (framebuffer, COGL_PIPELINE (material),
+                                   stage_width / 2.0f - image_width / 2.0f,
+                                   stage_height / 2.0f - image_height / 2.0f,
+                                   stage_width / 2.0f + image_width / 2.0f,
+                                   stage_height / 2.0f + image_height / 2.0f);
 }
 
 static void
@@ -193,11 +196,10 @@ set_shader_num (int new_no)
 
   shader = cogl_create_shader (COGL_SHADER_TYPE_FRAGMENT);
   cogl_shader_source (shader, shaders[new_no].source);
-  cogl_shader_compile (shader);
 
   program = cogl_create_program ();
   cogl_program_attach_shader (program, shader);
-  cogl_handle_unref (shader);
+  cogl_object_unref (shader);
   cogl_program_link (program);
 
   uniform_no = cogl_program_get_uniform_location (program, "tex");
@@ -215,7 +217,7 @@ set_shader_num (int new_no)
   cogl_program_set_uniform_1f (program, uniform_no, 1.0f / image_height);
 
   cogl_material_set_user_program (material, program);
-  cogl_handle_unref (program);
+  cogl_object_unref (program);
 
   shader_no = new_no;
 }
@@ -229,11 +231,7 @@ button_release_cb (ClutterActor *actor,
 
   /* Stop the automatic cycling if the user want to manually control
    * which shader to display */
-  if (timeout_id)
-    {
-      g_source_remove (timeout_id);
-      timeout_id = 0;
-    }
+  g_clear_handle_id (&timeout_id, g_source_remove);
 
   if (event->button.button == 1)
     {
@@ -320,7 +318,7 @@ test_cogl_shader_glsl_main (int argc, char *argv[])
                                         COGL_TEXTURE_NO_ATLAS,
                                         COGL_PIXEL_FORMAT_ANY,
                                         &error);
-  if (redhand == COGL_INVALID_HANDLE)
+  if (redhand == NULL)
     g_error ("image load failed: %s", error->message);
 
   material = cogl_material_new ();

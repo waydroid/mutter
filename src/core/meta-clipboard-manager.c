@@ -32,12 +32,12 @@ static struct {
   const char *mimetype_glob;
   ssize_t max_transfer_size;
 } supported_mimetypes[] = {
+  { "image/tiff",               MAX_IMAGE_SIZE },
+  { "image/bmp",                MAX_IMAGE_SIZE },
   { "image/gif",                MAX_IMAGE_SIZE },
   { "image/jpeg",               MAX_IMAGE_SIZE },
   { "image/webp",               MAX_IMAGE_SIZE },
   { "image/png",                MAX_IMAGE_SIZE },
-  { "image/bmp",                MAX_IMAGE_SIZE },
-  { "image/tiff",               MAX_IMAGE_SIZE },
   { "image/svg+xml",            MAX_IMAGE_SIZE },
   { "text/plain",               MAX_TEXT_SIZE },
   { "text/plain;charset=utf-8", MAX_TEXT_SIZE },
@@ -128,13 +128,17 @@ owner_changed_cb (MetaSelection       *selection,
         }
 
       if (best_idx < 0)
-        return;
+        {
+          g_list_free_full (mimetypes, g_free);
+          return;
+        }
 
       display->saved_clipboard_mimetype = g_strdup (best);
+      g_list_free_full (mimetypes, g_free);
       output = g_memory_output_stream_new_resizable ();
       meta_selection_transfer_async (selection,
                                      META_SELECTION_CLIPBOARD,
-                                     best,
+                                     display->saved_clipboard_mimetype,
                                      transfer_size,
                                      output,
                                      NULL,

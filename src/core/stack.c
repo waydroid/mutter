@@ -30,8 +30,9 @@
 #include "core/stack.h"
 
 #include "backends/meta-logical-monitor.h"
-#include "cogl/cogl-trace.h"
+#include "cogl/cogl.h"
 #include "core/frame.h"
+#include "core/main-private.h"
 #include "core/meta-workspace-manager-private.h"
 #include "core/window-private.h"
 #include "meta/group.h"
@@ -39,15 +40,8 @@
 #include "meta/workspace.h"
 #include "x11/meta-x11-display-private.h"
 
-#define WINDOW_HAS_TRANSIENT_TYPE(w)                    \
-          (w->type == META_WINDOW_DIALOG ||             \
-	   w->type == META_WINDOW_MODAL_DIALOG ||       \
-           w->type == META_WINDOW_TOOLBAR ||            \
-           w->type == META_WINDOW_MENU ||               \
-           w->type == META_WINDOW_UTILITY)
-
-#define WINDOW_TRANSIENT_FOR_WHOLE_GROUP(w)                     \
-  (WINDOW_HAS_TRANSIENT_TYPE (w) && w->transient_for == NULL)
+#define WINDOW_TRANSIENT_FOR_WHOLE_GROUP(w)        \
+  (meta_window_has_transient_type (w) && w->transient_for == NULL)
 
 static void meta_window_set_stack_position_no_sync (MetaWindow *window,
                                                     int         position);
@@ -447,137 +441,6 @@ meta_stack_update_window_tile_matches (MetaStack     *stack,
   g_list_free (windows);
 }
 
-/* Get layer ignoring any transient or group relationships */
-static MetaStackLayer
-get_standalone_layer (MetaWindow *window)
-{
-  MetaStackLayer layer;
-
-  switch (window->type)
-    {
-    case META_WINDOW_DESKTOP:
-      layer = META_LAYER_DESKTOP;
-      break;
-
-    case META_WINDOW_DOCK:
-      if (window->wm_state_below ||
-          (window->monitor && window->monitor->in_fullscreen))
-        layer = META_LAYER_BOTTOM;
-      else
-        layer = META_LAYER_DOCK;
-      break;
-
-    case META_WINDOW_DROPDOWN_MENU:
-    case META_WINDOW_POPUP_MENU:
-    case META_WINDOW_TOOLTIP:
-    case META_WINDOW_NOTIFICATION:
-    case META_WINDOW_COMBO:
-    case META_WINDOW_OVERRIDE_OTHER:
-      switch (window->client_type)
-        {
-        case META_WINDOW_CLIENT_TYPE_X11:
-          layer = META_LAYER_OVERRIDE_REDIRECT;
-          break;
-        case META_WINDOW_CLIENT_TYPE_WAYLAND:
-          layer = META_LAYER_NORMAL;
-          break;
-        default:
-          g_assert_not_reached ();
-        }
-      break;
-    default:
-      if (window->wm_state_below)
-        layer = META_LAYER_BOTTOM;
-      else if (window->wm_state_above && !META_WINDOW_MAXIMIZED (window))
-        layer = META_LAYER_TOP;
-      else
-        layer = META_LAYER_NORMAL;
-      break;
-    }
-
-  return layer;
-}
-
-/* Note that this function can never use window->layer only
- * get_standalone_layer, or we'd have issues.
- */
-static MetaStackLayer
-get_maximum_layer_in_group (MetaWindow *window)
-{
-  GSList *members;
-  MetaGroup *group;
-  GSList *tmp;
-  MetaStackLayer max;
-  MetaStackLayer layer;
-
-  max = META_LAYER_DESKTOP;
-
-  group = meta_window_get_group (window);
-
-  if (group != NULL)
-    members = meta_group_list_windows (group);
-  else
-    members = NULL;
-
-  tmp = members;
-  while (tmp != NULL)
-    {
-      MetaWindow *w = tmp->data;
-
-      if (!w->override_redirect)
-        {
-          layer = get_standalone_layer (w);
-          if (layer > max)
-            max = layer;
-        }
-
-      tmp = tmp->next;
-    }
-
-  g_slist_free (members);
-
-  return max;
-}
-
-static void
-compute_layer (MetaWindow *window)
-{
-  window->layer = get_standalone_layer (window);
-
-  /* We can only do promotion-due-to-group for dialogs and other
-   * transients, or weird stuff happens like the desktop window and
-   * nautilus windows getting in the same layer, or all gnome-terminal
-   * windows getting in fullscreen layer if any terminal is
-   * fullscreen.
-   */
-  if (window->layer != META_LAYER_DESKTOP &&
-      WINDOW_HAS_TRANSIENT_TYPE(window) &&
-      window->transient_for == NULL)
-    {
-      /* We only do the group thing if the dialog is NOT transient for
-       * a particular window. Imagine a group with a normal window, a dock,
-       * and a dialog transient for the normal window; you don't want the dialog
-       * above the dock if it wouldn't normally be.
-       */
-
-      MetaStackLayer group_max;
-
-      group_max = get_maximum_layer_in_group (window);
-
-      if (group_max > window->layer)
-        {
-          meta_topic (META_DEBUG_STACK,
-                      "Promoting window %s from layer %u to %u due to group membership\n",
-                      window->desc, window->layer, group_max);
-          window->layer = group_max;
-        }
-    }
-
-  meta_topic (META_DEBUG_STACK, "Window %s on layer %u type = %u has_focus = %d\n",
-              window->desc, window->layer,
-              window->type, window->has_focus);
-}
-
 /* Front of the layer list is the topmost window,
  * so the lower stack position is later in the list
  */
@@ -753,7 +616,7 @@ create_constraints (Constraint **constraints,
               /* better way I think, so transient-for-group are constrained
                * only above non-transient-type windows in their group
                */
-              if (!WINDOW_HAS_TRANSIENT_TYPE (group_window))
+              if (!meta_window_has_transient_type (group_window))
 #endif
                 {
                   meta_topic (META_DEBUG_STACK, "Constraining %s above %s as it's transient for its group\n",
@@ -860,7 +723,7 @@ ensure_above (MetaWindow *above,
 {
   gboolean is_transient;
 
-  is_transient = WINDOW_HAS_TRANSIENT_TYPE (above) ||
+  is_transient = meta_window_has_transient_type (above) ||
                  above->transient_for == below;
   if (is_transient && above->layer < below->layer)
     {
@@ -968,7 +831,7 @@ stack_do_relayer (MetaStack *stack)
       w = tmp->data;
       old_layer = w->layer;
 
-      compute_layer (w);
+      w->layer = meta_window_calculate_layer (w);
 
       if (w->layer != old_layer)
         {
@@ -1149,7 +1012,7 @@ window_contains_point (MetaWindow *window,
 
   meta_window_get_frame_rect (window, &rect);
 
-  return POINT_IN_RECT (root_x, root_y, rect);
+  return META_POINT_IN_RECT (root_x, root_y, rect);
 }
 
 static gboolean

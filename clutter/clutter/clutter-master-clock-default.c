@@ -31,6 +31,8 @@
 
 #include "clutter-build-config.h"
 
+#include <cogl/cogl.h>
+
 #include "clutter-master-clock.h"
 #include "clutter-master-clock-default.h"
 #include "clutter-debug.h"
@@ -186,6 +188,26 @@ master_clock_get_swap_wait_time (ClutterMasterClockDefault *master_clock)
           return (delay_us + 999) / 1000;
         }
     }
+}
+
+static int64_t
+master_clock_get_next_presentation_time (ClutterMasterClockDefault *master_clock)
+{
+  ClutterStageManager *stage_manager = clutter_stage_manager_get_default ();
+  const GSList *stages, *l;
+  int64_t earliest = -1;
+
+  stages = clutter_stage_manager_peek_stages (stage_manager);
+
+  for (l = stages; l != NULL; l = l->next)
+    {
+      gint64 t = _clutter_stage_get_next_presentation_time (l->data);
+
+      if (earliest == -1 || (t != -1 && t < earliest))
+        earliest = t;
+    }
+
+  return earliest;
 }
 
 static void
@@ -461,8 +483,14 @@ clutter_clock_dispatch (GSource     *source,
 
   _clutter_threads_acquire_lock ();
 
+  COGL_TRACE_BEGIN (ClutterMasterClockTick, "Master Clock (tick)");
+
   /* Get the time to use for this frame */
-  master_clock->cur_tick = g_source_get_time (source);
+  master_clock->cur_tick = master_clock_get_next_presentation_time (master_clock);
+
+  /* On the first frame the backend might not have an answer */
+  if (master_clock->cur_tick <= 0)
+    master_clock->cur_tick = g_source_get_time (source);
 
 #ifdef CLUTTER_ENABLE_DEBUG
   master_clock->remaining_budget = master_clock->frame_budget;
@@ -491,6 +519,8 @@ clutter_clock_dispatch (GSource     *source,
   master_clock_reschedule_stage_updates (master_clock, stages);
 
   g_slist_free_full (stages, g_object_unref);
+
+  COGL_TRACE_END (ClutterMasterClockTick);
 
   _clutter_threads_release_lock ();
 

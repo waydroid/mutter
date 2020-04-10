@@ -37,8 +37,8 @@ struct _MetaScreenCastWindowInterface
 {
   GTypeInterface parent_iface;
 
-  void (*get_frame_bounds) (MetaScreenCastWindow *screen_cast_window,
-                            MetaRectangle        *bounds);
+  void (*get_buffer_bounds) (MetaScreenCastWindow *screen_cast_window,
+                             MetaRectangle        *bounds);
 
   void (*transform_relative_position) (MetaScreenCastWindow *screen_cast_window,
                                        double                x,
@@ -48,19 +48,23 @@ struct _MetaScreenCastWindowInterface
 
   gboolean (*transform_cursor_position) (MetaScreenCastWindow *screen_cast_window,
                                          MetaCursorSprite     *cursor_sprite,
-                                         ClutterPoint         *cursor_position,
+                                         graphene_point_t     *cursor_position,
                                          float                *out_cursor_scale,
-                                         ClutterPoint         *out_relative_cursor_position);
+                                         graphene_point_t     *out_relative_cursor_position);
 
   void (*capture_into) (MetaScreenCastWindow *screen_cast_window,
                         MetaRectangle        *bounds,
                         uint8_t              *data);
 
+  gboolean (*blit_to_framebuffer) (MetaScreenCastWindow *screen_cast_window,
+                                   MetaRectangle        *bounds,
+                                   CoglFramebuffer      *framebuffer);
+
   gboolean (*has_damage) (MetaScreenCastWindow *screen_cast_window);
 };
 
-void meta_screen_cast_window_get_frame_bounds (MetaScreenCastWindow *screen_cast_window,
-                                               MetaRectangle        *bounds);
+void meta_screen_cast_window_get_buffer_bounds (MetaScreenCastWindow *screen_cast_window,
+                                                MetaRectangle        *bounds);
 
 void meta_screen_cast_window_transform_relative_position (MetaScreenCastWindow *screen_cast_window,
                                                           double                x,
@@ -70,13 +74,17 @@ void meta_screen_cast_window_transform_relative_position (MetaScreenCastWindow *
 
 gboolean meta_screen_cast_window_transform_cursor_position (MetaScreenCastWindow *screen_cast_window,
                                                             MetaCursorSprite     *cursor_sprite,
-                                                            ClutterPoint         *cursor_position,
+                                                            graphene_point_t     *cursor_position,
                                                             float                *out_cursor_scale,
-                                                            ClutterPoint         *out_relative_cursor_position);
+                                                            graphene_point_t     *out_relative_cursor_position);
 
 void meta_screen_cast_window_capture_into (MetaScreenCastWindow *screen_cast_window,
                                            MetaRectangle        *bounds,
                                            uint8_t              *data);
+
+gboolean meta_screen_cast_window_blit_to_framebuffer (MetaScreenCastWindow *screen_cast_window,
+                                                      MetaRectangle        *bounds,
+                                                      CoglFramebuffer      *framebuffer);
 
 gboolean meta_screen_cast_window_has_damage (MetaScreenCastWindow *screen_cast_window);
 

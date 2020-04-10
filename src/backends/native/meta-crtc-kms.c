@@ -63,7 +63,7 @@ meta_crtc_kms_apply_transform (MetaCrtc               *crtc,
   MetaCrtcKms *crtc_kms = crtc->driver_private;
   MetaMonitorTransform hw_transform;
 
-  hw_transform = crtc->transform;
+  hw_transform = crtc->config->transform;
   if (!meta_crtc_kms_is_transform_handled (crtc, hw_transform))
     hw_transform = META_MONITOR_TRANSFORM_NORMAL;
   if (!meta_crtc_kms_is_transform_handled (crtc, hw_transform))
@@ -79,31 +79,32 @@ meta_crtc_kms_assign_primary_plane (MetaCrtc      *crtc,
                                     uint32_t       fb_id,
                                     MetaKmsUpdate *kms_update)
 {
-  MetaRectangle logical_monitor_rect;
-  int x, y;
+  MetaCrtcConfig *crtc_config;
   MetaFixed16Rectangle src_rect;
   MetaFixed16Rectangle dst_rect;
+  MetaKmsAssignPlaneFlag flags;
   MetaKmsCrtc *kms_crtc;
   MetaKmsDevice *kms_device;
   MetaKmsPlane *primary_kms_plane;
   MetaKmsPlaneAssignment *plane_assignment;
 
-  logical_monitor_rect =
-    meta_logical_monitor_get_layout (crtc->logical_monitor);
-  x = crtc->rect.x - logical_monitor_rect.x;
-  y = crtc->rect.y - logical_monitor_rect.y;
+  crtc_config = crtc->config;
+
+
   src_rect = (MetaFixed16Rectangle) {
-    .x = meta_fixed_16_from_int (x),
-    .y = meta_fixed_16_from_int (y),
-    .width = meta_fixed_16_from_int (crtc->rect.width),
-    .height = meta_fixed_16_from_int (crtc->rect.height),
+    .x = meta_fixed_16_from_int (0),
+    .y = meta_fixed_16_from_int (0),
+    .width = meta_fixed_16_from_int (crtc_config->mode->width),
+    .height = meta_fixed_16_from_int (crtc_config->mode->height),
   };
   dst_rect = (MetaFixed16Rectangle) {
     .x = meta_fixed_16_from_int (0),
     .y = meta_fixed_16_from_int (0),
-    .width = meta_fixed_16_from_int (crtc->rect.width),
-    .height = meta_fixed_16_from_int (crtc->rect.height),
+    .width = meta_fixed_16_from_int (crtc_config->mode->width),
+    .height = meta_fixed_16_from_int (crtc_config->mode->height),
   };
+
+  flags = META_KMS_ASSIGN_PLANE_FLAG_NONE;
 
   kms_crtc = meta_crtc_kms_get_kms_crtc (crtc);
   kms_device = meta_kms_crtc_get_device (kms_crtc);
@@ -114,7 +115,8 @@ meta_crtc_kms_assign_primary_plane (MetaCrtc      *crtc,
                                                    primary_kms_plane,
                                                    fb_id,
                                                    src_rect,
-                                                   dst_rect);
+                                                   dst_rect,
+                                                   flags);
   meta_crtc_kms_apply_transform (crtc, plane_assignment);
 }
 
@@ -147,6 +149,7 @@ void
 meta_crtc_kms_set_mode (MetaCrtc      *crtc,
                         MetaKmsUpdate *kms_update)
 {
+  MetaCrtcConfig *crtc_config = crtc->config;
   MetaGpu *gpu = meta_crtc_get_gpu (crtc);
   GList *connectors;
   drmModeModeInfo *mode;
@@ -155,7 +158,7 @@ meta_crtc_kms_set_mode (MetaCrtc      *crtc,
 
   if (connectors)
     {
-      mode = crtc->current_mode->driver_private;
+      mode = crtc_config->mode->driver_private;
 
       g_debug ("Setting CRTC (%ld) mode to %s", crtc->crtc_id, mode->name);
     }
@@ -270,36 +273,15 @@ meta_create_kms_crtc (MetaGpuKms  *gpu_kms,
   MetaCrtc *crtc;
   MetaCrtcKms *crtc_kms;
   MetaKmsPlane *primary_plane;
-  const MetaKmsCrtcState *crtc_state;
 
   kms_device = meta_gpu_kms_get_kms_device (gpu_kms);
   primary_plane = meta_kms_device_get_primary_plane_for (kms_device,
                                                          kms_crtc);
-  crtc_state = meta_kms_crtc_get_current_state (kms_crtc);
-
   crtc = g_object_new (META_TYPE_CRTC, NULL);
   crtc->gpu = gpu;
   crtc->crtc_id = meta_kms_crtc_get_id (kms_crtc);
-  crtc->rect = crtc_state->rect;
   crtc->is_dirty = FALSE;
-  crtc->transform = META_MONITOR_TRANSFORM_NORMAL;
   crtc->all_transforms = ALL_TRANSFORMS_MASK;
-
-  if (crtc_state->is_drm_mode_valid)
-    {
-      GList *l;
-
-      for (l = meta_gpu_get_modes (gpu); l; l = l->next)
-        {
-          MetaCrtcMode *mode = l->data;
-
-          if (meta_drm_mode_equal (&crtc_state->drm_mode, mode->driver_private))
-            {
-              crtc->current_mode = mode;
-              break;
-            }
-        }
-    }
 
   crtc_kms = g_new0 (MetaCrtcKms, 1);
   crtc_kms->kms_crtc = kms_crtc;

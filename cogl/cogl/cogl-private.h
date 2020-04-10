@@ -43,21 +43,15 @@ typedef enum
   COGL_PRIVATE_FEATURE_TEXTURE_2D_FROM_EGL_IMAGE,
   COGL_PRIVATE_FEATURE_MESA_PACK_INVERT,
   COGL_PRIVATE_FEATURE_BLIT_FRAMEBUFFER,
-  COGL_PRIVATE_FEATURE_FOUR_CLIP_PLANES,
   COGL_PRIVATE_FEATURE_PBOS,
-  COGL_PRIVATE_FEATURE_VBOS,
   COGL_PRIVATE_FEATURE_EXT_PACKED_DEPTH_STENCIL,
   COGL_PRIVATE_FEATURE_OES_PACKED_DEPTH_STENCIL,
   COGL_PRIVATE_FEATURE_TEXTURE_FORMAT_BGRA8888,
   COGL_PRIVATE_FEATURE_UNPACK_SUBIMAGE,
   COGL_PRIVATE_FEATURE_SAMPLER_OBJECTS,
   COGL_PRIVATE_FEATURE_READ_PIXELS_ANY_FORMAT,
-  COGL_PRIVATE_FEATURE_ALPHA_TEST,
   COGL_PRIVATE_FEATURE_FORMAT_CONVERSION,
-  COGL_PRIVATE_FEATURE_QUADS,
-  COGL_PRIVATE_FEATURE_BLEND_CONSTANT,
   COGL_PRIVATE_FEATURE_QUERY_FRAMEBUFFER_BITS,
-  COGL_PRIVATE_FEATURE_BUILTIN_POINT_SIZE_UNIFORM,
   COGL_PRIVATE_FEATURE_QUERY_TEXTURE_PARAMETERS,
   COGL_PRIVATE_FEATURE_ALPHA_TEXTURES,
   COGL_PRIVATE_FEATURE_TEXTURE_SWIZZLE,
@@ -67,15 +61,10 @@ typedef enum
    * events. Otherwise a dirty event will be queued when the onscreen
    * is first allocated or when it is shown or resized */
   COGL_PRIVATE_FEATURE_DIRTY_EVENTS,
-  COGL_PRIVATE_FEATURE_ENABLE_PROGRAM_POINT_SIZE,
-  /* These features let us avoid conditioning code based on the exact
-   * driver being used and instead check for broad opengl feature
-   * sets that can be shared by several GL apis */
+  /* This feature allows for explicitly selecting a GL-based backend,
+   * as opposed to nop or (in the future) Vulkan.
+   */
   COGL_PRIVATE_FEATURE_ANY_GL,
-  COGL_PRIVATE_FEATURE_GL_FIXED,
-  COGL_PRIVATE_FEATURE_GL_PROGRAMMABLE,
-  COGL_PRIVATE_FEATURE_GL_EMBEDDED,
-  COGL_PRIVATE_FEATURE_GL_WEB,
 
   COGL_N_PRIVATE_FEATURES
 } CoglPrivateFeature;
@@ -99,16 +88,7 @@ gboolean
 _cogl_check_extension (const char *name, char * const *ext);
 
 void
-_cogl_clear (const CoglColor *color, unsigned long buffers);
-
-void
 _cogl_init (void);
-
-void
-_cogl_push_source (CoglPipeline *pipeline, gboolean enable_legacy);
-
-gboolean
-_cogl_get_enable_legacy_state (void);
 
 #define _cogl_has_private_feature(ctx, feature) \
   COGL_FLAGS_GET ((ctx)->private_features, (feature))

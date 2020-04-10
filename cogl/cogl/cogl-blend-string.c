@@ -216,16 +216,6 @@ validate_blend_statements (CoglBlendStringStatement *statements,
 
   _COGL_GET_CONTEXT (ctx, 0);
 
-  if (n_statements == 2 &&
-      !ctx->glBlendEquationSeparate &&
-      statements[0].function->type != statements[1].function->type)
-    {
-      error_string = "Separate blend functions for the RGB an A "
-        "channels isn't supported by the driver";
-      detail = COGL_BLEND_STRING_ERROR_GPU_UNSUPPORTED_ERROR;
-      goto error;
-    }
-
   for (i = 0; i < n_statements; i++)
     for (j = 0; j < statements[i].function->argc; j++)
       {
@@ -243,17 +233,6 @@ validate_blend_statements (CoglBlendStringStatement *statements,
           {
             error_string = "For blending you must always use SRC_COLOR "
                            "for arg0 and DST_COLOR for arg1";
-            goto error;
-          }
-
-        if (!_cogl_has_private_feature (ctx,
-                                        COGL_PRIVATE_FEATURE_BLEND_CONSTANT) &&
-            arg->factor.is_color &&
-            (arg->factor.source.info->type ==
-             COGL_BLEND_STRING_COLOR_SOURCE_CONSTANT))
-          {
-            error_string = "Driver doesn't support constant blend factors";
-            detail = COGL_BLEND_STRING_ERROR_GPU_UNSUPPORTED_ERROR;
             goto error;
           }
       }
@@ -530,7 +509,7 @@ parse_argument (const char *string, /* original user string */
           if (parsing_factor)
             arg->factor.is_color = TRUE;
 
-          /* fall through */
+          G_GNUC_FALLTHROUGH;
         case PARSER_ARG_STATE_SCRAPING_COLOR_SRC_NAME:
           if (!is_symbol_char (*p))
             {
@@ -561,7 +540,7 @@ parse_argument (const char *string, /* original user string */
           else
             continue;
 
-          /* fall through */
+          G_GNUC_FALLTHROUGH;
         case PARSER_ARG_STATE_MAYBE_COLOR_MASK:
           if (*p != '[')
             {
@@ -575,7 +554,7 @@ parse_argument (const char *string, /* original user string */
           state = PARSER_ARG_STATE_SCRAPING_MASK;
           mark = p;
 
-          /* fall through */
+          G_GNUC_FALLTHROUGH;
         case PARSER_ARG_STATE_SCRAPING_MASK:
           if (*p == ']')
             {
@@ -708,7 +687,7 @@ parse_argument (const char *string, /* original user string */
           arg->factor.is_one = TRUE;
           state = PARSER_ARG_STATE_EXPECT_END;
 
-          /* fall through */
+          G_GNUC_FALLTHROUGH;
         case PARSER_ARG_STATE_EXPECT_END:
           if (*p != ',' && *p != ')')
             {
@@ -808,7 +787,7 @@ _cogl_blend_string_compile (const char *string,
           mark = p;
           state = PARSER_STATE_SCRAPING_DEST_CHANNELS;
 
-          /* fall through */
+          G_GNUC_FALLTHROUGH;
         case PARSER_STATE_SCRAPING_DEST_CHANNELS:
           if (*p != '=')
             continue;
@@ -831,7 +810,7 @@ _cogl_blend_string_compile (const char *string,
           mark = p;
           state = PARSER_STATE_SCRAPING_FUNCTION_NAME;
 
-          /* fall through */
+          G_GNUC_FALLTHROUGH;
         case PARSER_STATE_SCRAPING_FUNCTION_NAME:
           if (*p != '(')
             {
@@ -853,7 +832,7 @@ _cogl_blend_string_compile (const char *string,
           current_arg = 0;
           state = PARSER_STATE_EXPECT_ARG_START;
 
-          /* fall through */
+          G_GNUC_FALLTHROUGH;
         case PARSER_STATE_EXPECT_ARG_START:
           if (*p != '(' && *p != ',')
             continue;

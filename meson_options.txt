@@ -153,6 +153,12 @@ option('xwayland_grab_default_access_rules',
   description: 'Comma delimited list of applications ressources or class allowed to issue X11 grabs in Xwayland'
 )
 
+option('xwayland_initfd',
+  type: 'feature',
+  value: 'auto',
+  description: 'Whether -initfd argument is passed to Xwayland to guarantee services (e.g. gsd-xsettings) startup before applications'
+)
+
 option('default_driver',
   type: 'combo',
   choices: ['auto', 'gl', 'gl3', 'gles2', 'nop'],

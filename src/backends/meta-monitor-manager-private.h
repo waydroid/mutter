@@ -24,6 +24,7 @@
 #define META_MONITOR_MANAGER_PRIVATE_H
 
 #include <cogl/cogl.h>
+#include <graphene.h>
 #include <libgnome-desktop/gnome-pnp-ids.h>
 
 #include "backends/meta-backend-private.h"
@@ -42,9 +43,8 @@
 typedef enum _MetaMonitorManagerCapability
 {
   META_MONITOR_MANAGER_CAPABILITY_NONE = 0,
-  META_MONITOR_MANAGER_CAPABILITY_MIRRORING = (1 << 0),
-  META_MONITOR_MANAGER_CAPABILITY_LAYOUT_MODE = (1 << 1),
-  META_MONITOR_MANAGER_CAPABILITY_GLOBAL_SCALE_REQUIRED = (1 << 2)
+  META_MONITOR_MANAGER_CAPABILITY_LAYOUT_MODE = (1 << 0),
+  META_MONITOR_MANAGER_CAPABILITY_GLOBAL_SCALE_REQUIRED = (1 << 1)
 } MetaMonitorManagerCapability;
 
 /* Equivalent to the 'method' enum in org.gnome.Mutter.DisplayConfig */
@@ -72,8 +72,7 @@ struct _MetaCrtcInfo
 {
   MetaCrtc                 *crtc;
   MetaCrtcMode             *mode;
-  int                       x;
-  int                       y;
+  graphene_rect_t           layout;
   MetaMonitorTransform      transform;
   GPtrArray                *outputs;
 };

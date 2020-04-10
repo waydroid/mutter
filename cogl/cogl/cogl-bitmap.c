@@ -38,7 +38,6 @@
 #include "cogl-pixel-buffer.h"
 #include "cogl-context-private.h"
 #include "cogl-gtype-private.h"
-#include "driver/gl/cogl-buffer-gl-private.h"
 
 #include <string.h>
 
@@ -135,8 +134,10 @@ _cogl_bitmap_copy_subregion (CoglBitmap *src,
   g_return_val_if_fail ((src->format & ~COGL_PREMULT_BIT) ==
                         (dst->format & ~COGL_PREMULT_BIT),
                         FALSE);
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (src->format) == 1,
+                        FALSE);
 
-  bpp = _cogl_pixel_format_get_bytes_per_pixel (src->format);
+  bpp = cogl_pixel_format_get_bytes_per_pixel (src->format, 0);
 
   if ((srcdata = _cogl_bitmap_map (src, COGL_BUFFER_ACCESS_READ, 0, error)))
     {
@@ -183,10 +184,11 @@ cogl_bitmap_new_for_data (CoglContext *context,
   CoglBitmap *bmp;
 
   g_return_val_if_fail (cogl_is_context (context), NULL);
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (format) == 1, NULL);
 
   /* Rowstride from width if not given */
   if (rowstride == 0)
-    rowstride = width * _cogl_pixel_format_get_bytes_per_pixel (format);
+    rowstride = width * cogl_pixel_format_get_bytes_per_pixel (format, 0);
 
   bmp = g_slice_new (CoglBitmap);
   bmp->context = context;
@@ -211,10 +213,17 @@ _cogl_bitmap_new_with_malloc_buffer (CoglContext *context,
                                      GError **error)
 {
   static CoglUserDataKey bitmap_free_key;
-  int bpp = _cogl_pixel_format_get_bytes_per_pixel (format);
-  int rowstride = ((width * bpp) + 3) & ~3;
-  uint8_t *data = g_try_malloc (rowstride * height);
+  int bpp;
+  int rowstride;
+  uint8_t *data;
   CoglBitmap *bitmap;
+
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (format) == 1, NULL);
+
+  /* Try to malloc the data */
+  bpp = cogl_pixel_format_get_bytes_per_pixel (format, 0);
+  rowstride = ((width * bpp) + 3) & ~3;
+  data = g_try_malloc (rowstride * height);
 
   if (!data)
     {
@@ -224,6 +233,7 @@ _cogl_bitmap_new_with_malloc_buffer (CoglContext *context,
       return NULL;
     }
 
+  /* Now create the bitmap */
   bitmap = cogl_bitmap_new_for_data (context,
                                      width, height,
                                      format,
@@ -305,10 +315,11 @@ cogl_bitmap_new_with_size (CoglContext *context,
 
   /* creating a buffer to store "any" format does not make sense */
   g_return_val_if_fail (format != COGL_PIXEL_FORMAT_ANY, NULL);
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (format) == 1, NULL);
 
   /* for now we fallback to cogl_pixel_buffer_new, later, we could ask
    * libdrm a tiled buffer for instance */
-  rowstride = width * _cogl_pixel_format_get_bytes_per_pixel (format);
+  rowstride = width * cogl_pixel_format_get_bytes_per_pixel (format, 0);
 
   pixel_buffer =
     cogl_pixel_buffer_new (context,
@@ -429,86 +440,6 @@ _cogl_bitmap_unmap (CoglBitmap *bitmap)
 
   if (bitmap->buffer)
     cogl_buffer_unmap (bitmap->buffer);
-}
-
-uint8_t *
-_cogl_bitmap_gl_bind (CoglBitmap *bitmap,
-                      CoglBufferAccess access,
-                      CoglBufferMapHint hints,
-                      GError **error)
-{
-  uint8_t *ptr;
-  GError *internal_error = NULL;
-
-  g_return_val_if_fail (access & (COGL_BUFFER_ACCESS_READ |
-                                  COGL_BUFFER_ACCESS_WRITE),
-                        NULL);
-
-  /* Divert to another bitmap if this data is shared */
-  if (bitmap->shared_bmp)
-    return _cogl_bitmap_gl_bind (bitmap->shared_bmp, access, hints, error);
-
-  g_return_val_if_fail (!bitmap->bound, NULL);
-
-  /* If the bitmap wasn't created from a buffer then the
-     implementation of bind is the same as map */
-  if (bitmap->buffer == NULL)
-    {
-      uint8_t *data = _cogl_bitmap_map (bitmap, access, hints, error);
-      if (data)
-        bitmap->bound = TRUE;
-      return data;
-    }
-
-  if (access == COGL_BUFFER_ACCESS_READ)
-    ptr = _cogl_buffer_gl_bind (bitmap->buffer,
-                                COGL_BUFFER_BIND_TARGET_PIXEL_UNPACK,
-                                &internal_error);
-  else if (access == COGL_BUFFER_ACCESS_WRITE)
-    ptr = _cogl_buffer_gl_bind (bitmap->buffer,
-                                COGL_BUFFER_BIND_TARGET_PIXEL_PACK,
-                                &internal_error);
-  else
-    {
-      ptr = NULL;
-      g_assert_not_reached ();
-      return NULL;
-    }
-
-  /* NB: _cogl_buffer_gl_bind() may return NULL in non-error
-   * conditions so we have to explicitly check internal_error to see
-   * if an exception was thrown */
-  if (internal_error)
-    {
-      g_propagate_error (error, internal_error);
-      return NULL;
-    }
-
-  bitmap->bound = TRUE;
-
-  /* The data pointer actually stores the offset */
-  return ptr + GPOINTER_TO_INT (bitmap->data);
-}
-
-void
-_cogl_bitmap_gl_unbind (CoglBitmap *bitmap)
-{
-  /* Divert to another bitmap if this data is shared */
-  if (bitmap->shared_bmp)
-    {
-      _cogl_bitmap_gl_unbind (bitmap->shared_bmp);
-      return;
-    }
-
-  g_assert (bitmap->bound);
-  bitmap->bound = FALSE;
-
-  /* If the bitmap wasn't created from a pixel array then the
-     implementation of unbind is the same as unmap */
-  if (bitmap->buffer)
-    _cogl_buffer_gl_unbind (bitmap->buffer);
-  else
-    _cogl_bitmap_unmap (bitmap);
 }
 
 CoglContext *

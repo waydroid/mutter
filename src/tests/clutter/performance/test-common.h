@@ -25,7 +25,9 @@ clutter_perf_fps_init (void)
   g_random_set_seed (12345678);
 }
 
-static void perf_stage_paint_cb (ClutterStage *stage, gpointer *data);
+static void perf_stage_paint_cb (ClutterStage        *stage,
+                                 ClutterPaintContext *paint_context,
+                                 gpointer            *data);
 static gboolean perf_fake_mouse_cb (gpointer stage);
 
 static inline void
@@ -47,7 +49,10 @@ clutter_perf_fps_report (const gchar *id)
        id, testframes / g_timer_elapsed (testtimer, NULL));
 }
 
-static void perf_stage_paint_cb (ClutterStage *stage, gpointer *data)
+static void
+perf_stage_paint_cb (ClutterStage        *stage,
+                     ClutterPaintContext *paint_context,
+                     gpointer            *data)
 {
   if (!testtimer)
     testtimer = g_timer_new ();
@@ -90,7 +95,10 @@ static gboolean perf_fake_mouse_cb (gpointer stage)
                 */
     {
       ClutterEvent *event2 = clutter_event_new (CLUTTER_ENTER);
-      device = clutter_device_manager_get_core_device (clutter_device_manager_get_default (), CLUTTER_POINTER_DEVICE);
+      ClutterBackend *backend = clutter_get_default_backend ();
+      ClutterSeat *seat = clutter_backend_get_default_seat (backend);
+
+      device = clutter_seat_get_pointer (seat);
 
       event2->crossing.stage = stage;
       event2->crossing.source = stage;

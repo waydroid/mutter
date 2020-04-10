@@ -49,7 +49,6 @@
 #include "cogl-depth-state-private.h"
 #include "cogl1-context.h"
 #include "cogl-gtype-private.h"
-#include "driver/gl/cogl-pipeline-opengl-private.h"
 
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -59,24 +58,13 @@ static void _cogl_pipeline_free (CoglPipeline *tex);
 static void recursively_free_layer_caches (CoglPipeline *pipeline);
 static gboolean _cogl_pipeline_is_weak (CoglPipeline *pipeline);
 
-const CoglPipelineFragend *_cogl_pipeline_fragends[COGL_PIPELINE_N_FRAGENDS];
-const CoglPipelineVertend *_cogl_pipeline_vertends[COGL_PIPELINE_N_VERTENDS];
-/* The 'MAX' here is so that we don't define an empty array when there
-   are no progends */
-const CoglPipelineProgend *
-_cogl_pipeline_progends[MAX (COGL_PIPELINE_N_PROGENDS, 1)];
+const CoglPipelineFragend *_cogl_pipeline_fragend;
+const CoglPipelineVertend *_cogl_pipeline_vertend;
+const CoglPipelineProgend *_cogl_pipeline_progend;
 
-#ifdef COGL_PIPELINE_FRAGEND_GLSL
 #include "driver/gl/cogl-pipeline-fragend-glsl-private.h"
-#endif
-
-#ifdef COGL_PIPELINE_VERTEND_GLSL
 #include "driver/gl/cogl-pipeline-vertend-glsl-private.h"
-#endif
-
-#ifdef COGL_PIPELINE_PROGEND_GLSL
 #include "driver/gl/cogl-pipeline-progend-glsl-private.h"
-#endif
 
 COGL_OBJECT_DEFINE (Pipeline, pipeline);
 COGL_GTYPE_DEFINE_CLASS (Pipeline, pipeline);
@@ -96,7 +84,6 @@ _cogl_pipeline_init_default_pipeline (void)
   /* XXX: NB: It's important that we zero this to avoid polluting
    * pipeline hash values with un-initialized data */
   CoglPipelineBigState *big_state = g_slice_new0 (CoglPipelineBigState);
-  CoglPipelineLightingState *lighting_state = &big_state->lighting_state;
   CoglPipelineAlphaFuncState *alpha_state = &big_state->alpha_state;
   CoglPipelineBlendState *blend_state = &big_state->blend_state;
   CoglPipelineCullFaceState *cull_face_state = &big_state->cull_face_state;
@@ -105,30 +92,18 @@ _cogl_pipeline_init_default_pipeline (void)
   _COGL_GET_CONTEXT (ctx, NO_RETVAL);
 
   /* Take this opportunity to setup the backends... */
-#ifdef COGL_PIPELINE_FRAGEND_GLSL
-  _cogl_pipeline_fragends[COGL_PIPELINE_FRAGEND_GLSL] =
-    &_cogl_pipeline_glsl_fragend;
-#endif
-#ifdef COGL_PIPELINE_PROGEND_GLSL
-  _cogl_pipeline_progends[COGL_PIPELINE_PROGEND_GLSL] =
-    &_cogl_pipeline_glsl_progend;
-#endif
-
-#ifdef COGL_PIPELINE_VERTEND_GLSL
-  _cogl_pipeline_vertends[COGL_PIPELINE_VERTEND_GLSL] =
-    &_cogl_pipeline_glsl_vertend;
-#endif
+  _cogl_pipeline_fragend = &_cogl_pipeline_glsl_fragend;
+  _cogl_pipeline_progend = &_cogl_pipeline_glsl_progend;
+  _cogl_pipeline_vertend = &_cogl_pipeline_glsl_vertend;
 
   _cogl_pipeline_node_init (COGL_NODE (pipeline));
 
   pipeline->is_weak = FALSE;
   pipeline->journal_ref_count = 0;
-  pipeline->progend = COGL_PIPELINE_PROGEND_UNDEFINED;
   pipeline->differences = COGL_PIPELINE_STATE_ALL_SPARSE;
 
   pipeline->real_blend_enable = FALSE;
 
-  pipeline->blend_enable = COGL_PIPELINE_BLEND_ENABLE_AUTOMATIC;
   pipeline->layer_differences = NULL;
   pipeline->n_layers = 0;
 
@@ -142,29 +117,6 @@ _cogl_pipeline_init_default_pipeline (void)
 
   /* Use the same defaults as the GL spec... */
   cogl_color_init_from_4ub (&pipeline->color, 0xff, 0xff, 0xff, 0xff);
-
-  /* Use the same defaults as the GL spec... */
-  lighting_state->ambient[0] = 0.2;
-  lighting_state->ambient[1] = 0.2;
-  lighting_state->ambient[2] = 0.2;
-  lighting_state->ambient[3] = 1.0;
-
-  lighting_state->diffuse[0] = 0.8;
-  lighting_state->diffuse[1] = 0.8;
-  lighting_state->diffuse[2] = 0.8;
-  lighting_state->diffuse[3] = 1.0;
-
-  lighting_state->specular[0] = 0;
-  lighting_state->specular[1] = 0;
-  lighting_state->specular[2] = 0;
-  lighting_state->specular[3] = 1.0;
-
-  lighting_state->emission[0] = 0;
-  lighting_state->emission[1] = 0;
-  lighting_state->emission[2] = 0;
-  lighting_state->emission[3] = 1.0;
-
-  lighting_state->shininess = 0.0f;
 
   /* Use the same defaults as the GL spec... */
   alpha_state->alpha_func = COGL_PIPELINE_ALPHA_FUNC_ALWAYS;
@@ -182,7 +134,7 @@ _cogl_pipeline_init_default_pipeline (void)
   blend_state->blend_src_factor_rgb = GL_ONE;
   blend_state->blend_dst_factor_rgb = GL_ONE_MINUS_SRC_ALPHA;
 
-  big_state->user_program = COGL_INVALID_HANDLE;
+  big_state->user_program = NULL;
 
   cogl_depth_state_init (&big_state->depth_state);
 
@@ -252,23 +204,6 @@ _cogl_pipeline_set_parent (CoglPipeline *pipeline,
    * layers could now be invalid so free it... */
   if (pipeline->differences & COGL_PIPELINE_STATE_LAYERS)
     recursively_free_layer_caches (pipeline);
-
-  /* If the backends are also caching state along with the pipeline
-   * that depends on the pipeline's ancestry then it may be notified
-   * here...
-   */
-  if (pipeline->progend != COGL_PIPELINE_PROGEND_UNDEFINED)
-    {
-      const CoglPipelineProgend *progend =
-        _cogl_pipeline_progends[pipeline->progend];
-      const CoglPipelineFragend *fragend =
-        _cogl_pipeline_fragends[progend->fragend];
-
-      /* Currently only the fragends ever care about reparenting of
-       * pipelines... */
-      if (fragend->pipeline_set_parent_notify)
-        fragend->pipeline_set_parent_notify (pipeline);
-    }
 }
 
 static void
@@ -345,10 +280,6 @@ _cogl_pipeline_copy (CoglPipeline *src, gboolean is_weak)
    */
 
   pipeline->layers_cache_dirty = TRUE;
-  pipeline->deprecated_get_layers_list = NULL;
-  pipeline->deprecated_get_layers_list_dirty = TRUE;
-
-  pipeline->progend = src->progend;
 
   pipeline->has_static_breadcrumb = FALSE;
 
@@ -435,7 +366,7 @@ _cogl_pipeline_free (CoglPipeline *pipeline)
 
   if (pipeline->differences & COGL_PIPELINE_STATE_USER_SHADER &&
       pipeline->big_state->user_program)
-    cogl_handle_unref (pipeline->big_state->user_program);
+    cogl_object_unref (pipeline->big_state->user_program);
 
   if (pipeline->differences & COGL_PIPELINE_STATE_UNIFORMS)
     {
@@ -463,8 +394,6 @@ _cogl_pipeline_free (CoglPipeline *pipeline)
 
   if (pipeline->differences & COGL_PIPELINE_STATE_NEEDS_BIG_STATE)
     g_slice_free (CoglPipelineBigState, pipeline->big_state);
-
-  g_list_free (pipeline->deprecated_get_layers_list);
 
   recursively_free_layer_caches (pipeline);
 
@@ -749,7 +678,7 @@ _cogl_pipeline_change_implies_transparency (CoglPipeline *pipeline,
        *
        * TODO: check that it isn't just a vertex shader!
        */
-      if (_cogl_pipeline_get_user_program (pipeline) != COGL_INVALID_HANDLE)
+      if (_cogl_pipeline_get_user_program (pipeline) != NULL)
         return TRUE;
     }
 
@@ -763,32 +692,6 @@ _cogl_pipeline_change_implies_transparency (CoglPipeline *pipeline,
     {
       if (_cogl_pipeline_has_non_layer_vertex_snippets (pipeline))
         return TRUE;
-    }
-
-  /* XXX: we should only need to look at these if lighting is enabled
-   */
-  if (changes & COGL_PIPELINE_STATE_LIGHTING)
-    {
-      /* XXX: This stuff is showing up in sysprof reports which is
-       * silly because lighting isn't currently actually supported
-       * by Cogl except for these token properties. When we actually
-       * expose lighting support we can avoid these checks when
-       * lighting is disabled. */
-#if 0
-      CoglColor tmp;
-      cogl_pipeline_get_ambient (pipeline, &tmp);
-      if (cogl_color_get_alpha_byte (&tmp) != 0xff)
-        return TRUE;
-      cogl_pipeline_get_diffuse (pipeline, &tmp);
-      if (cogl_color_get_alpha_byte (&tmp) != 0xff)
-        return TRUE;
-      cogl_pipeline_get_specular (pipeline, &tmp);
-      if (cogl_color_get_alpha_byte (&tmp) != 0xff)
-        return TRUE;
-      cogl_pipeline_get_emission (pipeline, &tmp);
-      if (cogl_color_get_alpha_byte (&tmp) != 0xff)
-        return TRUE;
-#endif
     }
 
   if (changes & COGL_PIPELINE_STATE_LAYERS)
@@ -813,23 +716,11 @@ _cogl_pipeline_needs_blending_enabled (CoglPipeline *pipeline,
                                        const CoglColor *override_color,
                                        gboolean unknown_color_alpha)
 {
-  CoglPipeline *enable_authority;
   CoglPipeline *blend_authority;
   CoglPipelineBlendState *blend_state;
-  CoglPipelineBlendEnable enabled;
 
   if (G_UNLIKELY (COGL_DEBUG_ENABLED (COGL_DEBUG_DISABLE_BLENDING)))
     return FALSE;
-
-  /* We unconditionally check the _BLEND_ENABLE state first because
-   * all the other changes are irrelevent if blend_enable != _AUTOMATIC
-   */
-  enable_authority =
-    _cogl_pipeline_get_authority (pipeline, COGL_PIPELINE_STATE_BLEND_ENABLE);
-
-  enabled = enable_authority->blend_enable;
-  if (enabled != COGL_PIPELINE_BLEND_ENABLE_AUTOMATIC)
-    return enabled == COGL_PIPELINE_BLEND_ENABLE_ENABLED ? TRUE : FALSE;
 
   blend_authority =
     _cogl_pipeline_get_authority (pipeline, COGL_PIPELINE_STATE_BLEND);
@@ -908,12 +799,6 @@ _cogl_pipeline_needs_blending_enabled (CoglPipeline *pipeline,
   return FALSE;
 }
 
-void
-_cogl_pipeline_set_progend (CoglPipeline *pipeline, int progend)
-{
-  pipeline->progend = progend;
-}
-
 static void
 _cogl_pipeline_copy_differences (CoglPipeline *dest,
                                  CoglPipeline *src,
@@ -923,9 +808,6 @@ _cogl_pipeline_copy_differences (CoglPipeline *dest,
 
   if (differences & COGL_PIPELINE_STATE_COLOR)
     dest->color = src->color;
-
-  if (differences & COGL_PIPELINE_STATE_BLEND_ENABLE)
-    dest->blend_enable = src->blend_enable;
 
   if (differences & COGL_PIPELINE_STATE_LAYERS)
     {
@@ -964,13 +846,6 @@ _cogl_pipeline_copy_differences (CoglPipeline *dest,
   else
     goto check_for_blending_change;
 
-  if (differences & COGL_PIPELINE_STATE_LIGHTING)
-    {
-      memcpy (&big_state->lighting_state,
-              &src->big_state->lighting_state,
-              sizeof (CoglPipelineLightingState));
-    }
-
   if (differences & COGL_PIPELINE_STATE_ALPHA_FUNC)
     big_state->alpha_state.alpha_func =
       src->big_state->alpha_state.alpha_func;
@@ -990,9 +865,9 @@ _cogl_pipeline_copy_differences (CoglPipeline *dest,
     {
       if (src->big_state->user_program)
         big_state->user_program =
-          cogl_handle_ref (src->big_state->user_program);
+          cogl_object_ref (src->big_state->user_program);
       else
-        big_state->user_program = COGL_INVALID_HANDLE;
+        big_state->user_program = NULL;
     }
 
   if (differences & COGL_PIPELINE_STATE_DEPTH)
@@ -1000,13 +875,6 @@ _cogl_pipeline_copy_differences (CoglPipeline *dest,
       memcpy (&big_state->depth_state,
               &src->big_state->depth_state,
               sizeof (CoglDepthState));
-    }
-
-  if (differences & COGL_PIPELINE_STATE_FOG)
-    {
-      memcpy (&big_state->fog_state,
-              &src->big_state->fog_state,
-              sizeof (CoglPipelineFogState));
     }
 
   if (differences & COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE)
@@ -1089,7 +957,6 @@ _cogl_pipeline_init_multi_property_sparse_state (CoglPipeline *pipeline,
     /* XXX: avoid using a default: label so we get a warning if we
      * don't explicitly handle a newly defined state-group here. */
     case COGL_PIPELINE_STATE_COLOR:
-    case COGL_PIPELINE_STATE_BLEND_ENABLE:
     case COGL_PIPELINE_STATE_ALPHA_FUNC:
     case COGL_PIPELINE_STATE_ALPHA_FUNC_REFERENCE:
     case COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE:
@@ -1103,13 +970,6 @@ _cogl_pipeline_init_multi_property_sparse_state (CoglPipeline *pipeline,
       pipeline->n_layers = authority->n_layers;
       pipeline->layer_differences = NULL;
       break;
-    case COGL_PIPELINE_STATE_LIGHTING:
-      {
-        memcpy (&pipeline->big_state->lighting_state,
-                &authority->big_state->lighting_state,
-                sizeof (CoglPipelineLightingState));
-        break;
-      }
     case COGL_PIPELINE_STATE_BLEND:
       {
         memcpy (&pipeline->big_state->blend_state,
@@ -1122,13 +982,6 @@ _cogl_pipeline_init_multi_property_sparse_state (CoglPipeline *pipeline,
         memcpy (&pipeline->big_state->depth_state,
                 &authority->big_state->depth_state,
                 sizeof (CoglDepthState));
-        break;
-      }
-    case COGL_PIPELINE_STATE_FOG:
-      {
-        memcpy (&pipeline->big_state->fog_state,
-                &authority->big_state->fog_state,
-                sizeof (CoglPipelineFogState));
         break;
       }
     case COGL_PIPELINE_STATE_CULL_FACE:
@@ -1275,28 +1128,21 @@ _cogl_pipeline_pre_change_notify (CoglPipeline     *pipeline,
    */
   if (!from_layer_change)
     {
-      int i;
+      const CoglPipelineProgend *progend = _cogl_pipeline_progend;
+      const CoglPipelineVertend *vertend = _cogl_pipeline_vertend;
+      const CoglPipelineFragend *fragend = _cogl_pipeline_fragend;
 
-      for (i = 0; i < COGL_PIPELINE_N_PROGENDS; i++)
-        {
-          const CoglPipelineProgend *progend = _cogl_pipeline_progends[i];
-          const CoglPipelineVertend *vertend =
-            _cogl_pipeline_vertends[progend->vertend];
-          const CoglPipelineFragend *fragend =
-            _cogl_pipeline_fragends[progend->fragend];
+      if (vertend->pipeline_pre_change_notify)
+        vertend->pipeline_pre_change_notify (pipeline, change, new_color);
 
-          if (vertend->pipeline_pre_change_notify)
-            vertend->pipeline_pre_change_notify (pipeline, change, new_color);
+      /* TODO: make the vertend and fragend implementation details
+       * of the progend */
 
-          /* TODO: make the vertend and fragend implementation details
-           * of the progend */
+      if (fragend->pipeline_pre_change_notify)
+        fragend->pipeline_pre_change_notify (pipeline, change, new_color);
 
-          if (fragend->pipeline_pre_change_notify)
-            fragend->pipeline_pre_change_notify (pipeline, change, new_color);
-
-          if (progend->pipeline_pre_change_notify)
-            progend->pipeline_pre_change_notify (pipeline, change, new_color);
-        }
+      if (progend->pipeline_pre_change_notify)
+        progend->pipeline_pre_change_notify (pipeline, change, new_color);
     }
 
   /* There may be an arbitrary tree of descendants of this pipeline;
@@ -2227,11 +2073,6 @@ _cogl_pipeline_equal (CoglPipeline *pipeline0,
                                  &authorities1[bit]->color))
             goto done;
           break;
-        case COGL_PIPELINE_STATE_LIGHTING_INDEX:
-          if (!_cogl_pipeline_lighting_state_equal (authorities0[bit],
-                                                    authorities1[bit]))
-            goto done;
-          break;
         case COGL_PIPELINE_STATE_ALPHA_FUNC_INDEX:
           if (!_cogl_pipeline_alpha_func_state_equal (authorities0[bit],
                                                       authorities1[bit]))
@@ -2256,11 +2097,6 @@ _cogl_pipeline_equal (CoglPipeline *pipeline0,
         case COGL_PIPELINE_STATE_DEPTH_INDEX:
           if (!_cogl_pipeline_depth_state_equal (authorities0[bit],
                                                  authorities1[bit]))
-            goto done;
-          break;
-        case COGL_PIPELINE_STATE_FOG_INDEX:
-          if (!_cogl_pipeline_fog_state_equal (authorities0[bit],
-                                               authorities1[bit]))
             goto done;
           break;
         case COGL_PIPELINE_STATE_CULL_FACE_INDEX:
@@ -2313,7 +2149,6 @@ _cogl_pipeline_equal (CoglPipeline *pipeline0,
             break;
           }
 
-        case COGL_PIPELINE_STATE_BLEND_ENABLE_INDEX:
         case COGL_PIPELINE_STATE_REAL_BLEND_ENABLE_INDEX:
         case COGL_PIPELINE_STATE_COUNT:
           g_warn_if_reached ();
@@ -2396,18 +2231,6 @@ _cogl_pipeline_update_authority (CoglPipeline *pipeline,
     }
 }
 
-gboolean
-_cogl_pipeline_get_fog_enabled (CoglPipeline *pipeline)
-{
-  CoglPipeline *authority;
-
-  g_return_val_if_fail (cogl_is_pipeline (pipeline), FALSE);
-
-  authority =
-    _cogl_pipeline_get_authority (pipeline, COGL_PIPELINE_STATE_FOG);
-  return authority->big_state->fog_state.enabled;
-}
-
 unsigned long
 _cogl_pipeline_get_age (CoglPipeline *pipeline)
 {
@@ -2468,42 +2291,6 @@ cogl_pipeline_remove_layer (CoglPipeline *pipeline, int layer_index)
   pipeline->dirty_real_blend_enable = TRUE;
 }
 
-static gboolean
-prepend_layer_to_list_cb (CoglPipelineLayer *layer,
-                          void *user_data)
-{
-  GList **layers = user_data;
-
-  *layers = g_list_prepend (*layers, layer);
-  return TRUE;
-}
-
-/* TODO: deprecate this API and replace it with
- * cogl_pipeline_foreach_layer
- * TODO: update the docs to note that if the user modifies any layers
- * then the list may become invalid.
- */
-const GList *
-_cogl_pipeline_get_layers (CoglPipeline *pipeline)
-{
-  g_return_val_if_fail (cogl_is_pipeline (pipeline), NULL);
-
-  if (!pipeline->deprecated_get_layers_list_dirty)
-    g_list_free (pipeline->deprecated_get_layers_list);
-
-  pipeline->deprecated_get_layers_list = NULL;
-
-  _cogl_pipeline_foreach_layer_internal (pipeline,
-                                         prepend_layer_to_list_cb,
-                                         &pipeline->deprecated_get_layers_list);
-  pipeline->deprecated_get_layers_list =
-    g_list_reverse (pipeline->deprecated_get_layers_list);
-
-  pipeline->deprecated_get_layers_list_dirty = 0;
-
-  return pipeline->deprecated_get_layers_list;
-}
-
 int
 cogl_pipeline_get_n_layers (CoglPipeline *pipeline)
 {
@@ -2543,40 +2330,6 @@ _cogl_pipeline_journal_unref (CoglPipeline *pipeline)
 }
 
 #ifdef COGL_DEBUG_ENABLED
-void
-_cogl_pipeline_apply_legacy_state (CoglPipeline *pipeline)
-{
-  _COGL_GET_CONTEXT (ctx, NO_RETVAL);
-
-  /* It was a mistake that we ever copied the OpenGL style API for
-   * associating these things directly with the context when we
-   * originally wrote Cogl. Until the corresponding deprecated APIs
-   * can be removed though we now shoehorn the state changes through
-   * the cogl_pipeline API instead.
-   */
-
-  /* A program explicitly set on the pipeline has higher precedence than
-   * one associated with the context using cogl_program_use() */
-  if (ctx->current_program &&
-      cogl_pipeline_get_user_program (pipeline) == COGL_INVALID_HANDLE)
-    cogl_pipeline_set_user_program (pipeline, ctx->current_program);
-
-  if (ctx->legacy_depth_test_enabled)
-    {
-      CoglDepthState depth_state;
-      cogl_depth_state_init (&depth_state);
-      cogl_depth_state_set_test_enabled (&depth_state, TRUE);
-      cogl_pipeline_set_depth_state (pipeline, &depth_state, NULL);
-    }
-
-  if (ctx->legacy_fog_state.enabled)
-    _cogl_pipeline_set_fog_state (pipeline, &ctx->legacy_fog_state);
-
-  if (ctx->legacy_backface_culling_enabled)
-    cogl_pipeline_set_cull_face_mode (pipeline,
-                                      COGL_PIPELINE_CULL_FACE_MODE_BACK);
-}
-
 void
 _cogl_pipeline_set_static_breadcrumb (CoglPipeline *pipeline,
                                       const char *breadcrumb)
@@ -2703,12 +2456,8 @@ _cogl_pipeline_init_state_hash_functions (void)
 {
   state_hash_functions[COGL_PIPELINE_STATE_COLOR_INDEX] =
     _cogl_pipeline_hash_color_state;
-  state_hash_functions[COGL_PIPELINE_STATE_BLEND_ENABLE_INDEX] =
-    _cogl_pipeline_hash_blend_enable_state;
   state_hash_functions[COGL_PIPELINE_STATE_LAYERS_INDEX] =
     _cogl_pipeline_hash_layers_state;
-  state_hash_functions[COGL_PIPELINE_STATE_LIGHTING_INDEX] =
-    _cogl_pipeline_hash_lighting_state;
   state_hash_functions[COGL_PIPELINE_STATE_ALPHA_FUNC_INDEX] =
     _cogl_pipeline_hash_alpha_func_state;
   state_hash_functions[COGL_PIPELINE_STATE_ALPHA_FUNC_REFERENCE_INDEX] =
@@ -2719,8 +2468,6 @@ _cogl_pipeline_init_state_hash_functions (void)
     _cogl_pipeline_hash_user_shader_state;
   state_hash_functions[COGL_PIPELINE_STATE_DEPTH_INDEX] =
     _cogl_pipeline_hash_depth_state;
-  state_hash_functions[COGL_PIPELINE_STATE_FOG_INDEX] =
-    _cogl_pipeline_hash_fog_state;
   state_hash_functions[COGL_PIPELINE_STATE_CULL_FACE_INDEX] =
     _cogl_pipeline_hash_cull_face_state;
   state_hash_functions[COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE_INDEX] =
@@ -2738,7 +2485,7 @@ _cogl_pipeline_init_state_hash_functions (void)
 
   {
   /* So we get a big error if we forget to update this code! */
-  _COGL_STATIC_ASSERT (COGL_PIPELINE_STATE_SPARSE_COUNT == 17,
+  _COGL_STATIC_ASSERT (COGL_PIPELINE_STATE_SPARSE_COUNT == 14,
                        "Make sure to install a hash function for "
                        "newly added pipeline state and update assert "
                        "in _cogl_pipeline_init_state_hash_functions");
@@ -3012,14 +2759,7 @@ _cogl_pipeline_get_state_for_vertex_codegen (CoglContext *context)
                              COGL_PIPELINE_STATE_USER_SHADER |
                              COGL_PIPELINE_STATE_PER_VERTEX_POINT_SIZE |
                              COGL_PIPELINE_STATE_VERTEX_SNIPPETS);
-
-  /* If we don't have the builtin point size uniform then we'll add
-   * one in the GLSL but we'll only do this if the point size is
-   * non-zero. Whether or not the point size is zero is represented by
-   * COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE */
-  if (!_cogl_has_private_feature
-      (context, COGL_PRIVATE_FEATURE_BUILTIN_POINT_SIZE_UNIFORM))
-    state |= COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE;
+  state |= COGL_PIPELINE_STATE_NON_ZERO_POINT_SIZE;
 
   return state;
 }
@@ -3045,10 +2785,8 @@ _cogl_pipeline_get_state_for_fragment_codegen (CoglContext *context)
 {
   CoglPipelineState state = (COGL_PIPELINE_STATE_LAYERS |
                              COGL_PIPELINE_STATE_USER_SHADER |
-                             COGL_PIPELINE_STATE_FRAGMENT_SNIPPETS);
-
-  if (!_cogl_has_private_feature (context, COGL_PRIVATE_FEATURE_ALPHA_TEST))
-    state |= COGL_PIPELINE_STATE_ALPHA_FUNC;
+                             COGL_PIPELINE_STATE_FRAGMENT_SNIPPETS |
+                             COGL_PIPELINE_STATE_ALPHA_FUNC);
 
   return state;
 }

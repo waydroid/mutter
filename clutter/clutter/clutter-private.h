@@ -64,10 +64,10 @@ typedef struct _ClutterVertex4          ClutterVertex4;
 #define CLUTTER_UNSET_PRIVATE_FLAGS(a,f) (CLUTTER_PRIVATE_FLAGS (a) &= ~(f))
 
 #define CLUTTER_ACTOR_IS_TOPLEVEL(a)            ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IS_TOPLEVEL) != FALSE)
-#define CLUTTER_ACTOR_IS_INTERNAL_CHILD(a)      ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_INTERNAL_CHILD) != FALSE)
 #define CLUTTER_ACTOR_IN_DESTRUCTION(a)         ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_DESTRUCTION) != FALSE)
 #define CLUTTER_ACTOR_IN_REPARENT(a)            ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_REPARENT) != FALSE)
 #define CLUTTER_ACTOR_IN_PAINT(a)               ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_PAINT) != FALSE)
+#define CLUTTER_ACTOR_IN_PICK(a)                ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_PICK) != FALSE)
 #define CLUTTER_ACTOR_IN_RELAYOUT(a)            ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_RELAYOUT) != FALSE)
 #define CLUTTER_ACTOR_IN_PREF_WIDTH(a)          ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_PREF_WIDTH) != FALSE)
 #define CLUTTER_ACTOR_IN_PREF_HEIGHT(a)         ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_PREF_HEIGHT) != FALSE)
@@ -105,12 +105,10 @@ typedef enum
 
   /* Used to avoid recursion */
   CLUTTER_IN_PAINT       = 1 << 5,
+  CLUTTER_IN_PICK        = 1 << 6,
 
   /* Used to avoid recursion */
-  CLUTTER_IN_RELAYOUT    = 1 << 6,
-
-  /* a flag for internal children of Containers (DEPRECATED) */
-  CLUTTER_INTERNAL_CHILD = 1 << 7
+  CLUTTER_IN_RELAYOUT    = 1 << 7,
 } ClutterPrivateFlags;
 
 /*
@@ -224,17 +222,17 @@ void _clutter_run_repaint_functions (ClutterRepaintFlags flags);
 
 GType _clutter_layout_manager_get_child_meta_type (ClutterLayoutManager *manager);
 
-void  _clutter_util_fully_transform_vertices (const CoglMatrix    *modelview,
-                                              const CoglMatrix    *projection,
-                                              const float         *viewport,
-                                              const ClutterVertex *vertices_in,
-                                              ClutterVertex       *vertices_out,
-                                              int                  n_vertices);
+void  _clutter_util_fully_transform_vertices (const CoglMatrix         *modelview,
+                                              const CoglMatrix         *projection,
+                                              const float              *viewport,
+                                              const graphene_point3d_t *vertices_in,
+                                              graphene_point3d_t       *vertices_out,
+                                              int                       n_vertices);
 
 void _clutter_util_rect_from_rectangle (const cairo_rectangle_int_t *src,
-                                        ClutterRect                 *dest);
+                                        graphene_rect_t             *dest);
 
-void _clutter_util_rectangle_int_extents (const ClutterRect     *src,
+void _clutter_util_rectangle_int_extents (const graphene_rect_t *src,
                                           cairo_rectangle_int_t *dest);
 
 void _clutter_util_rectangle_offset (const cairo_rectangle_int_t *src,
@@ -249,6 +247,9 @@ void _clutter_util_rectangle_union (const cairo_rectangle_int_t *src1,
 gboolean _clutter_util_rectangle_intersection (const cairo_rectangle_int_t *src1,
                                                const cairo_rectangle_int_t *src2,
                                                cairo_rectangle_int_t       *dest);
+
+gboolean clutter_util_rectangle_equal (const cairo_rectangle_int_t *src1,
+                                       const cairo_rectangle_int_t *src2);
 
 
 struct _ClutterVertex4
@@ -282,10 +283,10 @@ void    _clutter_util_matrix_skew_yz            (ClutterMatrix *matrix,
                                                  float          factor);
 
 gboolean        _clutter_util_matrix_decompose  (const ClutterMatrix *src,
-                                                 ClutterVertex       *scale_p,
+                                                 graphene_point3d_t  *scale_p,
                                                  float                shear_p[3],
-                                                 ClutterVertex       *rotate_p,
-                                                 ClutterVertex       *translate_p,
+                                                 graphene_point3d_t  *rotate_p,
+                                                 graphene_point3d_t  *translate_p,
                                                  ClutterVertex4      *perspective_p);
 
 CLUTTER_EXPORT
@@ -296,8 +297,8 @@ PangoDirection _clutter_pango_find_base_dir     (const gchar *text,
 
 typedef struct _ClutterPlane
 {
-  float v0[3];
-  float n[3];
+  graphene_vec3_t v0;
+  graphene_vec3_t n;
 } ClutterPlane;
 
 typedef enum _ClutterCullResult

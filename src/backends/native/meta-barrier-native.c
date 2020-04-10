@@ -367,7 +367,7 @@ emit_barrier_event (MetaBarrierImplNative *self,
     case META_BARRIER_STATE_LEFT:
       self->state = META_BARRIER_STATE_ACTIVE;
 
-      /* Intentional fall-through. */
+      G_GNUC_FALLTHROUGH;
     case META_BARRIER_STATE_HELD:
       event->dt = time - self->last_event_time;
 
@@ -468,7 +468,7 @@ meta_barrier_manager_native_process (MetaBarrierManagerNative *manager,
                                      float                    *x,
                                      float                    *y)
 {
-  ClutterPoint prev_pos;
+  graphene_point_t prev_pos;
   float prev_x;
   float prev_y;
   float orig_x = *x;

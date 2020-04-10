@@ -49,17 +49,9 @@ _cogl_pipeline_has_non_layer_vertex_snippets (CoglPipeline *pipeline);
 gboolean
 _cogl_pipeline_has_non_layer_fragment_snippets (CoglPipeline *pipeline);
 
-void
-_cogl_pipeline_set_fog_state (CoglPipeline *pipeline,
-                              const CoglPipelineFogState *fog_state);
-
 gboolean
 _cogl_pipeline_color_equal (CoglPipeline *authority0,
                             CoglPipeline *authority1);
-
-gboolean
-_cogl_pipeline_lighting_state_equal (CoglPipeline *authority0,
-                                     CoglPipeline *authority1);
 
 gboolean
 _cogl_pipeline_alpha_func_state_equal (CoglPipeline *authority0,
@@ -76,10 +68,6 @@ _cogl_pipeline_blend_state_equal (CoglPipeline *authority0,
 gboolean
 _cogl_pipeline_depth_state_equal (CoglPipeline *authority0,
                                   CoglPipeline *authority1);
-
-gboolean
-_cogl_pipeline_fog_state_equal (CoglPipeline *authority0,
-                                CoglPipeline *authority1);
 
 gboolean
 _cogl_pipeline_non_zero_point_size_equal (CoglPipeline *authority0,
@@ -121,16 +109,8 @@ _cogl_pipeline_hash_color_state (CoglPipeline *authority,
                                  CoglPipelineHashState *state);
 
 void
-_cogl_pipeline_hash_blend_enable_state (CoglPipeline *authority,
-                                        CoglPipelineHashState *state);
-
-void
 _cogl_pipeline_hash_layers_state (CoglPipeline *authority,
                                   CoglPipelineHashState *state);
-
-void
-_cogl_pipeline_hash_lighting_state (CoglPipeline *authority,
-                                    CoglPipelineHashState *state);
 
 void
 _cogl_pipeline_hash_alpha_func_state (CoglPipeline *authority,
@@ -151,10 +131,6 @@ _cogl_pipeline_hash_user_shader_state (CoglPipeline *authority,
 void
 _cogl_pipeline_hash_depth_state (CoglPipeline *authority,
                                  CoglPipelineHashState *state);
-
-void
-_cogl_pipeline_hash_fog_state (CoglPipeline *authority,
-                               CoglPipelineHashState *state);
 
 void
 _cogl_pipeline_hash_non_zero_point_size_state (CoglPipeline *authority,

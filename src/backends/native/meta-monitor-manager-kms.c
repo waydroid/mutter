@@ -121,9 +121,9 @@ meta_monitor_manager_kms_set_power_save_mode (MetaMonitorManager *manager,
   MetaBackendNative *backend_native = META_BACKEND_NATIVE (backend);
   MetaKms *kms = meta_backend_native_get_kms (backend_native);
   MetaKmsUpdate *kms_update;
-  g_autoptr (GError) error = NULL;
   uint64_t state;
   GList *l;
+  g_autoptr (MetaKmsFeedback) kms_feedback = NULL;
 
   switch (mode) {
   case META_POWER_SAVE_ON:
@@ -150,8 +150,12 @@ meta_monitor_manager_kms_set_power_save_mode (MetaMonitorManager *manager,
       meta_gpu_kms_set_power_save_mode (gpu_kms, state, kms_update);
     }
 
-  if (!meta_kms_post_pending_update_sync (kms, &error))
-    g_warning ("Failed to DPMS: %s", error->message);
+  kms_feedback = meta_kms_post_pending_update_sync (kms);
+  if (meta_kms_feedback_get_result (kms_feedback) != META_KMS_FEEDBACK_PASSED)
+    {
+      g_warning ("Failed to set DPMS: %s",
+                 meta_kms_feedback_get_error (kms_feedback)->message);
+    }
 }
 
 static void
@@ -185,37 +189,16 @@ apply_crtc_assignments (MetaMonitorManager *manager,
 
       if (crtc_info->mode == NULL)
         {
-          crtc->rect.x = 0;
-          crtc->rect.y = 0;
-          crtc->rect.width = 0;
-          crtc->rect.height = 0;
-          crtc->current_mode = NULL;
+          meta_crtc_unset_config (crtc);
         }
       else
         {
-          MetaCrtcMode *mode;
           unsigned int j;
-          int width, height;
 
-          mode = crtc_info->mode;
-
-          if (meta_monitor_transform_is_rotated (crtc_info->transform))
-            {
-              width = mode->height;
-              height = mode->width;
-            }
-          else
-            {
-              width = mode->width;
-              height = mode->height;
-            }
-
-          crtc->rect.x = crtc_info->x;
-          crtc->rect.y = crtc_info->y;
-          crtc->rect.width = width;
-          crtc->rect.height = height;
-          crtc->current_mode = mode;
-          crtc->transform = crtc_info->transform;
+          meta_crtc_set_config (crtc,
+                                &crtc_info->layout,
+                                crtc_info->mode,
+                                crtc_info->transform);
 
           for (j = 0; j < crtc_info->outputs->len; j++)
             {
@@ -238,19 +221,13 @@ apply_crtc_assignments (MetaMonitorManager *manager,
         {
           MetaCrtc *crtc = k->data;
 
-          crtc->logical_monitor = NULL;
-
           if (crtc->is_dirty)
             {
               crtc->is_dirty = FALSE;
               continue;
             }
 
-          crtc->rect.x = 0;
-          crtc->rect.y = 0;
-          crtc->rect.width = 0;
-          crtc->rect.height = 0;
-          crtc->current_mode = NULL;
+          meta_crtc_unset_config (crtc);
         }
     }
 
@@ -455,7 +432,7 @@ meta_monitor_manager_kms_set_crtc_gamma (MetaMonitorManager *manager,
   MetaKmsCrtc *kms_crtc;
   g_autofree char *gamma_ramp_string = NULL;
   MetaKmsUpdate *kms_update;
-  g_autoptr (GError) error = NULL;
+  g_autoptr (MetaKmsFeedback) kms_feedback = NULL;
 
   gamma_ramp_string = generate_gamma_ramp_string (size, red, green, blue);
   g_debug ("Setting CRTC (%ld) gamma to %s", crtc->crtc_id, gamma_ramp_string);
@@ -466,8 +443,12 @@ meta_monitor_manager_kms_set_crtc_gamma (MetaMonitorManager *manager,
   meta_kms_crtc_set_gamma (kms_crtc, kms_update,
                            size, red, green, blue);
 
-  if (!meta_kms_post_pending_update_sync (kms, &error))
-    g_warning ("Failed to CRTC gamma: %s", error->message);
+  kms_feedback = meta_kms_post_pending_update_sync (kms);
+  if (meta_kms_feedback_get_result (kms_feedback) != META_KMS_FEEDBACK_PASSED)
+    {
+      g_warning ("Failed to set CRTC gamma: %s",
+                 meta_kms_feedback_get_error (kms_feedback)->message);
+    }
 }
 
 static void
@@ -566,8 +547,6 @@ meta_monitor_manager_kms_get_capabilities (MetaMonitorManager *manager)
 {
   MetaBackend *backend = meta_monitor_manager_get_backend (manager);
   MetaSettings *settings = meta_backend_get_settings (backend);
-  MetaRenderer *renderer = meta_backend_get_renderer (backend);
-  MetaRendererNative *renderer_native = META_RENDERER_NATIVE (renderer);
   MetaMonitorManagerCapability capabilities =
     META_MONITOR_MANAGER_CAPABILITY_NONE;
 
@@ -575,9 +554,6 @@ meta_monitor_manager_kms_get_capabilities (MetaMonitorManager *manager)
         settings,
         META_EXPERIMENTAL_FEATURE_SCALE_MONITOR_FRAMEBUFFER))
     capabilities |= META_MONITOR_MANAGER_CAPABILITY_LAYOUT_MODE;
-
-  if (meta_renderer_native_supports_mirroring (renderer_native))
-    capabilities |= META_MONITOR_MANAGER_CAPABILITY_MIRRORING;
 
   return capabilities;
 }

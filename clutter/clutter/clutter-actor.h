@@ -39,6 +39,8 @@
 
 #include <clutter/clutter-types.h>
 #include <clutter/clutter-event.h>
+#include <clutter/clutter-paint-context.h>
+#include <clutter/clutter-pick-context.h>
 
 G_BEGIN_DECLS
 
@@ -228,13 +230,14 @@ struct _ClutterActorClass
   void (* unrealize)            (ClutterActor          *self);
   void (* map)                  (ClutterActor          *self);
   void (* unmap)                (ClutterActor          *self);
-  void (* paint)                (ClutterActor          *self);
+  void (* paint)                (ClutterActor          *self,
+                                 ClutterPaintContext   *paint_context);
   void (* parent_set)           (ClutterActor          *actor,
                                  ClutterActor          *old_parent);
 
   void (* destroy)              (ClutterActor          *self);
   void (* pick)                 (ClutterActor          *actor,
-                                 const ClutterColor    *color);
+                                 ClutterPickContext    *pick_context);
 
   gboolean (* queue_redraw)     (ClutterActor          *actor,
                                  ClutterActor          *leaf_that_queued,
@@ -296,10 +299,11 @@ struct _ClutterActorClass
 
   gboolean (* touch_event)          (ClutterActor         *self,
                                      ClutterTouchEvent    *event);
+  gboolean (* has_accessible)       (ClutterActor         *self);
 
   /*< private >*/
   /* padding for future expansion */
-  gpointer _padding_dummy[26];
+  gpointer _padding_dummy[25];
 };
 
 /**
@@ -350,9 +354,17 @@ void                            clutter_actor_map                               
 CLUTTER_EXPORT
 void                            clutter_actor_unmap                             (ClutterActor                *self);
 CLUTTER_EXPORT
-void                            clutter_actor_paint                             (ClutterActor                *self);
+void                            clutter_actor_paint                             (ClutterActor                *self,
+                                                                                 ClutterPaintContext         *paint_context);
 CLUTTER_EXPORT
-void                            clutter_actor_continue_paint                    (ClutterActor                *self);
+void                            clutter_actor_continue_paint                    (ClutterActor                *self,
+                                                                                 ClutterPaintContext         *paint_context);
+CLUTTER_EXPORT
+void                            clutter_actor_pick                              (ClutterActor                *actor,
+                                                                                 ClutterPickContext          *pick_context);
+CLUTTER_EXPORT
+void                            clutter_actor_continue_pick                     (ClutterActor                *actor,
+                                                                                 ClutterPickContext          *pick_context);
 CLUTTER_EXPORT
 void                            clutter_actor_queue_redraw                      (ClutterActor                *self);
 CLUTTER_EXPORT
@@ -369,6 +381,8 @@ CLUTTER_EXPORT
 const gchar *                   clutter_actor_get_name                          (ClutterActor                *self);
 CLUTTER_EXPORT
 AtkObject *                     clutter_actor_get_accessible                    (ClutterActor                *self);
+CLUTTER_EXPORT
+gboolean                        clutter_actor_has_accessible                    (ClutterActor                *self);
 
 CLUTTER_EXPORT
 gboolean                        clutter_actor_is_visible                        (ClutterActor                *self);
@@ -431,7 +445,7 @@ void                            clutter_actor_get_allocation_box                
 CLUTTER_EXPORT
 void                            clutter_actor_get_allocation_vertices           (ClutterActor                *self,
                                                                                  ClutterActor                *ancestor,
-                                                                                 ClutterVertex                verts[]);
+                                                                                 graphene_point3d_t          *verts);
 CLUTTER_EXPORT
 gboolean                        clutter_actor_has_allocation                    (ClutterActor                *self);
 CLUTTER_EXPORT
@@ -817,16 +831,16 @@ gboolean                        clutter_actor_transform_stage_point             
                                                                                  gfloat                     *y_out);
 CLUTTER_EXPORT
 void                            clutter_actor_get_abs_allocation_vertices       (ClutterActor               *self,
-                                                                                 ClutterVertex               verts[]);
+                                                                                 graphene_point3d_t         *verts);
 CLUTTER_EXPORT
 void                            clutter_actor_apply_transform_to_point          (ClutterActor               *self,
-                                                                                 const ClutterVertex        *point,
-                                                                                 ClutterVertex              *vertex);
+                                                                                 const graphene_point3d_t   *point,
+                                                                                 graphene_point3d_t         *vertex);
 CLUTTER_EXPORT
 void                            clutter_actor_apply_relative_transform_to_point (ClutterActor               *self,
                                                                                  ClutterActor               *ancestor,
-                                                                                 const ClutterVertex        *point,
-                                                                                 ClutterVertex              *vertex);
+                                                                                 const graphene_point3d_t   *point,
+                                                                                 graphene_point3d_t         *vertex);
 
 /* Implicit animations */
 CLUTTER_EXPORT
@@ -870,6 +884,11 @@ void                            clutter_actor_set_opacity_override              
 CLUTTER_EXPORT
 gint                            clutter_actor_get_opacity_override              (ClutterActor               *self);
 
+CLUTTER_EXPORT
+void                            clutter_actor_inhibit_culling                   (ClutterActor               *actor);
+CLUTTER_EXPORT
+void                            clutter_actor_uninhibit_culling                 (ClutterActor               *actor);
+
 /**
  * ClutterActorCreateChildFunc:
  * @item: (type GObject): the item in the model
@@ -904,6 +923,7 @@ void                            clutter_actor_bind_model_with_properties        
 
 CLUTTER_EXPORT
 void clutter_actor_pick_box (ClutterActor          *self,
+                             ClutterPickContext    *pick_context,
                              const ClutterActorBox *box);
 
 G_END_DECLS

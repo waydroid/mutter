@@ -46,14 +46,8 @@
 #include "cogl-attribute-private.h"
 #include "cogl1-context.h"
 #include "cogl-gpu-info-private.h"
-#include "cogl-config-private.h"
 #include "cogl-gtype-private.h"
-#include "driver/gl/cogl-pipeline-opengl-private.h"
-#include "driver/gl/cogl-util-gl-private.h"
 #include "winsys/cogl-winsys-private.h"
-#include "winsys/cogl-winsys-stub-private.h"
-
-#include "deprecated/cogl-framebuffer-deprecated.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -98,9 +92,6 @@ static CoglContext *_cogl_context = NULL;
 static void
 _cogl_init_feature_overrides (CoglContext *ctx)
 {
-  if (G_UNLIKELY (COGL_DEBUG_ENABLED (COGL_DEBUG_DISABLE_VBOS)))
-    COGL_FLAGS_SET (ctx->private_features, COGL_PRIVATE_FEATURE_VBOS, FALSE);
-
   if (G_UNLIKELY (COGL_DEBUG_ENABLED (COGL_DEBUG_DISABLE_PBOS)))
     COGL_FLAGS_SET (ctx->private_features, COGL_PRIVATE_FEATURE_PBOS, FALSE);
 }
@@ -109,6 +100,12 @@ const CoglWinsysVtable *
 _cogl_context_get_winsys (CoglContext *context)
 {
   return context->display->renderer->winsys_vtable;
+}
+
+static const CoglDriverVtable *
+_cogl_context_get_driver (CoglContext *context)
+{
+  return context->driver_vtable;
 }
 
 /* For reference: There was some deliberation over whether to have a
@@ -166,7 +163,6 @@ cogl_context_new (CoglDisplay *display,
 
   /* Init default values */
   memset (context->features, 0, sizeof (context->features));
-  context->feature_flags = 0;
   memset (context->private_features, 0, sizeof (context->private_features));
   memset (context->winsys_features, 0, sizeof (context->winsys_features));
 
@@ -215,6 +211,13 @@ cogl_context_new (CoglDisplay *display,
       return NULL;
     }
 
+  if (!context->driver_vtable->context_init (context))
+    {
+      cogl_object_unref (display);
+      g_free (context);
+      return NULL;
+    }
+
   context->attribute_name_states_hash =
     g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
   context->attribute_name_index_map = NULL;
@@ -249,30 +252,11 @@ cogl_context_new (CoglDisplay *display,
   cogl_matrix_init_identity (&context->y_flip_matrix);
   cogl_matrix_scale (&context->y_flip_matrix, 1, -1, 1);
 
-  context->flushed_matrix_mode = COGL_MATRIX_MODELVIEW;
-
-  context->texture_units =
-    g_array_new (FALSE, FALSE, sizeof (CoglTextureUnit));
-
-  if (_cogl_has_private_feature (context, COGL_PRIVATE_FEATURE_ANY_GL))
-    {
-      /* See cogl-pipeline.c for more details about why we leave texture unit 1
-       * active by default... */
-      context->active_texture_unit = 1;
-      GE (context, glActiveTexture (GL_TEXTURE1));
-    }
-
-  context->legacy_fog_state.enabled = FALSE;
-
   context->opaque_color_pipeline = cogl_pipeline_new (context);
-  context->blended_color_pipeline = cogl_pipeline_new (context);
-  context->texture_pipeline = cogl_pipeline_new (context);
+
   context->codegen_header_buffer = g_string_new ("");
   context->codegen_source_buffer = g_string_new ("");
   context->codegen_boilerplate_buffer = g_string_new ("");
-  context->source_stack = NULL;
-
-  context->legacy_state_set = 0;
 
   context->default_gl_texture_2d_tex = NULL;
 
@@ -298,10 +282,6 @@ cogl_context_new (CoglDisplay *display,
   context->current_pipeline_changes_since_flush = 0;
   context->current_pipeline_with_color_attrib = FALSE;
 
-  _cogl_bitmask_init (&context->enabled_builtin_attributes);
-  _cogl_bitmask_init (&context->enable_builtin_attributes_tmp);
-  _cogl_bitmask_init (&context->enabled_texcoord_attributes);
-  _cogl_bitmask_init (&context->enable_texcoord_attributes_tmp);
   _cogl_bitmask_init (&context->enabled_custom_attributes);
   _cogl_bitmask_init (&context->enable_custom_attributes_tmp);
   _cogl_bitmask_init (&context->changed_bits_tmp);
@@ -309,8 +289,6 @@ cogl_context_new (CoglDisplay *display,
   context->max_texture_units = -1;
   context->max_activateable_texture_units = -1;
 
-  context->current_fragment_program_type = COGL_PIPELINE_PROGRAM_TYPE_GLSL;
-  context->current_vertex_program_type = COGL_PIPELINE_PROGRAM_TYPE_GLSL;
   context->current_gl_program = 0;
 
   context->current_gl_dither_enabled = TRUE;
@@ -330,20 +308,6 @@ cogl_context_new (CoglDisplay *display,
   for (i = 0; i < COGL_BUFFER_BIND_TARGET_COUNT; i++)
     context->current_buffer[i] = NULL;
 
-  context->window_buffer = NULL;
-  context->framebuffer_stack = _cogl_create_framebuffer_stack ();
-
-  /* XXX: In this case the Clutter backend is still responsible for
-   * the OpenGL binding API and for creating onscreen framebuffers and
-   * so we have to add a dummy framebuffer to represent the backend
-   * owned window... */
-  if (_cogl_context_get_winsys (context) == _cogl_winsys_stub_get_vtable ())
-    {
-      CoglOnscreen *window = _cogl_onscreen_new ();
-      cogl_set_framebuffer (COGL_FRAMEBUFFER (window));
-      cogl_object_unref (COGL_FRAMEBUFFER (window));
-    }
-
   context->current_path = NULL;
   context->stencil_pipeline = cogl_pipeline_new (context);
 
@@ -357,31 +321,6 @@ cogl_context_new (CoglDisplay *display,
 
   context->texture_download_pipeline = NULL;
   context->blit_texture_pipeline = NULL;
-
-#ifdef HAVE_COGL_GL
-  if (_cogl_has_private_feature (context, COGL_PRIVATE_FEATURE_ALPHA_TEST))
-    /* The default for GL_ALPHA_TEST is to always pass which is equivalent to
-     * the test being disabled therefore we assume that for all drivers there
-     * will be no performance impact if we always leave the test enabled which
-     * makes things a bit simpler for us. Under GLES2 the alpha test is
-     * implemented in the fragment shader so there is no enable for it
-     */
-    GE (context, glEnable (GL_ALPHA_TEST));
-
-  if ((context->driver == COGL_DRIVER_GL3))
-    {
-      GLuint vertex_array;
-
-      /* In a forward compatible context, GL 3 doesn't support rendering
-       * using the default vertex array object. Cogl doesn't use vertex
-       * array objects yet so for now we just create a dummy array
-       * object that we will use as our own default object. Eventually
-       * it could be good to attach the vertex array objects to
-       * CoglPrimitives */
-      context->glGenVertexArrays (1, &vertex_array);
-      context->glBindVertexArray (vertex_array);
-    }
-#endif
 
   context->current_modelview_entry = NULL;
   context->current_projection_entry = NULL;
@@ -398,24 +337,11 @@ cogl_context_new (CoglDisplay *display,
                                    white_pixel,
                                    NULL); /* abort on error */
 
-  cogl_push_source (context->opaque_color_pipeline);
-
   context->atlases = NULL;
   g_hook_list_init (&context->atlas_reorganize_callbacks, sizeof (GHook));
 
   context->buffer_map_fallback_array = g_byte_array_new ();
   context->buffer_map_fallback_in_use = FALSE;
-
-  /* As far as I can tell, GL_POINT_SPRITE doesn't have any effect
-     unless GL_COORD_REPLACE is enabled for an individual layer.
-     Therefore it seems like it should be ok to just leave it enabled
-     all the time instead of having to have a set property on each
-     pipeline to track whether any layers have point sprite coords
-     enabled. We don't need to do this for GL3 or GLES2 because point
-     sprites are handled using a builtin varying in the shader. */
-  if (_cogl_has_private_feature (context, COGL_PRIVATE_FEATURE_GL_FIXED) &&
-      cogl_has_feature (context, COGL_FEATURE_ID_POINT_SPRITE))
-    GE (context, glEnable (GL_POINT_SPRITE));
 
   _cogl_list_init (&context->fences);
 
@@ -426,23 +352,18 @@ static void
 _cogl_context_free (CoglContext *context)
 {
   const CoglWinsysVtable *winsys = _cogl_context_get_winsys (context);
+  const CoglDriverVtable *driver = _cogl_context_get_driver (context);
 
   winsys->context_deinit (context);
 
-  _cogl_free_framebuffer_stack (context->framebuffer_stack);
-
   if (context->current_path)
-    cogl_handle_unref (context->current_path);
+    cogl_object_unref (context->current_path);
 
   if (context->default_gl_texture_2d_tex)
     cogl_object_unref (context->default_gl_texture_2d_tex);
 
   if (context->opaque_color_pipeline)
     cogl_object_unref (context->opaque_color_pipeline);
-  if (context->blended_color_pipeline)
-    cogl_object_unref (context->blended_color_pipeline);
-  if (context->texture_pipeline)
-    cogl_object_unref (context->texture_pipeline);
 
   if (context->blit_texture_pipeline)
     cogl_object_unref (context->blit_texture_pipeline);
@@ -484,10 +405,6 @@ _cogl_context_free (CoglContext *context)
   g_slist_free (context->atlases);
   g_hook_list_clear (&context->atlas_reorganize_callbacks);
 
-  _cogl_bitmask_destroy (&context->enabled_builtin_attributes);
-  _cogl_bitmask_destroy (&context->enable_builtin_attributes_tmp);
-  _cogl_bitmask_destroy (&context->enabled_texcoord_attributes);
-  _cogl_bitmask_destroy (&context->enable_texcoord_attributes_tmp);
   _cogl_bitmask_destroy (&context->enabled_custom_attributes);
   _cogl_bitmask_destroy (&context->enable_custom_attributes_tmp);
   _cogl_bitmask_destroy (&context->changed_bits_tmp);
@@ -503,8 +420,6 @@ _cogl_context_free (CoglContext *context)
 
   _cogl_sampler_cache_free (context->sampler_cache);
 
-  _cogl_destroy_texture_units ();
-
   g_ptr_array_free (context->uniform_names, TRUE);
   g_hash_table_destroy (context->uniform_name_hash);
 
@@ -512,6 +427,8 @@ _cogl_context_free (CoglContext *context)
   g_array_free (context->attribute_name_index_map, TRUE);
 
   g_byte_array_free (context->buffer_map_fallback_array, TRUE);
+
+  driver->context_deinit (context);
 
   cogl_object_unref (context->display);
 
@@ -611,11 +528,9 @@ _cogl_context_get_gl_extensions (CoglContext *context)
       ret = g_strsplit (all_extensions, " ", 0 /* max tokens */);
     }
 
-  if ((env_disabled_extensions = g_getenv ("COGL_DISABLE_GL_EXTENSIONS"))
-      || _cogl_config_disable_gl_extensions)
+  if ((env_disabled_extensions = g_getenv ("COGL_DISABLE_GL_EXTENSIONS")))
     {
       char **split_env_disabled_extensions;
-      char **split_conf_disabled_extensions;
       char **src, **dst;
 
       if (env_disabled_extensions)
@@ -626,14 +541,6 @@ _cogl_context_get_gl_extensions (CoglContext *context)
       else
         split_env_disabled_extensions = NULL;
 
-      if (_cogl_config_disable_gl_extensions)
-        split_conf_disabled_extensions =
-          g_strsplit (_cogl_config_disable_gl_extensions,
-                      ",",
-                      0 /* no max tokens */);
-      else
-        split_conf_disabled_extensions = NULL;
-
       for (dst = ret, src = ret;
            *src;
            src++)
@@ -642,10 +549,6 @@ _cogl_context_get_gl_extensions (CoglContext *context)
 
           if (split_env_disabled_extensions)
             for (d = split_env_disabled_extensions; *d; d++)
-              if (!strcmp (*src, *d))
-                goto disabled;
-          if (split_conf_disabled_extensions)
-            for (d = split_conf_disabled_extensions; *d; d++)
               if (!strcmp (*src, *d))
                 goto disabled;
 
@@ -661,8 +564,6 @@ _cogl_context_get_gl_extensions (CoglContext *context)
 
       if (split_env_disabled_extensions)
         g_strfreev (split_env_disabled_extensions);
-      if (split_conf_disabled_extensions)
-        g_strfreev (split_conf_disabled_extensions);
     }
 
   return ret;
@@ -675,8 +576,6 @@ _cogl_context_get_gl_version (CoglContext *context)
 
   if ((version_override = g_getenv ("COGL_OVERRIDE_GL_VERSION")))
     return version_override;
-  else if (_cogl_config_override_gl_version)
-    return _cogl_config_override_gl_version;
   else
     return (const char *) context->glGetString (GL_VERSION);
 

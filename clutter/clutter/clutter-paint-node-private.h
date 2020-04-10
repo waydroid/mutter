@@ -27,6 +27,7 @@
 
 #include <glib-object.h>
 #include <json-glib/json-glib.h>
+#include <clutter/clutter-paint-context.h>
 #include <clutter/clutter-paint-node.h>
 
 G_BEGIN_DECLS
@@ -48,11 +49,11 @@ struct _ClutterPaintNode
   ClutterPaintNode *next_sibling;
   ClutterPaintNode *last_child;
 
-  guint n_children;
-
   GArray *operations;
 
-  gchar *name;
+  const gchar *name;
+
+  guint n_children;
 
   volatile int ref_count;
 };
@@ -63,9 +64,12 @@ struct _ClutterPaintNodeClass
 
   void     (* finalize)  (ClutterPaintNode *node);
 
-  gboolean (* pre_draw)  (ClutterPaintNode *node);
-  void     (* draw)      (ClutterPaintNode *node);
-  void     (* post_draw) (ClutterPaintNode *node);
+  gboolean (* pre_draw)  (ClutterPaintNode    *node,
+                          ClutterPaintContext *paint_context);
+  void     (* draw)      (ClutterPaintNode    *node,
+                          ClutterPaintContext *paint_context);
+  void     (* post_draw) (ClutterPaintNode    *node,
+                          ClutterPaintContext *paint_context);
 
   JsonNode*(* serialize) (ClutterPaintNode *node);
 
@@ -111,7 +115,8 @@ void                    _clutter_paint_node_init_types                  (void);
 gpointer                _clutter_paint_node_create                      (GType gtype);
 
 ClutterPaintNode *      _clutter_transform_node_new                     (const CoglMatrix            *matrix);
-ClutterPaintNode *      _clutter_dummy_node_new                         (ClutterActor                *actor);
+ClutterPaintNode *      _clutter_dummy_node_new                         (ClutterActor                *actor,
+                                                                         CoglFramebuffer             *framebuffer);
 
 void                    _clutter_paint_node_dump_tree                   (ClutterPaintNode            *root);
 
@@ -138,30 +143,6 @@ G_GNUC_INTERNAL
 ClutterPaintNode *      clutter_paint_node_get_last_child               (ClutterPaintNode      *node);
 G_GNUC_INTERNAL
 ClutterPaintNode *      clutter_paint_node_get_parent                   (ClutterPaintNode      *node);
-
-#define CLUTTER_TYPE_LAYER_NODE                 (_clutter_layer_node_get_type ())
-#define CLUTTER_LAYER_NODE(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLUTTER_TYPE_LAYER_NODE, ClutterLayerNode))
-#define CLUTTER_IS_LAYER_NODE(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), CLUTTER_TYPE_LAYER_NODE))
-
-/*
- * ClutterLayerNode:
- *
- * The #ClutterLayerNode structure is an opaque
- * type whose members cannot be directly accessed.
- *
- * Since: 1.10
- */
-typedef struct _ClutterLayerNode                ClutterLayerNode;
-typedef struct _ClutterLayerNodeClass           ClutterLayerNodeClass;
-
-GType _clutter_layer_node_get_type (void) G_GNUC_CONST;
-
-ClutterPaintNode *      _clutter_layer_node_new         (const CoglMatrix        *projection,
-                                                         const cairo_rectangle_t *viewport,
-                                                         float                    width,
-                                                         float                    height,
-                                                         guint8                   opacity);
-
 
 G_END_DECLS
 

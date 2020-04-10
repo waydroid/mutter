@@ -140,13 +140,10 @@ struct _CoglTextureVtable
   /* OpenGL driver specific virtual function */
   void (* gl_flush_legacy_texobj_wrap_modes) (CoglTexture *tex,
                                               GLenum wrap_mode_s,
-                                              GLenum wrap_mode_t,
-                                              GLenum wrap_mode_p);
+                                              GLenum wrap_mode_t);
 
   CoglPixelFormat (* get_format) (CoglTexture *tex);
   GLenum (* get_gl_format) (CoglTexture *tex);
-
-  gboolean (* is_foreign) (CoglTexture *tex);
 
   /* Only needs to be implemented if is_primitive == TRUE */
   void (* set_auto_mipmap) (CoglTexture *texture,
@@ -157,7 +154,6 @@ typedef enum _CoglTextureSoureType {
   COGL_TEXTURE_SOURCE_TYPE_SIZED = 1,
   COGL_TEXTURE_SOURCE_TYPE_BITMAP,
   COGL_TEXTURE_SOURCE_TYPE_EGL_IMAGE,
-  COGL_TEXTURE_SOURCE_TYPE_GL_FOREIGN,
   COGL_TEXTURE_SOURCE_TYPE_EGL_IMAGE_EXTERNAL
 } CoglTextureSourceType;
 
@@ -276,7 +272,7 @@ _cogl_texture_register_texture_type (const CoglObjectClass *klass);
   (TypeName, type_name,                                                 \
    _cogl_texture_register_texture_type (&_cogl_##type_name##_class))
 
-gboolean
+COGL_EXPORT gboolean
 _cogl_texture_can_hardware_repeat (CoglTexture *texture);
 
 void
@@ -326,9 +322,6 @@ void
 _cogl_texture_set_internal_format (CoglTexture *texture,
                                    CoglPixelFormat internal_format);
 
-gboolean
-_cogl_texture_is_foreign (CoglTexture *texture);
-
 void
 _cogl_texture_associate_framebuffer (CoglTexture *texture,
                                      CoglFramebuffer *framebuffer);
@@ -353,7 +346,7 @@ _cogl_texture_spans_foreach_in_region (CoglSpan *x_spans,
                                        CoglMetaTextureCallback callback,
                                        void *user_data);
 
-gboolean
+COGL_EXPORT gboolean
 _cogl_texture_set_region (CoglTexture *texture,
                           int width,
                           int height,
@@ -397,7 +390,7 @@ _cogl_texture_set_allocated (CoglTexture *texture,
                              int width,
                              int height);
 
-CoglPixelFormat
+COGL_EXPORT CoglPixelFormat
 _cogl_texture_get_format (CoglTexture *texture);
 
 CoglTextureLoader *

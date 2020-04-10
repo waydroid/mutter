@@ -310,11 +310,7 @@ cally_actor_finalize (GObject *obj)
 
   _cally_actor_clean_action_list (cally_actor);
 
-  if (priv->action_idle_handler)
-    {
-      g_source_remove (priv->action_idle_handler);
-      priv->action_idle_handler = 0;
-    }
+  g_clear_handle_id (&priv->action_idle_handler, g_source_remove);
 
   if (priv->action_queue)
     {
@@ -604,10 +600,11 @@ cally_actor_real_remove_actor (ClutterActor *container,
   g_return_val_if_fail (CLUTTER_IS_ACTOR (actor), 0);
 
   atk_parent = ATK_OBJECT (data);
-  atk_child = clutter_actor_get_accessible (actor);
 
-  if (atk_child)
+  if (clutter_actor_has_accessible (actor))
     {
+      atk_child = clutter_actor_get_accessible (actor);
+
       g_value_init (&values.old_value, G_TYPE_POINTER);
       g_value_set_pointer (&values.old_value, atk_parent);
 
@@ -657,7 +654,7 @@ cally_actor_get_extents (AtkComponent *component,
   ClutterActor *actor      = NULL;
   gint          top_level_x, top_level_y;
   gfloat        f_width, f_height;
-  ClutterVertex verts[4];
+  graphene_point3d_t verts[4];
   ClutterActor  *stage = NULL;
 
   g_return_if_fail (CALLY_IS_ACTOR (component));

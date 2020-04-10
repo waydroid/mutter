@@ -97,7 +97,7 @@
 #define COGL_WINSYS_FEATURE_BEGIN(name, namespaces, extension_names,    \
                                   egl_private_flags)                    \
   { 255, 255, 0, namespaces, extension_names,                           \
-      0, egl_private_flags,                                             \
+      egl_private_flags,                                                \
       0,                                                                \
       cogl_egl_feature_ ## name ## _funcs },
 #undef COGL_WINSYS_FEATURE_FUNCTION
@@ -696,13 +696,29 @@ _cogl_winsys_onscreen_get_buffer_age (CoglOnscreen *onscreen)
   CoglRenderer *renderer = context->display->renderer;
   CoglRendererEGL *egl_renderer = renderer->winsys;
   CoglOnscreenEGL *egl_onscreen = onscreen->winsys;
+  CoglDisplayEGL *egl_display = context->display->winsys;
   EGLSurface surface = egl_onscreen->egl_surface;
-  int age;
+  static gboolean warned = FALSE;
+  int age = 0;
 
   if (!(egl_renderer->private_features & COGL_EGL_WINSYS_FEATURE_BUFFER_AGE))
     return 0;
 
-  eglQuerySurface (egl_renderer->edpy, surface, EGL_BUFFER_AGE_EXT, &age);
+  if (!_cogl_winsys_egl_make_current (context->display,
+				      surface, surface,
+                                      egl_display->egl_context))
+    return 0;
+
+  if (!eglQuerySurface (egl_renderer->edpy, surface, EGL_BUFFER_AGE_EXT, &age))
+    {
+      if (!warned)
+        g_critical ("Failed to query buffer age, got error %x", eglGetError ());
+      warned = TRUE;
+    }
+  else
+    {
+      warned = FALSE;
+    }
 
   return age;
 }
@@ -948,12 +964,4 @@ cogl_egl_context_get_egl_display (CoglContext *context)
   CoglRendererEGL *egl_renderer = context->display->renderer->winsys;
 
   return egl_renderer->edpy;
-}
-
-EGLContext
-cogl_egl_context_get_egl_context (CoglContext *context)
-{
-  CoglDisplayEGL *egl_display = context->display->winsys;
-
-  return egl_display->egl_context;
 }

@@ -111,7 +111,8 @@ typedef enum
   META_DEBUG_SHAPES          = 1 << 19,
   META_DEBUG_COMPOSITOR      = 1 << 20,
   META_DEBUG_EDGE_RESISTANCE = 1 << 21,
-  META_DEBUG_DBUS            = 1 << 22
+  META_DEBUG_DBUS            = 1 << 22,
+  META_DEBUG_INPUT           = 1 << 23
 } MetaDebugTopic;
 
 META_EXPORT
@@ -141,7 +142,7 @@ guint meta_unsigned_long_hash  (gconstpointer v);
 META_EXPORT
 const char* meta_frame_type_to_string (MetaFrameType type);
 META_EXPORT
-const char* meta_gravity_to_string (int gravity);
+const char* meta_gravity_to_string (MetaGravity gravity);
 
 META_EXPORT
 char* meta_external_binding_name_for_action (guint keybinding_action);
@@ -222,5 +223,15 @@ typedef enum
 
 META_EXPORT
 MetaLocaleDirection meta_get_locale_direction (void);
+
+META_EXPORT
+void meta_add_clutter_debug_flags (ClutterDebugFlag     debug_flags,
+                                   ClutterDrawDebugFlag draw_flags,
+                                   ClutterPickDebugFlag pick_flags);
+
+META_EXPORT
+void meta_remove_clutter_debug_flags (ClutterDebugFlag     debug_flags,
+                                      ClutterDrawDebugFlag draw_flags,
+                                      ClutterPickDebugFlag pick_flags);
 
 #endif /* META_UTIL_H */

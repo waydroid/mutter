@@ -363,7 +363,7 @@ typedef struct _WaitForShownData
 {
   GMainLoop *loop;
   MetaWindow *window;
-  guint shown_handler_id;
+  gulong shown_handler_id;
 } WaitForShownData;
 
 static void
@@ -405,8 +405,7 @@ test_client_wait_for_window_shown (TestClient *client,
                   &data,
                   NULL);
   g_main_loop_run (data.loop);
-  if (data.shown_handler_id)
-    g_signal_handler_disconnect (window, data.shown_handler_id);
+  g_clear_signal_handler (&data.shown_handler_id, window);
   g_main_loop_unref (data.loop);
 }
 
@@ -533,4 +532,18 @@ test_get_plugin_name (void)
     return name;
   else
     return "libdefault";
+}
+
+void
+test_wait_for_x11_display (void)
+{
+  MetaDisplay *display;
+
+  display = meta_get_display ();
+  g_assert_nonnull (display);
+
+  while (!display->x11_display)
+    g_main_context_iteration (NULL, TRUE);
+
+  g_assert_nonnull (display->x11_display);
 }

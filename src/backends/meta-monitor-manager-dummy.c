@@ -512,38 +512,17 @@ apply_crtc_assignments (MetaMonitorManager *manager,
 
       if (crtc_info->mode == NULL)
         {
-          crtc->rect.x = 0;
-          crtc->rect.y = 0;
-          crtc->rect.width = 0;
-          crtc->rect.height = 0;
-          crtc->current_mode = NULL;
+          meta_crtc_unset_config (crtc);
         }
       else
         {
-          MetaCrtcMode *mode;
           MetaOutput *output;
           unsigned int j;
-          int width, height;
 
-          mode = crtc_info->mode;
-
-          if (meta_monitor_transform_is_rotated (crtc_info->transform))
-            {
-              width = mode->height;
-              height = mode->width;
-            }
-          else
-            {
-              width = mode->width;
-              height = mode->height;
-            }
-
-          crtc->rect.x = crtc_info->x;
-          crtc->rect.y = crtc_info->y;
-          crtc->rect.width = width;
-          crtc->rect.height = height;
-          crtc->current_mode = mode;
-          crtc->transform = crtc_info->transform;
+          meta_crtc_set_config (crtc,
+                                &crtc_info->layout,
+                                crtc_info->mode,
+                                crtc_info->transform);
 
           for (j = 0; j < crtc_info->outputs->len; j++)
             {
@@ -569,19 +548,13 @@ apply_crtc_assignments (MetaMonitorManager *manager,
     {
       MetaCrtc *crtc = l->data;
 
-      crtc->logical_monitor = NULL;
-
       if (crtc->is_dirty)
         {
           crtc->is_dirty = FALSE;
           continue;
         }
 
-      crtc->rect.x = 0;
-      crtc->rect.y = 0;
-      crtc->rect.width = 0;
-      crtc->rect.height = 0;
-      crtc->current_mode = NULL;
+      meta_crtc_unset_config (crtc);
     }
 
   /* Disable outputs not mentioned in the list */
@@ -740,8 +713,6 @@ meta_monitor_manager_dummy_get_capabilities (MetaMonitorManager *manager)
   MetaSettings *settings = meta_backend_get_settings (backend);
   MetaMonitorManagerCapability capabilities =
     META_MONITOR_MANAGER_CAPABILITY_NONE;
-
-  capabilities |= META_MONITOR_MANAGER_CAPABILITY_MIRRORING;
 
   if (meta_settings_is_experimental_feature_enabled (
         settings,

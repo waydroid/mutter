@@ -51,14 +51,6 @@ struct _ClutterStageWindowInterface
   gint64            (* get_update_time)         (ClutterStageWindow *stage_window);
   void              (* clear_update_time)       (ClutterStageWindow *stage_window);
 
-  void              (* add_redraw_clip)         (ClutterStageWindow    *stage_window,
-                                                 cairo_rectangle_int_t *stage_rectangle);
-  gboolean          (* has_redraw_clips)        (ClutterStageWindow    *stage_window);
-  gboolean          (* ignoring_redraw_clips)   (ClutterStageWindow    *stage_window);
-  gboolean          (* get_redraw_clip_bounds)  (ClutterStageWindow    *stage_window,
-                                                 cairo_rectangle_int_t *clip);
-
-
   void              (* set_accept_focus)        (ClutterStageWindow *stage_window,
                                                  gboolean            accept_focus);
 
@@ -69,6 +61,8 @@ struct _ClutterStageWindowInterface
   GList            *(* get_views)               (ClutterStageWindow *stage_window);
   int64_t           (* get_frame_counter)       (ClutterStageWindow *stage_window);
   void              (* finish_frame)            (ClutterStageWindow *stage_window);
+
+  int64_t           (* get_next_presentation_time) (ClutterStageWindow *stage_window);
 };
 
 ClutterActor *    _clutter_stage_window_get_wrapper        (ClutterStageWindow *window);
@@ -96,13 +90,6 @@ void              _clutter_stage_window_schedule_update         (ClutterStageWin
 gint64            _clutter_stage_window_get_update_time         (ClutterStageWindow *window);
 void              _clutter_stage_window_clear_update_time       (ClutterStageWindow *window);
 
-void              _clutter_stage_window_add_redraw_clip         (ClutterStageWindow    *window,
-                                                                 cairo_rectangle_int_t *stage_clip);
-gboolean          _clutter_stage_window_has_redraw_clips        (ClutterStageWindow    *window);
-gboolean          _clutter_stage_window_ignoring_redraw_clips   (ClutterStageWindow    *window);
-gboolean          _clutter_stage_window_get_redraw_clip_bounds  (ClutterStageWindow    *window,
-                                                                 cairo_rectangle_int_t *clip);
-
 void              _clutter_stage_window_set_accept_focus        (ClutterStageWindow *window,
                                                                  gboolean            accept_focus);
 
@@ -115,6 +102,8 @@ GList *           _clutter_stage_window_get_views               (ClutterStageWin
 void              _clutter_stage_window_finish_frame            (ClutterStageWindow *window);
 
 int64_t           _clutter_stage_window_get_frame_counter       (ClutterStageWindow *window);
+
+int64_t           _clutter_stage_window_get_next_presentation_time (ClutterStageWindow *window);
 
 G_END_DECLS
 

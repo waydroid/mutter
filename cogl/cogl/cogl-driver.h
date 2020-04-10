@@ -40,6 +40,12 @@ typedef struct _CoglDriverVtable CoglDriverVtable;
 
 struct _CoglDriverVtable
 {
+  gboolean
+  (* context_init) (CoglContext *context);
+
+  void
+  (* context_deinit) (CoglContext *context);
+
   /* TODO: factor this out since this is OpenGL specific and
    * so can be ignored by non-OpenGL drivers. */
   gboolean
@@ -86,6 +92,9 @@ struct _CoglDriverVtable
 
   void
   (* framebuffer_finish) (CoglFramebuffer *framebuffer);
+
+  void
+  (* framebuffer_flush) (CoglFramebuffer *framebuffer);
 
   void
   (* framebuffer_discard_buffers) (CoglFramebuffer *framebuffer,

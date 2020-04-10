@@ -31,6 +31,30 @@ meta_crtc_get_gpu (MetaCrtc *crtc)
   return crtc->gpu;
 }
 
+void
+meta_crtc_set_config (MetaCrtc             *crtc,
+                      graphene_rect_t      *layout,
+                      MetaCrtcMode         *mode,
+                      MetaMonitorTransform  transform)
+{
+  MetaCrtcConfig *config;
+
+  meta_crtc_unset_config (crtc);
+
+  config = g_new0 (MetaCrtcConfig, 1);
+  config->layout = *layout;
+  config->mode = mode;
+  config->transform = transform;
+
+  crtc->config = config;
+}
+
+void
+meta_crtc_unset_config (MetaCrtc *crtc)
+{
+  g_clear_pointer (&crtc->config, g_free);
+}
+
 static void
 meta_crtc_finalize (GObject *object)
 {
@@ -38,6 +62,8 @@ meta_crtc_finalize (GObject *object)
 
   if (crtc->driver_notify)
     crtc->driver_notify (crtc);
+
+  g_clear_pointer (&crtc->config, g_free);
 
   G_OBJECT_CLASS (meta_crtc_parent_class)->finalize (object);
 }
@@ -62,6 +88,8 @@ meta_crtc_mode_finalize (GObject *object)
 
   if (crtc_mode->driver_notify)
     crtc_mode->driver_notify (crtc_mode);
+
+  g_clear_pointer (&crtc_mode->name, g_free);
 
   G_OBJECT_CLASS (meta_crtc_mode_parent_class)->finalize (object);
 }

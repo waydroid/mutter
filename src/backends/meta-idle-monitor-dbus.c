@@ -210,46 +210,12 @@ create_monitor_skeleton (GDBusObjectManagerServer *manager,
 }
 
 static void
-on_device_added (ClutterDeviceManager     *device_manager,
-                 ClutterInputDevice       *device,
-                 GDBusObjectManagerServer *manager)
-{
-
-  MetaIdleMonitor *monitor;
-  int device_id;
-  char *path;
-
-  device_id = clutter_input_device_get_device_id (device);
-  monitor = meta_idle_monitor_get_for_device (device_id);
-  path = g_strdup_printf ("/org/gnome/Mutter/IdleMonitor/Device%d", device_id);
-
-  create_monitor_skeleton (manager, monitor, path);
-  g_free (path);
-}
-
-static void
-on_device_removed (ClutterDeviceManager     *device_manager,
-                   ClutterInputDevice       *device,
-                   GDBusObjectManagerServer *manager)
-{
-  int device_id;
-  char *path;
-
-  device_id = clutter_input_device_get_device_id (device);
-  path = g_strdup_printf ("/org/gnome/Mutter/IdleMonitor/Device%d", device_id);
-  g_dbus_object_manager_server_unexport (manager, path);
-  g_free (path);
-}
-
-static void
 on_bus_acquired (GDBusConnection *connection,
                  const char      *name,
                  gpointer         user_data)
 {
   GDBusObjectManagerServer *manager;
-  ClutterDeviceManager *device_manager;
   MetaIdleMonitor *monitor;
-  GSList *devices, *iter;
   char *path;
 
   manager = g_dbus_object_manager_server_new ("/org/gnome/Mutter/IdleMonitor");
@@ -260,19 +226,6 @@ on_bus_acquired (GDBusConnection *connection,
   path = g_strdup ("/org/gnome/Mutter/IdleMonitor/Core");
   create_monitor_skeleton (manager, monitor, path);
   g_free (path);
-
-  device_manager = clutter_device_manager_get_default ();
-  devices = clutter_device_manager_list_devices (device_manager);
-
-  for (iter = devices; iter; iter = iter->next)
-    on_device_added (device_manager, iter->data, manager);
-
-  g_slist_free (devices);
-
-  g_signal_connect_object (device_manager, "device-added",
-                           G_CALLBACK (on_device_added), manager, 0);
-  g_signal_connect_object (device_manager, "device-removed",
-                           G_CALLBACK (on_device_removed), manager, 0);
 
   g_dbus_object_manager_server_set_connection (manager, connection);
 }

@@ -150,12 +150,19 @@ key_group_key_press (ClutterActor    *actor,
 }
 
 static void
-key_group_paint (ClutterActor *actor)
+key_group_paint (ClutterActor        *actor,
+                 ClutterPaintContext *paint_context)
 {
   KeyGroup *self = KEY_GROUP (actor);
   ClutterActorIter iter;
   ClutterActor *child;
   gint i = 0;
+  CoglFramebuffer *framebuffer =
+    clutter_paint_context_get_framebuffer (paint_context);
+  CoglContext *ctx = cogl_framebuffer_get_context (framebuffer);
+  CoglPipeline *pipeline;
+
+  pipeline = cogl_pipeline_new (ctx);
 
   clutter_actor_iter_init (&iter, actor);
   while (clutter_actor_iter_next (&iter, &child))
@@ -172,11 +179,13 @@ key_group_paint (ClutterActor *actor)
           box.x2 += 2;
           box.y2 += 2;
 
-          cogl_set_source_color4ub (255, 255, 0, 224);
-          cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
+          cogl_pipeline_set_color4ub (pipeline, 255, 255, 0, 224);
+
+          cogl_framebuffer_draw_rectangle (framebuffer, pipeline,
+                                           box.x1, box.y1, box.x2, box.y2);
         }
 
-      clutter_actor_paint (child);
+      clutter_actor_paint (child, paint_context);
 
       i += 1;
     }

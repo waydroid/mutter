@@ -55,8 +55,8 @@ struct _MetaOverlay
   CoglPipeline *pipeline;
   CoglTexture *texture;
 
-  ClutterRect current_rect;
-  ClutterRect previous_rect;
+  graphene_rect_t current_rect;
+  graphene_rect_t previous_rect;
   gboolean previous_is_valid;
 };
 
@@ -95,9 +95,9 @@ meta_overlay_free (MetaOverlay *overlay)
 }
 
 static void
-meta_overlay_set (MetaOverlay *overlay,
-                  CoglTexture *texture,
-                  ClutterRect *rect)
+meta_overlay_set (MetaOverlay     *overlay,
+                  CoglTexture     *texture,
+                  graphene_rect_t *rect)
 {
   if (overlay->texture != texture)
     {
@@ -119,14 +119,18 @@ meta_overlay_set (MetaOverlay *overlay,
 }
 
 static void
-meta_overlay_paint (MetaOverlay *overlay)
+meta_overlay_paint (MetaOverlay         *overlay,
+                    ClutterPaintContext *paint_context)
 {
+  CoglFramebuffer *framebuffer;
+
   if (!overlay->enabled)
     return;
 
   g_assert (meta_is_wayland_compositor ());
 
-  cogl_framebuffer_draw_rectangle (cogl_get_draw_framebuffer (),
+  framebuffer = clutter_paint_context_get_framebuffer (paint_context);
+  cogl_framebuffer_draw_rectangle (framebuffer,
                                    overlay->pipeline,
                                    overlay->current_rect.origin.x,
                                    overlay->current_rect.origin.y,
@@ -135,7 +139,7 @@ meta_overlay_paint (MetaOverlay *overlay)
                                    (overlay->current_rect.origin.y +
                                     overlay->current_rect.size.height));
 
-  if (!clutter_rect_equals (&overlay->previous_rect, &overlay->current_rect))
+  if (!graphene_rect_equal (&overlay->previous_rect, &overlay->current_rect))
     {
       overlay->previous_rect = overlay->current_rect;
       overlay->previous_is_valid = TRUE;
@@ -184,12 +188,13 @@ notify_watchers_for_mode (MetaStage           *stage,
 }
 
 static void
-meta_stage_paint (ClutterActor *actor)
+meta_stage_paint (ClutterActor        *actor,
+                  ClutterPaintContext *paint_context)
 {
   MetaStage *stage = META_STAGE (actor);
   GList *l;
 
-  CLUTTER_ACTOR_CLASS (meta_stage_parent_class)->paint (actor);
+  CLUTTER_ACTOR_CLASS (meta_stage_parent_class)->paint (actor, paint_context);
 
   notify_watchers_for_mode (stage, stage->current_view,
                             META_STAGE_WATCH_AFTER_ACTOR_PAINT);
@@ -197,22 +202,24 @@ meta_stage_paint (ClutterActor *actor)
   g_signal_emit (stage, signals[ACTORS_PAINTED], 0);
 
   for (l = stage->overlays; l; l = l->next)
-    meta_overlay_paint (l->data);
+    meta_overlay_paint (l->data, paint_context);
 
   notify_watchers_for_mode (stage, stage->current_view,
                             META_STAGE_WATCH_AFTER_OVERLAY_PAINT);
 }
 
 static void
-meta_stage_paint_view (ClutterStage     *stage,
-                       ClutterStageView *view)
+meta_stage_paint_view (ClutterStage         *stage,
+                       ClutterStageView     *view,
+                       const cairo_region_t *redraw_clip)
 {
   MetaStage *meta_stage = META_STAGE (stage);
 
   notify_watchers_for_mode (meta_stage, view, META_STAGE_WATCH_BEFORE_PAINT);
 
   meta_stage->current_view = view;
-  CLUTTER_STAGE_CLASS (meta_stage_parent_class)->paint_view (stage, view);
+  CLUTTER_STAGE_CLASS (meta_stage_parent_class)->paint_view (stage, view,
+                                                             redraw_clip);
 
   notify_watchers_for_mode (meta_stage, view, META_STAGE_WATCH_AFTER_PAINT);
 }
@@ -297,9 +304,9 @@ meta_stage_new (MetaBackend *backend)
 }
 
 static void
-queue_redraw_clutter_rect (MetaStage   *stage,
-                           MetaOverlay *overlay,
-                           ClutterRect *rect)
+queue_redraw_clutter_rect (MetaStage       *stage,
+                           MetaOverlay     *overlay,
+                           graphene_rect_t *rect)
 {
   cairo_rectangle_int_t clip = {
     .x = floorf (rect->origin.x),
@@ -358,10 +365,10 @@ meta_stage_remove_cursor_overlay (MetaStage   *stage,
 }
 
 void
-meta_stage_update_cursor_overlay (MetaStage   *stage,
-                                  MetaOverlay *overlay,
-                                  CoglTexture *texture,
-                                  ClutterRect *rect)
+meta_stage_update_cursor_overlay (MetaStage       *stage,
+                                  MetaOverlay     *overlay,
+                                  CoglTexture     *texture,
+                                  graphene_rect_t *rect)
 {
   g_assert (meta_is_wayland_compositor () || texture == NULL);
 

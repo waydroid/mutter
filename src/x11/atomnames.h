@@ -63,6 +63,7 @@ item(_GTK_MENUBAR_OBJECT_PATH)
 item(_GTK_FRAME_EXTENTS)
 item(_GTK_SHOW_WINDOW_MENU)
 item(_GTK_EDGE_CONSTRAINTS)
+item(_GTK_WORKAREAS)
 item(_GNOME_WM_KEYBINDINGS)
 item(_GNOME_PANEL_ACTION)
 item(_GNOME_PANEL_ACTION_MAIN_MENU)
@@ -81,6 +82,8 @@ item(ATOM_PAIR)
 item(_XKB_RULES_NAMES)
 item(WL_SURFACE_ID)
 item(_XWAYLAND_MAY_GRAB_KEYBOARD)
+item(_XWAYLAND_RANDR_EMU_MONITOR_RECTS)
+item(_XWAYLAND_ALLOW_COMMITS)
 
 /* Oddities: These are used, and we need atoms for them,
  * but when we need all _NET_WM hints (i.e. when we're making

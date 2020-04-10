@@ -49,7 +49,7 @@
 
 #include "cogl-poll.h"
 
-uint32_t
+COGL_EXPORT uint32_t
 _cogl_winsys_error_quark (void);
 
 #define COGL_WINSYS_ERROR (_cogl_winsys_error_quark ())
@@ -90,6 +90,12 @@ typedef struct _CoglWinsysVtable
 
   void
   (*display_destroy) (CoglDisplay *display);
+
+  CoglDmaBufHandle *
+  (*renderer_create_dma_buf) (CoglRenderer  *renderer,
+                              int            width,
+                              int            height,
+                              GError       **error);
 
   gboolean
   (*context_init) (CoglContext *context, GError **error);

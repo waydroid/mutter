@@ -37,10 +37,15 @@ G_DEFINE_TYPE (FooActor, foo_actor, CLUTTER_TYPE_ACTOR);
 static gboolean group_has_overlaps;
 
 static void
-foo_actor_paint (ClutterActor *actor)
+foo_actor_paint (ClutterActor        *actor,
+                 ClutterPaintContext *paint_context)
 {
+  CoglContext *ctx =
+    clutter_backend_get_cogl_context (clutter_get_default_backend ());
   FooActor *foo_actor = (FooActor *) actor;
   ClutterActorBox allocation;
+  CoglPipeline *pipeline;
+  CoglFramebuffer *framebuffer;
 
   foo_actor->last_paint_opacity = clutter_actor_get_paint_opacity (actor);
   foo_actor->paint_count++;
@@ -48,14 +53,19 @@ foo_actor_paint (ClutterActor *actor)
   clutter_actor_get_allocation_box (actor, &allocation);
 
   /* Paint a red rectangle with the right opacity */
-  cogl_set_source_color4ub (255,
-                            0,
-                            0,
-                            foo_actor->last_paint_opacity);
-  cogl_rectangle (allocation.x1,
-                  allocation.y1,
-                  allocation.x2,
-                  allocation.y2);
+  pipeline = cogl_pipeline_new (ctx);
+  cogl_pipeline_set_color4ub (pipeline,
+                              255, 0, 0,
+                              foo_actor->last_paint_opacity);
+
+  framebuffer = clutter_paint_context_get_framebuffer (paint_context);
+  cogl_framebuffer_draw_rectangle (framebuffer,
+                                   pipeline,
+                                   allocation.x1,
+                                   allocation.y1,
+                                   allocation.x2,
+                                   allocation.y2);
+  cogl_object_unref (pipeline);
 }
 
 static gboolean
@@ -156,7 +166,7 @@ static void
 verify_redraw (Data *data, int expected_paint_count)
 {
   GMainLoop *main_loop = g_main_loop_new (NULL, TRUE);
-  guint paint_handler;
+  gulong paint_handler;
 
   paint_handler = g_signal_connect_data (data->stage,
                                          "paint",
@@ -173,7 +183,7 @@ verify_redraw (Data *data, int expected_paint_count)
   /* Wait for it to paint */
   g_main_loop_run (main_loop);
 
-  g_signal_handler_disconnect (data->stage, paint_handler);
+  g_clear_signal_handler (&paint_handler, data->stage);
 
   g_assert_cmpint (data->foo_actor->paint_count, ==, expected_paint_count);
 }
@@ -182,6 +192,9 @@ static gboolean
 verify_redraws (gpointer user_data)
 {
   Data *data = user_data;
+
+  clutter_actor_set_offscreen_redirect (data->container,
+                                        CLUTTER_OFFSCREEN_REDIRECT_ALWAYS);
 
   /* Queueing a redraw on the actor should cause a redraw */
   clutter_actor_queue_redraw (data->container);
@@ -210,6 +223,7 @@ static gboolean
 run_verify (gpointer user_data)
 {
   Data *data = user_data;
+  int i;
 
   group_has_overlaps = FALSE;
 
@@ -303,6 +317,90 @@ run_verify (gpointer user_data)
                   0,
                   255);
 
+  /* ON_IDLE: Defer redirection through the FBO until it is deemed to be the
+   * best performing option, which means when the actor's contents have
+   * stopped changing.
+   */
+  clutter_actor_set_offscreen_redirect (data->container,
+                                        CLUTTER_OFFSCREEN_REDIRECT_ON_IDLE);
+
+  /* Changing modes should not incur a redraw */
+  verify_results (data,
+                  255, 0, 0,
+                  0,
+                  255);
+
+  /* These will incur a redraw because the actor is dirty: */
+  for (i = 0; i < 10; i++)
+    {
+      clutter_actor_queue_redraw (data->container);
+      verify_results (data,
+                      255, 0, 0,
+                      1,
+                      255);
+    }
+
+  /* The actor is not dirty, but also not yet cached so a redraw is expected */
+  verify_results (data,
+                  255, 0, 0,
+                  1,
+                  255);
+
+  /* These will NOT incur a redraw because the actor is unchanged: */
+  for (i = 0; i < 10; i++)
+    {
+      verify_results (data,
+                      255, 0, 0,
+                      0,
+                      255);
+    }
+
+  /* The first opacity change should require no redaw */
+  clutter_actor_set_opacity (data->container, 64);
+  verify_results (data,
+                  255, 191, 191,
+                  0,
+                  255);
+
+  /* The second opacity change should require no redaw */
+  clutter_actor_set_opacity (data->container, 127);
+  verify_results (data,
+                  255, 127, 127,
+                  0,
+                  255);
+
+  /* The third opacity change should require no redaw */
+  clutter_actor_set_opacity (data->container, 255);
+  verify_results (data,
+                  255, 0, 0,
+                  0,
+                  255);
+
+  /* Now several frames without the actor changing AND the FBO is populated.
+   * Expect no internal repaints.
+   */
+  for (i = 0; i < 10; i++)
+    {
+      verify_results (data,
+                      255, 0, 0,
+                      0,
+                      255);
+    }
+
+  /* Another opacity change, no redraw expected */
+  clutter_actor_set_opacity (data->container, 127);
+  verify_results (data,
+                  255, 127, 127,
+                  0,
+                  255);
+
+  /* Finally the actor's content changes so a redraw is expected */
+  clutter_actor_queue_redraw (data->container);
+  verify_results (data,
+                  255, 127, 127,
+                  1,
+                  127);
+
   /* Check redraws */
   g_idle_add (verify_redraws, data);
 
@@ -314,11 +412,11 @@ actor_offscreen_redirect (void)
 {
   Data data = { 0 };
 
-  if (!cogl_features_available (COGL_FEATURE_OFFSCREEN))
-    return;
-
   data.stage = clutter_test_get_stage ();
   data.parent_container = clutter_actor_new ();
+  clutter_actor_set_background_color (data.parent_container,
+                                      &(ClutterColor) { 255, 255, 255, 255 });
+
   data.container = g_object_new (foo_group_get_type (), NULL);
   data.foo_actor = g_object_new (foo_actor_get_type (), NULL);
   clutter_actor_set_size (CLUTTER_ACTOR (data.foo_actor), 100, 100);

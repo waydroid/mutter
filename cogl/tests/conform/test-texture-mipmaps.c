@@ -45,7 +45,9 @@ make_texture (void)
 }
 
 static void
-on_paint (ClutterActor *actor, TestState *state)
+on_paint (ClutterActor        *actor,
+          ClutterPaintContext *paint_context,
+          TestState           *state)
 {
   CoglHandle tex;
   CoglHandle material;
@@ -54,7 +56,7 @@ on_paint (ClutterActor *actor, TestState *state)
   tex = make_texture ();
   material = cogl_material_new ();
   cogl_material_set_layer (material, 0, tex);
-  cogl_handle_unref (tex);
+  cogl_object_unref (tex);
 
   /* Render a 1x1 pixel quad without mipmaps */
   cogl_set_source (material);
@@ -68,7 +70,7 @@ on_paint (ClutterActor *actor, TestState *state)
                                    COGL_MATERIAL_FILTER_NEAREST);
   cogl_rectangle (1, 0, 2, 1);
 
-  cogl_handle_unref (material);
+  cogl_object_unref (material);
 
   /* Read back the two pixels we rendered */
   cogl_read_pixels (0, 0, 2, 1,
@@ -129,7 +131,7 @@ test_texture_mipmaps (TestUtilsGTestFixture *fixture,
 
   clutter_main ();
 
-  g_source_remove (idle_source);
+  g_clear_handle_id (&idle_source, g_source_remove);
 
   if (cogl_test_verbose ())
     g_print ("OK\n");

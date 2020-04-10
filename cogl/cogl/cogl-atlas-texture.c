@@ -252,16 +252,14 @@ _cogl_atlas_texture_foreach_sub_texture_in_region (
 static void
 _cogl_atlas_texture_gl_flush_legacy_texobj_wrap_modes (CoglTexture *tex,
                                                        GLenum wrap_mode_s,
-                                                       GLenum wrap_mode_t,
-                                                       GLenum wrap_mode_p)
+                                                       GLenum wrap_mode_t)
 {
   CoglAtlasTexture *atlas_tex = COGL_ATLAS_TEXTURE (tex);
 
   /* Forward on to the sub texture */
   _cogl_texture_gl_flush_legacy_texobj_wrap_modes (atlas_tex->sub_texture,
                                                    wrap_mode_s,
-                                                   wrap_mode_t,
-                                                   wrap_mode_p);
+                                                   wrap_mode_t);
 }
 
 static void
@@ -729,18 +727,6 @@ allocate_space (CoglAtlasTexture *atlas_tex,
       return FALSE;
     }
 
-  /* If we can't use FBOs then it will be too slow to migrate textures
-     and we shouldn't use the atlas */
-  if (!cogl_has_feature (ctx, COGL_FEATURE_ID_OFFSCREEN))
-    {
-      g_set_error_literal (error,
-                           COGL_SYSTEM_ERROR,
-                           COGL_SYSTEM_ERROR_UNSUPPORTED,
-                           "Atlasing disabled because migrations "
-                           "would be too slow");
-      return FALSE;
-    }
-
   /* Look for an existing atlas that can hold the texture */
   for (l = ctx->atlases; l; l = l->next)
     {
@@ -938,11 +924,12 @@ cogl_atlas_texture_new_from_data (CoglContext *ctx,
   CoglAtlasTexture *atlas_tex;
 
   g_return_val_if_fail (format != COGL_PIXEL_FORMAT_ANY, NULL);
+  g_return_val_if_fail (cogl_pixel_format_get_n_planes (format) == 1, NULL);
   g_return_val_if_fail (data != NULL, NULL);
 
   /* Rowstride from width if not given */
   if (rowstride == 0)
-    rowstride = width * _cogl_pixel_format_get_bytes_per_pixel (format);
+    rowstride = width * cogl_pixel_format_get_bytes_per_pixel (format, 0);
 
   /* Wrap the data into a bitmap */
   bmp = cogl_bitmap_new_for_data (ctx,
@@ -1033,6 +1020,5 @@ cogl_atlas_texture_vtable =
     _cogl_atlas_texture_gl_flush_legacy_texobj_wrap_modes,
     _cogl_atlas_texture_get_format,
     _cogl_atlas_texture_get_gl_format,
-    NULL, /* is_foreign */
     NULL /* set_auto_mipmap */
   };

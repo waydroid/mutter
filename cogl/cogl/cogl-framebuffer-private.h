@@ -41,15 +41,6 @@
 #include "cogl-gl-header.h"
 #include "cogl-clip-stack.h"
 
-#ifdef COGL_HAS_XLIB_SUPPORT
-#include <X11/Xlib.h>
-#endif
-
-#ifdef COGL_HAS_GLX_SUPPORT
-#include <GL/glx.h>
-#include <GL/glxext.h>
-#endif
-
 typedef enum _CoglFramebufferType {
   COGL_FRAMEBUFFER_TYPE_ONSCREEN,
   COGL_FRAMEBUFFER_TYPE_OFFSCREEN
@@ -60,7 +51,6 @@ typedef struct
   CoglSwapChain *swap_chain;
   gboolean need_stencil;
   int samples_per_pixel;
-  gboolean depth_texture_enabled;
   gboolean stereo_enabled;
 } CoglFramebufferConfig;
 
@@ -181,10 +171,6 @@ struct _CoglFramebuffer
   int                 clear_clip_y1;
   gboolean            clear_clip_dirty;
 
-  /* Whether something has been drawn to the buffer since the last
-   * swap buffers or swap region. */
-  gboolean            mid_scene;
-
   /* driver specific */
   gboolean            dirty_bitmasks;
   CoglFramebufferBits bits;
@@ -269,16 +255,11 @@ _cogl_framebuffer_clear_without_flush4f (CoglFramebuffer *framebuffer,
 void
 _cogl_framebuffer_mark_clear_clip_dirty (CoglFramebuffer *framebuffer);
 
-void
-_cogl_framebuffer_mark_mid_scene (CoglFramebuffer *framebuffer);
-
 /*
  * _cogl_framebuffer_get_clip_stack:
  * @framebuffer: A #CoglFramebuffer
  *
- * Gets a pointer to the current clip stack. This can be used to later
- * return to the same clip stack state with
- * _cogl_framebuffer_set_clip_stack(). A reference is not taken on the
+ * Gets a pointer to the current clip stack. A reference is not taken on the
  * stack so if you want to keep it you should call
  * _cogl_clip_stack_ref().
  *
@@ -287,29 +268,15 @@ _cogl_framebuffer_mark_mid_scene (CoglFramebuffer *framebuffer);
 CoglClipStack *
 _cogl_framebuffer_get_clip_stack (CoglFramebuffer *framebuffer);
 
-/*
- * _cogl_framebuffer_set_clip_stack:
- * @framebuffer: A #CoglFramebuffer
- * @stack: a pointer to the replacement clip stack
- *
- * Replaces the @framebuffer clip stack with @stack.
- */
-void
-_cogl_framebuffer_set_clip_stack (CoglFramebuffer *framebuffer,
-                                  CoglClipStack *stack);
-
-CoglMatrixStack *
+COGL_EXPORT CoglMatrixStack *
 _cogl_framebuffer_get_modelview_stack (CoglFramebuffer *framebuffer);
 
-CoglMatrixStack *
+COGL_EXPORT CoglMatrixStack *
 _cogl_framebuffer_get_projection_stack (CoglFramebuffer *framebuffer);
 
 void
 _cogl_framebuffer_add_dependency (CoglFramebuffer *framebuffer,
                                   CoglFramebuffer *dependency);
-
-void
-_cogl_framebuffer_remove_all_dependencies (CoglFramebuffer *framebuffer);
 
 void
 _cogl_framebuffer_flush_journal (CoglFramebuffer *framebuffer);
@@ -349,27 +316,6 @@ _cogl_offscreen_new_with_texture_full (CoglTexture *texture,
                                        CoglOffscreenFlags create_flags,
                                        int level);
 
-/*
- * _cogl_push_framebuffers:
- * @draw_buffer: A pointer to the buffer used for drawing
- * @read_buffer: A pointer to the buffer used for reading back pixels
- *
- * Redirects drawing and reading to the specified framebuffers as in
- * cogl_push_framebuffer() except that it allows the draw and read
- * buffer to be different. The buffers are pushed as a pair so that
- * they can later both be restored with a single call to
- * cogl_pop_framebuffer().
- */
-void
-_cogl_push_framebuffers (CoglFramebuffer *draw_buffer,
-                         CoglFramebuffer *read_buffer);
-
-void
-_cogl_framebuffer_push_projection (CoglFramebuffer *framebuffer);
-
-void
-_cogl_framebuffer_pop_projection (CoglFramebuffer *framebuffer);
-
 void
 _cogl_framebuffer_save_clip_stack (CoglFramebuffer *framebuffer);
 
@@ -403,16 +349,9 @@ _cogl_framebuffer_draw_indexed_attributes (CoglFramebuffer *framebuffer,
                                            int n_attributes,
                                            CoglDrawFlags flags);
 
-gboolean
-_cogl_framebuffer_try_creating_gl_fbo (CoglContext *ctx,
-                                       CoglTexture *texture,
-                                       int texture_level,
-                                       int texture_level_width,
-                                       int texture_level_height,
-                                       CoglTexture *depth_texture,
-                                       CoglFramebufferConfig *config,
-                                       CoglOffscreenAllocateFlags flags,
-                                       CoglGLFramebuffer *gl_framebuffer);
+void
+cogl_framebuffer_set_viewport4fv (CoglFramebuffer *framebuffer,
+                                  float *viewport);
 
 unsigned long
 _cogl_framebuffer_compare (CoglFramebuffer *a,
@@ -454,7 +393,7 @@ _cogl_framebuffer_read_pixels_into_bitmap (CoglFramebuffer *framebuffer,
  * Since: 2.0
  * Stability: unstable
  */
-int
+COGL_EXPORT int
 _cogl_framebuffer_get_stencil_bits (CoglFramebuffer *framebuffer);
 
 #endif /* __COGL_FRAMEBUFFER_PRIVATE_H */

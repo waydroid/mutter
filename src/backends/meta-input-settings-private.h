@@ -114,6 +114,17 @@ struct _MetaInputSettingsClass
                                   GDesktopStylusButtonAction  primary,
                                   GDesktopStylusButtonAction  secondary,
                                   GDesktopStylusButtonAction  tertiary);
+
+  void (* set_mouse_middle_click_emulation) (MetaInputSettings  *settings,
+                                             ClutterInputDevice *device,
+                                             gboolean            enabled);
+  void (* set_touchpad_middle_click_emulation) (MetaInputSettings  *settings,
+                                                ClutterInputDevice *device,
+                                                gboolean            enabled);
+  void (* set_trackball_middle_click_emulation) (MetaInputSettings  *settings,
+                                                 ClutterInputDevice *device,
+                                                 gboolean            enabled);
+
   gboolean (* has_two_finger_scroll) (MetaInputSettings  *settings,
                                       ClutterInputDevice *device);
   gboolean (* is_trackball_device) (MetaInputSettings  *settings,
@@ -138,11 +149,6 @@ gchar *                    meta_input_settings_get_pad_action_label      (MetaIn
                                                                           ClutterInputDevice *pad,
                                                                           MetaPadActionType   action,
                                                                           guint               number);
-
-#ifdef HAVE_LIBWACOM
-WacomDevice * meta_input_settings_get_tablet_wacom_device (MetaInputSettings *settings,
-                                                           ClutterInputDevice *device);
-#endif
 
 void meta_input_settings_maybe_save_numlock_state    (MetaInputSettings *input_settings);
 void meta_input_settings_maybe_restore_numlock_state (MetaInputSettings *input_settings);

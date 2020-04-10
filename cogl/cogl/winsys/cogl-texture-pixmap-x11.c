@@ -49,9 +49,10 @@
 #include "cogl-renderer-private.h"
 #include "cogl-object-private.h"
 #include "cogl-xlib.h"
+#include "cogl-xlib-renderer-private.h"
+#include "cogl-x11-renderer-private.h"
 #include "cogl-private.h"
 #include "cogl-gtype-private.h"
-#include "driver/gl/cogl-pipeline-opengl-private.h"
 #include "driver/gl/cogl-texture-gl-private.h"
 #include "winsys/cogl-winsys-private.h"
 
@@ -229,6 +230,17 @@ process_damage_event (CoglTexturePixmapX11 *tex_pixmap,
       winsys = _cogl_texture_pixmap_x11_get_winsys (tex_pixmap);
       winsys->texture_pixmap_x11_damage_notify (tex_pixmap);
     }
+}
+
+static int
+_cogl_xlib_get_damage_base (void)
+{
+  CoglX11Renderer *x11_renderer;
+  _COGL_GET_CONTEXT (ctxt, -1);
+
+  x11_renderer =
+    (CoglX11Renderer *) _cogl_xlib_renderer_get_data (ctxt->display->renderer);
+  return x11_renderer->damage_base;
 }
 
 static CoglFilterReturn
@@ -554,23 +566,6 @@ cogl_texture_pixmap_x11_is_using_tfp_extension (CoglTexturePixmapX11 *tex_pixmap
   return !!tex_pixmap->winsys;
 }
 
-void
-cogl_texture_pixmap_x11_set_damage_object (CoglTexturePixmapX11 *tex_pixmap,
-                                           uint32_t damage,
-                                           CoglTexturePixmapX11ReportLevel
-                                                                  report_level)
-{
-  int damage_base;
-
-  _COGL_GET_CONTEXT (ctxt, NO_RETVAL);
-
-  g_return_if_fail (tex_pixmap->stereo_mode != COGL_TEXTURE_PIXMAP_RIGHT);
-
-  damage_base = _cogl_xlib_get_damage_base ();
-  if (damage_base >= 0)
-    set_damage_object_internal (ctxt, tex_pixmap, damage, report_level);
-}
-
 static CoglTexture *
 create_fallback_texture (CoglContext *ctx,
                          int width,
@@ -729,8 +724,9 @@ _cogl_texture_pixmap_x11_update_image_texture (CoglTexturePixmapX11 *tex_pixmap)
                                         image->depth,
                                         image->bits_per_pixel,
                                         image->byte_order == LSBFirst);
+  g_return_if_fail (cogl_pixel_format_get_n_planes (image_format) == 1);
 
-  bpp = _cogl_pixel_format_get_bytes_per_pixel (image_format);
+  bpp = cogl_pixel_format_get_bytes_per_pixel (image_format, 0);
   offset = image->bytes_per_line * src_y + bpp * src_x;
 
   _cogl_texture_set_region (tex_pixmap->tex,
@@ -1000,8 +996,7 @@ _cogl_texture_pixmap_x11_ensure_non_quad_rendering (CoglTexture *tex)
 static void
 _cogl_texture_pixmap_x11_gl_flush_legacy_texobj_wrap_modes (CoglTexture *tex,
                                                             GLenum wrap_mode_s,
-                                                            GLenum wrap_mode_t,
-                                                            GLenum wrap_mode_p)
+                                                            GLenum wrap_mode_t)
 {
   CoglTexturePixmapX11 *tex_pixmap = COGL_TEXTURE_PIXMAP_X11 (tex);
   CoglTexture *child_tex = _cogl_texture_pixmap_x11_get_texture (tex_pixmap);
@@ -1009,8 +1004,7 @@ _cogl_texture_pixmap_x11_gl_flush_legacy_texobj_wrap_modes (CoglTexture *tex,
   /* Forward on to the child texture */
   _cogl_texture_gl_flush_legacy_texobj_wrap_modes (child_tex,
                                                    wrap_mode_s,
-                                                   wrap_mode_t,
-                                                   wrap_mode_p);
+                                                   wrap_mode_t);
 }
 
 static CoglPixelFormat
@@ -1098,6 +1092,5 @@ cogl_texture_pixmap_x11_vtable =
     _cogl_texture_pixmap_x11_gl_flush_legacy_texobj_wrap_modes,
     _cogl_texture_pixmap_x11_get_format,
     _cogl_texture_pixmap_x11_get_gl_format,
-    NULL, /* is_foreign */
     NULL /* set_auto_mipmap */
   };

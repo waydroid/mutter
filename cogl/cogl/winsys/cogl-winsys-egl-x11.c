@@ -60,7 +60,6 @@ typedef struct _CoglDisplayXlib
 typedef struct _CoglOnscreenXlib
 {
   Window xwin;
-  gboolean is_foreign_xwin;
 } CoglOnscreenXlib;
 
 #ifdef EGL_KHR_image_pixmap
@@ -82,7 +81,7 @@ find_onscreen_for_xid (CoglContext *context, uint32_t xid)
       CoglOnscreenEGL *egl_onscreen;
       CoglOnscreenXlib *xlib_onscreen;
 
-      if (!framebuffer->type == COGL_FRAMEBUFFER_TYPE_ONSCREEN)
+      if (framebuffer->type != COGL_FRAMEBUFFER_TYPE_ONSCREEN)
         continue;
 
       egl_onscreen = COGL_ONSCREEN (framebuffer)->winsys;
@@ -387,9 +386,6 @@ _cogl_winsys_egl_context_init (CoglContext *context,
                                  event_filter_cb,
                                  context);
 
-  context->feature_flags |= COGL_FEATURE_ONSCREEN_MULTIPLE;
-  COGL_FLAGS_SET (context->features,
-                  COGL_FEATURE_ID_ONSCREEN_MULTIPLE, TRUE);
   COGL_FLAGS_SET (context->winsys_features,
                   COGL_WINSYS_FEATURE_MULTIPLE_ONSCREEN,
                   TRUE);
@@ -428,51 +424,10 @@ _cogl_winsys_egl_onscreen_init (CoglOnscreen *onscreen,
   Window xwin;
 
   /* FIXME: We need to explicitly Select for ConfigureNotify events.
-   * For foreign windows we need to be careful not to mess up any
-   * existing event mask.
    * We need to document that for windows we create then toolkits
    * must be careful not to clear event mask bits that we select.
    */
 
-  /* XXX: Note we ignore the user's original width/height when
-   * given a foreign X window. */
-  if (onscreen->foreign_xid)
-    {
-      Status status;
-      CoglXlibTrapState state;
-      XWindowAttributes attr;
-      int xerror;
-
-      xwin = onscreen->foreign_xid;
-
-      _cogl_xlib_renderer_trap_errors (display->renderer, &state);
-
-      status = XGetWindowAttributes (xlib_renderer->xdpy, xwin, &attr);
-      xerror = _cogl_xlib_renderer_untrap_errors (display->renderer,
-                                                  &state);
-      if (status == 0 || xerror)
-        {
-          char message[1000];
-          XGetErrorText (xlib_renderer->xdpy, xerror,
-                         message, sizeof (message));
-          g_set_error (error, COGL_WINSYS_ERROR,
-                       COGL_WINSYS_ERROR_CREATE_ONSCREEN,
-                       "Unable to query geometry of foreign "
-                       "xid 0x%08lX: %s",
-                       xwin, message);
-          return FALSE;
-        }
-
-      _cogl_framebuffer_winsys_update_size (framebuffer,
-                                            attr.width, attr.height);
-
-      /* Make sure the app selects for the events we require... */
-      onscreen->foreign_update_mask_callback (onscreen,
-                                              COGL_ONSCREEN_X11_EVENT_MASK,
-                                              onscreen->
-                                              foreign_update_mask_data);
-    }
-  else
     {
       int width;
       int height;
@@ -544,7 +499,6 @@ _cogl_winsys_egl_onscreen_init (CoglOnscreen *onscreen,
   egl_onscreen->platform = xlib_onscreen;
 
   xlib_onscreen->xwin = xwin;
-  xlib_onscreen->is_foreign_xwin = onscreen->foreign_xid ? TRUE : FALSE;
 
   egl_onscreen->egl_surface =
     eglCreateWindowSurface (egl_renderer->edpy,
@@ -569,7 +523,7 @@ _cogl_winsys_egl_onscreen_deinit (CoglOnscreen *onscreen)
 
   _cogl_xlib_renderer_trap_errors (renderer, &old_state);
 
-  if (!xlib_onscreen->is_foreign_xwin && xlib_onscreen->xwin != None)
+  if (xlib_onscreen->xwin != None)
     {
       XDestroyWindow (xlib_renderer->xdpy, xlib_onscreen->xwin);
       xlib_onscreen->xwin = None;
@@ -875,7 +829,7 @@ _cogl_winsys_egl_vtable =
     .onscreen_deinit = _cogl_winsys_egl_onscreen_deinit
   };
 
-const CoglWinsysVtable *
+COGL_EXPORT const CoglWinsysVtable *
 _cogl_winsys_egl_xlib_get_vtable (void)
 {
   static gboolean vtable_inited = FALSE;

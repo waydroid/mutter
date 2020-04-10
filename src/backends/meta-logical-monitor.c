@@ -122,7 +122,7 @@ derive_monitor_transform (MetaMonitor *monitor)
   MetaMonitorTransform transform;
 
   main_output = meta_monitor_get_main_output (monitor);
-  transform = meta_output_get_assigned_crtc (main_output)->transform;
+  transform = meta_output_get_assigned_crtc (main_output)->config->transform;
 
   return meta_monitor_crtc_to_logical_transform (monitor, transform);
 }
@@ -177,16 +177,14 @@ meta_logical_monitor_add_monitor (MetaLogicalMonitor *logical_monitor,
       for (l_output = outputs; l_output; l_output = l_output->next)
         {
           MetaOutput *output = l_output->data;
-          MetaCrtc *crtc;
 
           is_presentation = is_presentation && output->is_presentation;
-          crtc = meta_output_get_assigned_crtc (output);
-          if (crtc)
-            crtc->logical_monitor = logical_monitor;
         }
     }
 
   logical_monitor->is_presentation = is_presentation;
+
+  meta_monitor_set_logical_monitor (monitor, logical_monitor);
 }
 
 gboolean
@@ -242,6 +240,7 @@ foreach_crtc (MetaMonitor         *monitor,
   ForeachCrtcData *data = user_data;
 
   data->func (data->logical_monitor,
+              monitor,
               monitor_crtc_mode->output,
               meta_output_get_assigned_crtc (monitor_crtc_mode->output),
               data->user_data);

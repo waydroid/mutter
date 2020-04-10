@@ -101,12 +101,9 @@ get_window_for_event (MetaDisplay        *display,
 static void
 handle_idletime_for_event (const ClutterEvent *event)
 {
-  ClutterInputDevice *device, *source_device;
-  MetaIdleMonitor *core_monitor, *device_monitor;
-  int device_id;
+  MetaIdleMonitor *core_monitor;
 
-  device = clutter_event_get_device (event);
-  if (device == NULL)
+  if (clutter_event_get_device (event) == NULL)
     return;
 
   if (event->any.flags & CLUTTER_EVENT_FLAG_SYNTHETIC ||
@@ -118,21 +115,8 @@ handle_idletime_for_event (const ClutterEvent *event)
       event->type == CLUTTER_DELETE)
     return;
 
-  device_id = clutter_input_device_get_device_id (device);
-
   core_monitor = meta_idle_monitor_get_core ();
-  device_monitor = meta_idle_monitor_get_for_device (device_id);
-
   meta_idle_monitor_reset_idletime (core_monitor);
-  meta_idle_monitor_reset_idletime (device_monitor);
-
-  source_device = clutter_event_get_source_device (event);
-  if (source_device != device)
-    {
-      device_id = clutter_input_device_get_device_id (device);
-      device_monitor = meta_idle_monitor_get_for_device (device_id);
-      meta_idle_monitor_reset_idletime (device_monitor);
-    }
 }
 
 static gboolean
@@ -256,13 +240,31 @@ meta_display_handle_event (MetaDisplay        *display,
     }
 #endif
 
-  if (!display->current_pad_osd &&
-      (event->type == CLUTTER_PAD_BUTTON_PRESS ||
-       event->type == CLUTTER_PAD_BUTTON_RELEASE ||
-       event->type == CLUTTER_PAD_RING ||
-       event->type == CLUTTER_PAD_STRIP))
+  if (event->type == CLUTTER_PAD_BUTTON_PRESS ||
+      event->type == CLUTTER_PAD_BUTTON_RELEASE ||
+      event->type == CLUTTER_PAD_RING ||
+      event->type == CLUTTER_PAD_STRIP)
     {
-      if (meta_input_settings_handle_pad_event (meta_backend_get_input_settings (backend),
+      gboolean handle_pad_event;
+      gboolean is_mode_switch = FALSE;
+
+      if (event->type == CLUTTER_PAD_BUTTON_PRESS ||
+          event->type == CLUTTER_PAD_BUTTON_RELEASE)
+        {
+          ClutterInputDevice *pad;
+          uint32_t button;
+
+          pad = clutter_event_get_source_device (event);
+          button = clutter_event_get_button (event);
+
+          is_mode_switch =
+            clutter_input_device_get_mode_switch_button_group (pad, button) >= 0;
+        }
+
+      handle_pad_event = !display->current_pad_osd || is_mode_switch;
+
+      if (handle_pad_event &&
+          meta_input_settings_handle_pad_event (meta_backend_get_input_settings (backend),
                                                 event))
         {
           bypass_wayland = bypass_clutter = TRUE;
@@ -273,10 +275,7 @@ meta_display_handle_event (MetaDisplay        *display,
   source = clutter_event_get_source_device (event);
 
   if (source)
-    {
-      meta_backend_update_last_device (backend,
-                                       clutter_input_device_get_device_id (source));
-    }
+    meta_backend_update_last_device (backend, source);
 
 #ifdef HAVE_WAYLAND
   if (meta_is_wayland_compositor () && event->type == CLUTTER_MOTION)

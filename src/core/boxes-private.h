@@ -45,6 +45,7 @@ typedef enum _MetaRoundingStrategy
 {
   META_ROUNDING_STRATEGY_SHRINK,
   META_ROUNDING_STRATEGY_GROW,
+  META_ROUNDING_STRATEGY_ROUND,
 } MetaRoundingStrategy;
 
 /* Output functions -- note that the output buffer had better be big enough:
@@ -72,14 +73,14 @@ char* meta_rectangle_edge_list_to_string (
 /* Resize old_rect to the given new_width and new_height, but store the
  * result in rect.  NOTE THAT THIS IS RESIZE ONLY SO IT CANNOT BE USED FOR
  * A MOVERESIZE OPERATION (that simplies the routine a little bit as it
- * means there's no difference between NorthWestGravity and StaticGravity.
- * Also, I lied a little bit--technically, you could use it in a MoveResize
- * operation if you muck with old_rect just right).
+ * means there's no difference between META_GRAVITY_NORTH_WEST and
+ * META_GRAVITY_STATIC. Also, I lied a little bit--technically, you could use
+ * it in a MoveResize operation if you muck with old_rect just right).
  */
 META_EXPORT_TEST
 void meta_rectangle_resize_with_gravity (const MetaRectangle *old_rect,
                                          MetaRectangle       *rect,
-                                         int                  gravity,
+                                         MetaGravity          gravity,
                                          int                  new_width,
                                          int                  new_height);
 
@@ -252,10 +253,10 @@ void meta_rectangle_scale_double (const MetaRectangle  *rect,
                                   MetaRoundingStrategy  rounding_strategy,
                                   MetaRectangle        *dest);
 
-static inline ClutterRect
-meta_rectangle_to_clutter_rect (MetaRectangle *rect)
+static inline graphene_rect_t
+meta_rectangle_to_graphene_rect (MetaRectangle *rect)
 {
-  return (ClutterRect) {
+  return (graphene_rect_t) {
     .origin = {
       .x = rect->x,
       .y = rect->y
@@ -274,12 +275,12 @@ void meta_rectangle_transform (const MetaRectangle  *rect,
                                int                   height,
                                MetaRectangle        *dest);
 
-void meta_rectangle_from_clutter_rect (ClutterRect          *rect,
-                                       MetaRoundingStrategy  rounding_strategy,
-                                       MetaRectangle        *dest);
+void meta_rectangle_from_graphene_rect (const graphene_rect_t *rect,
+                                        MetaRoundingStrategy   rounding_strategy,
+                                        MetaRectangle         *dest);
 
 void meta_rectangle_crop_and_scale (const MetaRectangle *rect,
-                                    ClutterRect         *src_rect,
+                                    graphene_rect_t     *src_rect,
                                     int                  dst_width,
                                     int                  dst_height,
                                     MetaRectangle       *dest);

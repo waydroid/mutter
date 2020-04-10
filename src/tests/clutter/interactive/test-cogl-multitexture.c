@@ -55,25 +55,31 @@ frame_cb (ClutterTimeline  *timeline,
 }
 
 static void
-material_rectangle_paint (ClutterActor *actor, gpointer data)
+material_rectangle_paint (ClutterActor        *actor,
+                          ClutterPaintContext *paint_context,
+                          gpointer             data)
 {
   TestMultiLayerMaterialState *state = data;
+  CoglFramebuffer *framebuffer =
+    clutter_paint_context_get_framebuffer (paint_context);
 
-  cogl_push_matrix ();
+  cogl_framebuffer_push_matrix (framebuffer);
 
-  cogl_translate (150, 15, 0);
+  cogl_framebuffer_translate (framebuffer, 150, 15, 0);
 
-  cogl_set_source (state->material0);
-  cogl_rectangle_with_multitexture_coords (0, 0, 200, 213,
-                                           state->tex_coords,
-                                           12);
-  cogl_translate (-300, -30, 0);
-  cogl_set_source (state->material1);
-  cogl_rectangle_with_multitexture_coords (0, 0, 200, 213,
-                                           state->tex_coords,
-                                           12);
+  cogl_framebuffer_draw_multitextured_rectangle (framebuffer,
+                                                 COGL_FRAMEBUFFER (state->material0),
+                                                 0, 0, 200, 213,
+                                                 state->tex_coords,
+                                                 12);
+  cogl_framebuffer_translate (framebuffer, -300, -30, 0);
+  cogl_framebuffer_draw_multitextured_rectangle (framebuffer,
+                                                 COGL_FRAMEBUFFER (state->material1),
+                                                 0, 0, 200, 213,
+                                                 state->tex_coords,
+                                                 12);
 
-  cogl_pop_matrix ();
+  cogl_framebuffer_pop_matrix (framebuffer);
 }
 
 static void
@@ -225,12 +231,12 @@ test_cogl_multitexture_main (int argc, char *argv[])
 
   clutter_main();
 
-  cogl_handle_unref (state->material1);
-  cogl_handle_unref (state->material0);
-  cogl_handle_unref (state->alpha_tex);
-  cogl_handle_unref (state->redhand_tex);
-  cogl_handle_unref (state->light_tex0);
-  cogl_handle_unref (state->light_tex1);
+  cogl_object_unref (state->material1);
+  cogl_object_unref (state->material0);
+  cogl_object_unref (state->alpha_tex);
+  cogl_object_unref (state->redhand_tex);
+  cogl_object_unref (state->light_tex0);
+  cogl_object_unref (state->light_tex1);
   g_free (state);
 
   return 0;

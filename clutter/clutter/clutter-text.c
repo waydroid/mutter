@@ -157,7 +157,7 @@ struct _ClutterTextPrivate
   gint text_logical_y;
 
   /* Where to draw the cursor */
-  ClutterRect cursor_rect;
+  graphene_rect_t cursor_rect;
   ClutterColor cursor_color;
   guint cursor_size;
 
@@ -178,17 +178,17 @@ struct _ClutterTextPrivate
   guint password_hint_timeout;
 
   /* Signal handler for when the backend changes its font settings */
-  guint settings_changed_id;
+  gulong settings_changed_id;
 
   /* Signal handler for when the :text-direction changes */
-  guint direction_changed_id;
+  gulong direction_changed_id;
 
   ClutterInputFocus *input_focus;
   ClutterInputContentHintFlags input_hints;
   ClutterInputContentPurpose input_purpose;
 
   /* Signal handler for when the :resource-scale changes */
-  guint resource_scale_changed_id;
+  gulong resource_scale_changed_id;
 
   /* bitfields */
   guint alignment               : 2;
@@ -348,13 +348,23 @@ clutter_text_input_focus_request_surrounding (ClutterInputFocus *focus)
 
 static void
 clutter_text_input_focus_delete_surrounding (ClutterInputFocus *focus,
-                                             guint              offset,
+                                             int                offset,
                                              guint              len)
 {
   ClutterText *clutter_text = CLUTTER_TEXT_INPUT_FOCUS (focus)->text;
+  int cursor;
+  int start;
 
+  cursor = clutter_text_get_cursor_position (clutter_text);
+  start = cursor + offset;
+  if (start < 0)
+    {
+      g_warning ("The offset '%d' of deleting surrounding is larger than the cursor pos '%d'",
+                 offset, cursor);
+      return;
+    }
   if (clutter_text_get_editable (clutter_text))
-    clutter_text_delete_text (clutter_text, offset, len);
+    clutter_text_delete_text (clutter_text, start, len);
 }
 
 static void
@@ -759,7 +769,14 @@ clutter_text_create_layout_no_cache (ClutterText       *text,
           ClutterTextDirection text_dir;
 
           if (clutter_actor_has_key_focus (CLUTTER_ACTOR (text)))
-            pango_dir = _clutter_backend_get_keymap_direction (backend);
+            {
+              ClutterSeat *seat;
+              ClutterKeymap *keymap;
+
+              seat = clutter_backend_get_default_seat (backend);
+              keymap = clutter_seat_get_keymap (seat);
+              pango_dir = clutter_keymap_get_direction (keymap);
+            }
           else
             {
               text_dir = clutter_actor_get_text_direction (CLUTTER_ACTOR (text));
@@ -1304,7 +1321,7 @@ static inline void
 update_cursor_location (ClutterText *self)
 {
   ClutterTextPrivate *priv = self->priv;
-  ClutterRect rect;
+  graphene_rect_t rect;
   float x, y;
 
   if (!priv->editable)
@@ -1312,7 +1329,7 @@ update_cursor_location (ClutterText *self)
 
   rect = priv->cursor_rect;
   clutter_actor_get_transformed_position (CLUTTER_ACTOR (self), &x, &y);
-  clutter_rect_offset (&rect, x, y);
+  graphene_rect_offset (&rect, x, y);
   clutter_input_focus_set_cursor_location (priv->input_focus, &rect);
 }
 
@@ -1322,7 +1339,7 @@ clutter_text_ensure_cursor_position (ClutterText *self,
 {
   ClutterTextPrivate *priv = self->priv;
   gfloat x, y, cursor_height;
-  ClutterRect cursor_rect = CLUTTER_RECT_INIT_ZERO;
+  graphene_rect_t cursor_rect = GRAPHENE_RECT_INIT_ZERO;
   gint position;
 
   position = priv->position;
@@ -1345,25 +1362,17 @@ clutter_text_ensure_cursor_position (ClutterText *self,
                                             &x, &y,
                                             &cursor_height);
 
-  clutter_rect_init (&cursor_rect,
-                     x,
-                     y + CURSOR_Y_PADDING * scale,
-                     priv->cursor_size * scale,
-                     cursor_height - 2 * CURSOR_Y_PADDING * scale);
+  graphene_rect_init (&cursor_rect,
+                      x,
+                      y + CURSOR_Y_PADDING * scale,
+                      priv->cursor_size * scale,
+                      cursor_height - 2 * CURSOR_Y_PADDING * scale);
 
-  if (!clutter_rect_equals (&priv->cursor_rect, &cursor_rect))
+  if (!graphene_rect_equal (&priv->cursor_rect, &cursor_rect))
     {
-      ClutterGeometry cursor_pos;
-
       priv->cursor_rect = cursor_rect;
 
-      /* XXX:2.0 - remove */
-      cursor_pos.x = clutter_rect_get_x (&priv->cursor_rect);
-      cursor_pos.y = clutter_rect_get_y (&priv->cursor_rect);
-      cursor_pos.width = clutter_rect_get_width (&priv->cursor_rect);
-      cursor_pos.height = clutter_rect_get_height (&priv->cursor_rect);
-      g_signal_emit (self, text_signals[CURSOR_EVENT], 0, &cursor_pos);
-
+      g_signal_emit (self, text_signals[CURSOR_EVENT], 0, &cursor_rect);
       g_signal_emit (self, text_signals[CURSOR_CHANGED], 0);
 
       update_cursor_location (self);
@@ -1766,30 +1775,12 @@ clutter_text_dispose (GObject *gobject)
   /* get rid of the entire cache */
   clutter_text_dirty_cache (self);
 
-  if (priv->direction_changed_id)
-    {
-      g_signal_handler_disconnect (self, priv->direction_changed_id);
-      priv->direction_changed_id = 0;
-    }
+  g_clear_signal_handler (&priv->direction_changed_id, self);
+  g_clear_signal_handler (&priv->resource_scale_changed_id, self);
+  g_clear_signal_handler (&priv->settings_changed_id,
+                          clutter_get_default_backend ());
 
-  if (priv->resource_scale_changed_id)
-    {
-      g_signal_handler_disconnect (self, priv->resource_scale_changed_id);
-      priv->resource_scale_changed_id = 0;
-    }
-
-  if (priv->settings_changed_id)
-    {
-      g_signal_handler_disconnect (clutter_get_default_backend (),
-                                   priv->settings_changed_id);
-      priv->settings_changed_id = 0;
-    }
-
-  if (priv->password_hint_id)
-    {
-      g_source_remove (priv->password_hint_id);
-      priv->password_hint_id = 0;
-    }
+  g_clear_handle_id (&priv->password_hint_id, g_source_remove);
 
   clutter_text_set_buffer (self, NULL);
 
@@ -2017,7 +2008,7 @@ selection_paint (ClutterText     *self,
                                 color->blue,
                                 paint_opacity * color->alpha / 255);
 
-      cogl_pango_render_layout (layout, priv->text_x, 0, &cogl_color, 0);
+      cogl_pango_show_layout (fb, layout, priv->text_x, 0, &cogl_color);
 
       cogl_framebuffer_pop_clip (fb);
     }
@@ -2472,8 +2463,7 @@ clutter_text_key_press (ClutterActor    *actor,
 
           if (priv->show_password_hint)
             {
-              if (priv->password_hint_id != 0)
-                g_source_remove (priv->password_hint_id);
+              g_clear_handle_id (&priv->password_hint_id, g_source_remove);
 
               priv->password_hint_visible = TRUE;
               priv->password_hint_id =
@@ -2575,7 +2565,8 @@ clutter_text_compute_layout_offsets (ClutterText           *self,
 #define TEXT_PADDING    2
 
 static void
-clutter_text_paint (ClutterActor *self)
+clutter_text_paint (ClutterActor        *self,
+                    ClutterPaintContext *paint_context)
 {
   ClutterText *text = CLUTTER_TEXT (self);
   ClutterTextPrivate *priv = text->priv;
@@ -2593,7 +2584,7 @@ clutter_text_paint (ClutterActor *self)
   float alloc_height;
   float resource_scale;
 
-  fb = cogl_get_draw_framebuffer ();
+  fb = clutter_paint_context_get_framebuffer (paint_context);
 
   /* Note that if anything in this paint method changes it needs to be
      reflected in the get_paint_volume implementation which is tightly
@@ -2712,7 +2703,7 @@ clutter_text_paint (ClutterActor *self)
 
       if (actor_width < text_width)
         {
-          gint cursor_x = clutter_rect_get_x (&priv->cursor_rect);
+          gint cursor_x = graphene_rect_get_x (&priv->cursor_rect);
 
           if (priv->position == -1)
             {
@@ -2781,7 +2772,7 @@ clutter_text_paint (ClutterActor *self)
                             priv->text_color.green,
                             priv->text_color.blue,
                             real_opacity);
-  cogl_pango_render_layout (layout, priv->text_x, priv->text_y, &color, 0);
+  cogl_pango_show_layout (fb, layout, priv->text_x, priv->text_y, &color);
 
   selection_paint (text, fb);
 
@@ -2799,7 +2790,7 @@ add_selection_to_paint_volume (ClutterText           *text,
 {
   ClutterPaintVolume *total_volume = user_data;
   ClutterPaintVolume rect_volume;
-  ClutterVertex vertex;
+  graphene_point3d_t vertex;
 
   _clutter_paint_volume_init_static (&rect_volume, CLUTTER_ACTOR (text));
 
@@ -2821,7 +2812,7 @@ clutter_text_get_paint_volume_for_cursor (ClutterText        *text,
                                           ClutterPaintVolume *volume)
 {
   ClutterTextPrivate *priv = text->priv;
-  ClutterVertex origin;
+  graphene_point3d_t origin;
 
   clutter_text_ensure_cursor_position (text, resource_scale);
 
@@ -2864,7 +2855,7 @@ clutter_text_get_paint_volume (ClutterActor       *self,
     {
       PangoLayout *layout;
       PangoRectangle ink_rect;
-      ClutterVertex origin;
+      graphene_point3d_t origin;
       float resource_scale;
 
       /* If the text is single line editable then it gets clipped to
@@ -4399,10 +4390,10 @@ clutter_text_class_init (ClutterTextClass *klass)
   /**
    * ClutterText::cursor-event:
    * @self: the #ClutterText that emitted the signal
-   * @geometry: the coordinates of the cursor
+   * @rect: the coordinates of the cursor
    *
    * The ::cursor-event signal is emitted whenever the cursor position
-   * changes inside a #ClutterText actor. Inside @geometry it is stored
+   * changes inside a #ClutterText actor. Inside @rect it is stored
    * the current position and size of the cursor, relative to the actor
    * itself.
    *
@@ -4417,7 +4408,7 @@ clutter_text_class_init (ClutterTextClass *klass)
 		  G_STRUCT_OFFSET (ClutterTextClass, cursor_event),
 		  NULL, NULL, NULL,
 		  G_TYPE_NONE, 1,
-		  CLUTTER_TYPE_GEOMETRY | G_SIGNAL_TYPE_STATIC_SCOPE);
+		  GRAPHENE_TYPE_RECT | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * ClutterText::cursor-changed:
@@ -6780,8 +6771,8 @@ clutter_text_get_layout_offsets (ClutterText *self,
  * Since: 1.16
  */
 void
-clutter_text_get_cursor_rect (ClutterText *self,
-                              ClutterRect *rect)
+clutter_text_get_cursor_rect (ClutterText     *self,
+                              graphene_rect_t *rect)
 {
   g_return_if_fail (CLUTTER_IS_TEXT (self));
   g_return_if_fail (rect != NULL);

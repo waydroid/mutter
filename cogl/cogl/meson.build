@@ -12,6 +12,7 @@ cdata.set('COGL_HAS_X11', have_x11)
 cdata.set('COGL_HAS_X11_SUPPORT', have_x11)
 cdata.set('COGL_HAS_XLIB', have_x11)
 cdata.set('COGL_HAS_XLIB_SUPPORT', have_x11)
+cdata.set('COGL_HAS_TRACING', have_profiler)
 
 cogl_defines_h = configure_file(
   input: 'cogl-defines.h.meson',
@@ -65,21 +66,17 @@ built_headers += [cogl_gl_header_h]
 
 cogl_deprecated_headers = [
   'deprecated/cogl-material-compat.h',
-  'deprecated/cogl-vertex-buffer.h',
   'deprecated/cogl-shader.h',
   'deprecated/cogl-clutter.h',
   'deprecated/cogl-type-casts.h',
   'deprecated/cogl-auto-texture.h',
 ]
 
-cogl_deprecated_nonintrospected_headers = [
-  'deprecated/cogl-framebuffer-deprecated.h',
-]
-
 cogl_headers = [
   'cogl1-context.h',
   'cogl-bitmap.h',
   'cogl-color.h',
+  'cogl-context.h',
   'cogl-framebuffer.h',
   'cogl-matrix.h',
   'cogl-object.h',
@@ -89,22 +86,20 @@ cogl_headers = [
   'cogl-pipeline-state.h',
   'cogl-pipeline-layer-state.h',
   'cogl-pixel-format.h',
-  'cogl-primitives.h',
   'cogl-texture.h',
   'cogl-texture-2d.h',
   'cogl-texture-2d-sliced.h',
   'cogl-types.h',
+  'cogl-trace.h',
   'cogl.h',
 ]
 
 cogl_nonintrospected_headers = [
-  'cogl-deprecated.h',
-  'cogl-pango.h',
   'cogl-renderer.h',
   'cogl-swap-chain.h',
   'cogl-onscreen-template.h',
+  'cogl-dma-buf-handle.h',
   'cogl-display.h',
-  'cogl-context.h',
   'cogl-snippet.h',
   'cogl-index-buffer.h',
   'cogl-attribute-buffer.h',
@@ -112,13 +107,9 @@ cogl_nonintrospected_headers = [
   'cogl-attribute.h',
   'cogl-primitive.h',
   'cogl-frame-info.h',
-  'cogl-vector.h',
-  'cogl-euler.h',
   'cogl-output.h',
-  'cogl-quaternion.h',
   'cogl-matrix-stack.h',
   'cogl-poll.h',
-  'cogl-texture-2d-gl.h',
   'cogl-sub-texture.h',
   'cogl-atlas-texture.h',
   'cogl-meta-texture.h',
@@ -171,6 +162,8 @@ cogl_common_driver_sources = [
   'driver/gl/cogl-clip-stack-gl.c',
   'driver/gl/cogl-buffer-gl-private.h',
   'driver/gl/cogl-buffer-gl.c',
+  'driver/gl/cogl-bitmap-gl-private.h',
+  'driver/gl/cogl-bitmap-gl.c',
   'driver/gl/cogl-pipeline-opengl.c',
   'driver/gl/cogl-pipeline-opengl-private.h',
   'driver/gl/cogl-pipeline-fragend-glsl.c',
@@ -213,6 +206,7 @@ cogl_sources = [
   'cogl-i18n-private.h',
   'cogl-debug.h',
   'cogl-debug-options.h',
+  'cogl-dma-buf-handle.c',
   'cogl-gpu-info.c',
   'cogl-gpu-info-private.h',
   'cogl-context-private.h',
@@ -242,7 +236,6 @@ cogl_sources = [
   'cogl-bitmap-conversion.c',
   'cogl-bitmap-packing.h',
   'cogl-primitives-private.h',
-  'cogl-primitives.h',
   'cogl-primitives.c',
   'cogl-bitmap-pixbuf.c',
   'cogl-clip-stack.h',
@@ -266,10 +259,6 @@ cogl_sources = [
   'cogl-primitive-private.h',
   'cogl-primitive.c',
   'cogl-matrix.c',
-  'cogl-vector.c',
-  'cogl-euler.c',
-  'cogl-quaternion-private.h',
-  'cogl-quaternion.c',
   'cogl-matrix-private.h',
   'cogl-matrix-stack.c',
   'cogl-matrix-stack-private.h',
@@ -301,7 +290,6 @@ cogl_sources = [
   'cogl-blend-string.h',
   'cogl-debug.c',
   'cogl-trace.c',
-  'cogl-trace.h',
   'cogl-sub-texture-private.h',
   'cogl-texture-private.h',
   'cogl-texture-2d-private.h',
@@ -344,10 +332,6 @@ cogl_sources = [
   'cogl-point-in-poly.c',
   'cogl-list.c',
   'cogl-list.h',
-  'winsys/cogl-winsys-stub-private.h',
-  'winsys/cogl-winsys-stub.c',
-  'cogl-config-private.h',
-  'cogl-config.c',
   'cogl-boxed-value.h',
   'cogl-boxed-value.c',
   'cogl-snippet-private.h',
@@ -355,7 +339,6 @@ cogl_sources = [
   'cogl-poll-private.h',
   'cogl-poll.c',
   'gl-prototypes/cogl-all-functions.h',
-  'gl-prototypes/cogl-fixed-functions.h',
   'cogl-memory-stack-private.h',
   'cogl-memory-stack.c',
   'cogl-magazine-private.h',
@@ -364,8 +347,6 @@ cogl_sources = [
   'cogl-closure-list.c',
   'cogl-fence.c',
   'cogl-fence-private.h',
-  'deprecated/cogl-vertex-buffer-private.h',
-  'deprecated/cogl-vertex-buffer.c',
   'deprecated/cogl-material-compat.c',
   'deprecated/cogl-program.c',
   'deprecated/cogl-program-private.h',
@@ -373,7 +354,6 @@ cogl_sources = [
   'deprecated/cogl-shader-private.h',
   'deprecated/cogl-shader.c',
   'deprecated/cogl-clutter.c',
-  'deprecated/cogl-framebuffer-deprecated.c',
   'cogl-glib-source.c',
   'cogl-mutter.h',
 ]
@@ -383,15 +363,11 @@ if have_x11
     'winsys/cogl-texture-pixmap-x11.h',
     'cogl-xlib.h',
   ]
-  cogl_deprecated_nonintrospected_headers += [
-    'deprecated/cogl-clutter-xlib.h',
-  ]
   cogl_sources += [
     'cogl-x11-renderer-private.h',
     'cogl-xlib-private.h',
     'cogl-xlib-renderer-private.h',
     'cogl-xlib-renderer.c',
-    'cogl-xlib.c',
     'winsys/cogl-texture-pixmap-x11-private.h',
     'winsys/cogl-texture-pixmap-x11.c',
   ]
@@ -402,11 +378,11 @@ endif
 
 if have_glx
   cogl_nonintrospected_headers += [
-    'cogl-glx.h',
+    'winsys/cogl-glx.h',
   ]
   cogl_sources += [
-    'cogl-glx-display-private.h',
-    'cogl-glx-renderer-private.h',
+    'winsys/cogl-glx-display-private.h',
+    'winsys/cogl-glx-renderer-private.h',
     'winsys/cogl-winsys-glx-feature-functions.h',
     'winsys/cogl-winsys-glx-private.h',
     'winsys/cogl-winsys-glx.c',
@@ -448,38 +424,23 @@ cogl_headers_all = [
   cogl_introspected_headers,
   cogl_nonintrospected_headers,
   cogl_deprecated_headers,
-  cogl_deprecated_nonintrospected_headers,
 ]
 
 cogl_test_deps = []
-cogl_unit_tests_map_data = configuration_data()
 
 if have_cogl_tests
   cogl_test_deps += [libmutter_cogl_test_fixtures_dep]
-
-  cogl_unit_tests_map_data.set('unit_tests_symbols', 'test_*; unit_test_*;')
 endif
 
-libmutter_cogl_map = configure_file(
-  input: 'libmutter-cogl.map.in',
-  output: 'libmutter-cogl.map',
-  configuration: cogl_unit_tests_map_data,
-  install: false,
-)
-
 libmutter_cogl_name = 'mutter-cogl-' + libmutter_api_version
-libmutter_cogl_link_args = [
-  '-Wl,--version-script,@0@'.format(libmutter_cogl_map),
-]
 libmutter_cogl = shared_library(libmutter_cogl_name,
   sources: [cogl_sources, cogl_headers_all],
   version: '0.0.0',
   soversion: 0,
   c_args: cogl_c_args,
   include_directories: cogl_includepath,
-  link_depends: libmutter_cogl_map,
-  link_args: libmutter_cogl_link_args,
   dependencies: [cogl_deps, cogl_test_deps],
+  gnu_symbol_visibility: 'hidden',
   install_rpath: pkglibdir,
   install_dir: pkglibdir,
   install: true,
@@ -494,7 +455,7 @@ if have_introspection
     sources: cogl_introspected_headers,
     nsversion: libmutter_api_version,
     namespace: 'Cogl',
-    includes: ['GL-1.0', 'GObject-2.0'],
+    includes: ['cairo-1.0', 'GL-1.0', 'GObject-2.0', 'Graphene-1.0'],
     dependencies: [cogl_deps],
     extra_args: introspection_args + [
       '-UCOGL_COMPILATION',
@@ -504,6 +465,7 @@ if have_introspection
       '-D__COGL_GLX_H_INSIDE__',
       '-DCOGL_GIR_SCANNING',
     ],
+    header: 'cogl/cogl.h',
     install_dir_gir: pkglibdir,
     install_dir_typelib: pkglibdir,
     install: true
@@ -518,7 +480,6 @@ install_headers([
 
 install_headers([
     cogl_deprecated_headers,
-    cogl_deprecated_nonintrospected_headers,
   ],
   subdir: join_paths(cogl_cogl_includesubdir, 'deprecated'))
 

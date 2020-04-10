@@ -44,7 +44,6 @@
 static void _cogl_shader_free (CoglShader *shader);
 
 COGL_HANDLE_DEFINE (Shader, shader);
-COGL_OBJECT_DEFINE_DEPRECATED_REF_COUNTING (shader);
 
 #ifndef GL_FRAGMENT_SHADER
 #define GL_FRAGMENT_SHADER 0x8B30
@@ -71,7 +70,7 @@ cogl_create_shader (CoglShaderType type)
 {
   CoglShader *shader;
 
-  _COGL_GET_CONTEXT (ctx, COGL_INVALID_HANDLE);
+  _COGL_GET_CONTEXT (ctx, NULL);
 
   switch (type)
     {
@@ -81,11 +80,10 @@ cogl_create_shader (CoglShaderType type)
     default:
       g_warning ("Unexpected shader type (0x%08lX) given to "
                  "cogl_create_shader", (unsigned long) type);
-      return COGL_INVALID_HANDLE;
+      return NULL;
     }
 
   shader = g_slice_new (CoglShader);
-  shader->language = COGL_SHADER_LANGUAGE_GLSL;
   shader->gl_handle = 0;
   shader->compilation_pipeline = NULL;
   shader->type = type;
@@ -115,7 +113,6 @@ cogl_shader_source (CoglHandle   handle,
                     const char  *source)
 {
   CoglShader *shader;
-  CoglShaderLanguage language;
 
   _COGL_GET_CONTEXT (ctx, NO_RETVAL);
 
@@ -123,29 +120,8 @@ cogl_shader_source (CoglHandle   handle,
     return;
 
   shader = handle;
-  language = COGL_SHADER_LANGUAGE_GLSL;
-
-  /* Delete the old object if the language is changing... */
-  if (G_UNLIKELY (language != shader->language) &&
-      shader->gl_handle)
-    delete_shader (shader);
 
   shader->source = g_strdup (source);
-
-  shader->language = language;
-}
-
-void
-cogl_shader_compile (CoglHandle handle)
-{
-  /* XXX: For GLSL we don't actually compile anything until the shader
-   * gets used so we have an opportunity to add some boilerplate to
-   * the shader.
-   *
-   * At the end of the day this is obviously a badly designed API
-   * given that we are having to lie to the user. It was a mistake to
-   * so thinly wrap the OpenGL shader API and the current plan is to
-   * replace it with a pipeline snippets API. */
 }
 
 void
@@ -219,33 +195,6 @@ _cogl_shader_compile_real (CoglHandle handle,
     }
 }
 
-char *
-cogl_shader_get_info_log (CoglHandle handle)
-{
-  if (!cogl_is_shader (handle))
-    return NULL;
-
-  /* XXX: This API doesn't really do anything!
-   *
-   * This API is purely for compatibility
-   *
-   * The reason we don't do anything is because a shader needs to
-   * be associated with a CoglPipeline for Cogl to be able to
-   * compile and link anything.
-   *
-   * The way this API was originally designed as a very thin wrapper
-   * over the GL api was a mistake and it's now very difficult to
-   * make the API work in a meaningful way given how the rest of Cogl
-   * has evolved.
-   *
-   * The CoglShader API is mostly deprecated by CoglSnippets and so
-   * these days we do the bare minimum to support the existing users
-   * of it until they are able to migrate to the snippets api.
-   */
-
-  return g_strdup ("");
-}
-
 CoglShaderType
 cogl_shader_get_type (CoglHandle  handle)
 {
@@ -261,36 +210,4 @@ cogl_shader_get_type (CoglHandle  handle)
 
   shader = handle;
   return shader->type;
-}
-
-gboolean
-cogl_shader_is_compiled (CoglHandle handle)
-{
-#if defined (HAVE_COGL_GL) || defined (HAVE_COGL_GLES2)
-  if (!cogl_is_shader (handle))
-    return FALSE;
-
-  /* XXX: This API doesn't really do anything!
-   *
-   * This API is purely for compatibility and blatantly lies to the
-   * user about whether their shader has been compiled.
-   *
-   * I suppose we could say we're stretching the definition of
-   * "compile" and are deferring any related errors to be "linker"
-   * errors.
-   *
-   * The reason we don't do anything is because a shader needs to
-   * be associated with a CoglPipeline for Cogl to be able to
-   * compile and link anything.
-   *
-   * The CoglShader API is mostly deprecated by CoglSnippets and so
-   * these days we do the bare minimum to support the existing users
-   * of it until they are able to migrate to the snippets api.
-   */
-
-  return TRUE;
-
-#else
-  return FALSE;
-#endif
 }

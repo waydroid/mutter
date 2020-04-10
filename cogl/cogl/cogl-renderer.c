@@ -43,12 +43,9 @@
 #include "cogl-renderer.h"
 #include "cogl-renderer-private.h"
 #include "cogl-display-private.h"
-#include "cogl-config-private.h"
 #include "cogl-gtype-private.h"
 
-#include "driver/gl/cogl-util-gl-private.h"
 #include "winsys/cogl-winsys-private.h"
-#include "winsys/cogl-winsys-stub-private.h"
 
 #ifdef COGL_HAS_EGL_PLATFORM_XLIB_SUPPORT
 #include "winsys/cogl-winsys-egl-x11-private.h"
@@ -94,8 +91,6 @@ static CoglDriverDescription _cogl_drivers[] =
     COGL_DRIVER_GL,
     "gl",
     { COGL_PRIVATE_FEATURE_ANY_GL,
-      COGL_PRIVATE_FEATURE_GL_FIXED,
-      COGL_PRIVATE_FEATURE_GL_PROGRAMMABLE,
       -1 },
     &_cogl_driver_gl,
     &_cogl_texture_driver_gl,
@@ -105,7 +100,6 @@ static CoglDriverDescription _cogl_drivers[] =
     COGL_DRIVER_GL3,
     "gl3",
     { COGL_PRIVATE_FEATURE_ANY_GL,
-      COGL_PRIVATE_FEATURE_GL_PROGRAMMABLE,
       -1 },
     &_cogl_driver_gl,
     &_cogl_texture_driver_gl,
@@ -117,8 +111,6 @@ static CoglDriverDescription _cogl_drivers[] =
     COGL_DRIVER_GLES2,
     "gles2",
     { COGL_PRIVATE_FEATURE_ANY_GL,
-      COGL_PRIVATE_FEATURE_GL_EMBEDDED,
-      COGL_PRIVATE_FEATURE_GL_PROGRAMMABLE,
       -1 },
     &_cogl_driver_gles,
     &_cogl_texture_driver_gles,
@@ -143,7 +135,6 @@ static CoglWinsysVtableGetter _cogl_winsys_vtable_getters[] =
 #ifdef COGL_HAS_EGL_PLATFORM_XLIB_SUPPORT
   _cogl_winsys_egl_xlib_get_vtable,
 #endif
-  _cogl_winsys_stub_get_vtable,
 };
 
 static void _cogl_renderer_free (CoglRenderer *renderer);
@@ -231,7 +222,7 @@ cogl_xlib_renderer_set_foreign_display (CoglRenderer *renderer,
 
   /* If the application is using a foreign display then we can assume
      it will also do its own event retrieval */
-  cogl_xlib_renderer_set_event_retrieval_enabled (renderer, FALSE);
+  renderer->xlib_enable_event_retrieval = FALSE;
 }
 
 Display *
@@ -240,17 +231,6 @@ cogl_xlib_renderer_get_foreign_display (CoglRenderer *renderer)
   g_return_val_if_fail (cogl_is_renderer (renderer), NULL);
 
   return renderer->foreign_xdpy;
-}
-
-void
-cogl_xlib_renderer_set_event_retrieval_enabled (CoglRenderer *renderer,
-                                                gboolean enable)
-{
-  g_return_if_fail (cogl_is_renderer (renderer));
-  /* NB: Renderers are considered immutable once connected */
-  g_return_if_fail (!renderer->connected);
-
-  renderer->xlib_enable_event_retrieval = enable;
 }
 
 void
@@ -408,9 +388,6 @@ _cogl_renderer_choose_driver (CoglRenderer *renderer,
   SatisfyConstraintsState state;
   const CoglDriverDescription *desc;
   int i;
-
-  if (!driver_name)
-    driver_name = _cogl_config_driver;
 
   if (driver_name)
     {
@@ -582,8 +559,6 @@ cogl_renderer_connect (CoglRenderer *renderer, GError **error)
       else
         {
           char *user_choice = getenv ("COGL_RENDERER");
-          if (!user_choice)
-            user_choice = _cogl_config_renderer;
           if (user_choice &&
               g_ascii_strcasecmp (winsys->name, user_choice) != 0)
             continue;
@@ -734,20 +709,6 @@ _cogl_renderer_get_proc_address (CoglRenderer *renderer,
   return winsys->renderer_get_proc_address (renderer, name, in_core);
 }
 
-int
-cogl_renderer_get_n_fragment_texture_units (CoglRenderer *renderer)
-{
-  int n = 0;
-
-  _COGL_GET_CONTEXT (ctx, 0);
-
-#if defined (HAVE_COGL_GL) || defined (HAVE_COGL_GLES2)
-  GE (ctx, glGetIntegerv (GL_MAX_TEXTURE_IMAGE_UNITS, &n));
-#endif
-
-  return n;
-}
-
 void
 cogl_renderer_add_constraint (CoglRenderer *renderer,
                               CoglRendererConstraint constraint)
@@ -794,4 +755,18 @@ cogl_renderer_foreach_output (CoglRenderer *renderer,
 
   for (l = renderer->outputs; l; l = l->next)
     callback (l->data, user_data);
+}
+
+CoglDmaBufHandle *
+cogl_renderer_create_dma_buf (CoglRenderer  *renderer,
+                              int            width,
+                              int            height,
+                              GError       **error)
+{
+  const CoglWinsysVtable *winsys = _cogl_renderer_get_winsys (renderer);
+
+  if (winsys->renderer_create_dma_buf)
+    return winsys->renderer_create_dma_buf (renderer, width, height, error);
+
+  return NULL;
 }

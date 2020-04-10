@@ -81,13 +81,11 @@ _cogl_texture_gl_prep_alignment_for_pixels_download (CoglContext *ctx,
 void
 _cogl_texture_gl_flush_legacy_texobj_wrap_modes (CoglTexture *texture,
                                                  unsigned int wrap_mode_s,
-                                                 unsigned int wrap_mode_t,
-                                                 unsigned int wrap_mode_p)
+                                                 unsigned int wrap_mode_t)
 {
   texture->vtable->gl_flush_legacy_texobj_wrap_modes (texture,
                                                       wrap_mode_s,
-                                                      wrap_mode_t,
-                                                      wrap_mode_p);
+                                                      wrap_mode_t);
 }
 
 void
@@ -119,8 +117,7 @@ _cogl_texture_gl_maybe_update_max_level (CoglTexture *texture,
       texture->max_level = max_level;
 
       _cogl_bind_gl_texture_transient (gl_target,
-                                       gl_handle,
-                                       _cogl_texture_is_foreign (texture));
+                                       gl_handle);
 
       GE( ctx, glTexParameteri (gl_target,
                                 GL_TEXTURE_MAX_LEVEL, texture->max_level));
@@ -141,8 +138,7 @@ _cogl_texture_gl_generate_mipmaps (CoglTexture *texture)
   cogl_texture_get_gl_texture (texture, &gl_handle, &gl_target);
 
   _cogl_bind_gl_texture_transient (gl_target,
-                                   gl_handle,
-                                   _cogl_texture_is_foreign (texture));
+                                   gl_handle);
   GE( ctx, glGenerateMipmap (gl_target) );
 }
 

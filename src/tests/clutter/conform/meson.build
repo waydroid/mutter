@@ -10,6 +10,7 @@ clutter_tests_conform_link_args = [
 
 clutter_conform_tests_actor_tests = [
   'actor-anchors',
+  'actor-clone',
   'actor-destroy',
   'actor-graph',
   'actor-invariants',
@@ -33,11 +34,9 @@ clutter_conform_tests_general_tests = [
   'interval',
   'script-parser',
   'units',
-  'point',
 ]
 
 clutter_conform_tests_deprecated_tests = [
-  'behaviours',
   'group',
   'rectangle',
 ]

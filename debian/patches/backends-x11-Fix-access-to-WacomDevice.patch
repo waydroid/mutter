@@ -1,0 +1,72 @@
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Tue, 7 Apr 2020 16:57:59 +0000
+Subject: backends/x11: Fix access to WacomDevice
+
+At some point we crossed the streams... In a short timespan we had
+1f00aba92c32 merged, pushing WacomDevice to a common parent object,
+and dcaa45fc0c199 implementing device grouping for X11.
+
+The latter did not rely on the former, and just happened to
+merge/compile without issues, but would promptly trigger a crash
+whenever the API would be used.
+
+Drop all traces of the WacomDevice internal to MetaInputDeviceX11.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1183
+
+(cherry picked from commit f0718c7d95820a38a54222ff362c76c2f7e0ec58)
+
+Origin: upstream, 3.36.2
+---
+ src/backends/x11/meta-input-device-x11.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/src/backends/x11/meta-input-device-x11.c b/src/backends/x11/meta-input-device-x11.c
+index 2406c34..6e41ffd 100644
+--- a/src/backends/x11/meta-input-device-x11.c
++++ b/src/backends/x11/meta-input-device-x11.c
+@@ -38,7 +38,6 @@ struct _MetaInputDeviceX11
+   float current_y;
+ 
+ #ifdef HAVE_LIBWACOM
+-  WacomDevice *wacom_device;
+   GArray *group_modes;
+ #endif
+ };
+@@ -93,13 +92,16 @@ meta_input_device_x11_is_grouped (ClutterInputDevice *device,
+                                   ClutterInputDevice *other_device)
+ {
+ #ifdef HAVE_LIBWACOM
+-  MetaInputDeviceX11 *device_x11 = META_INPUT_DEVICE_X11 (device);
+-  MetaInputDeviceX11 *other_device_x11 = META_INPUT_DEVICE_X11 (other_device);
++  WacomDevice *wacom_device, *other_wacom_device;
+ 
+-  if (device_x11->wacom_device &&
+-      other_device_x11->wacom_device &&
+-      libwacom_compare (device_x11->wacom_device,
+-                        other_device_x11->wacom_device,
++  wacom_device =
++    meta_input_device_get_wacom_device (META_INPUT_DEVICE (device));
++  other_wacom_device =
++    meta_input_device_get_wacom_device (META_INPUT_DEVICE (other_device));
++
++  if (wacom_device && other_wacom_device &&
++      libwacom_compare (wacom_device,
++                        other_wacom_device,
+                         WCOMPARE_NORMAL) == 0)
+     return TRUE;
+ #endif
+@@ -413,9 +415,12 @@ pad_switch_mode (ClutterInputDevice *device,
+ {
+   MetaInputDeviceX11 *device_x11 = META_INPUT_DEVICE_X11 (device);
+   uint32_t n_buttons, n_modes, button_group, next_mode, i;
++  WacomDevice *wacom_device;
+   GList *switch_buttons = NULL;
+ 
+-  n_buttons = libwacom_get_num_buttons (device_x11->wacom_device);
++  wacom_device =
++    meta_input_device_get_wacom_device (META_INPUT_DEVICE (device));
++  n_buttons = libwacom_get_num_buttons (wacom_device);
+ 
+   for (i = 0; i < n_buttons; i++)
+     {

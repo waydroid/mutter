@@ -23,6 +23,8 @@
 #include <cairo-gobject.h>
 #include <math.h>
 
+#include "clutter/clutter-private.h"
+
 enum
 {
   PROP_0,
@@ -49,6 +51,9 @@ typedef struct _ClutterStageViewPrivate
 
   CoglOffscreen *shadowfb;
   CoglPipeline *shadowfb_pipeline;
+
+  gboolean has_redraw_clip;
+  cairo_region_t *redraw_clip;
 
   guint dirty_viewport   : 1;
   guint dirty_projection : 1;
@@ -166,12 +171,11 @@ clutter_stage_view_invalidate_offscreen_blit_pipeline (ClutterStageView *view)
 }
 
 static void
-clutter_stage_view_copy_to_framebuffer (ClutterStageView            *view,
-                                        const cairo_rectangle_int_t *rect,
-                                        CoglPipeline                *pipeline,
-                                        CoglFramebuffer             *src_framebuffer,
-                                        CoglFramebuffer             *dst_framebuffer,
-                                        gboolean                     can_blit)
+clutter_stage_view_copy_to_framebuffer (ClutterStageView *view,
+                                        CoglPipeline     *pipeline,
+                                        CoglFramebuffer  *src_framebuffer,
+                                        CoglFramebuffer  *dst_framebuffer,
+                                        gboolean          can_blit)
 {
   CoglMatrix matrix;
 
@@ -204,8 +208,7 @@ clutter_stage_view_copy_to_framebuffer (ClutterStageView            *view,
 }
 
 void
-clutter_stage_view_blit_offscreen (ClutterStageView            *view,
-                                   const cairo_rectangle_int_t *rect)
+clutter_stage_view_after_paint (ClutterStageView *view)
 {
   ClutterStageViewPrivate *priv =
     clutter_stage_view_get_instance_private (view);
@@ -222,7 +225,6 @@ clutter_stage_view_blit_offscreen (ClutterStageView            *view,
       if (priv->shadowfb)
         {
           clutter_stage_view_copy_to_framebuffer (view,
-                                                  rect,
                                                   priv->offscreen_pipeline,
                                                   priv->offscreen,
                                                   priv->shadowfb,
@@ -231,7 +233,6 @@ clutter_stage_view_blit_offscreen (ClutterStageView            *view,
       else
         {
           clutter_stage_view_copy_to_framebuffer (view,
-                                                  rect,
                                                   priv->offscreen_pipeline,
                                                   priv->offscreen,
                                                   priv->framebuffer,
@@ -243,7 +244,6 @@ clutter_stage_view_blit_offscreen (ClutterStageView            *view,
     {
       clutter_stage_view_ensure_shadowfb_blit_pipeline (view);
       clutter_stage_view_copy_to_framebuffer (view,
-                                              rect,
                                               priv->shadowfb_pipeline,
                                               priv->shadowfb,
                                               priv->framebuffer,
@@ -305,6 +305,86 @@ clutter_stage_view_get_offscreen_transformation_matrix (ClutterStageView *view,
   ClutterStageViewClass *view_class = CLUTTER_STAGE_VIEW_GET_CLASS (view);
 
   view_class->get_offscreen_transformation_matrix (view, matrix);
+}
+
+void
+clutter_stage_view_add_redraw_clip (ClutterStageView            *view,
+                                    const cairo_rectangle_int_t *clip)
+{
+  ClutterStageViewPrivate *priv =
+    clutter_stage_view_get_instance_private (view);
+
+  if (priv->has_redraw_clip && !priv->redraw_clip)
+    return;
+
+  if (!clip)
+    {
+      g_clear_pointer (&priv->redraw_clip, cairo_region_destroy);
+      priv->has_redraw_clip = TRUE;
+      return;
+    }
+
+  if (clip->width == 0 || clip->height == 0)
+    return;
+
+  if (!priv->redraw_clip)
+    {
+      if (!clutter_util_rectangle_equal (&priv->layout, clip))
+        priv->redraw_clip = cairo_region_create_rectangle (clip);
+    }
+  else
+    {
+      cairo_region_union_rectangle (priv->redraw_clip, clip);
+
+      if (cairo_region_num_rectangles (priv->redraw_clip) == 1)
+        {
+          cairo_rectangle_int_t redraw_clip_extents;
+
+          cairo_region_get_extents (priv->redraw_clip, &redraw_clip_extents);
+          if (clutter_util_rectangle_equal (&priv->layout, &redraw_clip_extents))
+            g_clear_pointer (&priv->redraw_clip, cairo_region_destroy);
+        }
+    }
+
+  priv->has_redraw_clip = TRUE;
+}
+
+gboolean
+clutter_stage_view_has_redraw_clip (ClutterStageView *view)
+{
+  ClutterStageViewPrivate *priv =
+    clutter_stage_view_get_instance_private (view);
+
+  return priv->has_redraw_clip;
+}
+
+gboolean
+clutter_stage_view_has_full_redraw_clip (ClutterStageView *view)
+{
+  ClutterStageViewPrivate *priv =
+    clutter_stage_view_get_instance_private (view);
+
+  return priv->has_redraw_clip && !priv->redraw_clip;
+}
+
+const cairo_region_t *
+clutter_stage_view_peek_redraw_clip (ClutterStageView *view)
+{
+  ClutterStageViewPrivate *priv =
+    clutter_stage_view_get_instance_private (view);
+
+  return priv->redraw_clip;
+}
+
+cairo_region_t *
+clutter_stage_view_take_redraw_clip (ClutterStageView *view)
+{
+  ClutterStageViewPrivate *priv =
+    clutter_stage_view_get_instance_private (view);
+
+  priv->has_redraw_clip = FALSE;
+
+  return g_steal_pointer (&priv->redraw_clip);
 }
 
 void
@@ -419,6 +499,7 @@ clutter_stage_view_dispose (GObject *object)
   g_clear_pointer (&priv->offscreen, cogl_object_unref);
   g_clear_pointer (&priv->offscreen_pipeline, cogl_object_unref);
   g_clear_pointer (&priv->shadowfb_pipeline, cogl_object_unref);
+  g_clear_pointer (&priv->redraw_clip, cairo_region_destroy);
 
   G_OBJECT_CLASS (clutter_stage_view_parent_class)->dispose (object);
 }
