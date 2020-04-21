@@ -67,6 +67,9 @@ on_timeout (gpointer data)
         }
       else if (test_num == 2)
         {
+          ClutterActorBox over_actor_box =
+            CLUTTER_ACTOR_BOX_INIT (0, 0, STAGE_WIDTH, STAGE_HEIGHT);
+
           /* Make the actor visible but set a clip so that only some
              of the actors are accessible */
           clutter_actor_show (over_actor);
@@ -75,6 +78,11 @@ on_timeout (gpointer data)
                                   state->actor_height * 2,
                                   state->actor_width * (ACTORS_X - 4),
                                   state->actor_height * (ACTORS_Y - 4));
+
+          /* Only allocated actors can be picked, so force an allocation
+           * of the overlay actor here.
+           */
+          clutter_actor_allocate (over_actor, &over_actor_box, 0);
 
           if (g_test_verbose ())
             g_print ("Clipped covering actor:\n");
@@ -175,10 +183,10 @@ actor_pick (void)
   for (y = 0; y < ACTORS_Y; y++)
     for (x = 0; x < ACTORS_X; x++)
       {
-	ClutterColor color = { x * 255 / (ACTORS_X - 1),
-			       y * 255 / (ACTORS_Y - 1),
-			       128, 255 };
-	ClutterActor *rect = clutter_rectangle_new_with_color (&color);
+        ClutterColor color = { x * 255 / (ACTORS_X - 1),
+                               y * 255 / (ACTORS_Y - 1),
+                               128, 255 };
+        ClutterActor *rect = clutter_rectangle_new_with_color (&color);
 
         clutter_actor_set_position (rect,
                                     x * state.actor_width,
@@ -187,9 +195,9 @@ actor_pick (void)
                                 state.actor_width,
                                 state.actor_height);
 
-	clutter_actor_add_child (state.stage, rect);
+        clutter_actor_add_child (state.stage, rect);
 
-	state.actors[y * ACTORS_X + x] = rect;
+        state.actors[y * ACTORS_X + x] = rect;
       }
 
   clutter_actor_show (state.stage);

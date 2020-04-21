@@ -172,6 +172,7 @@ assign_monitor_crtc (MetaMonitor         *monitor,
   MetaCrtc *crtc;
   MetaMonitorTransform transform;
   MetaMonitorTransform crtc_transform;
+  MetaMonitorTransform crtc_hw_transform;
   int crtc_x, crtc_y;
   float x_offset, y_offset;
   float scale = 0.0;
@@ -200,10 +201,12 @@ assign_monitor_crtc (MetaMonitor         *monitor,
 
   transform = data->logical_monitor_config->transform;
   crtc_transform = meta_monitor_logical_to_crtc_transform (monitor, transform);
-  if (!meta_monitor_manager_is_transform_handled (data->monitor_manager,
-                                                  crtc,
-                                                  crtc_transform))
-    crtc_transform = META_MONITOR_TRANSFORM_NORMAL;
+  if (meta_monitor_manager_is_transform_handled (data->monitor_manager,
+                                                 crtc,
+                                                 crtc_transform))
+    crtc_hw_transform = crtc_transform;
+  else
+    crtc_hw_transform = META_MONITOR_TRANSFORM_NORMAL;
 
   meta_monitor_calculate_crtc_pos (monitor, mode, output, crtc_transform,
                                    &crtc_x, &crtc_y);
@@ -244,7 +247,7 @@ assign_monitor_crtc (MetaMonitor         *monitor,
     .crtc = crtc,
     .mode = crtc_mode,
     .layout = crtc_layout,
-    .transform = crtc_transform,
+    .transform = crtc_hw_transform,
     .outputs = g_ptr_array_new ()
   };
   g_ptr_array_add (crtc_info->outputs, output);
@@ -443,21 +446,33 @@ MetaMonitorsConfigKey *
 meta_create_monitors_config_key_for_current_state (MetaMonitorManager *monitor_manager)
 {
   MetaMonitorsConfigKey *config_key;
+  MetaMonitorSpec *laptop_monitor_spec;
   GList *l;
   GList *monitor_specs;
 
+  laptop_monitor_spec = NULL;
   monitor_specs = NULL;
   for (l = monitor_manager->monitors; l; l = l->next)
     {
       MetaMonitor *monitor = l->data;
       MetaMonitorSpec *monitor_spec;
 
-      if (meta_monitor_is_laptop_panel (monitor) &&
-          is_lid_closed (monitor_manager))
-        continue;
+      if (meta_monitor_is_laptop_panel (monitor))
+        {
+          laptop_monitor_spec = meta_monitor_get_spec (monitor);
+
+          if (is_lid_closed (monitor_manager))
+            continue;
+        }
 
       monitor_spec = meta_monitor_spec_clone (meta_monitor_get_spec (monitor));
       monitor_specs = g_list_prepend (monitor_specs, monitor_spec);
+    }
+
+  if (!monitor_specs && laptop_monitor_spec)
+    {
+      monitor_specs =
+        g_list_prepend (NULL, meta_monitor_spec_clone (laptop_monitor_spec));
     }
 
   if (!monitor_specs)

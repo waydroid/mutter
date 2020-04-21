@@ -1,3 +1,26 @@
+mutter (3.36.1+git20200419-1) unstable; urgency=medium
+
+  * Team upload
+
+  [ Simon McVittie ]
+  * New upstream snapshot from gnome-3-36 branch (3.36.1-42-gda9eb4718)
+    - Fix trackball button scrolling
+    - Fix tiled (MST) displays
+    - Copy/paste fixes, particularly for large images and incremental
+      transfers
+    - Fall back to closed laptop lid configuration if no other available
+      (LP: #1793496)
+
+  [ Jeremy Bicha ]
+  * Drop obsolete dh_strip dbgsym migration rule
+  * Bump debhelper-compat to 13
+    - dh_missing --fail-missing is the default
+    - dh_auto_test has several default improvements
+    - dh_autoreconf isn't needed with meson
+  * debian/watch: Only watch for stable releases
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 21 Apr 2020 13:46:42 +0100
+
 mutter (3.36.1-4) unstable; urgency=medium
 
   * Team upload
