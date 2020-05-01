@@ -1595,6 +1595,7 @@ libmutter-clutter-6.so.0 libmutter-6-0 #MINVER#
  clutter_page_turn_effect_set_radius@Base 3.29.4
  clutter_paint_context_destroy@Base 3.35.90
  clutter_paint_context_get_framebuffer@Base 3.35.90
+ clutter_paint_context_get_paint_flags@Base 3.36.2
  clutter_paint_context_get_redraw_clip@Base 3.35.92
  clutter_paint_context_get_stage_view@Base 3.35.90
  clutter_paint_context_get_type@Base 3.35.90
@@ -1834,6 +1835,8 @@ libmutter-clutter-6.so.0 libmutter-6-0 #MINVER#
  clutter_stage_manager_list_stages@Base 3.29.4
  clutter_stage_manager_peek_stages@Base 3.29.4
  clutter_stage_new@Base 3.29.4
+ clutter_stage_paint_to_buffer@Base 3.36.2
+ clutter_stage_paint_to_framebuffer@Base 3.36.2
  clutter_stage_queue_redraw@Base 3.29.4
  clutter_stage_read_pixels@Base 3.29.4
  clutter_stage_set_accept_focus@Base 3.29.4

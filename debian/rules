@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-export DEB_LDFLAGS_MAINT_APPEND = -Wl,-O1 -Wl,--as-needed
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,-O1
 
 %:
 	dh $@
@@ -73,7 +73,7 @@ endif
 # blocking migration to testing
 override_dh_auto_test:
 	glib-compile-schemas $(BUILDDIR)/data
-ifneq (,$(filter hurd-i386 kfreebsd-i386 kfreebsd-amd64 s390x,$(DEB_HOST_ARCH)))
+ifneq (,$(filter hurd-i386 kfreebsd-i386 kfreebsd-amd64 riscv64 s390x,$(DEB_HOST_ARCH)))
 	-$(TEST_COMMAND)
 	-$(TEST_COMMAND_FLAKY)
 else ifeq (,$(filter mips mips64el mipsel,$(DEB_HOST_ARCH)))
