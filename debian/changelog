@@ -1,3 +1,11 @@
+mutter (3.36.2-2) unstable; urgency=medium
+
+  [ Daniel van Vugt ]
+  * d/p/backend-x11-Reintroduce-XInitThreads.patch:
+    Fix a very common crash when running in X11 (LP: #1877075)
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 26 May 2020 21:41:05 +0200
+
 mutter (3.36.2-1) unstable; urgency=medium
 
   * Team upload

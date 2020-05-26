@@ -526,7 +526,7 @@ libmutter-6.so.0 libmutter-6-0 #MINVER#
  meta_verify_monitors_config@Base 3.28.2
  meta_virtual_modifier_get_type@Base 3.28.2
  meta_warning@Base 3.28.2
- meta_wayland_actor_surface_get_actor@Base 3.35.90
+ (arch=linux-any)meta_wayland_actor_surface_get_actor@Base 3.35.90
  (arch=linux-any)meta_wayland_compositor_get_default@Base 3.28.2
  (arch=linux-any)meta_wayland_get_wayland_display_name@Base 3.28.2
  (arch=linux-any)meta_wayland_get_xwayland_display_name@Base 3.28.2
