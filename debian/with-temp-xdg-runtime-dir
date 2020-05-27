@@ -1,0 +1,11 @@
+#!/bin/sh
+# Wrap "$@" with a temporary XDG_RUNTIME_DIR with a short absolute path.
+# Workaround for https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=961655
+
+set -eux
+
+xrd="$(mktemp -d -p /tmp)"
+e=0
+XDG_RUNTIME_DIR="$xrd" "$@" || e=$?
+rm -fr "$xrd"
+exit "$e"

@@ -57,6 +57,7 @@ TEST_COMMAND_BASE=env \
 	GSETTINGS_SCHEMA_DIR=$(BUILDDIR)/data \
 	dbus-run-session -- xvfb-run -s '+iglx -noreset' -a \
 	dh_auto_test -- -C $(BUILDDIR) --no-rebuild --verbose --timeout-multiplier 6 \
+	           --wrapper=$(CURDIR)/debian/with-temp-xdg-runtime-dir \
 	           --no-stdsplit --print-errorlogs
 TEST_COMMAND=$(TEST_COMMAND_BASE) --no-suite flaky
 TEST_COMMAND_FLAKY=$(TEST_COMMAND_BASE) --suite flaky
