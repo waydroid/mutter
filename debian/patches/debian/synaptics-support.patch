@@ -260,10 +260,10 @@ index 4006777..820b7ea 100644
    switch (mode)
      {
 diff --git a/src/backends/x11/meta-seat-x11.c b/src/backends/x11/meta-seat-x11.c
-index e6e9968..587a6ca 100644
+index f20cac1..8288228 100644
 --- a/src/backends/x11/meta-seat-x11.c
 +++ b/src/backends/x11/meta-seat-x11.c
-@@ -243,7 +243,8 @@ is_touch_device (XIAnyClassInfo         **classes,
+@@ -248,7 +248,8 @@ is_touch_device (XIAnyClassInfo         **classes,
  }
  
  static gboolean
@@ -273,7 +273,7 @@ index e6e9968..587a6ca 100644
  {
    gulong nitems, bytes_after;
    uint32_t *data = NULL;
-@@ -251,7 +252,7 @@ is_touchpad_device (XIDeviceInfo *info)
+@@ -256,7 +257,7 @@ is_touchpad_device (XIDeviceInfo *info)
    Atom type;
    Atom prop;
  
@@ -282,7 +282,7 @@ index e6e9968..587a6ca 100644
    if (prop == None)
      return FALSE;
  
-@@ -272,6 +273,13 @@ is_touchpad_device (XIDeviceInfo *info)
+@@ -277,6 +278,13 @@ is_touchpad_device (XIDeviceInfo *info)
    return TRUE;
  }
  

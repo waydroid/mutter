@@ -1,3 +1,12 @@
+mutter (3.36.2+12+gb425f1153-1) experimental; urgency=medium
+
+  * Team upload
+  * New upstream snapshot from the gnome-3-36 branch
+  * d/p/backend-x11-Reintroduce-XInitThreads.patch:
+    Drop patch, applied upstream
+
+ -- Simon McVittie <smcv@debian.org>  Sat, 30 May 2020 15:12:09 +0100
+
 mutter (3.36.2-3) unstable; urgency=medium
 
   [ Simon McVittie ]
