@@ -34,7 +34,6 @@ typedef struct _MetaSurfaceActorPrivate
   cairo_region_t *input_region;
 
   /* MetaCullable regions, see that documentation for more details */
-  cairo_region_t *clip_region;
   cairo_region_t *unobscured_region;
 
   /* Freeze/thaw accounting */
@@ -58,6 +57,12 @@ enum
 
 static guint signals[LAST_SIGNAL];
 
+typedef enum
+{
+  IN_STAGE_PERSPECTIVE,
+  IN_ACTOR_PERSPECTIVE
+} ScalePerspectiveType;
+
 static cairo_region_t *
 effective_unobscured_region (MetaSurfaceActor *surface_actor)
 {
@@ -79,18 +84,39 @@ effective_unobscured_region (MetaSurfaceActor *surface_actor)
 }
 
 static cairo_region_t*
-get_scaled_region (MetaSurfaceActor *surface_actor,
-                   cairo_region_t   *region)
+get_scaled_region (MetaSurfaceActor     *surface_actor,
+                   cairo_region_t       *region,
+                   ScalePerspectiveType  scale_perspective)
 {
   MetaWindowActor *window_actor;
+  cairo_region_t *scaled_region;
   int geometry_scale;
+  float x, y;
 
   window_actor = meta_window_actor_from_actor (CLUTTER_ACTOR (surface_actor));
   geometry_scale = meta_window_actor_get_geometry_scale (window_actor);
 
-  return meta_region_scale_double (region,
-                                   1.0 / geometry_scale,
-                                   META_ROUNDING_STRATEGY_GROW);
+  clutter_actor_get_position (CLUTTER_ACTOR (surface_actor), &x, &y);
+  cairo_region_translate (region, x, y);
+
+  switch (scale_perspective)
+    {
+    case IN_STAGE_PERSPECTIVE:
+      scaled_region = meta_region_scale_double (region,
+                                                geometry_scale,
+                                                META_ROUNDING_STRATEGY_GROW);
+      break;
+    case IN_ACTOR_PERSPECTIVE:
+      scaled_region = meta_region_scale_double (region,
+                                                1.0 / geometry_scale,
+                                                META_ROUNDING_STRATEGY_GROW);
+      break;
+    }
+
+  cairo_region_translate (region, -x, -y);
+  cairo_region_translate (scaled_region, -x, -y);
+
+  return scaled_region;
 }
 
 static void
@@ -120,8 +146,9 @@ set_unobscured_region (MetaSurfaceActor *surface_actor,
             .height = height,
           };
 
-          priv->unobscured_region =
-            get_scaled_region (surface_actor, unobscured_region);
+          priv->unobscured_region = get_scaled_region (surface_actor,
+                                                       unobscured_region,
+                                                       IN_ACTOR_PERSPECTIVE);
 
           cairo_region_intersect_rectangle (priv->unobscured_region, &bounds);
         }
@@ -134,30 +161,23 @@ set_clip_region (MetaSurfaceActor *surface_actor,
 {
   MetaSurfaceActorPrivate *priv =
     meta_surface_actor_get_instance_private (surface_actor);
+  MetaShapedTexture *stex = priv->texture;
 
-  g_clear_pointer (&priv->clip_region, cairo_region_destroy);
-  if (clip_region)
+  if (clip_region && !cairo_region_is_empty (clip_region))
     {
-      if (cairo_region_is_empty (clip_region))
-        priv->clip_region = cairo_region_reference (clip_region);
-      else
-        priv->clip_region = get_scaled_region (surface_actor, clip_region);
+      cairo_region_t *region;
+
+      region = get_scaled_region (surface_actor,
+                                  clip_region,
+                                  IN_ACTOR_PERSPECTIVE);
+      meta_shaped_texture_set_clip_region (stex, region);
+
+      cairo_region_destroy (region);
     }
-}
-
-static void
-meta_surface_actor_paint (ClutterActor        *actor,
-                          ClutterPaintContext *paint_context)
-{
-  MetaSurfaceActor *surface_actor = META_SURFACE_ACTOR (actor);
-  MetaSurfaceActorPrivate *priv =
-    meta_surface_actor_get_instance_private (surface_actor);
-
-  if (priv->clip_region && cairo_region_is_empty (priv->clip_region))
-    return;
-
-  CLUTTER_ACTOR_CLASS (meta_surface_actor_parent_class)->paint (actor,
-                                                                paint_context);
+  else
+    {
+      meta_shaped_texture_set_clip_region (stex, clip_region);
+    }
 }
 
 static void
@@ -227,7 +247,6 @@ meta_surface_actor_dispose (GObject *object)
   g_clear_object (&priv->texture);
 
   set_unobscured_region (self, NULL);
-  set_clip_region (self, NULL);
 
   G_OBJECT_CLASS (meta_surface_actor_parent_class)->dispose (object);
 }
@@ -239,7 +258,6 @@ meta_surface_actor_class_init (MetaSurfaceActorClass *klass)
   ClutterActorClass *actor_class = CLUTTER_ACTOR_CLASS (klass);
 
   object_class->dispose = meta_surface_actor_dispose;
-  actor_class->paint = meta_surface_actor_paint;
   actor_class->pick = meta_surface_actor_pick;
   actor_class->get_paint_volume = meta_surface_actor_get_paint_volume;
 
@@ -279,11 +297,8 @@ meta_surface_actor_cull_out (MetaCullable   *cullable,
 
   if (opacity == 0xff)
     {
-      MetaWindowActor *window_actor;
-      cairo_region_t *scaled_opaque_region;
       cairo_region_t *opaque_region;
-      int geometry_scale;
-      float x, y;
+      cairo_region_t *scaled_opaque_region;
 
       opaque_region = meta_shaped_texture_get_opaque_region (priv->texture);
       if (opaque_region)
@@ -306,14 +321,9 @@ meta_surface_actor_cull_out (MetaCullable   *cullable,
           return;
         }
 
-      window_actor = meta_window_actor_from_actor (CLUTTER_ACTOR (surface_actor));
-      geometry_scale = meta_window_actor_get_geometry_scale (window_actor);
-      clutter_actor_get_position (CLUTTER_ACTOR (surface_actor), &x, &y);
-
-      cairo_region_translate (opaque_region, x, y);
-      scaled_opaque_region = meta_region_scale (opaque_region, geometry_scale);
-      cairo_region_translate (scaled_opaque_region, -x, -y);
-      cairo_region_translate (opaque_region, -x, -y);
+      scaled_opaque_region = get_scaled_region (surface_actor,
+                                                opaque_region,
+                                                IN_STAGE_PERSPECTIVE);
 
       if (unobscured_region)
         cairo_region_subtract (unobscured_region, scaled_opaque_region);

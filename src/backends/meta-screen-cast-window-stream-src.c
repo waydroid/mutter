@@ -327,8 +327,10 @@ screen_cast_window_damaged (MetaWindowActor               *actor,
                             MetaScreenCastWindowStreamSrc *window_src)
 {
   MetaScreenCastStreamSrc *src = META_SCREEN_CAST_STREAM_SRC (window_src);
+  MetaScreenCastRecordFlag flags;
 
-  meta_screen_cast_stream_src_maybe_record_frame (src);
+  flags = META_SCREEN_CAST_RECORD_FLAG_CURSOR_ONLY;
+  meta_screen_cast_stream_src_maybe_record_frame (src, flags);
 }
 
 static void
@@ -365,6 +367,7 @@ static void
 sync_cursor_state (MetaScreenCastWindowStreamSrc *window_src)
 {
   MetaScreenCastStreamSrc *src = META_SCREEN_CAST_STREAM_SRC (window_src);
+  MetaScreenCastRecordFlag flags;
 
   if (!is_cursor_in_stream (window_src))
     return;
@@ -372,7 +375,8 @@ sync_cursor_state (MetaScreenCastWindowStreamSrc *window_src)
   if (meta_screen_cast_window_has_damage (window_src->screen_cast_window))
     return;
 
-  meta_screen_cast_stream_src_maybe_record_frame (src);
+  flags = META_SCREEN_CAST_RECORD_FLAG_CURSOR_ONLY;
+  meta_screen_cast_stream_src_maybe_record_frame (src, flags);
 }
 
 static void
@@ -401,6 +405,7 @@ meta_screen_cast_window_stream_src_enable (MetaScreenCastStreamSrc *src)
   MetaCursorTracker *cursor_tracker = meta_backend_get_cursor_tracker (backend);
   MetaWindowActor *window_actor;
   MetaScreenCastStream *stream;
+  MetaScreenCastRecordFlag flags;
 
   window_actor = meta_window_actor_from_window (get_window (window_src));
   if (!window_actor)
@@ -438,7 +443,8 @@ meta_screen_cast_window_stream_src_enable (MetaScreenCastStreamSrc *src)
       break;
     }
 
-  meta_screen_cast_stream_src_maybe_record_frame (src);
+  flags = META_SCREEN_CAST_RECORD_FLAG_NONE;
+  meta_screen_cast_stream_src_maybe_record_frame (src, flags);
 }
 
 static void
@@ -451,8 +457,9 @@ meta_screen_cast_window_stream_src_disable (MetaScreenCastStreamSrc *src)
 }
 
 static gboolean
-meta_screen_cast_window_stream_src_record_frame (MetaScreenCastStreamSrc *src,
-                                                 uint8_t                 *data)
+meta_screen_cast_window_stream_src_record_to_buffer (MetaScreenCastStreamSrc  *src,
+                                                     uint8_t                  *data,
+                                                     GError                  **error)
 {
   MetaScreenCastWindowStreamSrc *window_src =
     META_SCREEN_CAST_WINDOW_STREAM_SRC (src);
@@ -463,8 +470,9 @@ meta_screen_cast_window_stream_src_record_frame (MetaScreenCastStreamSrc *src,
 }
 
 static gboolean
-meta_screen_cast_window_stream_src_blit_to_framebuffer (MetaScreenCastStreamSrc *src,
-                                                        CoglFramebuffer         *framebuffer)
+meta_screen_cast_window_stream_src_record_to_framebuffer (MetaScreenCastStreamSrc  *src,
+                                                          CoglFramebuffer          *framebuffer,
+                                                          GError                  **error)
 {
   MetaScreenCastWindowStreamSrc *window_src =
     META_SCREEN_CAST_WINDOW_STREAM_SRC (src);
@@ -477,9 +485,13 @@ meta_screen_cast_window_stream_src_blit_to_framebuffer (MetaScreenCastStreamSrc 
   stream_rect.height = get_stream_height (window_src);
 
   if (!meta_screen_cast_window_blit_to_framebuffer (window_src->screen_cast_window,
-                                                     &stream_rect,
-                                                     framebuffer))
-    return FALSE;
+                                                    &stream_rect,
+                                                    framebuffer))
+    {
+      g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                   "Failed to blit window content to framebuffer");
+      return FALSE;
+    }
 
   stream = meta_screen_cast_stream_src_get_stream (src);
   switch (meta_screen_cast_stream_get_cursor_mode (stream))
@@ -495,6 +507,15 @@ meta_screen_cast_window_stream_src_blit_to_framebuffer (MetaScreenCastStreamSrc 
   cogl_framebuffer_finish (framebuffer);
 
   return TRUE;
+}
+
+static void
+meta_screen_cast_window_stream_record_follow_up (MetaScreenCastStreamSrc *src)
+{
+  MetaScreenCastRecordFlag flags;
+
+  flags = META_SCREEN_CAST_RECORD_FLAG_NONE;
+  meta_screen_cast_stream_src_maybe_record_frame (src, flags);
 }
 
 static void
@@ -580,9 +601,12 @@ meta_screen_cast_window_stream_src_class_init (MetaScreenCastWindowStreamSrcClas
   src_class->get_specs = meta_screen_cast_window_stream_src_get_specs;
   src_class->enable = meta_screen_cast_window_stream_src_enable;
   src_class->disable = meta_screen_cast_window_stream_src_disable;
-  src_class->record_frame = meta_screen_cast_window_stream_src_record_frame;
-  src_class->blit_to_framebuffer =
-    meta_screen_cast_window_stream_src_blit_to_framebuffer;
+  src_class->record_to_buffer =
+    meta_screen_cast_window_stream_src_record_to_buffer;
+  src_class->record_to_framebuffer =
+    meta_screen_cast_window_stream_src_record_to_framebuffer;
+  src_class->record_follow_up =
+    meta_screen_cast_window_stream_record_follow_up;
   src_class->get_videocrop = meta_screen_cast_window_stream_src_get_videocrop;
   src_class->set_cursor_metadata = meta_screen_cast_window_stream_src_set_cursor_metadata;
 }

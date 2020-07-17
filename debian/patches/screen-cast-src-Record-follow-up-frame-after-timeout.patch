@@ -1,0 +1,276 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Fri, 3 Jul 2020 23:57:31 +0200
+Subject: screen-cast/src: Record follow up frame after timeout
+
+During animation or other things that cause multiple frames in a row
+being painted, we might skip recording frames if the max framerate is
+reached.
+
+Doing so means we might end up skipping the last frame in a series,
+ending with the last frame we sent was not the last one, making things
+appear to get stuck sometimes.
+
+Handle this by creating a timeout if we ever throttle, and at the time
+the timeout callback is triggered, make sure we eventually send an up to
+date frame.
+
+This is handle differently depending on the source type. A monitor
+source type reports 1x1 pixel damage on each view its monitor overlaps,
+while a window source type simply records a frame from the surface
+directly, except without recording a timestamp, so that timestamps
+always refer to when damage actually happened.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1351
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1351
+Bug-GNOME: https://gitlab.gnome.org/GNOME/mutter/-/issues/1323
+Applied-Upstream: 3.36.5
+---
+ src/backends/meta-screen-cast-monitor-stream-src.c | 43 ++++++++++++
+ src/backends/meta-screen-cast-stream-src.c         | 77 ++++++++++++++++++++--
+ src/backends/meta-screen-cast-stream-src.h         |  4 ++
+ src/backends/meta-screen-cast-window-stream-src.c  | 11 ++++
+ 4 files changed, 130 insertions(+), 5 deletions(-)
+
+diff --git a/src/backends/meta-screen-cast-monitor-stream-src.c b/src/backends/meta-screen-cast-monitor-stream-src.c
+index 570f16b..c902e98 100644
+--- a/src/backends/meta-screen-cast-monitor-stream-src.c
++++ b/src/backends/meta-screen-cast-monitor-stream-src.c
+@@ -191,6 +191,9 @@ sync_cursor_state (MetaScreenCastMonitorStreamSrc *monitor_src)
+   if (clutter_stage_is_redraw_queued (stage))
+     return;
+ 
++  if (meta_screen_cast_stream_src_pending_follow_up_frame (src))
++    return;
++
+   flags = META_SCREEN_CAST_RECORD_FLAG_CURSOR_ONLY;
+   meta_screen_cast_stream_src_maybe_record_frame (src, flags);
+ }
+@@ -440,6 +443,44 @@ meta_screen_cast_monitor_stream_src_record_to_framebuffer (MetaScreenCastStreamS
+   return TRUE;
+ }
+ 
++static void
++meta_screen_cast_monitor_stream_record_follow_up (MetaScreenCastStreamSrc *src)
++{
++  MetaScreenCastMonitorStreamSrc *monitor_src =
++    META_SCREEN_CAST_MONITOR_STREAM_SRC (src);
++  MetaBackend *backend = get_backend (monitor_src);
++  MetaRenderer *renderer = meta_backend_get_renderer (backend);
++  ClutterStage *stage = get_stage (monitor_src);
++  MetaMonitor *monitor;
++  MetaLogicalMonitor *logical_monitor;
++  MetaRectangle logical_monitor_layout;
++  GList *l;
++
++  monitor = get_monitor (monitor_src);
++  logical_monitor = meta_monitor_get_logical_monitor (monitor);
++  logical_monitor_layout = meta_logical_monitor_get_layout (logical_monitor);
++
++  for (l = meta_renderer_get_views (renderer); l; l = l->next)
++    {
++      MetaRendererView *view = l->data;
++      MetaRectangle view_layout;
++      MetaRectangle damage;
++
++      clutter_stage_view_get_layout (CLUTTER_STAGE_VIEW (view), &view_layout);
++
++      if (!meta_rectangle_overlap (&logical_monitor_layout, &view_layout))
++        continue;
++
++      damage = (cairo_rectangle_int_t) {
++        .x = view_layout.x,
++        .y = view_layout.y,
++        .width = 1,
++        .height = 1,
++      };
++      clutter_actor_queue_redraw_with_clip (CLUTTER_ACTOR (stage), &damage);
++    }
++}
++
+ static void
+ meta_screen_cast_monitor_stream_src_set_cursor_metadata (MetaScreenCastStreamSrc *src,
+                                                          struct spa_meta_cursor  *spa_meta_cursor)
+@@ -564,6 +605,8 @@ meta_screen_cast_monitor_stream_src_class_init (MetaScreenCastMonitorStreamSrcCl
+     meta_screen_cast_monitor_stream_src_record_to_buffer;
+   src_class->record_to_framebuffer =
+     meta_screen_cast_monitor_stream_src_record_to_framebuffer;
++  src_class->record_follow_up =
++    meta_screen_cast_monitor_stream_record_follow_up;
+   src_class->set_cursor_metadata =
+     meta_screen_cast_monitor_stream_src_set_cursor_metadata;
+ }
+diff --git a/src/backends/meta-screen-cast-stream-src.c b/src/backends/meta-screen-cast-stream-src.c
+index 9921681..8412642 100644
+--- a/src/backends/meta-screen-cast-stream-src.c
++++ b/src/backends/meta-screen-cast-stream-src.c
+@@ -92,6 +92,7 @@ typedef struct _MetaScreenCastStreamSrcPrivate
+   int video_stride;
+ 
+   int64_t last_frame_timestamp_us;
++  guint follow_up_frame_source_id;
+ 
+   GHashTable *dmabuf_handles;
+ 
+@@ -109,6 +110,12 @@ G_DEFINE_TYPE_WITH_CODE (MetaScreenCastStreamSrc,
+                                                 meta_screen_cast_stream_src_init_initable_iface)
+                          G_ADD_PRIVATE (MetaScreenCastStreamSrc))
+ 
++static inline uint32_t
++us2ms (uint64_t us)
++{
++  return (uint32_t) (us / 1000);
++}
++
+ static void
+ meta_screen_cast_stream_src_get_specs (MetaScreenCastStreamSrc *src,
+                                        int                     *width,
+@@ -156,6 +163,15 @@ meta_screen_cast_stream_src_record_to_framebuffer (MetaScreenCastStreamSrc  *src
+   return klass->record_to_framebuffer (src, framebuffer, error);
+ }
+ 
++static void
++meta_screen_cast_stream_src_record_follow_up (MetaScreenCastStreamSrc *src)
++{
++  MetaScreenCastStreamSrcClass *klass =
++    META_SCREEN_CAST_STREAM_SRC_GET_CLASS (src);
++
++  klass->record_follow_up (src);
++}
++
+ static void
+ meta_screen_cast_stream_src_set_cursor_metadata (MetaScreenCastStreamSrc *src,
+                                                  struct spa_meta_cursor  *spa_meta_cursor)
+@@ -442,6 +458,43 @@ do_record_frame (MetaScreenCastStreamSrc  *src,
+   return FALSE;
+ }
+ 
++gboolean
++meta_screen_cast_stream_src_pending_follow_up_frame (MetaScreenCastStreamSrc *src)
++{
++  MetaScreenCastStreamSrcPrivate *priv =
++    meta_screen_cast_stream_src_get_instance_private (src);
++
++  return priv->follow_up_frame_source_id != 0;
++}
++
++static gboolean
++follow_up_frame_cb (gpointer user_data)
++{
++  MetaScreenCastStreamSrc *src = user_data;
++  MetaScreenCastStreamSrcPrivate *priv =
++    meta_screen_cast_stream_src_get_instance_private (src);
++
++  priv->follow_up_frame_source_id = 0;
++  meta_screen_cast_stream_src_record_follow_up (src);
++
++  return G_SOURCE_REMOVE;
++}
++
++static void
++maybe_schedule_follow_up_frame (MetaScreenCastStreamSrc *src,
++                                int64_t                  timeout_us)
++{
++  MetaScreenCastStreamSrcPrivate *priv =
++    meta_screen_cast_stream_src_get_instance_private (src);
++
++  if (priv->follow_up_frame_source_id)
++    return;
++
++  priv->follow_up_frame_source_id = g_timeout_add (us2ms (timeout_us),
++                                                   follow_up_frame_cb,
++                                                   src);
++}
++
+ void
+ meta_screen_cast_stream_src_maybe_record_frame (MetaScreenCastStreamSrc  *src,
+                                                 MetaScreenCastRecordFlag  flags)
+@@ -457,11 +510,24 @@ meta_screen_cast_stream_src_maybe_record_frame (MetaScreenCastStreamSrc  *src,
+ 
+   now_us = g_get_monotonic_time ();
+   if (priv->video_format.max_framerate.num > 0 &&
+-      priv->last_frame_timestamp_us != 0 &&
+-      (now_us - priv->last_frame_timestamp_us <
+-       ((1000000 * priv->video_format.max_framerate.denom) /
+-        priv->video_format.max_framerate.num)))
+-    return;
++      priv->last_frame_timestamp_us != 0)
++    {
++      int64_t min_interval_us;
++      int64_t time_since_last_frame_us;
++
++      min_interval_us = ((1000000 * priv->video_format.max_framerate.denom) /
++                         priv->video_format.max_framerate.num);
++
++      time_since_last_frame_us = now_us - priv->last_frame_timestamp_us;
++      if (time_since_last_frame_us < min_interval_us)
++        {
++          int64_t timeout_us;
++
++          timeout_us = min_interval_us - time_since_last_frame_us;
++          maybe_schedule_follow_up_frame (src, timeout_us);
++          return;
++        }
++    }
+ 
+   if (!priv->pipewire_stream)
+     return;
+@@ -481,6 +547,7 @@ meta_screen_cast_stream_src_maybe_record_frame (MetaScreenCastStreamSrc  *src,
+ 
+   if (!(flags & META_SCREEN_CAST_RECORD_FLAG_CURSOR_ONLY))
+     {
++      g_clear_handle_id (&priv->follow_up_frame_source_id, g_source_remove);
+       if (do_record_frame (src, spa_buffer, data, &error))
+         {
+           struct spa_meta_region *spa_meta_video_crop;
+diff --git a/src/backends/meta-screen-cast-stream-src.h b/src/backends/meta-screen-cast-stream-src.h
+index 152790e..81ea20b 100644
+--- a/src/backends/meta-screen-cast-stream-src.h
++++ b/src/backends/meta-screen-cast-stream-src.h
+@@ -65,6 +65,8 @@ struct _MetaScreenCastStreamSrcClass
+   gboolean (* record_to_framebuffer) (MetaScreenCastStreamSrc  *src,
+                                       CoglFramebuffer          *framebuffer,
+                                       GError                  **error);
++  void (* record_follow_up) (MetaScreenCastStreamSrc *src);
++
+   gboolean (* get_videocrop) (MetaScreenCastStreamSrc *src,
+                               MetaRectangle           *crop_rect);
+   void (* set_cursor_metadata) (MetaScreenCastStreamSrc *src,
+@@ -74,6 +76,8 @@ struct _MetaScreenCastStreamSrcClass
+ void meta_screen_cast_stream_src_maybe_record_frame (MetaScreenCastStreamSrc  *src,
+                                                      MetaScreenCastRecordFlag  flags);
+ 
++gboolean meta_screen_cast_stream_src_pending_follow_up_frame (MetaScreenCastStreamSrc *src);
++
+ MetaScreenCastStream * meta_screen_cast_stream_src_get_stream (MetaScreenCastStreamSrc *src);
+ 
+ gboolean meta_screen_cast_stream_src_draw_cursor_into (MetaScreenCastStreamSrc  *src,
+diff --git a/src/backends/meta-screen-cast-window-stream-src.c b/src/backends/meta-screen-cast-window-stream-src.c
+index a504bd1..e80cd5e 100644
+--- a/src/backends/meta-screen-cast-window-stream-src.c
++++ b/src/backends/meta-screen-cast-window-stream-src.c
+@@ -509,6 +509,15 @@ meta_screen_cast_window_stream_src_record_to_framebuffer (MetaScreenCastStreamSr
+   return TRUE;
+ }
+ 
++static void
++meta_screen_cast_window_stream_record_follow_up (MetaScreenCastStreamSrc *src)
++{
++  MetaScreenCastRecordFlag flags;
++
++  flags = META_SCREEN_CAST_RECORD_FLAG_NONE;
++  meta_screen_cast_stream_src_maybe_record_frame (src, flags);
++}
++
+ static void
+ meta_screen_cast_window_stream_src_set_cursor_metadata (MetaScreenCastStreamSrc *src,
+                                                         struct spa_meta_cursor  *spa_meta_cursor)
+@@ -596,6 +605,8 @@ meta_screen_cast_window_stream_src_class_init (MetaScreenCastWindowStreamSrcClas
+     meta_screen_cast_window_stream_src_record_to_buffer;
+   src_class->record_to_framebuffer =
+     meta_screen_cast_window_stream_src_record_to_framebuffer;
++  src_class->record_follow_up =
++    meta_screen_cast_window_stream_record_follow_up;
+   src_class->get_videocrop = meta_screen_cast_window_stream_src_get_videocrop;
+   src_class->set_cursor_metadata = meta_screen_cast_window_stream_src_set_cursor_metadata;
+ }
