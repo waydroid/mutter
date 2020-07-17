@@ -1,0 +1,176 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Fri, 3 Jul 2020 16:42:45 +0200
+Subject: screen-cast-src: Make the two record vfuncs more similarly named
+
+Both do more or less the same but with different methods - one puts
+pixels into a buffer using the CPU, the other puts pixels into a buffer
+using the GPU.
+
+However, they are behaving slightly different, which they shouldn't.
+Lets first address the misleading disconnect in naming, and later we'll
+make them behave more similarly.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1351
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1351
+Bug-GNOME: https://gitlab.gnome.org/GNOME/mutter/-/issues/1323
+Applied-Upstream: 3.36.5
+---
+ src/backends/meta-screen-cast-monitor-stream-src.c | 15 ++++++++-------
+ src/backends/meta-screen-cast-stream-src.c         | 17 +++++++++--------
+ src/backends/meta-screen-cast-stream-src.h         |  8 ++++----
+ src/backends/meta-screen-cast-window-stream-src.c  | 15 ++++++++-------
+ 4 files changed, 29 insertions(+), 26 deletions(-)
+
+diff --git a/src/backends/meta-screen-cast-monitor-stream-src.c b/src/backends/meta-screen-cast-monitor-stream-src.c
+index 9d1d212..4b72416 100644
+--- a/src/backends/meta-screen-cast-monitor-stream-src.c
++++ b/src/backends/meta-screen-cast-monitor-stream-src.c
+@@ -362,8 +362,8 @@ meta_screen_cast_monitor_stream_src_disable (MetaScreenCastStreamSrc *src)
+ }
+ 
+ static gboolean
+-meta_screen_cast_monitor_stream_src_record_frame (MetaScreenCastStreamSrc *src,
+-                                                  uint8_t                 *data)
++meta_screen_cast_monitor_stream_src_record_to_buffer (MetaScreenCastStreamSrc *src,
++                                                      uint8_t                 *data)
+ {
+   MetaScreenCastMonitorStreamSrc *monitor_src =
+     META_SCREEN_CAST_MONITOR_STREAM_SRC (src);
+@@ -383,8 +383,8 @@ meta_screen_cast_monitor_stream_src_record_frame (MetaScreenCastStreamSrc *src,
+ }
+ 
+ static gboolean
+-meta_screen_cast_monitor_stream_src_blit_to_framebuffer (MetaScreenCastStreamSrc *src,
+-                                                         CoglFramebuffer         *framebuffer)
++meta_screen_cast_monitor_stream_src_record_to_framebuffer (MetaScreenCastStreamSrc *src,
++                                                           CoglFramebuffer         *framebuffer)
+ {
+   MetaScreenCastMonitorStreamSrc *monitor_src =
+     META_SCREEN_CAST_MONITOR_STREAM_SRC (src);
+@@ -562,9 +562,10 @@ meta_screen_cast_monitor_stream_src_class_init (MetaScreenCastMonitorStreamSrcCl
+   src_class->get_specs = meta_screen_cast_monitor_stream_src_get_specs;
+   src_class->enable = meta_screen_cast_monitor_stream_src_enable;
+   src_class->disable = meta_screen_cast_monitor_stream_src_disable;
+-  src_class->record_frame = meta_screen_cast_monitor_stream_src_record_frame;
+-  src_class->blit_to_framebuffer =
+-    meta_screen_cast_monitor_stream_src_blit_to_framebuffer;
++  src_class->record_to_buffer =
++    meta_screen_cast_monitor_stream_src_record_to_buffer;
++  src_class->record_to_framebuffer =
++    meta_screen_cast_monitor_stream_src_record_to_framebuffer;
+   src_class->set_cursor_metadata =
+     meta_screen_cast_monitor_stream_src_set_cursor_metadata;
+ }
+diff --git a/src/backends/meta-screen-cast-stream-src.c b/src/backends/meta-screen-cast-stream-src.c
+index 5ec3c04..2454f93 100644
+--- a/src/backends/meta-screen-cast-stream-src.c
++++ b/src/backends/meta-screen-cast-stream-src.c
+@@ -135,23 +135,23 @@ meta_screen_cast_stream_src_get_videocrop (MetaScreenCastStreamSrc *src,
+ }
+ 
+ static gboolean
+-meta_screen_cast_stream_src_record_frame (MetaScreenCastStreamSrc *src,
+-                                          uint8_t                 *data)
++meta_screen_cast_stream_src_record_to_buffer (MetaScreenCastStreamSrc *src,
++                                              uint8_t                 *data)
+ {
+   MetaScreenCastStreamSrcClass *klass =
+     META_SCREEN_CAST_STREAM_SRC_GET_CLASS (src);
+ 
+-  return klass->record_frame (src, data);
++  return klass->record_to_buffer (src, data);
+ }
+ 
+ static gboolean
+-meta_screen_cast_stream_src_blit_to_framebuffer (MetaScreenCastStreamSrc *src,
+-                                                 CoglFramebuffer         *framebuffer)
++meta_screen_cast_stream_src_record_to_framebuffer (MetaScreenCastStreamSrc *src,
++                                                   CoglFramebuffer         *framebuffer)
+ {
+   MetaScreenCastStreamSrcClass *klass =
+     META_SCREEN_CAST_STREAM_SRC_GET_CLASS (src);
+ 
+-  return klass->blit_to_framebuffer (src, framebuffer);
++  return klass->record_to_framebuffer (src, framebuffer);
+ }
+ 
+ static void
+@@ -419,7 +419,7 @@ do_record_frame (MetaScreenCastStreamSrc *src,
+   if (spa_buffer->datas[0].data ||
+       spa_buffer->datas[0].type == SPA_DATA_MemFd)
+     {
+-      return meta_screen_cast_stream_src_record_frame (src, data);
++      return meta_screen_cast_stream_src_record_to_buffer (src, data);
+     }
+   else if (spa_buffer->datas[0].type == SPA_DATA_DmaBuf)
+     {
+@@ -429,7 +429,8 @@ do_record_frame (MetaScreenCastStreamSrc *src,
+       CoglFramebuffer *dmabuf_fbo =
+         cogl_dma_buf_handle_get_framebuffer (dmabuf_handle);
+ 
+-      return meta_screen_cast_stream_src_blit_to_framebuffer (src, dmabuf_fbo);
++      return meta_screen_cast_stream_src_record_to_framebuffer (src,
++                                                                dmabuf_fbo);
+     }
+ 
+   return FALSE;
+diff --git a/src/backends/meta-screen-cast-stream-src.h b/src/backends/meta-screen-cast-stream-src.h
+index 3f6a1af..0eda02f 100644
+--- a/src/backends/meta-screen-cast-stream-src.h
++++ b/src/backends/meta-screen-cast-stream-src.h
+@@ -53,10 +53,10 @@ struct _MetaScreenCastStreamSrcClass
+                       float                   *frame_rate);
+   void (* enable) (MetaScreenCastStreamSrc *src);
+   void (* disable) (MetaScreenCastStreamSrc *src);
+-  gboolean (* record_frame) (MetaScreenCastStreamSrc *src,
+-                             uint8_t                 *data);
+-  gboolean (* blit_to_framebuffer) (MetaScreenCastStreamSrc *src,
+-                                    CoglFramebuffer         *framebuffer);
++  gboolean (* record_to_buffer) (MetaScreenCastStreamSrc *src,
++                                 uint8_t                 *data);
++  gboolean (* record_to_framebuffer) (MetaScreenCastStreamSrc *src,
++                                      CoglFramebuffer         *framebuffer);
+   gboolean (* get_videocrop) (MetaScreenCastStreamSrc *src,
+                               MetaRectangle           *crop_rect);
+   void (* set_cursor_metadata) (MetaScreenCastStreamSrc *src,
+diff --git a/src/backends/meta-screen-cast-window-stream-src.c b/src/backends/meta-screen-cast-window-stream-src.c
+index b1221ad..5d1bfde 100644
+--- a/src/backends/meta-screen-cast-window-stream-src.c
++++ b/src/backends/meta-screen-cast-window-stream-src.c
+@@ -451,8 +451,8 @@ meta_screen_cast_window_stream_src_disable (MetaScreenCastStreamSrc *src)
+ }
+ 
+ static gboolean
+-meta_screen_cast_window_stream_src_record_frame (MetaScreenCastStreamSrc *src,
+-                                                 uint8_t                 *data)
++meta_screen_cast_window_stream_src_record_to_buffer (MetaScreenCastStreamSrc *src,
++                                                     uint8_t                 *data)
+ {
+   MetaScreenCastWindowStreamSrc *window_src =
+     META_SCREEN_CAST_WINDOW_STREAM_SRC (src);
+@@ -463,8 +463,8 @@ meta_screen_cast_window_stream_src_record_frame (MetaScreenCastStreamSrc *src,
+ }
+ 
+ static gboolean
+-meta_screen_cast_window_stream_src_blit_to_framebuffer (MetaScreenCastStreamSrc *src,
+-                                                        CoglFramebuffer         *framebuffer)
++meta_screen_cast_window_stream_src_record_to_framebuffer (MetaScreenCastStreamSrc *src,
++                                                          CoglFramebuffer         *framebuffer)
+ {
+   MetaScreenCastWindowStreamSrc *window_src =
+     META_SCREEN_CAST_WINDOW_STREAM_SRC (src);
+@@ -580,9 +580,10 @@ meta_screen_cast_window_stream_src_class_init (MetaScreenCastWindowStreamSrcClas
+   src_class->get_specs = meta_screen_cast_window_stream_src_get_specs;
+   src_class->enable = meta_screen_cast_window_stream_src_enable;
+   src_class->disable = meta_screen_cast_window_stream_src_disable;
+-  src_class->record_frame = meta_screen_cast_window_stream_src_record_frame;
+-  src_class->blit_to_framebuffer =
+-    meta_screen_cast_window_stream_src_blit_to_framebuffer;
++  src_class->record_to_buffer =
++    meta_screen_cast_window_stream_src_record_to_buffer;
++  src_class->record_to_framebuffer =
++    meta_screen_cast_window_stream_src_record_to_framebuffer;
+   src_class->get_videocrop = meta_screen_cast_window_stream_src_get_videocrop;
+   src_class->set_cursor_metadata = meta_screen_cast_window_stream_src_set_cursor_metadata;
+ }

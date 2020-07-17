@@ -1,3 +1,28 @@
+mutter (3.36.4-1) unstable; urgency=medium
+
+  * New upstream stable release (LP: #1887998)
+    - Fix crash on area screenshots with fractional scaling
+    - Do not paint textures of fully obscured windows
+    - Turn off CRTCs as well when enabling DPMS
+    - Improve selection support
+    - Use a more appropriate combine function on opaque areas
+    - Fix remote desktop being broken without screencast session
+    - Fix popovers disappearing on wayland and HiDPI
+    - Fixed crashes (LP: #1870867, LP: #1857947)
+    - Plugged memory leaks
+  * d/p/screen-cast-Let-the-reason-for-recording-determine-what-t.patch,
+    d/p/screen-cast-src-Add-flag-to-maybe_record.patch,
+    d/p/screen-cast-src-Fix-signedness-of-timestamp-field.patch,
+    d/p/screen-cast-src-Make-record-functions-return-an-error-whe.patch,
+    d/p/screen-cast-src-Make-the-two-record-vfuncs-more-similarly.patch,
+    d/p/screen-cast-src-Record-follow-up-frame-after-timeout.patch,
+    d/p/screen-cast-src-Remove-follow-up-timeout-source-on-disabl.patch,
+    d/p/screen-cast-src-Use-G_USEC_PER_SEC-instead-of-1000000.patch,
+    d/p/screen-cast-window-stream-src-Fix-indentation.patch:
+    - Import more fixes for screencasting and remote desktop
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Fri, 17 Jul 2020 21:12:56 +0200
+
 mutter (3.36.3-1) unstable; urgency=medium
 
   * New upstream release (LP: #1881971)
