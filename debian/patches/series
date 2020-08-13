@@ -1,12 +1,3 @@
-screen-cast-src-Make-the-two-record-vfuncs-more-similarly.patch
-screen-cast-window-stream-src-Fix-indentation.patch
-screen-cast-src-Add-flag-to-maybe_record.patch
-screen-cast-Let-the-reason-for-recording-determine-what-t.patch
-screen-cast-src-Make-record-functions-return-an-error-whe.patch
-screen-cast-src-Fix-signedness-of-timestamp-field.patch
-screen-cast-src-Record-follow-up-frame-after-timeout.patch
-screen-cast-src-Use-G_USEC_PER_SEC-instead-of-1000000.patch
-screen-cast-src-Remove-follow-up-timeout-source-on-disabl.patch
 theme-use-gtk_render_icon_suface-to-paint-button-icon.patch
 theme-load-icons-as-Gtk-does-with-fallback-and-RTL-suppor.patch
 meson-add-back-default_driver-option.patch
