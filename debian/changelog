@@ -1,3 +1,16 @@
+mutter (3.36.5-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Screencast fixes and improvements
+    - Fix glitches when subsurfaces extend outside the toplevel
+    - Improve background display in overview workspace switcher
+    - Fix wine copy & paste
+    - Plug memory leaks
+  * Drop patches that were applied upstream
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 13 Aug 2020 10:19:59 +0100
+
 mutter (3.36.4-1) unstable; urgency=medium
 
   * New upstream stable release (LP: #1887998)
