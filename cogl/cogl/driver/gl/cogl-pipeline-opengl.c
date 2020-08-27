@@ -94,47 +94,51 @@ CoglTextureUnit *
 _cogl_get_texture_unit (int index_)
 {
   _COGL_GET_CONTEXT (ctx, NULL);
+  CoglGLContext *glctx = _cogl_driver_gl_context(ctx);
 
-  if (ctx->texture_units->len < (index_ + 1))
+  if (glctx->texture_units->len < (index_ + 1))
     {
       int i;
-      int prev_len = ctx->texture_units->len;
-      ctx->texture_units = g_array_set_size (ctx->texture_units, index_ + 1);
+      int prev_len = glctx->texture_units->len;
+      glctx->texture_units = g_array_set_size (glctx->texture_units,
+                                               index_ + 1);
       for (i = prev_len; i <= index_; i++)
         {
           CoglTextureUnit *unit =
-            &g_array_index (ctx->texture_units, CoglTextureUnit, i);
+            &g_array_index (glctx->texture_units, CoglTextureUnit, i);
 
           texture_unit_init (ctx, unit, i);
         }
     }
 
-  return &g_array_index (ctx->texture_units, CoglTextureUnit, index_);
+  return &g_array_index (glctx->texture_units, CoglTextureUnit, index_);
 }
 
 void
 _cogl_destroy_texture_units (CoglContext *ctx)
 {
   int i;
+  CoglGLContext *glctx = _cogl_driver_gl_context(ctx);
 
-  for (i = 0; i < ctx->texture_units->len; i++)
+  for (i = 0; i < glctx->texture_units->len; i++)
     {
       CoglTextureUnit *unit =
-        &g_array_index (ctx->texture_units, CoglTextureUnit, i);
+        &g_array_index (glctx->texture_units, CoglTextureUnit, i);
       texture_unit_free (unit);
     }
-  g_array_free (ctx->texture_units, TRUE);
+  g_array_free (glctx->texture_units, TRUE);
 }
 
 void
 _cogl_set_active_texture_unit (int unit_index)
 {
   _COGL_GET_CONTEXT (ctx, NO_RETVAL);
+  CoglGLContext *glctx = _cogl_driver_gl_context(ctx);
 
-  if (ctx->active_texture_unit != unit_index)
+  if (glctx->active_texture_unit != unit_index)
     {
       GE (ctx, glActiveTexture (GL_TEXTURE0 + unit_index));
-      ctx->active_texture_unit = unit_index;
+      glctx->active_texture_unit = unit_index;
     }
 }
 
@@ -190,11 +194,12 @@ _cogl_delete_gl_texture (GLuint gl_texture)
   int i;
 
   _COGL_GET_CONTEXT (ctx, NO_RETVAL);
+  CoglGLContext *glctx = _cogl_driver_gl_context(ctx);
 
-  for (i = 0; i < ctx->texture_units->len; i++)
+  for (i = 0; i < glctx->texture_units->len; i++)
     {
       CoglTextureUnit *unit =
-        &g_array_index (ctx->texture_units, CoglTextureUnit, i);
+        &g_array_index (glctx->texture_units, CoglTextureUnit, i);
 
       if (unit->gl_texture == gl_texture)
         {
@@ -218,11 +223,12 @@ _cogl_pipeline_texture_storage_change_notify (CoglTexture *texture)
   int i;
 
   _COGL_GET_CONTEXT (ctx, NO_RETVAL);
+  CoglGLContext *glctx = _cogl_driver_gl_context(ctx);
 
-  for (i = 0; i < ctx->texture_units->len; i++)
+  for (i = 0; i < glctx->texture_units->len; i++)
     {
       CoglTextureUnit *unit =
-        &g_array_index (ctx->texture_units, CoglTextureUnit, i);
+        &g_array_index (glctx->texture_units, CoglTextureUnit, i);
 
       if (unit->layer &&
           _cogl_pipeline_layer_get_texture (unit->layer) == texture)
@@ -688,6 +694,48 @@ _cogl_pipeline_layer_forward_wrap_modes (CoglPipelineLayer *layer,
                                                    gl_wrap_mode_t);
 }
 
+void
+_cogl_sampler_gl_init (CoglContext *context, CoglSamplerCacheEntry *entry)
+{
+  if (_cogl_has_private_feature (context,
+                                 COGL_PRIVATE_FEATURE_SAMPLER_OBJECTS))
+    {
+      GE( context, glGenSamplers (1, &entry->sampler_object) );
+
+      GE( context, glSamplerParameteri (entry->sampler_object,
+                                        GL_TEXTURE_MIN_FILTER,
+                                        entry->min_filter) );
+      GE( context, glSamplerParameteri (entry->sampler_object,
+                                        GL_TEXTURE_MAG_FILTER,
+                                        entry->mag_filter) );
+
+      GE (context, glSamplerParameteri (entry->sampler_object,
+                                        GL_TEXTURE_WRAP_S,
+                                        entry->wrap_mode_s) );
+      GE (context, glSamplerParameteri (entry->sampler_object,
+                                        GL_TEXTURE_WRAP_T,
+                                        entry->wrap_mode_t) );
+    }
+  else
+    {
+      CoglGLContext *gl_context = context->driver_context;
+
+      /* If sampler objects aren't supported then we'll invent a
+         unique number so that pipelines can still compare the
+         unique state just by comparing the sampler object
+         numbers */
+      entry->sampler_object = gl_context->next_fake_sampler_object_number++;
+    }
+}
+
+void
+_cogl_sampler_gl_free (CoglContext *context, CoglSamplerCacheEntry *entry)
+{
+  if (_cogl_has_private_feature (context,
+                                 COGL_PRIVATE_FEATURE_SAMPLER_OBJECTS))
+    GE( context, glDeleteSamplers (1, &entry->sampler_object) );
+}
+
 /* OpenGL associates the min/mag filters and repeat modes with the
  * texture object not the texture unit so we always have to re-assert
  * the filter and repeat modes whenever we use a texture since it may
@@ -704,11 +752,12 @@ foreach_texture_unit_update_filter_and_wrap_modes (void)
   int i;
 
   _COGL_GET_CONTEXT (ctx, NO_RETVAL);
+  CoglGLContext *glctx = _cogl_driver_gl_context(ctx);
 
-  for (i = 0; i < ctx->texture_units->len; i++)
+  for (i = 0; i < glctx->texture_units->len; i++)
     {
       CoglTextureUnit *unit =
-        &g_array_index (ctx->texture_units, CoglTextureUnit, i);
+        &g_array_index (glctx->texture_units, CoglTextureUnit, i);
 
       if (unit->layer)
         {
@@ -1141,3 +1190,95 @@ done:
   COGL_TIMER_STOP (_cogl_uprof_context, pipeline_flush_timer);
 }
 
+void
+_cogl_gl_set_uniform (CoglContext *ctx,
+                      GLint location,
+                      const CoglBoxedValue *value)
+{
+  switch (value->type)
+    {
+    case COGL_BOXED_NONE:
+      break;
+
+    case COGL_BOXED_INT:
+      {
+        const int *ptr;
+
+        if (value->count == 1)
+          ptr = value->v.int_value;
+        else
+          ptr = value->v.int_array;
+
+        switch (value->size)
+          {
+          case 1:
+            GE( ctx, glUniform1iv (location, value->count, ptr) );
+            break;
+          case 2:
+            GE( ctx, glUniform2iv (location, value->count, ptr) );
+            break;
+          case 3:
+            GE( ctx, glUniform3iv (location, value->count, ptr) );
+            break;
+          case 4:
+            GE( ctx, glUniform4iv (location, value->count, ptr) );
+            break;
+          }
+      }
+      break;
+
+    case COGL_BOXED_FLOAT:
+      {
+        const float *ptr;
+
+        if (value->count == 1)
+          ptr = value->v.float_value;
+        else
+          ptr = value->v.float_array;
+
+        switch (value->size)
+          {
+          case 1:
+            GE( ctx, glUniform1fv (location, value->count, ptr) );
+            break;
+          case 2:
+            GE( ctx, glUniform2fv (location, value->count, ptr) );
+            break;
+          case 3:
+            GE( ctx, glUniform3fv (location, value->count, ptr) );
+            break;
+          case 4:
+            GE( ctx, glUniform4fv (location, value->count, ptr) );
+            break;
+          }
+      }
+      break;
+
+    case COGL_BOXED_MATRIX:
+      {
+        const float *ptr;
+
+        if (value->count == 1)
+          ptr = value->v.matrix;
+        else
+          ptr = value->v.float_array;
+
+        switch (value->size)
+          {
+          case 2:
+            GE( ctx, glUniformMatrix2fv (location, value->count,
+                                         FALSE, ptr) );
+            break;
+          case 3:
+            GE( ctx, glUniformMatrix3fv (location, value->count,
+                                         FALSE, ptr) );
+            break;
+          case 4:
+            GE( ctx, glUniformMatrix4fv (location, value->count,
+                                         FALSE, ptr) );
+            break;
+          }
+      }
+      break;
+    }
+}

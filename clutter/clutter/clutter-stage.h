@@ -28,8 +28,8 @@
 #error "Only <clutter/clutter.h> can be included directly."
 #endif
 
+#include <clutter/clutter-actor.h>
 #include <clutter/clutter-types.h>
-#include <clutter/clutter-group.h>
 #include <clutter/clutter-stage-view.h>
 
 G_BEGIN_DECLS
@@ -56,7 +56,7 @@ typedef struct _ClutterStagePrivate ClutterStagePrivate;
 struct _ClutterStage
 {
   /*< private >*/
-  ClutterGroup parent_instance;
+  ClutterActor parent_instance;
 
   ClutterStagePrivate *priv;
 };
@@ -64,7 +64,6 @@ struct _ClutterStage
  * ClutterStageClass:
  * @activate: handler for the #ClutterStage::activate signal
  * @deactivate: handler for the #ClutterStage::deactivate signal
- * @delete_event: handler for the #ClutterStage::delete-event signal
  *
  * The #ClutterStageClass structure contains only private data
  *
@@ -74,15 +73,12 @@ struct _ClutterStage
 struct _ClutterStageClass
 {
   /*< private >*/
-  ClutterGroupClass parent_class;
+  ClutterActorClass parent_class;
 
   /*< public >*/
   /* signals */
   void (* activate)     (ClutterStage *stage);
   void (* deactivate)   (ClutterStage *stage);
-
-  gboolean (* delete_event) (ClutterStage *stage,
-                             ClutterEvent *event);
 
   void (* paint_view) (ClutterStage         *stage,
                        ClutterStageView     *view,
@@ -90,7 +86,7 @@ struct _ClutterStageClass
 
   /*< private >*/
   /* padding for future expansion */
-  gpointer _padding_dummy[30];
+  gpointer _padding_dummy[31];
 };
 
 /**
@@ -103,8 +99,7 @@ struct _ClutterStageClass
  * @z_far: the distance from the viewer to the far clipping
  *   plane (always positive)
  *
- * Stage perspective definition. #ClutterPerspective is only used by
- * the fixed point version of clutter_stage_set_perspective().
+ * Stage perspective definition.
  *
  * Since: 0.4
  */
@@ -138,18 +133,8 @@ CLUTTER_EXPORT
 GType clutter_stage_get_type (void) G_GNUC_CONST;
 
 CLUTTER_EXPORT
-ClutterActor *  clutter_stage_new                               (void);
-
-CLUTTER_EXPORT
-void            clutter_stage_set_perspective                   (ClutterStage          *stage,
-			                                         ClutterPerspective    *perspective);
-CLUTTER_EXPORT
 void            clutter_stage_get_perspective                   (ClutterStage          *stage,
 			                                         ClutterPerspective    *perspective);
-CLUTTER_EXPORT
-void            clutter_stage_show_cursor                       (ClutterStage          *stage);
-CLUTTER_EXPORT
-void            clutter_stage_hide_cursor                       (ClutterStage          *stage);
 CLUTTER_EXPORT
 void            clutter_stage_set_title                         (ClutterStage          *stage,
                                                                  const gchar           *title);
@@ -186,11 +171,6 @@ void            clutter_stage_set_motion_events_enabled         (ClutterStage   
 CLUTTER_EXPORT
 gboolean        clutter_stage_get_motion_events_enabled         (ClutterStage          *stage);
 CLUTTER_EXPORT
-void            clutter_stage_set_accept_focus                  (ClutterStage          *stage,
-                                                                 gboolean               accept_focus);
-CLUTTER_EXPORT
-gboolean        clutter_stage_get_accept_focus                  (ClutterStage          *stage);
-CLUTTER_EXPORT
 gboolean        clutter_stage_event                             (ClutterStage          *stage,
                                                                  ClutterEvent          *event);
 
@@ -208,11 +188,10 @@ guchar *        clutter_stage_read_pixels                       (ClutterStage   
 
 CLUTTER_EXPORT
 void            clutter_stage_ensure_viewport                   (ClutterStage          *stage);
-CLUTTER_EXPORT
-void            clutter_stage_ensure_redraw                     (ClutterStage          *stage);
 
 CLUTTER_EXPORT
-gboolean        clutter_stage_is_redraw_queued                  (ClutterStage          *stage);
+gboolean        clutter_stage_is_redraw_queued_on_view          (ClutterStage          *stage,
+                                                                 ClutterStageView      *view);
 
 #ifdef CLUTTER_ENABLE_EXPERIMENTAL_API
 CLUTTER_EXPORT
@@ -223,6 +202,9 @@ void            clutter_stage_skip_sync_delay                   (ClutterStage   
 #endif
 
 CLUTTER_EXPORT
+void clutter_stage_schedule_update (ClutterStage *stage);
+
+CLUTTER_EXPORT
 gboolean clutter_stage_get_capture_final_size (ClutterStage          *stage,
                                                cairo_rectangle_int_t *rect,
                                                int                   *width,
@@ -230,11 +212,22 @@ gboolean clutter_stage_get_capture_final_size (ClutterStage          *stage,
                                                float                 *scale);
 
 CLUTTER_EXPORT
-gboolean clutter_stage_capture (ClutterStage          *stage,
-                                gboolean               paint,
-                                cairo_rectangle_int_t *rect,
-                                ClutterCapture       **out_captures,
-                                int                   *out_n_captures);
+void clutter_stage_paint_to_framebuffer (ClutterStage                *stage,
+                                         CoglFramebuffer             *framebuffer,
+                                         const cairo_rectangle_int_t *rect,
+                                         float                        scale,
+                                         ClutterPaintFlag             paint_flags);
+
+CLUTTER_EXPORT
+gboolean clutter_stage_paint_to_buffer (ClutterStage                 *stage,
+                                        const cairo_rectangle_int_t  *rect,
+                                        float                         scale,
+                                        uint8_t                      *data,
+                                        int                           stride,
+                                        CoglPixelFormat               format,
+                                        ClutterPaintFlag              paint_flags,
+                                        GError                      **error);
+
 CLUTTER_EXPORT
 ClutterStageView * clutter_stage_get_view_at (ClutterStage *stage,
                                               float         x,

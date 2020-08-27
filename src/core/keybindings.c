@@ -30,6 +30,7 @@
 #include "config.h"
 
 #include "backends/meta-backend-private.h"
+#include "backends/meta-keymap-utils.h"
 #include "backends/meta-logical-monitor.h"
 #include "backends/meta-monitor-manager-private.h"
 #include "backends/x11/meta-backend-x11.h"
@@ -741,7 +742,7 @@ create_us_layout (void)
   names.variant = "";
   names.options = "";
 
-  context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
+  context = meta_create_xkb_context ();
   keymap = xkb_keymap_new_from_names (context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
   xkb_context_unref (context);
 
@@ -3112,7 +3113,7 @@ handle_move_to_center  (MetaDisplay     *display,
   MetaRectangle work_area;
   MetaRectangle frame_rect;
 
-  meta_window_get_work_area_all_monitors (window, &work_area);
+  meta_window_get_work_area_current_monitor (window, &work_area);
   meta_window_get_frame_rect (window, &frame_rect);
 
   meta_window_move_frame (window,
@@ -3302,15 +3303,7 @@ handle_toggle_tiled (MetaDisplay     *display,
   if ((META_WINDOW_TILED_LEFT (window) && mode == META_TILE_LEFT) ||
       (META_WINDOW_TILED_RIGHT (window) && mode == META_TILE_RIGHT))
     {
-      window->tile_monitor_number = window->saved_maximize ? window->monitor->number
-        : -1;
-      window->tile_mode = window->saved_maximize ? META_TILE_MAXIMIZED
-        : META_TILE_NONE;
-
-      if (window->saved_maximize)
-        meta_window_maximize (window, META_MAXIMIZE_BOTH);
-      else
-        meta_window_unmaximize (window, META_MAXIMIZE_BOTH);
+      meta_window_untile (window);
     }
   else if (meta_window_can_tile_side_by_side (window))
     {

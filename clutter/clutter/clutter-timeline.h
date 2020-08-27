@@ -119,7 +119,19 @@ CLUTTER_EXPORT
 GType clutter_timeline_get_type (void) G_GNUC_CONST;
 
 CLUTTER_EXPORT
-ClutterTimeline *               clutter_timeline_new                            (guint                     msecs);
+ClutterTimeline *               clutter_timeline_new_for_actor                  (ClutterActor             *actor,
+                                                                                 unsigned int              duration_ms);
+
+CLUTTER_EXPORT
+ClutterTimeline *               clutter_timeline_new_for_frame_clock            (ClutterFrameClock        *frame_clock,
+                                                                                 unsigned int              duration_ms);
+
+CLUTTER_EXPORT
+ClutterActor *                  clutter_timeline_get_actor                      (ClutterTimeline          *timeline);
+
+CLUTTER_EXPORT
+void                            clutter_timeline_set_actor                      (ClutterTimeline          *timeline,
+                                                                                 ClutterActor             *actor);
 
 CLUTTER_EXPORT
 guint                           clutter_timeline_get_duration                   (ClutterTimeline          *timeline);
@@ -220,6 +232,13 @@ CLUTTER_EXPORT
 gint64                          clutter_timeline_get_duration_hint              (ClutterTimeline          *timeline);
 CLUTTER_EXPORT
 gint                            clutter_timeline_get_current_repeat             (ClutterTimeline          *timeline);
+
+CLUTTER_EXPORT
+ClutterFrameClock *             clutter_timeline_get_frame_clock                (ClutterTimeline           *timeline);
+
+CLUTTER_EXPORT
+void                            clutter_timeline_set_frame_clock                (ClutterTimeline           *timeline,
+                                                                                 ClutterFrameClock         *frame_clock);
 
 G_END_DECLS
 

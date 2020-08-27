@@ -29,7 +29,7 @@ index f2d46b2..e9e4a0e 100644
 +
  #define COGL_CONFIG_H_INCLUDED 1
 diff --git a/cogl/meson.build b/cogl/meson.build
-index 2dfe5bc..3d4c2d3 100644
+index a3c61cf..c45614c 100644
 --- a/cogl/meson.build
 +++ b/cogl/meson.build
 @@ -10,6 +10,10 @@ cdata.set('HAVE_COGL_GLES2', have_gles2)
@@ -44,7 +44,7 @@ index 2dfe5bc..3d4c2d3 100644
    input: 'cogl-config.h.meson',
    output: 'cogl-config.h',
 diff --git a/meson.build b/meson.build
-index 5e22824..58d0150 100644
+index 0a4a3ce..0fb6a88 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -222,6 +222,8 @@ if have_wayland_eglstream
@@ -56,7 +56,7 @@ index 5e22824..58d0150 100644
  have_sm = get_option('sm')
  if have_sm
    sm_dep = dependency('sm')
-@@ -457,6 +459,7 @@ output = [
+@@ -484,6 +486,7 @@ output = [
    '        Wayland EGLStream........ ' + have_wayland_eglstream.to_string(),
    '        Native Backend........... ' + have_native_backend.to_string(),
    '        EGL Device............... ' + have_egl_device.to_string(),
@@ -65,7 +65,7 @@ index 5e22824..58d0150 100644
    '        gudev.................... ' + have_libgudev.to_string(),
    '        Wacom.................... ' + have_libwacom.to_string(),
 diff --git a/meson_options.txt b/meson_options.txt
-index 75a1961..8b1088d 100644
+index 655ef43..b4c0375 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -158,3 +158,9 @@ option('xwayland_initfd',

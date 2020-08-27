@@ -61,20 +61,13 @@
 #include "clutter-input-pointer-a11y-private.h"
 #include "clutter-graphene.h"
 #include "clutter-main.h"
-#include "clutter-master-clock.h"
 #include "clutter-mutter.h"
 #include "clutter-paint-node-private.h"
 #include "clutter-private.h"
 #include "clutter-settings-private.h"
 #include "clutter-stage-manager.h"
 #include "clutter-stage-private.h"
-
-#ifdef CLUTTER_WINDOWING_X11
-#include "x11/clutter-backend-x11.h"
-#endif
-#ifdef CLUTTER_WINDOWING_EGL
-#include "egl/clutter-backend-eglnative.h"
-#endif
+#include "clutter-backend-private.h"
 
 #include <cogl/cogl.h>
 #include <cogl-pango/cogl-pango.h>
@@ -83,26 +76,18 @@
 
 /* main context */
 static ClutterMainContext *ClutterCntx       = NULL;
-G_LOCK_DEFINE_STATIC (ClutterCntx);
-
-/* main lock and locking/unlocking functions */
-static GMutex clutter_threads_mutex;
 
 /* command line options */
 static gboolean clutter_is_initialized       = FALSE;
 static gboolean clutter_show_fps             = FALSE;
 static gboolean clutter_fatal_warnings       = FALSE;
 static gboolean clutter_disable_mipmap_text  = FALSE;
-static gboolean clutter_use_fuzzy_picking    = FALSE;
 static gboolean clutter_enable_accessibility = TRUE;
 static gboolean clutter_sync_to_vblank       = TRUE;
 
 static guint clutter_default_fps             = 60;
 
 static ClutterTextDirection clutter_text_direction = CLUTTER_TEXT_DIRECTION_LTR;
-
-static guint clutter_main_loop_level         = 0;
-static GSList *main_loops                    = NULL;
 
 /* debug flags */
 guint clutter_debug_flags       = 0;
@@ -144,12 +129,6 @@ static const GDebugKey clutter_paint_debug_keys[] = {
   { "paint-deform-tiles", CLUTTER_DEBUG_PAINT_DEFORM_TILES },
   { "damage-region", CLUTTER_DEBUG_PAINT_DAMAGE_REGION },
 };
-
-static inline void
-clutter_threads_init_default (void)
-{
-  g_mutex_init (&clutter_threads_mutex);
-}
 
 #define ENVIRONMENT_GROUP       "Environment"
 #define DEBUG_GROUP             "Debug"
@@ -195,16 +174,6 @@ clutter_config_read_from_key_file (GKeyFile *keyfile)
     g_clear_error (&key_error);
   else
     clutter_disable_mipmap_text = bool_value;
-
-  bool_value =
-    g_key_file_get_boolean (keyfile, ENVIRONMENT_GROUP,
-                            "UseFuzzyPicking",
-                            &key_error);
-
-  if (key_error != NULL)
-    g_clear_error (&key_error);
-  else
-    clutter_use_fuzzy_picking = bool_value;
 
   bool_value =
     g_key_file_get_boolean (keyfile, ENVIRONMENT_GROUP,
@@ -460,92 +429,14 @@ clutter_get_text_direction (void)
   return dir;
 }
 
-/**
- * clutter_main_quit:
- *
- * Terminates the Clutter mainloop.
- */
-void
-clutter_main_quit (void)
-{
-  if (main_loops == NULL)
-    {
-      g_critical ("Calling clutter_main_quit() without calling clutter_main() "
-                  "is not allowed. If you are using another main loop, use the "
-                  "appropriate API to terminate it.");
-      return;
-    }
-
-  CLUTTER_NOTE (MISC, "Terminating main loop level %d", clutter_main_loop_level);
-
-  g_main_loop_quit (main_loops->data);
-}
-
-/**
- * clutter_main_level:
- *
- * Retrieves the depth of the Clutter mainloop.
- *
- * Return value: The level of the mainloop.
- */
-gint
-clutter_main_level (void)
-{
-  return clutter_main_loop_level;
-}
-
-/**
- * clutter_main:
- *
- * Starts the Clutter mainloop.
- */
-void
-clutter_main (void)
-{
-  GMainLoop *loop;
-
-  if (!_clutter_context_is_initialized ())
-    {
-      g_warning ("Called clutter_main() but Clutter wasn't initialised. "
-		 "You must call clutter_init() first.");
-      return;
-    }
-
-  clutter_main_loop_level++;
-
-  CLUTTER_NOTE (MISC, "Entering main loop level %d", clutter_main_loop_level);
-
-  loop = g_main_loop_new (NULL, TRUE);
-  main_loops = g_slist_prepend (main_loops, loop);
-
-  if (g_main_loop_is_running (main_loops->data))
-    {
-      _clutter_threads_release_lock ();
-      g_main_loop_run (loop);
-      _clutter_threads_acquire_lock ();
-    }
-
-  main_loops = g_slist_remove (main_loops, loop);
-
-  g_main_loop_unref (loop);
-
-  CLUTTER_NOTE (MISC, "Leaving main loop level %d", clutter_main_loop_level);
-
-  clutter_main_loop_level--;
-}
-
 gboolean
 _clutter_threads_dispatch (gpointer data)
 {
   ClutterThreadsDispatch *dispatch = data;
   gboolean ret = FALSE;
 
-  _clutter_threads_acquire_lock ();
-
   if (!g_source_is_destroyed (g_main_current_source ()))
     ret = dispatch->func (dispatch->data);
-
-  _clutter_threads_release_lock ();
 
   return ret;
 }
@@ -771,40 +662,6 @@ clutter_threads_add_timeout (guint       interval,
                                            NULL);
 }
 
-void
-_clutter_threads_acquire_lock (void)
-{
-  g_mutex_lock (&clutter_threads_mutex);
-}
-
-void
-_clutter_threads_release_lock (void)
-{
-  /* we need to trylock here, in case the lock hasn't been acquired; on
-   * various systems trying to release a mutex that hasn't been acquired
-   * will cause a run-time error. trylock() will either fail, in which
-   * case we can release the lock we own; or it will succeeds, in which
-   * case we need to release the lock we just acquired. so we ignore the
-   * returned value.
-   *
-   * see: https://bugs.gnome.org/679439
-   */
-  g_mutex_trylock (&clutter_threads_mutex);
-  g_mutex_unlock (&clutter_threads_mutex);
-}
-
-void
-_clutter_context_lock (void)
-{
-  G_LOCK (ClutterCntx);
-}
-
-void
-_clutter_context_unlock (void)
-{
-  G_UNLOCK (ClutterCntx);
-}
-
 gboolean
 _clutter_context_is_initialized (void)
 {
@@ -814,8 +671,8 @@ _clutter_context_is_initialized (void)
   return ClutterCntx->is_initialized;
 }
 
-static ClutterMainContext *
-clutter_context_get_default_unlocked (void)
+ClutterMainContext *
+_clutter_context_get_default (void)
 {
   if (G_UNLIKELY (ClutterCntx == NULL))
     {
@@ -844,20 +701,6 @@ clutter_context_get_default_unlocked (void)
     }
 
   return ClutterCntx;
-}
-
-ClutterMainContext *
-_clutter_context_get_default (void)
-{
-  ClutterMainContext *retval;
-
-  _clutter_context_lock ();
-
-  retval = clutter_context_get_default_unlocked ();
-
-  _clutter_context_unlock ();
-
-  return retval;
 }
 
 static gboolean
@@ -990,9 +833,6 @@ static GOptionEntry clutter_args[] = {
   { "clutter-disable-mipmapped-text", 0, 0, G_OPTION_ARG_NONE,
     &clutter_disable_mipmap_text,
     N_("Disable mipmapping on text"), NULL },
-  { "clutter-use-fuzzy-picking", 0, 0, G_OPTION_ARG_NONE,
-    &clutter_use_fuzzy_picking,
-    N_("Use 'fuzzy' picking"), NULL },
 #ifdef CLUTTER_ENABLE_DEBUG
   { "clutter-debug", 0, 0, G_OPTION_ARG_CALLBACK, clutter_arg_debug_cb,
     N_("Clutter debugging flags to set"), "FLAGS" },
@@ -1073,10 +913,6 @@ pre_parse_hook (GOptionContext  *context,
   env_string = g_getenv ("CLUTTER_DISABLE_MIPMAPPED_TEXT");
   if (env_string)
     clutter_disable_mipmap_text = TRUE;
-
-  env_string = g_getenv ("CLUTTER_FUZZY_PICK");
-  if (env_string)
-    clutter_use_fuzzy_picking = TRUE;
 
   return _clutter_backend_pre_parse (backend, error);
 }
@@ -1736,6 +1572,11 @@ _clutter_process_event_details (ClutterActor        *stage,
                                 ClutterEvent        *event)
 {
   ClutterInputDevice *device = clutter_event_get_device (event);
+  ClutterMainContext *clutter_context;
+  ClutterBackend *backend;
+
+  clutter_context = _clutter_context_get_default ();
+  backend = clutter_context->backend;
 
   switch (event->type)
     {
@@ -1821,7 +1662,6 @@ _clutter_process_event_details (ClutterActor        *stage,
         break;
 
       case CLUTTER_DESTROY_NOTIFY:
-      case CLUTTER_DELETE:
         event->any.source = stage;
 
         if (_clutter_event_process_filters (event))
@@ -1832,8 +1672,7 @@ _clutter_process_event_details (ClutterActor        *stage,
         break;
 
       case CLUTTER_MOTION:
-#ifdef CLUTTER_WINDOWING_X11
-        if (!clutter_check_windowing_backend (CLUTTER_WINDOWING_X11) &&
+        if (clutter_backend_is_display_server (backend) &&
             !(event->any.flags & CLUTTER_EVENT_FLAG_SYNTHETIC))
           {
             if (_clutter_is_input_pointer_a11y_enabled (device))
@@ -1844,7 +1683,6 @@ _clutter_process_event_details (ClutterActor        *stage,
                 _clutter_input_pointer_a11y_on_motion_event (device, x, y);
               }
           }
-#endif /* CLUTTER_WINDOWING_X11 */
         /* only the stage gets motion events if they are enabled */
         if (!clutter_stage_get_motion_events_enabled (CLUTTER_STAGE (stage)) &&
             event->any.source == NULL)
@@ -1875,8 +1713,7 @@ _clutter_process_event_details (ClutterActor        *stage,
         G_GNUC_FALLTHROUGH;
       case CLUTTER_BUTTON_PRESS:
       case CLUTTER_BUTTON_RELEASE:
-#ifdef CLUTTER_WINDOWING_X11
-        if (!clutter_check_windowing_backend (CLUTTER_WINDOWING_X11))
+        if (clutter_backend_is_display_server (backend))
           {
             if (_clutter_is_input_pointer_a11y_enabled (device) && (event->type != CLUTTER_MOTION))
               {
@@ -1885,7 +1722,6 @@ _clutter_process_event_details (ClutterActor        *stage,
                                                              event->type == CLUTTER_BUTTON_PRESS);
               }
           }
-#endif /* CLUTTER_WINDOWING_X11 */
       case CLUTTER_SCROLL:
       case CLUTTER_TOUCHPAD_PINCH:
       case CLUTTER_TOUCHPAD_SWIPE:
@@ -2049,7 +1885,8 @@ _clutter_process_event_details (ClutterActor        *stage,
 
                   emit_touch_event (event, device);
 
-                  if (event->type == CLUTTER_TOUCH_END)
+                  if (event->type == CLUTTER_TOUCH_END ||
+                      event->type == CLUTTER_TOUCH_CANCEL)
                     _clutter_input_device_remove_event_sequence (device, event);
 
                   break;
@@ -2084,7 +1921,8 @@ _clutter_process_event_details (ClutterActor        *stage,
 
           emit_touch_event (event, device);
 
-          if (event->type == CLUTTER_TOUCH_END)
+          if (event->type == CLUTTER_TOUCH_END ||
+              event->type == CLUTTER_TOUCH_CANCEL)
             _clutter_input_device_remove_event_sequence (device, event);
 
           break;
@@ -2154,27 +1992,6 @@ _clutter_process_event (ClutterEvent *event)
   context->current_event = g_slist_delete_link (context->current_event, context->current_event);
 }
 
-/**
- * clutter_get_actor_by_gid:
- * @id_: a #ClutterActor unique id.
- *
- * Retrieves the #ClutterActor with @id_.
- *
- * Return value: (transfer none): the actor with the passed id or %NULL.
- *   The returned actor does not have its reference count increased.
- *
- * Since: 0.6
- *
- * Deprecated: 1.8: The id is deprecated, and this function always returns
- *   %NULL. Use the proper scene graph API in #ClutterActor to find a child
- *   of the stage.
- */
-ClutterActor *
-clutter_get_actor_by_gid (guint32 id_)
-{
-  return NULL;
-}
-
 void
 clutter_base_init (void)
 {
@@ -2188,9 +2005,6 @@ clutter_base_init (void)
       /* initialise GLib type system */
       g_type_init ();
 #endif
-
-      /* initialise the Big Clutter Lock™ if necessary */
-      clutter_threads_init_default ();
 
       clutter_graphene_init ();
     }
@@ -2259,9 +2073,7 @@ clutter_threads_remove_repaint_func (guint handle_id)
 
   g_return_if_fail (handle_id > 0);
 
-  _clutter_context_lock ();
-
-  context = clutter_context_get_default_unlocked ();
+  context = _clutter_context_get_default ();
   l = context->repaint_funcs;
   while (l != NULL)
     {
@@ -2284,8 +2096,6 @@ clutter_threads_remove_repaint_func (guint handle_id)
 
       l = l->next;
     }
-
-  _clutter_context_unlock ();
 }
 
 /**
@@ -2384,31 +2194,19 @@ clutter_threads_add_repaint_func_full (ClutterRepaintFlags flags,
 
   g_return_val_if_fail (func != NULL, 0);
 
-  _clutter_context_lock ();
-
-  context = clutter_context_get_default_unlocked ();
+  context = _clutter_context_get_default ();
 
   repaint_func = g_slice_new (ClutterRepaintFunction);
 
   repaint_func->id = context->last_repaint_id++;
 
-  /* mask out QUEUE_REDRAW_ON_ADD, since we're going to consume it */
-  repaint_func->flags = flags & ~CLUTTER_REPAINT_FLAGS_QUEUE_REDRAW_ON_ADD;
+  repaint_func->flags = flags;
   repaint_func->func = func;
   repaint_func->data = data;
   repaint_func->notify = notify;
 
   context->repaint_funcs = g_list_prepend (context->repaint_funcs,
                                            repaint_func);
-
-  _clutter_context_unlock ();
-
-  if ((flags & CLUTTER_REPAINT_FLAGS_QUEUE_REDRAW_ON_ADD) != 0)
-    {
-      ClutterMasterClock *master_clock = _clutter_master_clock_get_default ();
-
-      _clutter_master_clock_ensure_next_iteration (master_clock);
-    }
 
   return repaint_func->id;
 }
@@ -2545,58 +2343,6 @@ _clutter_context_get_pick_mode (void)
   ClutterMainContext *context = _clutter_context_get_default ();
 
   return context->pick_mode;
-}
-
-/**
- * clutter_check_windowing_backend:
- * @backend_type: the name of the backend to check
- *
- * Checks the run-time name of the Clutter windowing system backend, using
- * the symbolic macros like %CLUTTER_WINDOWING_X11.
- *
- * This function should be used in conjuction with the compile-time macros
- * inside applications and libraries that are using the platform-specific
- * windowing system API, to ensure that they are running on the correct
- * windowing system; for instance:
- *
- * |[
- * #ifdef CLUTTER_WINDOWING_X11
- *   if (clutter_check_windowing_backend (CLUTTER_WINDOWING_X11))
- *     {
- *       // it is safe to use the clutter_x11_* API
- *     }
- *   else
- * #endif
- *     g_error ("Unknown Clutter backend.");
- * ]|
- *
- * Return value: %TRUE if the current Clutter windowing system backend is
- *   the one checked, and %FALSE otherwise
- *
- * Since: 1.10
- */
-gboolean
-clutter_check_windowing_backend (const char *backend_type)
-{
-  ClutterMainContext *context = _clutter_context_get_default ();
-
-  g_return_val_if_fail (backend_type != NULL, FALSE);
-
-  backend_type = g_intern_string (backend_type);
-
-#ifdef CLUTTER_WINDOWING_EGL
-  if (backend_type == I_(CLUTTER_WINDOWING_EGL) &&
-      CLUTTER_IS_BACKEND_EGL_NATIVE (context->backend))
-    return TRUE;
-  else
-#endif
-#ifdef CLUTTER_WINDOWING_X11
-  if (backend_type == I_(CLUTTER_WINDOWING_X11) &&
-      CLUTTER_IS_BACKEND_X11 (context->backend))
-    return TRUE;
-  else
-#endif
-  return FALSE;
 }
 
 /**

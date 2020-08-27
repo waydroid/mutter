@@ -6,6 +6,7 @@
 
 #include <clutter/clutter.h>
 #include "test-utils.h"
+#include "tests/clutter-test-utils.h"
 
 /* layout actor, by Lucas Rocha */
 
@@ -276,15 +277,14 @@ my_thing_get_preferred_height (ClutterActor *self,
 
 static void
 my_thing_allocate (ClutterActor           *self,
-                   const ClutterActorBox  *box,
-                   ClutterAllocationFlags  flags)
+                   const ClutterActorBox  *box)
 {
   MyThingPrivate *priv;
   gfloat current_x, current_y, max_row_height;
   ClutterActorIter iter;
   ClutterActor *child;
 
-  clutter_actor_set_allocation (self, box, flags);
+  clutter_actor_set_allocation (self, box);
 
   priv = MY_THING (self)->priv;
 
@@ -322,7 +322,7 @@ my_thing_allocate (ClutterActor           *self,
       child_box.x2 = child_box.x1 + natural_width;
       child_box.y2 = child_box.y1 + natural_height;
 
-      clutter_actor_allocate (child, &child_box, flags);
+      clutter_actor_allocate (child, &child_box);
 
       /* if we take into account the transformation of the children
        * then we first check if it's transformed; then we get the
@@ -338,17 +338,8 @@ my_thing_allocate (ClutterActor           *self,
               graphene_point3d_t v1 = { 0, }, v2 = { 0, };
               ClutterActorBox transformed_box = { 0, };
 
-              /* origin */
-              if (!(flags & CLUTTER_ABSOLUTE_ORIGIN_CHANGED))
-                {
-                  v1.x = 0;
-                  v1.y = 0;
-                }
-              else
-                {
-                  v1.x = box->x1;
-                  v1.y = box->y1;
-                }
+              v1.x = box->x1;
+              v1.y = box->y1;
 
               clutter_actor_apply_transform_to_point (child, &v1, &v2);
               transformed_box.x1 = v2.x;
@@ -507,7 +498,7 @@ keypress_cb (ClutterActor *actor,
   switch (clutter_event_get_key_symbol (event))
     {
     case CLUTTER_KEY_q:
-      clutter_main_quit ();
+      clutter_test_quit ();
       break;
 
     case CLUTTER_KEY_a:
@@ -609,15 +600,14 @@ test_layout_main (int argc, char *argv[])
   gint i, size;
   GError *error = NULL;
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init (&argc, &argv);
 
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_actor_set_size (stage, 800, 600);
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Layout");
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
 
-  main_timeline = clutter_timeline_new (2000);
+  main_timeline = clutter_timeline_new_for_actor (stage, 2000);
   clutter_timeline_set_repeat_count (main_timeline, -1);
   clutter_timeline_set_auto_reverse (main_timeline, TRUE);
   g_signal_connect (main_timeline, "new-frame",
@@ -680,7 +670,7 @@ test_layout_main (int argc, char *argv[])
 
   clutter_actor_show (stage);
 
-  clutter_main ();
+  clutter_test_main ();
 
   g_object_unref (main_timeline);
 

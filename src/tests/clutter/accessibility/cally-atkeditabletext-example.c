@@ -149,8 +149,9 @@ _create_button (const gchar *text)
   ClutterActor *rectangle  = NULL;
   ClutterActor *label      = NULL;
 
-  button = clutter_group_new ();
-  rectangle = clutter_rectangle_new_with_color (CLUTTER_COLOR_Magenta);
+  button = clutter_actor_new ();
+  rectangle = clutter_actor_new ();
+  clutter_actor_set_background_color (rectangle, CLUTTER_COLOR_Magenta);
   clutter_actor_set_size (rectangle, 375, 35);
 
   label = clutter_text_new_full ("Sans Bold 32px",
@@ -169,7 +170,7 @@ make_ui (ClutterActor *stage)
   ClutterActor *button      = NULL;
 
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Cally - AtkEditable Test");
-  clutter_stage_set_color (CLUTTER_STAGE (stage), CLUTTER_COLOR_White);
+  clutter_actor_set_background_color (CLUTTER_ACTOR (stage), CLUTTER_COLOR_White);
   clutter_actor_set_size (stage, WIDTH, HEIGHT);
 
   /* text */
@@ -247,22 +248,19 @@ main (int argc, char *argv[])
 
   g_set_application_name ("AtkEditableText");
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
-
   cally_util_a11y_init (&argc, &argv);
 
-  stage = clutter_stage_new ();
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  stage = clutter_test_get_stage ();
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
 
   make_ui (stage);
 
-  clutter_actor_show_all (stage);
+  clutter_actor_show (stage);
 
   test_atk_text (text_actor);
   test_atk_text (text_editable_actor);
 
-  clutter_main ();
+  clutter_test_main ();
 
   return 0;
 }

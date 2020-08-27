@@ -31,11 +31,13 @@
 #include "backends/x11/meta-backend-x11.h"
 #include "backends/x11/meta-seat-x11.h"
 #include "backends/x11/meta-stage-x11.h"
+#include "backends/x11/nested/meta-stage-x11-nested.h"
 #include "clutter/clutter-mutter.h"
 #include "clutter/x11/clutter-x11.h"
 #include "clutter/x11/clutter-backend-x11.h"
 #include "cogl/cogl.h"
 #include "core/display-private.h"
+#include "meta/main.h"
 #include "meta/meta-x11-errors.h"
 
 #define STAGE_X11_IS_MAPPED(s)  ((((MetaStageX11 *) (s))->wm_state & STAGE_X11_WITHDRAWN) == 0)
@@ -236,39 +238,6 @@ set_wm_title (MetaStageX11 *stage_x11)
     }
 }
 
-static inline void
-set_cursor_visible (MetaStageX11 *stage_x11)
-{
-  Display *xdisplay = clutter_x11_get_default_display ();
-
-  if (stage_x11->xwin == None)
-    return;
-
-  g_debug ("setting cursor state ('%s') over stage window (%u)",
-           stage_x11->is_cursor_visible ? "visible" : "invisible",
-           (unsigned int) stage_x11->xwin);
-
-  if (stage_x11->is_cursor_visible)
-    {
-      XUndefineCursor (xdisplay, stage_x11->xwin);
-    }
-  else
-    {
-      XColor col;
-      Pixmap pix;
-      Cursor curs;
-
-      pix = XCreatePixmap (xdisplay, stage_x11->xwin, 1, 1, 1);
-      memset (&col, 0, sizeof (col));
-      curs = XCreatePixmapCursor (xdisplay,
-                                  pix, pix,
-                                  &col, &col,
-                                  1, 1);
-      XFreePixmap (xdisplay, pix);
-      XDefineCursor (xdisplay, stage_x11->xwin, curs);
-    }
-}
-
 static void
 meta_stage_x11_unrealize (ClutterStageWindow *stage_window)
 {
@@ -280,33 +249,9 @@ meta_stage_x11_unrealize (ClutterStageWindow *stage_window)
                            GINT_TO_POINTER (stage_x11->xwin));
     }
 
-  if (stage_x11->frame_closure)
-    {
-      cogl_onscreen_remove_frame_callback (stage_x11->onscreen,
-                                           stage_x11->frame_closure);
-      stage_x11->frame_closure = NULL;
-    }
-
   clutter_stage_window_parent_iface->unrealize (stage_window);
 
   g_clear_pointer (&stage_x11->onscreen, cogl_object_unref);
-}
-
-static void
-frame_cb (CoglOnscreen  *onscreen,
-          CoglFrameEvent frame_event,
-          CoglFrameInfo *frame_info,
-          void          *user_data)
-
-{
-  ClutterStageCogl *stage_cogl = user_data;
-  ClutterFrameInfo clutter_frame_info = {
-    .frame_counter = cogl_frame_info_get_frame_counter (frame_info),
-    .presentation_time = cogl_frame_info_get_presentation_time (frame_info),
-    .refresh_rate = cogl_frame_info_get_refresh_rate (frame_info)
-  };
-
-  _clutter_stage_cogl_presented (stage_cogl, frame_event, &clutter_frame_info);
 }
 
 static gboolean
@@ -324,18 +269,15 @@ meta_stage_x11_realize (ClutterStageWindow *stage_window)
 
   stage_x11->onscreen = cogl_onscreen_new (backend->cogl_context, width, height);
 
-  stage_x11->frame_closure =
-    cogl_onscreen_add_frame_callback (stage_x11->onscreen,
-                                      frame_cb,
-                                      stage_cogl,
-                                      NULL);
-
   if (META_IS_BACKEND_X11_CM (stage_x11->backend))
     {
       MetaRenderer *renderer = meta_backend_get_renderer (stage_x11->backend);
       MetaRendererX11Cm *renderer_x11_cm = META_RENDERER_X11_CM (renderer);
 
-      meta_renderer_x11_cm_set_onscreen (renderer_x11_cm, stage_x11->onscreen);
+      meta_renderer_x11_cm_init_screen_view (renderer_x11_cm,
+                                             stage_x11->onscreen,
+                                             stage_x11->xwin_width,
+                                             stage_x11->xwin_height);
     }
 
   /* We just created a window of the size of the actor. No need to fix
@@ -365,7 +307,6 @@ meta_stage_x11_realize (ClutterStageWindow *stage_window)
 
   set_wm_pid (stage_x11);
   set_wm_title (stage_x11);
-  set_cursor_visible (stage_x11);
 
   /* we unconditionally select input events even with event retrieval
    * disabled because we need to guarantee that the Clutter internal
@@ -397,16 +338,6 @@ meta_stage_x11_realize (ClutterStageWindow *stage_window)
 }
 
 static void
-meta_stage_x11_set_cursor_visible (ClutterStageWindow *stage_window,
-                                   gboolean            cursor_visible)
-{
-  MetaStageX11 *stage_x11 = META_STAGE_X11 (stage_window);
-
-  stage_x11->is_cursor_visible = !!cursor_visible;
-  set_cursor_visible (stage_x11);
-}
-
-static void
 meta_stage_x11_set_title (ClutterStageWindow *stage_window,
                           const char         *title)
 {
@@ -428,19 +359,9 @@ update_wm_hints (MetaStageX11 *stage_x11)
 
   wm_hints.flags = StateHint | InputHint;
   wm_hints.initial_state = NormalState;
-  wm_hints.input = stage_x11->accept_focus ? True : False;
+  wm_hints.input = True;
 
   XSetWMHints (xdisplay, stage_x11->xwin, &wm_hints);
-}
-
-static void
-meta_stage_x11_set_accept_focus (ClutterStageWindow *stage_window,
-                                 gboolean            accept_focus)
-{
-  MetaStageX11 *stage_x11 = META_STAGE_X11 (stage_window);
-
-  stage_x11->accept_focus = !!accept_focus;
-  update_wm_hints (stage_x11);
 }
 
 static void
@@ -534,14 +455,6 @@ meta_stage_x11_get_views (ClutterStageWindow *stage_window)
   return meta_renderer_get_views (renderer);
 }
 
-static int64_t
-meta_stage_x11_get_frame_counter (ClutterStageWindow *stage_window)
-{
-  MetaStageX11 *stage_x11 = META_STAGE_X11 (stage_window);
-
-  return cogl_onscreen_get_frame_counter (stage_x11->onscreen);
-}
-
 static void
 meta_stage_x11_finalize (GObject *object)
 {
@@ -563,32 +476,16 @@ meta_stage_x11_class_init (MetaStageX11Class *klass)
 static void
 meta_stage_x11_init (MetaStageX11 *stage)
 {
-  MetaRenderer *renderer;
-  MetaRendererX11Cm *renderer_x11_cm;
-
   stage->xwin = None;
   stage->xwin_width = 640;
   stage->xwin_height = 480;
 
   stage->wm_state = STAGE_X11_WITHDRAWN;
 
-  stage->is_cursor_visible = TRUE;
-  stage->accept_focus = TRUE;
-
   stage->title = NULL;
 
   stage->backend = meta_get_backend ();
   g_assert (stage->backend);
-
-  if (META_IS_BACKEND_X11_CM (stage->backend))
-    {
-      renderer = meta_backend_get_renderer (stage->backend);
-      renderer_x11_cm = META_RENDERER_X11_CM (renderer);
-
-      meta_renderer_x11_cm_ensure_screen_view (renderer_x11_cm,
-                                               stage->xwin_width,
-                                               stage->xwin_height);
-    }
 }
 
 static void
@@ -597,8 +494,6 @@ clutter_stage_window_iface_init (ClutterStageWindowInterface *iface)
   clutter_stage_window_parent_iface = g_type_interface_peek_parent (iface);
 
   iface->set_title = meta_stage_x11_set_title;
-  iface->set_cursor_visible = meta_stage_x11_set_cursor_visible;
-  iface->set_accept_focus = meta_stage_x11_set_accept_focus;
   iface->show = meta_stage_x11_show;
   iface->hide = meta_stage_x11_hide;
   iface->resize = meta_stage_x11_resize;
@@ -607,7 +502,6 @@ clutter_stage_window_iface_init (ClutterStageWindowInterface *iface)
   iface->unrealize = meta_stage_x11_unrealize;
   iface->can_clip_redraws = meta_stage_x11_can_clip_redraws;
   iface->get_views = meta_stage_x11_get_views;
-  iface->get_frame_counter = meta_stage_x11_get_frame_counter;
 }
 
 static inline void
@@ -710,7 +604,13 @@ meta_stage_x11_translate_event (MetaStageX11 *stage_x11,
 
           stage_width = xevent->xconfigure.width;
           stage_height = xevent->xconfigure.height;
-          clutter_actor_set_size (CLUTTER_ACTOR (stage), stage_width, stage_height);
+
+          if (META_IS_BACKEND_X11_CM (stage_x11->backend))
+            {
+              clutter_actor_set_size (CLUTTER_ACTOR (stage),
+                                      stage_width,
+                                      stage_height);
+            }
 
           if (size_changed)
             {
@@ -847,9 +747,10 @@ meta_stage_x11_translate_event (MetaStageX11 *stage_x11,
         {
           if (handle_wm_protocols_event (backend_x11, stage_x11, xevent))
             {
-              event->any.type = CLUTTER_DELETE;
-              event->any.stage = stage;
-              res = TRUE;
+              g_return_val_if_fail (META_IS_STAGE_X11_NESTED (stage_x11),
+                                    FALSE);
+              meta_quit (META_EXIT_SUCCESS);
+              res = FALSE;
             }
         }
 

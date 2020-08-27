@@ -24,33 +24,16 @@
 
 #include "backends/meta-cursor.h"
 #include "backends/meta-cursor-renderer.h"
-#include "backends/x11/cm/meta-cursor-sprite-xfixes.h"
 #include "meta/meta-cursor-tracker.h"
 
-struct _MetaCursorTracker {
-  GObject parent_instance;
+struct _MetaCursorTrackerClass
+{
+  GObjectClass parent_class;
 
-  gboolean is_showing;
-
-  MetaCursorSprite *effective_cursor; /* May be NULL when hidden */
-  MetaCursorSprite *displayed_cursor;
-
-  /* Wayland clients can set a NULL buffer as their cursor
-   * explicitly, which means that we shouldn't display anything.
-   * So, we can't simply store a NULL in window_cursor to
-   * determine an unset window cursor; we need an extra boolean.
-   */
-  gboolean has_window_cursor;
-  MetaCursorSprite *window_cursor;
-
-  MetaCursorSprite *root_cursor;
-
-  /* The cursor from the X11 server. */
-  MetaCursorSpriteXfixes *xfixes_cursor;
+  void (* set_force_track_position) (MetaCursorTracker *tracker,
+                                     gboolean           is_enabled);
+  MetaCursorSprite * (* get_sprite) (MetaCursorTracker *tracker);
 };
-
-gboolean meta_cursor_tracker_handle_xevent (MetaCursorTracker *tracker,
-					    XEvent            *xevent);
 
 void     meta_cursor_tracker_set_window_cursor   (MetaCursorTracker *tracker,
                                                   MetaCursorSprite  *cursor_sprite);
@@ -62,6 +45,14 @@ void     meta_cursor_tracker_update_position (MetaCursorTracker *tracker,
                                               float              new_x,
                                               float              new_y);
 
+void meta_cursor_tracker_track_position (MetaCursorTracker *tracker);
+
+void meta_cursor_tracker_untrack_position (MetaCursorTracker *tracker);
+
 MetaCursorSprite * meta_cursor_tracker_get_displayed_cursor (MetaCursorTracker *tracker);
+
+MetaBackend * meta_cursor_tracker_get_backend (MetaCursorTracker *tracker);
+
+void meta_cursor_tracker_notify_cursor_changed (MetaCursorTracker *tracker);
 
 #endif

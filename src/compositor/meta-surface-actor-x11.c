@@ -181,8 +181,8 @@ update_pixmap (MetaSurfaceActorX11 *self)
     }
 }
 
-static gboolean
-is_visible (MetaSurfaceActorX11 *self)
+gboolean
+meta_surface_actor_x11_is_visible (MetaSurfaceActorX11 *self)
 {
   return (self->pixmap != None) && !self->unredirected;
 }
@@ -212,17 +212,17 @@ meta_surface_actor_x11_process_damage (MetaSurfaceActor *actor,
         self->does_full_damage = TRUE;
     }
 
-  if (!is_visible (self))
+  if (!meta_surface_actor_x11_is_visible (self))
     return;
 
   cogl_texture_pixmap_x11_update_area (COGL_TEXTURE_PIXMAP_X11 (self->texture),
                                        x, y, width, height);
+  meta_surface_actor_update_area (actor, x, y, width, height);
 }
 
-static void
-meta_surface_actor_x11_pre_paint (MetaSurfaceActor *actor)
+void
+meta_surface_actor_x11_handle_updates (MetaSurfaceActorX11 *self)
 {
-  MetaSurfaceActorX11 *self = META_SURFACE_ACTOR_X11 (actor);
   MetaDisplay *display = self->display;
   Display *xdisplay = meta_x11_display_get_xdisplay (display->x11_display);
 
@@ -236,13 +236,6 @@ meta_surface_actor_x11_pre_paint (MetaSurfaceActor *actor)
     }
 
   update_pixmap (self);
-}
-
-static gboolean
-meta_surface_actor_x11_is_visible (MetaSurfaceActor *actor)
-{
-  MetaSurfaceActorX11 *self = META_SURFACE_ACTOR_X11 (actor);
-  return is_visible (self);
 }
 
 static gboolean
@@ -260,33 +253,14 @@ meta_surface_actor_x11_is_opaque (MetaSurfaceActor *actor)
 gboolean
 meta_surface_actor_x11_should_unredirect (MetaSurfaceActorX11 *self)
 {
-  MetaWindow *window = self->window;
-
-  if (meta_window_requested_dont_bypass_compositor (window))
-    return FALSE;
-
-  if (window->opacity != 0xFF)
-    return FALSE;
-
-  if (window->shape_region != NULL)
-    return FALSE;
-
-  if (!meta_window_is_monitor_sized (window))
-    return FALSE;
-
-  if (meta_window_requested_bypass_compositor (window))
-    return TRUE;
-
   if (!meta_surface_actor_x11_is_opaque (META_SURFACE_ACTOR (self)))
     return FALSE;
 
-  if (meta_window_is_override_redirect (window))
-    return TRUE;
+  if (!self->does_full_damage &&
+      !meta_window_is_override_redirect (self->window))
+    return FALSE;
 
-  if (self->does_full_damage)
-    return TRUE;
-
-  return FALSE;
+  return TRUE;
 }
 
 static void
@@ -357,8 +331,6 @@ meta_surface_actor_x11_class_init (MetaSurfaceActorX11Class *klass)
   object_class->dispose = meta_surface_actor_x11_dispose;
 
   surface_actor_class->process_damage = meta_surface_actor_x11_process_damage;
-  surface_actor_class->pre_paint = meta_surface_actor_x11_pre_paint;
-  surface_actor_class->is_visible = meta_surface_actor_x11_is_visible;
   surface_actor_class->is_opaque = meta_surface_actor_x11_is_opaque;
 }
 

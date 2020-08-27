@@ -74,10 +74,12 @@ struct _MetaWaylandCompositor
 {
   GObject parent;
 
+  MetaBackend *backend;
+
   struct wl_display *wayland_display;
   char *display_name;
   GHashTable *outputs;
-  struct wl_list frame_callbacks;
+  GList *frame_callback_surfaces;
 
   MetaXWaylandManager xwayland_manager;
 

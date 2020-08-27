@@ -136,14 +136,6 @@ GOptionGroup *          clutter_get_option_group                (void);
 CLUTTER_EXPORT
 GOptionGroup *          clutter_get_option_group_without_init   (void);
 
-/* Mainloop */
-CLUTTER_EXPORT
-void                    clutter_main                            (void);
-CLUTTER_EXPORT
-void                    clutter_main_quit                       (void);
-CLUTTER_EXPORT
-gint                    clutter_main_level                      (void);
-
 CLUTTER_EXPORT
 void                    clutter_do_event                        (ClutterEvent *event);
 
@@ -193,9 +185,6 @@ ClutterTextDirection    clutter_get_default_text_direction      (void);
 
 CLUTTER_EXPORT
 guint                   clutter_get_default_frame_rate          (void);
-
-CLUTTER_EXPORT
-gboolean                clutter_check_windowing_backend         (const char *backend_type);
 
 CLUTTER_EXPORT
 void                    clutter_add_debug_flags                 (ClutterDebugFlag     debug_flags,

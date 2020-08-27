@@ -885,12 +885,8 @@ meta_event_prepare (GSource *source,
 {
   gboolean retval;
 
-  _clutter_threads_acquire_lock ();
-
   *timeout = -1;
   retval = clutter_events_pending ();
-
-  _clutter_threads_release_lock ();
 
   return retval;
 }
@@ -901,12 +897,8 @@ meta_event_check (GSource *source)
   MetaEventSource *event_source = (MetaEventSource *) source;
   gboolean retval;
 
-  _clutter_threads_acquire_lock ();
-
   retval = ((event_source->event_poll_fd.revents & G_IO_IN) ||
             clutter_events_pending ());
-
-  _clutter_threads_release_lock ();
 
   return retval;
 }
@@ -1273,8 +1265,6 @@ meta_event_dispatch (GSource     *g_source,
   MetaSeatNative *seat;
   ClutterEvent *event;
 
-  _clutter_threads_acquire_lock ();
-
   seat = source->seat;
 
   /* Don't queue more events if we haven't finished handling the previous batch
@@ -1299,7 +1289,7 @@ meta_event_dispatch (GSource     *g_source,
 
       /* Drop events if we don't have any stage to forward them to */
       if (!_clutter_input_device_get_stage (input_device))
-        goto out;
+        return TRUE;
 
       /* update the device states *before* the event */
       event_state = seat->button_state |
@@ -1310,9 +1300,6 @@ meta_event_dispatch (GSource     *g_source,
       /* forward the event into clutter for emission etc. */
       _clutter_stage_queue_event (event->any.stage, event, FALSE);
     }
-
-out:
-  _clutter_threads_release_lock ();
 
   return TRUE;
 }
@@ -2636,17 +2623,12 @@ meta_seat_native_get_keyboard (ClutterSeat *seat)
   return seat_native->core_keyboard;
 }
 
-static GList *
-meta_seat_native_list_devices (ClutterSeat *seat)
+static const GList *
+meta_seat_native_peek_devices (ClutterSeat *seat)
 {
   MetaSeatNative *seat_native = META_SEAT_NATIVE (seat);
-  GList *devices = NULL;
-  GSList *l;
 
-  for (l = seat_native->devices; l; l = l->next)
-    devices = g_list_prepend (devices, l->data);
-
-  return devices;
+  return (const GList *) seat_native->devices;
 }
 
 static void
@@ -2771,7 +2753,7 @@ meta_seat_native_class_init (MetaSeatNativeClass *klass)
 
   seat_class->get_pointer = meta_seat_native_get_pointer;
   seat_class->get_keyboard = meta_seat_native_get_keyboard;
-  seat_class->list_devices = meta_seat_native_list_devices;
+  seat_class->peek_devices = meta_seat_native_peek_devices;
   seat_class->bell_notify = meta_seat_native_bell_notify;
   seat_class->get_keymap = meta_seat_native_get_keymap;
   seat_class->copy_event_data = meta_seat_native_copy_event_data;

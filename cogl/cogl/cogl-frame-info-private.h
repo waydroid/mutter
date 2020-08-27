@@ -43,10 +43,9 @@ struct _CoglFrameInfo
   float refresh_rate;
 
   int64_t global_frame_counter;
-
-  CoglOutput *output;
 };
 
-CoglFrameInfo *_cogl_frame_info_new (void);
+COGL_EXPORT
+CoglFrameInfo *cogl_frame_info_new (int64_t global_frame_counter);
 
 #endif /* __COGL_FRAME_INFO_PRIVATE_H */

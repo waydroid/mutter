@@ -4,10 +4,10 @@
 #include <glib-object.h>
 #include <clutter/clutter.h>
 
-typedef struct {
-  ClutterActor *stage;
+#include "compositor/meta-plugin-manager.h"
 
-  guint no_display : 1;
+typedef struct {
+  gpointer dummy_field;
 } ClutterTestEnvironment;
 
 static ClutterTestEnvironment *test_environ = NULL;
@@ -28,6 +28,57 @@ log_func (const gchar    *log_domain,
   return TRUE;
 }
 
+static const char *
+test_get_plugin_name (void)
+{
+  const char *name;
+
+  name = g_getenv ("MUTTER_TEST_PLUGIN_PATH");
+  if (name)
+    return name;
+  else
+    return "libdefault";
+}
+
+static void
+init_common_pre (void)
+{
+  const char *display;
+
+  if (G_UNLIKELY (test_environ != NULL))
+    g_error ("Attempting to initialize the test suite more than once, "
+             "aborting...\n");
+
+  meta_plugin_manager_load (test_get_plugin_name ());
+  meta_test_init ();
+
+  display = g_getenv ("DISPLAY");
+  if (!display || *display == '\0')
+    {
+      g_error ("No DISPLAY environment variable found, but we require a "
+               "DISPLAY set in order to run the conformance test suite.\n"
+               "Skipping all tests.\n");
+    }
+
+  /* we explicitly disable the synchronisation to the vertical refresh
+   * rate, and run the master clock using a 60 fps timer instead.
+   */
+  _clutter_set_sync_to_vblank (FALSE);
+}
+
+static void
+init_common_post (int    *argc,
+                  char ***argv)
+{
+  g_test_init (argc, argv, NULL);
+  g_test_bug_base ("https://bugzilla.gnome.org/show_bug.cgi?id=%s");
+
+  /* our global state, accessible from each test unit */
+  test_environ = g_new0 (ClutterTestEnvironment, 1);
+
+  meta_start ();
+}
+
 /*
  * clutter_test_init:
  * @argc: (inout): number of arguments in @argv
@@ -41,49 +92,25 @@ void
 clutter_test_init (int    *argc,
                    char ***argv)
 {
-  gboolean no_display = FALSE;
-
-  if (G_UNLIKELY (test_environ != NULL))
-    g_error ("Attempting to initialize the test suite more than once, "
-             "aborting...\n");
-
-#ifdef CLUTTER_WINDOWING_X11
-  /* on X11 backends we need the DISPLAY environment set.
-   *
-   * check_windowing_backend() will pre-initialize the Clutter
-   * backend object.
-   */
-  if (clutter_check_windowing_backend (CLUTTER_WINDOWING_X11))
-    {
-      const char *display = g_getenv ("DISPLAY");
-
-      if (display == NULL || *display == '\0')
-        {
-          g_test_message ("No DISPLAY environment variable found, but we require a "
-                          "DISPLAY set in order to run the conformance test suite.\n"
-                          "Skipping all tests.\n");
-          no_display = TRUE;
-
-          goto out;
-        }
-    }
-#endif
-
-  /* we explicitly disable the synchronisation to the vertical refresh
-   * rate, and run the master clock using a 60 fps timer instead.
-   */
-  _clutter_set_sync_to_vblank (FALSE);
-
-  /* perform the actual initialization */
+  init_common_pre ();
   g_assert (clutter_init (NULL, NULL) == CLUTTER_INIT_SUCCESS);
+  init_common_post (argc, argv);
+}
 
-out:
-  g_test_init (argc, argv, NULL);
-  g_test_bug_base ("https://bugzilla.gnome.org/show_bug.cgi?id=%s");
-
-  /* our global state, accessible from each test unit */
-  test_environ = g_new0 (ClutterTestEnvironment, 1);
-  test_environ->no_display = no_display;
+void
+clutter_test_init_with_args (int            *argc,
+                             char         ***argv,
+                             const char     *parameter_string,
+                             GOptionEntry   *entries,
+                             const char     *translation_domain)
+{
+  init_common_pre ();
+  g_assert (clutter_init_with_args (argc, argv,
+                                    parameter_string,
+                                    entries,
+                                    translation_domain,
+                                    NULL) == CLUTTER_INIT_SUCCESS);
+  init_common_post (argc, argv);
 }
 
 /**
@@ -98,18 +125,9 @@ out:
 ClutterActor *
 clutter_test_get_stage (void)
 {
-  g_assert (test_environ != NULL);
+  MetaBackend *backend = meta_get_backend ();
 
-  if (test_environ->stage == NULL)
-    {
-      /* create a stage, and ensure that it goes away at the end */
-      test_environ->stage = clutter_stage_new ();
-      clutter_actor_set_name (test_environ->stage, "Test Stage");
-      g_object_add_weak_pointer (G_OBJECT (test_environ->stage),
-                                 (gpointer *) &test_environ->stage);
-    }
-
-  return test_environ->stage;
+  return meta_backend_get_stage (backend);
 }
 
 typedef struct {
@@ -118,21 +136,39 @@ typedef struct {
   GDestroyNotify test_notify;
 } ClutterTestData;
 
+static gboolean
+list_equal_unsorted (GList *list_a,
+                     GList *list_b)
+{
+  GList *l_a;
+  GList *l_b;
+
+  for (l_a = list_a, l_b = list_b;
+       l_a && l_b;
+       l_a = l_a->next, l_b = l_b->next)
+    {
+      if (l_a->data != l_b->data)
+        return FALSE;
+    }
+
+  return !l_a && !l_b;
+}
+
 static void
 clutter_test_func_wrapper (gconstpointer data_)
 {
   const ClutterTestData *data = data_;
+  ClutterActor *stage;
+  GList *pre_stage_children;
+  GList *post_stage_children;
 
   g_test_log_set_fatal_handler (log_func, NULL);
 
   /* ensure that the previous test state has been cleaned up */
-  g_assert_null (test_environ->stage);
+  stage = clutter_test_get_stage ();
+  clutter_actor_hide (stage);
 
-  if (test_environ->no_display)
-    {
-      g_test_skip ("No DISPLAY set");
-      goto out;
-    }
+  pre_stage_children = clutter_actor_get_children (stage);
 
   if (data->test_data != NULL)
     {
@@ -147,15 +183,17 @@ clutter_test_func_wrapper (gconstpointer data_)
       test_func ();
     }
 
-out:
   if (data->test_notify != NULL)
     data->test_notify (data->test_data);
 
-  if (test_environ->stage != NULL)
-    {
-      clutter_actor_destroy (test_environ->stage);
-      g_assert_null (test_environ->stage);
-    }
+  post_stage_children = clutter_actor_get_children (stage);
+
+  g_assert_true (list_equal_unsorted (pre_stage_children, post_stage_children));
+
+  g_list_free (pre_stage_children);
+  g_list_free (post_stage_children);
+
+  clutter_actor_hide (stage);
 }
 
 /**
@@ -277,6 +315,18 @@ clutter_test_run (void)
   g_free (test_environ);
 
   return res;
+}
+
+void
+clutter_test_main (void)
+{
+  meta_run_main_loop ();
+}
+
+void
+clutter_test_quit (void)
+{
+  meta_quit (META_EXIT_SUCCESS);
 }
 
 typedef struct {

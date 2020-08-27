@@ -21,7 +21,7 @@
 #ifndef META_BACKGROUND_ACTOR_H
 #define META_BACKGROUND_ACTOR_H
 
-#include <gsettings-desktop-schemas/gdesktop-enums.h>
+#include <gdesktop-enums.h>
 
 #include "clutter/clutter.h"
 #include "meta/meta-background.h"
@@ -46,25 +46,5 @@ G_DECLARE_FINAL_TYPE (MetaBackgroundActor,
 META_EXPORT
 ClutterActor *meta_background_actor_new    (MetaDisplay *display,
                                             int          monitor);
-
-META_EXPORT
-void meta_background_actor_set_background  (MetaBackgroundActor *self,
-                                            MetaBackground      *background);
-
-META_EXPORT
-void meta_background_actor_set_gradient (MetaBackgroundActor *self,
-                                         gboolean             enabled,
-                                         int                  height,
-                                         double               tone_start);
-
-META_EXPORT
-void meta_background_actor_set_monitor  (MetaBackgroundActor *self,
-                                         int                  monitor);
-
-META_EXPORT
-void meta_background_actor_set_vignette (MetaBackgroundActor *self,
-                                         gboolean             enabled,
-                                         double               brightness,
-                                         double               sharpness);
 
 #endif /* META_BACKGROUND_ACTOR_H */

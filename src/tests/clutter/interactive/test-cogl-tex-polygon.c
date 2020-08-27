@@ -4,6 +4,8 @@
 #include <clutter/clutter.h>
 #include <cogl/cogl.h>
 
+#include "tests/clutter-test-utils.h"
+
 /* Coglbox declaration
  *--------------------------------------------------*/
 
@@ -366,7 +368,7 @@ on_toggle_click (ClutterActor *button, ClutterEvent *event,
 static ClutterActor *
 make_toggle (const char *label_text, gboolean *toggle_val)
 {
-  ClutterActor *group = clutter_group_new ();
+  ClutterActor *group = clutter_actor_new ();
   ClutterActor *label = clutter_text_new_with_text ("Sans 14", label_text);
   ClutterActor *button = clutter_text_new_with_text ("Sans 14", "");
 
@@ -394,23 +396,22 @@ test_cogl_tex_polygon_main (int argc, char *argv[])
   ClutterTimeline  *timeline;
   ClutterColor      blue = { 0x30, 0x30, 0xff, 0xff };
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init (&argc, &argv);
 
   /* Stage */
-  stage = clutter_stage_new ();
-  clutter_stage_set_color (CLUTTER_STAGE (stage), &blue);
+  stage = clutter_test_get_stage ();
+  clutter_actor_set_background_color (CLUTTER_ACTOR (stage), &blue);
   clutter_actor_set_size (stage, 640, 480);
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Cogl Texture Polygon");
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
 
   /* Cogl Box */
   coglbox = test_coglbox_new ();
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), coglbox);
 
   /* Timeline for animation */
-  timeline = clutter_timeline_new (6000);
-  clutter_timeline_set_loop (timeline, TRUE);
+  timeline = clutter_timeline_new_for_actor (stage, 6000);
+  clutter_timeline_set_repeat_count (timeline, -1);
   g_signal_connect (timeline, "new-frame", G_CALLBACK (frame_cb), coglbox);
   clutter_timeline_start (timeline);
 
@@ -442,7 +443,7 @@ test_cogl_tex_polygon_main (int argc, char *argv[])
 
   clutter_actor_show (stage);
 
-  clutter_main ();
+  clutter_test_main ();
 
   return 0;
 }

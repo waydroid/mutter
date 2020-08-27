@@ -37,7 +37,6 @@
 #include "clutter-feature.h"
 #include "clutter-id-pool.h"
 #include "clutter-layout-manager.h"
-#include "clutter-master-clock.h"
 #include "clutter-settings.h"
 #include "clutter-stage-manager.h"
 #include "clutter-stage.h"
@@ -65,7 +64,6 @@ typedef struct _ClutterVertex4          ClutterVertex4;
 
 #define CLUTTER_ACTOR_IS_TOPLEVEL(a)            ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IS_TOPLEVEL) != FALSE)
 #define CLUTTER_ACTOR_IN_DESTRUCTION(a)         ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_DESTRUCTION) != FALSE)
-#define CLUTTER_ACTOR_IN_REPARENT(a)            ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_REPARENT) != FALSE)
 #define CLUTTER_ACTOR_IN_PAINT(a)               ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_PAINT) != FALSE)
 #define CLUTTER_ACTOR_IN_PICK(a)                ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_PICK) != FALSE)
 #define CLUTTER_ACTOR_IN_RELAYOUT(a)            ((CLUTTER_PRIVATE_FLAGS (a) & CLUTTER_IN_RELAYOUT) != FALSE)
@@ -99,7 +97,6 @@ typedef enum
 
   CLUTTER_IN_DESTRUCTION = 1 << 0,
   CLUTTER_IS_TOPLEVEL    = 1 << 1,
-  CLUTTER_IN_REPARENT    = 1 << 2,
   CLUTTER_IN_PREF_WIDTH  = 1 << 3,
   CLUTTER_IN_PREF_HEIGHT = 1 << 4,
 
@@ -123,9 +120,6 @@ struct _ClutterMainContext
 
   /* the object holding all the stage instances */
   ClutterStageManager *stage_manager;
-
-  /* the clock driving all the frame operations */
-  ClutterMasterClock *master_clock;
 
   /* the main event queue */
   GQueue *events_queue;
@@ -178,11 +172,6 @@ typedef struct
 
 gboolean _clutter_threads_dispatch      (gpointer data);
 void     _clutter_threads_dispatch_free (gpointer data);
-
-CLUTTER_EXPORT
-void                    _clutter_threads_acquire_lock                   (void);
-CLUTTER_EXPORT
-void                    _clutter_threads_release_lock                   (void);
 
 ClutterMainContext *    _clutter_context_get_default                    (void);
 void                    _clutter_context_lock                           (void);
@@ -317,6 +306,36 @@ gboolean        _clutter_run_progress_function  (GType gtype,
                                                  GValue *retval);
 
 void            clutter_timeline_cancel_delay (ClutterTimeline *timeline);
+
+static inline uint64_t
+us (uint64_t us)
+{
+  return us;
+}
+
+static inline uint32_t
+ms (uint32_t ms)
+{
+  return ms;
+}
+
+static inline uint64_t
+ms2us (uint64_t ms)
+{
+  return us (ms * 1000);
+}
+
+static inline uint32_t
+us2ms (uint64_t us)
+{
+  return (uint32_t) (us / 1000);
+}
+
+static inline uint64_t
+ns2us (uint64_t ns)
+{
+  return us (ns / 1000);
+}
 
 G_END_DECLS
 

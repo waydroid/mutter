@@ -30,6 +30,7 @@
 
 #include "cogl-config.h"
 
+#include "cogl-mutter.h"
 #include "cogl-object.h"
 #include "cogl-private.h"
 #include "cogl-profile.h"
@@ -45,39 +46,11 @@
 #include "cogl-onscreen-private.h"
 #include "cogl-attribute-private.h"
 #include "cogl1-context.h"
-#include "cogl-gpu-info-private.h"
 #include "cogl-gtype-private.h"
 #include "winsys/cogl-winsys-private.h"
 
 #include <string.h>
 #include <stdlib.h>
-
-/* These aren't defined in the GLES headers */
-#ifndef GL_POINT_SPRITE
-#define GL_POINT_SPRITE 0x8861
-#endif
-
-#ifndef GL_NUM_EXTENSIONS
-#define GL_NUM_EXTENSIONS 0x821D
-#endif
-
-/* This is a relatively new extension */
-#ifndef GL_PURGED_CONTEXT_RESET_NV
-#define GL_PURGED_CONTEXT_RESET_NV 0x92BB
-#endif
-
-/* These aren't defined in the GLES2 headers */
-#ifndef GL_GUILTY_CONTEXT_RESET_ARB
-#define GL_GUILTY_CONTEXT_RESET_ARB 0x8253
-#endif
-
-#ifndef GL_INNOCENT_CONTEXT_RESET_ARB
-#define GL_INNOCENT_CONTEXT_RESET_ARB 0x8254
-#endif
-
-#ifndef GL_UNKNOWN_CONTEXT_RESET_ARB
-#define GL_UNKNOWN_CONTEXT_RESET_ARB 0x8255
-#endif
 
 static void _cogl_context_free (CoglContext *context);
 
@@ -276,8 +249,6 @@ cogl_context_new (CoglDisplay *display,
     g_array_new (TRUE, FALSE, sizeof (CoglAttribute *));
   context->journal_clip_bounds = NULL;
 
-  context->polygon_vertices = g_array_new (FALSE, FALSE, sizeof (float));
-
   context->current_pipeline = NULL;
   context->current_pipeline_changes_since_flush = 0;
   context->current_pipeline_with_color_attrib = FALSE;
@@ -308,25 +279,17 @@ cogl_context_new (CoglDisplay *display,
   for (i = 0; i < COGL_BUFFER_BIND_TARGET_COUNT; i++)
     context->current_buffer[i] = NULL;
 
-  context->current_path = NULL;
   context->stencil_pipeline = cogl_pipeline_new (context);
-
-  context->quad_buffer_indices_byte = NULL;
-  context->quad_buffer_indices = NULL;
-  context->quad_buffer_indices_len = 0;
 
   context->rectangle_byte_indices = NULL;
   context->rectangle_short_indices = NULL;
   context->rectangle_short_indices_len = 0;
 
-  context->texture_download_pipeline = NULL;
   context->blit_texture_pipeline = NULL;
 
   context->current_modelview_entry = NULL;
   context->current_projection_entry = NULL;
   _cogl_matrix_entry_identity_init (&context->identity_entry);
-  _cogl_matrix_entry_cache_init (&context->builtin_flushed_projection);
-  _cogl_matrix_entry_cache_init (&context->builtin_flushed_modelview);
 
   /* Create default textures used for fall backs */
   context->default_gl_texture_2d_tex =
@@ -356,9 +319,6 @@ _cogl_context_free (CoglContext *context)
 
   winsys->context_deinit (context);
 
-  if (context->current_path)
-    cogl_object_unref (context->current_path);
-
   if (context->default_gl_texture_2d_tex)
     cogl_object_unref (context->default_gl_texture_2d_tex);
 
@@ -375,14 +335,6 @@ _cogl_context_free (CoglContext *context)
     g_array_free (context->journal_flush_attributes_array, TRUE);
   if (context->journal_clip_bounds)
     g_array_free (context->journal_clip_bounds, TRUE);
-
-  if (context->polygon_vertices)
-    g_array_free (context->polygon_vertices, TRUE);
-
-  if (context->quad_buffer_indices_byte)
-    cogl_object_unref (context->quad_buffer_indices_byte);
-  if (context->quad_buffer_indices)
-    cogl_object_unref (context->quad_buffer_indices);
 
   if (context->rectangle_byte_indices)
     cogl_object_unref (context->rectangle_byte_indices);
@@ -413,8 +365,6 @@ _cogl_context_free (CoglContext *context)
     cogl_matrix_entry_unref (context->current_modelview_entry);
   if (context->current_projection_entry)
     cogl_matrix_entry_unref (context->current_projection_entry);
-  _cogl_matrix_entry_cache_destroy (&context->builtin_flushed_projection);
-  _cogl_matrix_entry_cache_destroy (&context->builtin_flushed_modelview);
 
   _cogl_pipeline_cache_free (context->pipeline_cache);
 
@@ -493,94 +443,6 @@ _cogl_context_set_current_modelview_entry (CoglContext *context,
   context->current_modelview_entry = entry;
 }
 
-char **
-_cogl_context_get_gl_extensions (CoglContext *context)
-{
-  const char *env_disabled_extensions;
-  char **ret;
-
-  /* In GL 3, querying GL_EXTENSIONS is deprecated so we have to build
-   * the array using glGetStringi instead */
-#ifdef HAVE_COGL_GL
-  if (context->driver == COGL_DRIVER_GL3)
-    {
-      int num_extensions, i;
-
-      context->glGetIntegerv (GL_NUM_EXTENSIONS, &num_extensions);
-
-      ret = g_malloc (sizeof (char *) * (num_extensions + 1));
-
-      for (i = 0; i < num_extensions; i++)
-        {
-          const char *ext =
-            (const char *) context->glGetStringi (GL_EXTENSIONS, i);
-          ret[i] = g_strdup (ext);
-        }
-
-      ret[num_extensions] = NULL;
-    }
-  else
-#endif
-    {
-      const char *all_extensions =
-        (const char *) context->glGetString (GL_EXTENSIONS);
-
-      ret = g_strsplit (all_extensions, " ", 0 /* max tokens */);
-    }
-
-  if ((env_disabled_extensions = g_getenv ("COGL_DISABLE_GL_EXTENSIONS")))
-    {
-      char **split_env_disabled_extensions;
-      char **src, **dst;
-
-      if (env_disabled_extensions)
-        split_env_disabled_extensions =
-          g_strsplit (env_disabled_extensions,
-                      ",",
-                      0 /* no max tokens */);
-      else
-        split_env_disabled_extensions = NULL;
-
-      for (dst = ret, src = ret;
-           *src;
-           src++)
-        {
-          char **d;
-
-          if (split_env_disabled_extensions)
-            for (d = split_env_disabled_extensions; *d; d++)
-              if (!strcmp (*src, *d))
-                goto disabled;
-
-          *(dst++) = *src;
-          continue;
-
-        disabled:
-          g_free (*src);
-          continue;
-        }
-
-      *dst = NULL;
-
-      if (split_env_disabled_extensions)
-        g_strfreev (split_env_disabled_extensions);
-    }
-
-  return ret;
-}
-
-const char *
-_cogl_context_get_gl_version (CoglContext *context)
-{
-  const char *version_override;
-
-  if ((version_override = g_getenv ("COGL_OVERRIDE_GL_VERSION")))
-    return version_override;
-  else
-    return (const char *) context->glGetString (GL_VERSION);
-
-}
-
 int64_t
 cogl_get_clock_time (CoglContext *context)
 {
@@ -595,24 +457,18 @@ cogl_get_clock_time (CoglContext *context)
 CoglGraphicsResetStatus
 cogl_get_graphics_reset_status (CoglContext *context)
 {
-  if (!context->glGetGraphicsResetStatus)
-    return COGL_GRAPHICS_RESET_STATUS_NO_ERROR;
+  return context->driver_vtable->get_graphics_reset_status (context);
+}
 
-  switch (context->glGetGraphicsResetStatus ())
-    {
-    case GL_GUILTY_CONTEXT_RESET_ARB:
-      return COGL_GRAPHICS_RESET_STATUS_GUILTY_CONTEXT_RESET;
+gboolean
+cogl_context_is_hardware_accelerated (CoglContext *context)
+{
+  return context->driver_vtable->is_hardware_accelerated (context);
+}
 
-    case GL_INNOCENT_CONTEXT_RESET_ARB:
-      return COGL_GRAPHICS_RESET_STATUS_INNOCENT_CONTEXT_RESET;
-
-    case GL_UNKNOWN_CONTEXT_RESET_ARB:
-      return COGL_GRAPHICS_RESET_STATUS_UNKNOWN_CONTEXT_RESET;
-
-    case GL_PURGED_CONTEXT_RESET_NV:
-      return COGL_GRAPHICS_RESET_STATUS_PURGED_CONTEXT_RESET;
-
-    default:
-      return COGL_GRAPHICS_RESET_STATUS_NO_ERROR;
-    }
+gboolean
+cogl_context_format_supports_upload (CoglContext *ctx,
+                                     CoglPixelFormat format)
+{
+  return ctx->texture_driver->format_supports_upload (ctx, format);
 }

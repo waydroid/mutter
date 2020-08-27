@@ -30,17 +30,15 @@ clutter_headers = [
   'clutter-deform-effect.h',
   'clutter-deprecated.h',
   'clutter-desaturate-effect.h',
-  'clutter-drag-action.h',
-  'clutter-drop-action.h',
   'clutter-effect.h',
   'clutter-enums.h',
   'clutter-event.h',
   'clutter-feature.h',
   'clutter-fixed-layout.h',
   'clutter-flow-layout.h',
+  'clutter-frame-clock.h',
   'clutter-gesture-action.h',
   'clutter-grid-layout.h',
-  'clutter-group.h',
   'clutter-image.h',
   'clutter-input-device.h',
   'clutter-input-device-tool.h',
@@ -116,16 +114,16 @@ clutter_sources = [
   'clutter-constraint.c',
   'clutter-container.c',
   'clutter-content.c',
+  'clutter-damage-history.c',
   'clutter-deform-effect.c',
   'clutter-desaturate-effect.c',
-  'clutter-drag-action.c',
-  'clutter-drop-action.c',
   'clutter-effect.c',
   'clutter-event.c',
   'clutter-feature.c',
   'clutter-fixed-layout.c',
   'clutter-flatten-effect.c',
   'clutter-flow-layout.c',
+  'clutter-frame-clock.c',
   'clutter-gesture-action.c',
   'clutter-graphene.c',
   'clutter-grid-layout.c',
@@ -143,8 +141,6 @@ clutter_sources = [
   'clutter-layout-manager.c',
   'clutter-layout-meta.c',
   'clutter-main.c',
-  'clutter-master-clock.c',
-  'clutter-master-clock-default.c',
   'clutter-offscreen-effect.c',
   'clutter-page-turn-effect.c',
   'clutter-paint-context.c',
@@ -189,6 +185,7 @@ clutter_private_headers = [
   'clutter-bezier.h',
   'clutter-constraint-private.h',
   'clutter-content-private.h',
+  'clutter-damage-history.h',
   'clutter-debug.h',
   'clutter-easing.h',
   'clutter-effect-private.h',
@@ -201,8 +198,6 @@ clutter_private_headers = [
   'clutter-input-focus-private.h',
   'clutter-input-method-private.h',
   'clutter-input-pointer-a11y-private.h',
-  'clutter-master-clock.h',
-  'clutter-master-clock-default.h',
   'clutter-offscreen-effect-private.h',
   'clutter-paint-context-private.h',
   'clutter-paint-node-private.h',
@@ -214,6 +209,7 @@ clutter_private_headers = [
   'clutter-stage-private.h',
   'clutter-stage-view-private.h',
   'clutter-stage-window.h',
+  'clutter-timeline-private.h',
 ]
 
 clutter_nonintrospected_sources = [
@@ -222,25 +218,8 @@ clutter_nonintrospected_sources = [
 ]
 
 clutter_deprecated_headers = [
-  'deprecated/clutter-actor.h',
-  'deprecated/clutter-alpha.h',
-  'deprecated/clutter-animation.h',
-  'deprecated/clutter-box.h',
   'deprecated/clutter-container.h',
-  'deprecated/clutter-group.h',
-  'deprecated/clutter-rectangle.h',
-  'deprecated/clutter-stage.h',
-  'deprecated/clutter-state.h',
   'deprecated/clutter-timeline.h',
-]
-
-clutter_deprecated_sources = [
-  'deprecated/clutter-alpha.c',
-  'deprecated/clutter-animation.c',
-  'deprecated/clutter-box.c',
-  'deprecated/clutter-group.c',
-  'deprecated/clutter-rectangle.c',
-  'deprecated/clutter-state.c',
 ]
 
 clutter_backend_sources = []
@@ -278,13 +257,6 @@ if have_x11
   clutter_backend_nonintrospected_sources += clutter_x11_nonintrospected_sources
 endif
 
-if have_native_backend
-  clutter_native_nonintrospected_sources = [
-    'egl/clutter-backend-eglnative.c',
-  ]
-  clutter_backend_nonintrospected_sources += clutter_native_nonintrospected_sources
-endif
-
 if have_wayland
   clutter_wayland_private_headers = [
     'wayland/clutter-wayland-compositor.h',
@@ -296,10 +268,8 @@ cally_headers = [
     'cally/cally-actor.h',
     'cally/cally-clone.h',
     'cally/cally-factory.h',
-    'cally/cally-group.h',
     'cally/cally.h',
     'cally/cally-main.h',
-    'cally/cally-rectangle.h',
     'cally/cally-root.h',
     'cally/cally-stage.h',
     'cally/cally-text.h',
@@ -310,8 +280,6 @@ cally_sources = [
     'cally/cally-actor.c',
     'cally/cally.c',
     'cally/cally-clone.c',
-    'cally/cally-group.c',
-    'cally/cally-rectangle.c',
     'cally/cally-root.c',
     'cally/cally-stage.c',
     'cally/cally-text.c',
@@ -341,35 +309,20 @@ clutter_build_config_h = configure_file(
 )
 clutter_built_private_headers += clutter_build_config_h
 
-clutter_config_defines = []
+cdata = configuration_data()
 if have_wayland
-  clutter_config_defines += [
-    '#define CLUTTER_HAS_WAYLAND_COMPOSITOR_SUPPORT 1',
-  ]
+  cdata.set10('CLUTTER_HAS_WAYLAND_COMPOSITOR_SUPPORT', true)
 endif
 if have_x11
-  clutter_config_defines += [
-    '#define CLUTTER_WINDOWING_X11 "x11"',
-    '#define CLUTTER_INPUT_X11 "x11"',
-    '#define CLUTTER_WINDOWING_GLX "glx"',
-  ]
+  cdata.set_quoted('CLUTTER_WINDOWING_X11', 'x11')
+  cdata.set_quoted('CLUTTER_INPUT_X11', 'x11')
+  cdata.set_quoted('CLUTTER_WINDOWING_GLX', 'glx')
 endif
 if have_native_backend
-  clutter_config_defines += [
-    '#define CLUTTER_WINDOWING_EGL "eglnative"',
-    '#define CLUTTER_INPUT_EVDEV "evdev"',
-  ]
+  cdata.set_quoted('CLUTTER_WINDOWING_EGL', 'eglnative')
+  cdata.set_quoted('CLUTTER_INPUT_EVDEV', 'evdev')
 endif
-clutter_config_defines += [
-  '#define CLUTTER_INPUT_NULL "null"',
-]
-clutter_config_defines_string = ''
-foreach clutter_config_define : clutter_config_defines
-  clutter_config_defines_string += clutter_config_define + '\n'
-endforeach
-
-cdata = configuration_data()
-cdata.set('CLUTTER_CONFIG_DEFINES', clutter_config_defines_string)
+cdata.set_quoted('CLUTTER_INPUT_NULL', 'null')
 
 clutter_config_h = configure_file(
   input: 'clutter-config.h.in',
@@ -408,7 +361,6 @@ libmutter_clutter = shared_library(libmutter_clutter_name,
     clutter_headers,
     clutter_private_headers,
     clutter_nonintrospected_sources,
-    clutter_deprecated_sources,
     clutter_deprecated_headers,
     clutter_backend_sources,
     clutter_backend_nonintrospected_sources,
@@ -429,7 +381,6 @@ libmutter_clutter = shared_library(libmutter_clutter_name,
   link_with: [
     libmutter_cogl,
     libmutter_cogl_pango,
-    libmutter_cogl_path,
   ],
   install_rpath: pkglibdir,
   install_dir: pkglibdir,
@@ -455,7 +406,6 @@ if have_introspection
       clutter_built_headers,
       clutter_sources,
       clutter_headers,
-      clutter_deprecated_sources,
       clutter_deprecated_headers,
     ],
     nsversion: libmutter_api_version,

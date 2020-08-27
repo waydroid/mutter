@@ -16,6 +16,7 @@
 #endif
 
 #include "test-utils.h"
+#include "tests/clutter-test-utils.h"
 
 #define NHANDS  6
 
@@ -38,7 +39,6 @@ typedef struct SuperOH
 } SuperOH;
 
 static gint n_hands = NHANDS;
-static gint use_alpha = 255;
 
 static GOptionEntry super_oh_entries[] = {
   {
@@ -46,12 +46,6 @@ static GOptionEntry super_oh_entries[] = {
     0,
     G_OPTION_ARG_INT, &n_hands,
     "Number of hands", "HANDS"
-  },
-  {
-    "use-alpha", 'a',
-    0,
-    G_OPTION_ARG_INT, &use_alpha,
-    "Stage opacity", "VALUE"
   },
   { NULL }
 };
@@ -94,7 +88,7 @@ input_cb (ClutterActor *stage,
 
       if (clutter_event_get_key_symbol (event) == CLUTTER_KEY_q)
         {
-	  clutter_main_quit ();
+	  clutter_test_quit ();
 
           return TRUE;
         }
@@ -124,22 +118,18 @@ frame_cb (ClutterTimeline *timeline,
 
   /* Rotate everything clockwise about stage center*/
 
-  clutter_actor_set_rotation (oh->group,
-                              CLUTTER_Z_AXIS,
-                              rotation,
-			      oh->stage_width / 2,
-                              oh->stage_height / 2,
-			      0);
+  clutter_actor_set_rotation_angle (oh->group,
+                                    CLUTTER_Z_AXIS,
+                                    rotation);
 
   for (i = 0; i < n_hands; i++)
     {
       /* Rotate each hand around there centers - to get this we need
        * to take into account any scaling.
        */
-      clutter_actor_set_rotation (oh->hand[i],
-                                  CLUTTER_Z_AXIS,
-                                  -6.0 * rotation,
-                                  0, 0, 0);
+      clutter_actor_set_rotation_angle (oh->hand[i],
+                                        CLUTTER_Z_AXIS,
+                                        -6.0 * rotation);
     }
 }
 
@@ -208,7 +198,7 @@ stop_and_quit (ClutterActor *actor,
   g_clear_signal_handler (&oh->frame_id, oh->timeline);
   clutter_timeline_stop (oh->timeline);
 
-  clutter_main_quit ();
+  clutter_test_quit ();
 }
 
 G_MODULE_EXPORT int
@@ -223,33 +213,15 @@ test_paint_wrapper_main (int argc, char *argv[])
 
   error = NULL;
 
-#ifdef CLUTTER_WINDOWING_X11
-  clutter_x11_set_use_argb_visual (TRUE);
-#endif
-
-  if (clutter_init_with_args (&argc, &argv,
-                              NULL,
-                              super_oh_entries,
-                              NULL,
-                              &error) != CLUTTER_INIT_SUCCESS)
-    {
-      g_warning ("Unable to initialise Clutter:\n%s",
-                 error->message);
-      g_error_free (error);
-
-      return EXIT_FAILURE;
-    }
+  clutter_test_init_with_args (&argc, &argv,
+                               NULL,
+                               super_oh_entries,
+                               NULL);
 
   oh = g_new(SuperOH, 1);
 
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_actor_set_size (stage, 800, 600);
-
-  if (use_alpha != 255)
-    {
-      clutter_stage_set_use_alpha (CLUTTER_STAGE (stage), TRUE);
-      clutter_actor_set_opacity (stage, use_alpha);
-    }
 
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Paint Test");
   clutter_actor_set_background_color (stage, &stage_color);
@@ -258,7 +230,7 @@ test_paint_wrapper_main (int argc, char *argv[])
   oh->stage = stage;
 
   /* Create a timeline to manage animation */
-  oh->timeline = clutter_timeline_new (6000);
+  oh->timeline = clutter_timeline_new_for_actor (oh->stage, 6000);
   clutter_timeline_set_repeat_count (oh->timeline, -1);
 
   /* fire a callback for frame change */
@@ -276,7 +248,8 @@ test_paint_wrapper_main (int argc, char *argv[])
     }
 
   /* create a new group to hold multiple actors in a group */
-  oh->group = clutter_group_new();
+  oh->group = clutter_actor_new();
+  clutter_actor_set_pivot_point (oh->group, 0.5, 0.5);
 
   oh->hand = g_new (ClutterActor*, n_hands);
 
@@ -313,9 +286,7 @@ test_paint_wrapper_main (int argc, char *argv[])
 	- h / 2;
 
       clutter_actor_set_position (oh->hand[i], x, y);
-
-      clutter_actor_move_anchor_point_from_gravity (oh->hand[i],
-						   CLUTTER_GRAVITY_CENTER);
+      clutter_actor_set_translation (oh->hand[i], -100.f, -106.5, 0);
 
       g_signal_connect (oh->hand[i], "button-press-event",
                         G_CALLBACK (on_button_press_event),
@@ -351,7 +322,7 @@ test_paint_wrapper_main (int argc, char *argv[])
   /* and start it */
   clutter_timeline_start (oh->timeline);
 
-  clutter_main ();
+  clutter_test_main ();
 
   g_object_unref (oh->timeline);
   g_free (oh->paint_guards);

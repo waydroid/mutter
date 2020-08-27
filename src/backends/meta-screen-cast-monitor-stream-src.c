@@ -178,17 +178,38 @@ is_cursor_in_stream (MetaScreenCastMonitorStreamSrc *monitor_src)
     }
 }
 
+static gboolean
+is_redraw_queued (MetaScreenCastMonitorStreamSrc *monitor_src)
+{
+  MetaBackend *backend = get_backend (monitor_src);
+  MetaRenderer *renderer = meta_backend_get_renderer (backend);
+  ClutterStage *stage = get_stage (monitor_src);
+  MetaMonitor *monitor = get_monitor (monitor_src);
+  g_autoptr (GList) views = NULL;
+  GList *l;
+
+  views = meta_renderer_get_views_for_monitor (renderer, monitor);
+  for (l = views; l; l = l->next)
+    {
+      MetaRendererView *view = l->data;
+
+      if (clutter_stage_is_redraw_queued_on_view (stage, CLUTTER_STAGE_VIEW (view)))
+        return TRUE;
+    }
+
+  return FALSE;
+}
+
 static void
 sync_cursor_state (MetaScreenCastMonitorStreamSrc *monitor_src)
 {
   MetaScreenCastStreamSrc *src = META_SCREEN_CAST_STREAM_SRC (monitor_src);
-  ClutterStage *stage = get_stage (monitor_src);
   MetaScreenCastRecordFlag flags;
 
   if (!is_cursor_in_stream (monitor_src))
     return;
 
-  if (clutter_stage_is_redraw_queued (stage))
+  if (is_redraw_queued (monitor_src))
     return;
 
   if (meta_screen_cast_stream_src_pending_follow_up_frame (src))
@@ -322,6 +343,7 @@ meta_screen_cast_monitor_stream_src_enable (MetaScreenCastStreamSrc *src)
         g_signal_connect_after (cursor_tracker, "cursor-changed",
                                 G_CALLBACK (cursor_changed),
                                 monitor_src);
+      meta_cursor_tracker_track_position (cursor_tracker);
       G_GNUC_FALLTHROUGH;
     case META_SCREEN_CAST_CURSOR_MODE_HIDDEN:
       add_view_painted_watches (monitor_src,
@@ -329,6 +351,7 @@ meta_screen_cast_monitor_stream_src_enable (MetaScreenCastStreamSrc *src)
       break;
     case META_SCREEN_CAST_CURSOR_MODE_EMBEDDED:
       inhibit_hw_cursor (monitor_src);
+      meta_cursor_tracker_track_position (cursor_tracker);
       add_view_painted_watches (monitor_src,
                                 META_STAGE_WATCH_AFTER_PAINT);
       break;
@@ -342,6 +365,7 @@ meta_screen_cast_monitor_stream_src_disable (MetaScreenCastStreamSrc *src)
 {
   MetaScreenCastMonitorStreamSrc *monitor_src =
     META_SCREEN_CAST_MONITOR_STREAM_SRC (src);
+  MetaScreenCastStream *stream = meta_screen_cast_stream_src_get_stream (src);
   MetaBackend *backend = get_backend (monitor_src);
   MetaCursorTracker *cursor_tracker = meta_backend_get_cursor_tracker (backend);
   ClutterStage *stage;
@@ -366,6 +390,79 @@ meta_screen_cast_monitor_stream_src_disable (MetaScreenCastStreamSrc *src)
                           cursor_tracker);
   g_clear_signal_handler (&monitor_src->cursor_changed_handler_id,
                           cursor_tracker);
+
+  switch (meta_screen_cast_stream_get_cursor_mode (stream))
+    {
+    case META_SCREEN_CAST_CURSOR_MODE_METADATA:
+    case META_SCREEN_CAST_CURSOR_MODE_EMBEDDED:
+      meta_cursor_tracker_untrack_position (cursor_tracker);
+      break;
+    case META_SCREEN_CAST_CURSOR_MODE_HIDDEN:
+      break;
+    }
+}
+
+static void
+maybe_paint_cursor_sprite (MetaScreenCastMonitorStreamSrc *monitor_src,
+                           uint8_t                        *data)
+{
+  MetaScreenCastStreamSrc *src = META_SCREEN_CAST_STREAM_SRC (monitor_src);
+  MetaBackend *backend = get_backend (monitor_src);
+  MetaCursorRenderer *cursor_renderer =
+    meta_backend_get_cursor_renderer (backend);
+  MetaCursorSprite *cursor_sprite;
+  CoglTexture *sprite_texture;
+  int sprite_width, sprite_height, sprite_stride;
+  float sprite_scale;
+  uint8_t *sprite_data;
+  cairo_surface_t *sprite_surface;
+  graphene_rect_t sprite_rect;
+  int width, height, stride;
+  cairo_surface_t *surface;
+  cairo_t *cr;
+
+  cursor_sprite = meta_cursor_renderer_get_cursor (cursor_renderer);
+  if (!cursor_sprite)
+    return;
+
+  if (meta_cursor_renderer_is_overlay_visible (cursor_renderer))
+    return;
+
+  sprite_rect = meta_cursor_renderer_calculate_rect (cursor_renderer,
+                                                     cursor_sprite);
+  sprite_texture = meta_cursor_sprite_get_cogl_texture (cursor_sprite);
+  sprite_width = cogl_texture_get_width (sprite_texture);
+  sprite_height = cogl_texture_get_height (sprite_texture);
+  sprite_stride = sprite_width * 4;
+  sprite_scale = meta_cursor_sprite_get_texture_scale (cursor_sprite);
+  sprite_data = g_new0 (uint8_t, sprite_stride * sprite_height);
+  cogl_texture_get_data (sprite_texture,
+                         CLUTTER_CAIRO_FORMAT_ARGB32,
+                         sprite_stride,
+                         sprite_data);
+  sprite_surface = cairo_image_surface_create_for_data (sprite_data,
+                                                        CAIRO_FORMAT_ARGB32,
+                                                        sprite_width,
+                                                        sprite_height,
+                                                        sprite_stride);
+  cairo_surface_set_device_scale (sprite_surface, sprite_scale, sprite_scale);
+
+  stride = meta_screen_cast_stream_src_get_stride (src);
+  width = meta_screen_cast_stream_src_get_width (src);
+  height = meta_screen_cast_stream_src_get_height (src);
+  surface = cairo_image_surface_create_for_data (data,
+                                                 CAIRO_FORMAT_ARGB32,
+                                                 width, height, stride);
+
+  cr = cairo_create (surface);
+  cairo_set_source_surface (cr, sprite_surface,
+                            sprite_rect.origin.x,
+                            sprite_rect.origin.y);
+  cairo_paint (cr);
+  cairo_destroy (cr);
+  cairo_surface_destroy (sprite_surface);
+  cairo_surface_destroy (surface);
+  g_free (sprite_data);
 }
 
 static gboolean
@@ -375,14 +472,25 @@ meta_screen_cast_monitor_stream_src_record_to_buffer (MetaScreenCastStreamSrc  *
 {
   MetaScreenCastMonitorStreamSrc *monitor_src =
     META_SCREEN_CAST_MONITOR_STREAM_SRC (src);
+  MetaScreenCastStream *stream = meta_screen_cast_stream_src_get_stream (src);
   ClutterStage *stage;
   MetaMonitor *monitor;
   MetaLogicalMonitor *logical_monitor;
 
-  stage = get_stage (monitor_src);
   monitor = get_monitor (monitor_src);
   logical_monitor = meta_monitor_get_logical_monitor (monitor);
+  stage = get_stage (monitor_src);
   clutter_stage_capture_into (stage, FALSE, &logical_monitor->rect, data);
+
+  switch (meta_screen_cast_stream_get_cursor_mode (stream))
+    {
+    case META_SCREEN_CAST_CURSOR_MODE_EMBEDDED:
+      maybe_paint_cursor_sprite (monitor_src, data);
+      break;
+    case META_SCREEN_CAST_CURSOR_MODE_METADATA:
+    case META_SCREEN_CAST_CURSOR_MODE_HIDDEN:
+      break;
+    }
 
   return TRUE;
 }

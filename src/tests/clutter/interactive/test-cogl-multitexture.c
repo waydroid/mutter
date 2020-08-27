@@ -9,6 +9,8 @@
 #include <clutter/clutter.h>
 #include <cogl/cogl.h>
 
+#include "tests/clutter-test-utils.h"
+
 typedef struct _TestMultiLayerMaterialState
 {
   ClutterActor    *group;
@@ -123,22 +125,21 @@ test_cogl_multitexture_main (int argc, char *argv[])
          0,   0,   1,   1
     };
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init (&argc, &argv);
 
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_actor_get_size (stage, &stage_w, &stage_h);
 
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Cogl: Multi-texturing");
-  clutter_stage_set_color (CLUTTER_STAGE (stage), &stage_color);
+  clutter_actor_set_background_color (CLUTTER_ACTOR (stage), &stage_color);
 
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
 
   /* We create a non-descript actor that we know doesn't have a
    * default paint handler, so that we can easily control
    * painting in a paint signal handler, without having to
    * sub-class anything etc. */
-  state->group = clutter_group_new ();
+  state->group = clutter_actor_new ();
   clutter_actor_set_position (state->group, stage_w / 2, stage_h / 2);
   g_signal_connect (state->group, "paint",
 		    G_CALLBACK(material_rectangle_paint), state);
@@ -208,11 +209,11 @@ test_cogl_multitexture_main (int argc, char *argv[])
   cogl_matrix_rotate (&state->rot_matrix1, -10.0, 0, 0, 1.0);
   cogl_matrix_translate (&state->rot_matrix1, -0.5, -0.5, 0);
 
-  clutter_actor_set_anchor_point (state->group, 86, 125);
+  clutter_actor_set_translation (data->parent_container, -86.f, -125.f, 0.f);
   clutter_container_add_actor (CLUTTER_CONTAINER(stage),
 			       state->group);
 
-  state->timeline = clutter_timeline_new (2812);
+  state->timeline = clutter_timeline_new_for_actor (stage, 2812);
 
   g_signal_connect (state->timeline, "new-frame", G_CALLBACK (frame_cb), state);
 
@@ -227,9 +228,9 @@ test_cogl_multitexture_main (int argc, char *argv[])
   /* start the timeline and thus the animations */
   clutter_timeline_start (state->timeline);
 
-  clutter_actor_show_all (stage);
+  clutter_actor_show (stage);
 
-  clutter_main();
+  clutter_test_main ();
 
   cogl_object_unref (state->material1);
   cogl_object_unref (state->material0);

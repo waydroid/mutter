@@ -97,32 +97,36 @@ _cogl_texture_gl_flush_legacy_texobj_filters (CoglTexture *texture,
                                                    min_filter, mag_filter);
 }
 
+/* GL and GLES3 have this by default, but GLES2 does not except via extension.
+ * So really it's probably always available. Even if we used it and it wasn't
+ * available in some driver then there are no adverse consequences to the
+ * command simply being ignored...
+ */
+#ifndef GL_TEXTURE_MAX_LEVEL
+#define GL_TEXTURE_MAX_LEVEL 0x813D
+#endif
+
 void
-_cogl_texture_gl_maybe_update_max_level (CoglTexture *texture,
-                                         int max_level)
+cogl_texture_gl_set_max_level (CoglTexture *texture,
+                               int max_level)
 {
-  /* This isn't supported on GLES */
-#ifdef HAVE_COGL_GL
   CoglContext *ctx = texture->context;
 
-  if (_cogl_has_private_feature (ctx, COGL_PRIVATE_FEATURE_TEXTURE_MAX_LEVEL) &&
-      texture->max_level < max_level)
+  if (_cogl_has_private_feature (ctx, COGL_PRIVATE_FEATURE_TEXTURE_MAX_LEVEL))
     {
-      CoglContext *ctx = texture->context;
       GLuint gl_handle;
       GLenum gl_target;
 
       cogl_texture_get_gl_texture (texture, &gl_handle, &gl_target);
 
-      texture->max_level = max_level;
+      texture->max_level_set = max_level;
 
       _cogl_bind_gl_texture_transient (gl_target,
                                        gl_handle);
 
       GE( ctx, glTexParameteri (gl_target,
-                                GL_TEXTURE_MAX_LEVEL, texture->max_level));
+                                GL_TEXTURE_MAX_LEVEL, texture->max_level_set));
     }
-#endif /* HAVE_COGL_GL */
 }
 
 void
@@ -133,7 +137,8 @@ _cogl_texture_gl_generate_mipmaps (CoglTexture *texture)
   GLuint gl_handle;
   GLenum gl_target;
 
-  _cogl_texture_gl_maybe_update_max_level (texture, n_levels - 1);
+  if (texture->max_level_set != n_levels - 1)
+    cogl_texture_gl_set_max_level (texture, n_levels - 1);
 
   cogl_texture_get_gl_texture (texture, &gl_handle, &gl_target);
 

@@ -110,12 +110,6 @@ G_DEFINE_TYPE_WITH_CODE (MetaScreenCastStreamSrc,
                                                 meta_screen_cast_stream_src_init_initable_iface)
                          G_ADD_PRIVATE (MetaScreenCastStreamSrc))
 
-static inline uint32_t
-us2ms (uint64_t us)
-{
-  return (uint32_t) (us / 1000);
-}
-
 static void
 meta_screen_cast_stream_src_get_specs (MetaScreenCastStreamSrc *src,
                                        int                     *width,
@@ -1055,6 +1049,33 @@ meta_screen_cast_stream_src_init_initable_iface (GInitableIface *iface)
   iface->init = meta_screen_cast_stream_src_initable_init;
 }
 
+int
+meta_screen_cast_stream_src_get_stride (MetaScreenCastStreamSrc *src)
+{
+  MetaScreenCastStreamSrcPrivate *priv =
+    meta_screen_cast_stream_src_get_instance_private (src);
+
+  return priv->video_stride;
+}
+
+int
+meta_screen_cast_stream_src_get_width (MetaScreenCastStreamSrc *src)
+{
+  MetaScreenCastStreamSrcPrivate *priv =
+    meta_screen_cast_stream_src_get_instance_private (src);
+
+  return priv->stream_width;
+}
+
+int
+meta_screen_cast_stream_src_get_height (MetaScreenCastStreamSrc *src)
+{
+  MetaScreenCastStreamSrcPrivate *priv =
+    meta_screen_cast_stream_src_get_instance_private (src);
+
+  return priv->stream_height;
+}
+
 MetaScreenCastStream *
 meta_screen_cast_stream_src_get_stream (MetaScreenCastStreamSrc *src)
 {
@@ -1098,7 +1119,7 @@ meta_screen_cast_stream_src_set_property (GObject      *object,
     {
     case PROP_STREAM:
       priv->stream = g_value_get_object (value);
-      break;;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }

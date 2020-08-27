@@ -37,21 +37,27 @@ G_DEFINE_TYPE (MetaRendererX11Cm, meta_renderer_x11_cm,
                META_TYPE_RENDERER_X11)
 
 void
-meta_renderer_x11_cm_ensure_screen_view (MetaRendererX11Cm *renderer_x11_cm,
-                                         int                width,
-                                         int                height)
+meta_renderer_x11_cm_init_screen_view (MetaRendererX11Cm *renderer_x11_cm,
+                                       CoglOnscreen      *onscreen,
+                                       int                width,
+                                       int                height)
 {
+  MetaRenderer *renderer = META_RENDERER (renderer_x11_cm);
+  MetaBackend *backend = meta_renderer_get_backend (renderer);
+  ClutterActor *stage = meta_backend_get_stage (backend);
   cairo_rectangle_int_t view_layout;
 
-  if (renderer_x11_cm->screen_view)
-    return;
+  g_return_if_fail (!renderer_x11_cm->screen_view);
 
   view_layout = (cairo_rectangle_int_t) {
     .width = width,
     .height = height,
   };
   renderer_x11_cm->screen_view = g_object_new (META_TYPE_RENDERER_VIEW,
+                                               "name", "X11 screen",
+                                               "stage", stage,
                                                "layout", &view_layout,
+                                               "framebuffer", onscreen,
                                                NULL);
   meta_renderer_add_view (META_RENDERER (renderer_x11_cm),
                           renderer_x11_cm->screen_view);
@@ -74,15 +80,6 @@ meta_renderer_x11_cm_resize (MetaRendererX11Cm *renderer_x11_cm,
                 NULL);
 }
 
-void
-meta_renderer_x11_cm_set_onscreen (MetaRendererX11Cm *renderer_x11_cm,
-                                   CoglOnscreen      *onscreen)
-{
-  g_object_set (G_OBJECT (renderer_x11_cm->screen_view),
-                "framebuffer", onscreen,
-                NULL);
-}
-
 static void
 meta_renderer_x11_cm_rebuild_views (MetaRenderer *renderer)
 {
@@ -91,6 +88,13 @@ meta_renderer_x11_cm_rebuild_views (MetaRenderer *renderer)
   g_return_if_fail (!meta_renderer_get_views (renderer));
 
   meta_renderer_add_view (renderer, renderer_x11_cm->screen_view);
+}
+
+static GList *
+meta_renderer_x11_cm_get_views_for_monitor (MetaRenderer *renderer,
+                                            MetaMonitor  *monitor)
+{
+  return g_list_prepend (NULL, meta_renderer_get_views (renderer)->data);
 }
 
 static void
@@ -104,4 +108,6 @@ meta_renderer_x11_cm_class_init (MetaRendererX11CmClass *klass)
   MetaRendererClass *renderer_class = META_RENDERER_CLASS (klass);
 
   renderer_class->rebuild_views = meta_renderer_x11_cm_rebuild_views;
+  renderer_class->get_views_for_monitor =
+    meta_renderer_x11_cm_get_views_for_monitor;
 }

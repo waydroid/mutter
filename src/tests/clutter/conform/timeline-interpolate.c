@@ -1,8 +1,9 @@
+#define CLUTTER_DISABLE_DEPRECATION_WARNINGS
 #include <stdlib.h>
 #include <glib.h>
 #include <clutter/clutter.h>
 
-#include "test-conform-common.h"
+#include "tests/clutter-test-utils.h"
 
 /* We ask for 1 frame per millisecond.
  * Whenever this rate can't be achieved then the timeline
@@ -12,8 +13,13 @@
 #define TEST_TIMELINE_DURATION 5000
 
 /* We are at the mercy of the system scheduler so this
- * may not be a very reliable tolerance. */
-#define TEST_ERROR_TOLERANCE 20
+ * may not be a very reliable tolerance.
+ *
+ * It's set as very tolerable (1 ms shorter than the frame interval) as
+ * otherwise CI, which are very prone to not get CPU time scheduled, tend to
+ * often fail.
+ */
+#define TEST_ERROR_TOLERANCE ((TEST_TIMELINE_FPS / 4) - 1)
 
 typedef struct _TestState
 {
@@ -118,26 +124,23 @@ completed_cb (ClutterTimeline *timeline,
   if (state->completion_count == 2)
     {
       if (state->passed)
-	{
-	  g_test_message ("Passed\n");
-	  clutter_main_quit ();
-	}
+        clutter_test_quit ();
       else
-	{
-	  g_test_message ("Failed\n");
-	  exit (EXIT_FAILURE);
-	}
+        g_assert_not_reached ();
     }
 }
 
-void
+static void
 timeline_interpolation (void)
 {
+  ClutterActor *stage;
   TestState state;
 
+  stage = clutter_test_get_stage ();
+
   state.timeline = 
-    clutter_timeline_new (TEST_TIMELINE_DURATION);
-  clutter_timeline_set_loop (state.timeline, TRUE);
+    clutter_timeline_new_for_actor (stage, TEST_TIMELINE_DURATION);
+  clutter_timeline_set_repeat_count (state.timeline, -1);
   g_signal_connect (G_OBJECT(state.timeline),
 		    "new-frame",
 		    G_CALLBACK(new_frame_cb),
@@ -152,10 +155,16 @@ timeline_interpolation (void)
   state.passed = TRUE;
   state.expected_frame = 0;
 
+  clutter_actor_show (stage);
+
   state.start_time = g_get_real_time ();
   clutter_timeline_start (state.timeline);
   
-  clutter_main();
+  clutter_test_main ();
 
   g_object_unref (state.timeline);
 }
+
+CLUTTER_TEST_SUITE (
+  CLUTTER_TEST_UNIT ("/timeline/interpolate", timeline_interpolation)
+)

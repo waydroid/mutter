@@ -131,7 +131,7 @@ script_child (void)
 
   test_file = g_test_build_filename (G_TEST_DIST, "scripts", "test-script-child.json", NULL);
   clutter_script_load_from_file (script, test_file, &error);
-  if (g_test_verbose () && error)
+  if (!g_test_quiet () && error)
     g_print ("Error: %s", error->message);
 
   g_assert_no_error (error);
@@ -142,7 +142,7 @@ script_child (void)
                               "test-rect-1", &actor,
                               NULL);
   g_assert (TEST_IS_GROUP (container));
-  g_assert (CLUTTER_IS_RECTANGLE (actor));
+  g_assert (CLUTTER_IS_ACTOR (actor));
 
   focus_ret = FALSE;
   clutter_container_child_get (CLUTTER_CONTAINER (container),
@@ -152,7 +152,7 @@ script_child (void)
   g_assert (focus_ret);
 
   actor = clutter_script_get_object (script, "test-rect-2");
-  g_assert (CLUTTER_IS_RECTANGLE (actor));
+  g_assert (CLUTTER_IS_ACTOR (actor));
 
   focus_ret = FALSE;
   clutter_container_child_get (CLUTTER_CONTAINER (container),
@@ -177,19 +177,19 @@ script_single (void)
 
   test_file = g_test_build_filename (G_TEST_DIST, "scripts", "test-script-single.json", NULL);
   clutter_script_load_from_file (script, test_file, &error);
-  if (g_test_verbose () && error)
+  if (!g_test_quiet () && error)
     g_print ("Error: %s", error->message);
 
   g_assert_no_error (error);
 
   actor = clutter_script_get_object (script, "test");
-  g_assert (CLUTTER_IS_RECTANGLE (actor));
+  g_assert (CLUTTER_IS_ACTOR (actor));
 
   rect = CLUTTER_ACTOR (actor);
   g_assert_cmpfloat (clutter_actor_get_width (rect), ==, 50.0);
   g_assert_cmpfloat (clutter_actor_get_y (rect), ==, 100.0);
 
-  clutter_rectangle_get_color (CLUTTER_RECTANGLE (rect), &color);
+  clutter_actor_get_background_color (rect, &color);
   g_assert_cmpint (color.red, ==, 255);
   g_assert_cmpint (color.green, ==, 0xcc);
   g_assert_cmpint (color.alpha, ==, 0xff);
@@ -209,15 +209,15 @@ script_object_property (void)
 
   test_file = g_test_build_filename (G_TEST_DIST, "scripts", "test-script-object-property.json", NULL);
   clutter_script_load_from_file (script, test_file, &error);
-  if (g_test_verbose () && error)
+  if (!g_test_quiet () && error)
     g_print ("Error: %s", error->message);
 
   g_assert_no_error (error);
 
   actor = clutter_script_get_object (script, "test");
-  g_assert (CLUTTER_IS_BOX (actor));
+  g_assert (CLUTTER_IS_ACTOR (actor));
 
-  manager = clutter_box_get_layout_manager (CLUTTER_BOX (actor));
+  manager = clutter_actor_get_layout_manager (CLUTTER_ACTOR (actor));
   g_assert (CLUTTER_IS_BIN_LAYOUT (manager));
 
   g_object_unref (script);
@@ -235,105 +235,20 @@ script_named_object (void)
 
   test_file = g_test_build_filename (G_TEST_DIST, "scripts", "test-script-named-object.json", NULL);
   clutter_script_load_from_file (script, test_file, &error);
-  if (g_test_verbose () && error)
+  if (!g_test_quiet () && error)
     g_print ("Error: %s", error->message);
 
   g_assert_no_error (error);
 
   actor = clutter_script_get_object (script, "test");
-  g_assert (CLUTTER_IS_BOX (actor));
+  g_assert (CLUTTER_IS_ACTOR (actor));
 
-  manager = clutter_box_get_layout_manager (CLUTTER_BOX (actor));
+  manager = clutter_actor_get_layout_manager (CLUTTER_ACTOR (actor));
   g_assert (CLUTTER_IS_BOX_LAYOUT (manager));
-  g_assert (clutter_box_layout_get_vertical (CLUTTER_BOX_LAYOUT (manager)));
+  g_assert (clutter_box_layout_get_orientation (CLUTTER_BOX_LAYOUT (manager)) == CLUTTER_ORIENTATION_VERTICAL);
 
   g_object_unref (script);
   g_free (test_file);
-}
-
-static void
-script_animation (void)
-{
-  ClutterScript *script = clutter_script_new ();
-  GObject *animation = NULL;
-  GError *error = NULL;
-  gchar *test_file;
-
-  test_file = g_test_build_filename (G_TEST_DIST, "scripts", "test-script-animation.json", NULL);
-  clutter_script_load_from_file (script, test_file, &error);
-  if (g_test_verbose () && error)
-    g_print ("Error: %s", error->message);
-
-  g_assert_no_error (error);
-
-  animation = clutter_script_get_object (script, "test");
-  g_assert (CLUTTER_IS_ANIMATION (animation));
-
-  g_object_unref (script);
-  g_free (test_file);
-}
-
-static void
-script_layout_property (void)
-{
-  ClutterScript *script = clutter_script_new ();
-  GObject *manager, *container, *actor1, *actor2;
-  GError *error = NULL;
-  gchar *test_file;
-  gboolean x_fill, expand;
-  ClutterBoxAlignment y_align;
-
-  test_file = g_test_build_filename (G_TEST_DIST, "scripts", "test-script-layout-property.json", NULL);
-  clutter_script_load_from_file (script, test_file, &error);
-  if (g_test_verbose () && error)
-    g_print ("Error: %s", error->message);
-
-  g_assert_no_error (error);
-
-  manager = container = actor1 = actor2 = NULL;
-  clutter_script_get_objects (script,
-                              "manager", &manager,
-                              "container", &container,
-                              "actor-1", &actor1,
-                              "actor-2", &actor2,
-                              NULL);
-
-  g_assert (CLUTTER_IS_LAYOUT_MANAGER (manager));
-  g_assert (CLUTTER_IS_CONTAINER (container));
-  g_assert (CLUTTER_IS_ACTOR (actor1));
-  g_assert (CLUTTER_IS_ACTOR (actor2));
-
-  x_fill = FALSE;
-  y_align = CLUTTER_BOX_ALIGNMENT_START;
-  expand = FALSE;
-  clutter_layout_manager_child_get (CLUTTER_LAYOUT_MANAGER (manager),
-                                    CLUTTER_CONTAINER (container),
-                                    CLUTTER_ACTOR (actor1),
-                                    "x-fill", &x_fill,
-                                    "y-align", &y_align,
-                                    "expand", &expand,
-                                    NULL);
-
-  g_assert (x_fill);
-  g_assert (y_align == CLUTTER_BOX_ALIGNMENT_CENTER);
-  g_assert (expand);
-
-  x_fill = TRUE;
-  y_align = CLUTTER_BOX_ALIGNMENT_START;
-  expand = TRUE;
-  clutter_layout_manager_child_get (CLUTTER_LAYOUT_MANAGER (manager),
-                                    CLUTTER_CONTAINER (container),
-                                    CLUTTER_ACTOR (actor2),
-                                    "x-fill", &x_fill,
-                                    "y-align", &y_align,
-                                    "expand", &expand,
-                                    NULL);
-
-  g_assert (x_fill == FALSE);
-  g_assert (y_align == CLUTTER_BOX_ALIGNMENT_END);
-  g_assert (expand == FALSE);
-
-  g_object_unref (script);
 }
 
 static void
@@ -346,7 +261,7 @@ script_margin (void)
 
   test_file = g_test_build_filename (G_TEST_DIST, "scripts", "test-script-margin.json", NULL);
   clutter_script_load_from_file (script, test_file, &error);
-  if (g_test_verbose () && error)
+  if (!g_test_quiet () && error)
     g_print ("Error: %s", error->message);
 
   g_assert_no_error (error);
@@ -383,8 +298,6 @@ CLUTTER_TEST_SUITE (
   CLUTTER_TEST_UNIT ("/script/single-object", script_single)
   CLUTTER_TEST_UNIT ("/script/container-child", script_child)
   CLUTTER_TEST_UNIT ("/script/named-object", script_named_object)
-  CLUTTER_TEST_UNIT ("/script/animation", script_animation)
   CLUTTER_TEST_UNIT ("/script/object-property", script_object_property)
-  CLUTTER_TEST_UNIT ("/script/layout-property", script_layout_property)
   CLUTTER_TEST_UNIT ("/script/actor-margin", script_margin)
 )

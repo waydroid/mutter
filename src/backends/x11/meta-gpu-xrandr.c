@@ -69,9 +69,12 @@ static int
 compare_outputs (const void *one,
                  const void *two)
 {
-  const MetaOutput *o_one = one, *o_two = two;
+  MetaOutput *o_one = (MetaOutput *) one;
+  MetaOutput *o_two = (MetaOutput *) two;
+  const MetaOutputInfo *output_info_one = meta_output_get_info (o_one);
+  const MetaOutputInfo *output_info_two = meta_output_get_info (o_two);
 
-  return strcmp (o_one->name, o_two->name);
+  return strcmp (output_info_one->name, output_info_two->name);
 }
 
 static char *
@@ -138,18 +141,23 @@ meta_gpu_xrandr_read_current (MetaGpu  *gpu,
   for (i = 0; i < (unsigned)resources->nmode; i++)
     {
       XRRModeInfo *xmode = &resources->modes[i];
+      g_autofree char *crtc_mode_name = NULL;
       MetaCrtcMode *mode;
+      g_autoptr (MetaCrtcModeInfo) crtc_mode_info = NULL;
 
-      mode = g_object_new (META_TYPE_CRTC_MODE, NULL);
+      crtc_mode_info = meta_crtc_mode_info_new ();
+      crtc_mode_info->width = xmode->width;
+      crtc_mode_info->height = xmode->height;
+      crtc_mode_info->refresh_rate = (xmode->dotClock /
+                                      ((float)xmode->hTotal * xmode->vTotal));
+      crtc_mode_info->flags = xmode->modeFlags;
 
-      mode->mode_id = xmode->id;
-      mode->width = xmode->width;
-      mode->height = xmode->height;
-      mode->refresh_rate = (xmode->dotClock /
-                            ((float)xmode->hTotal * xmode->vTotal));
-      mode->flags = xmode->modeFlags;
-      mode->name = get_xmode_name (xmode);
-
+      crtc_mode_name = get_xmode_name (xmode);
+      mode = g_object_new (META_TYPE_CRTC_MODE,
+                           "id", (uint64_t) xmode->id,
+                           "name", crtc_mode_name,
+                           "info", crtc_mode_info,
+                           NULL);
       modes = g_list_append (modes, mode);
     }
   meta_gpu_take_modes (gpu, modes);
@@ -158,16 +166,16 @@ meta_gpu_xrandr_read_current (MetaGpu  *gpu,
     {
       XRRCrtcInfo *xrandr_crtc;
       RRCrtc crtc_id;
-      MetaCrtc *crtc;
+      MetaCrtcXrandr *crtc_xrandr;
 
       crtc_id = resources->crtcs[i];
       xrandr_crtc = XRRGetCrtcInfo (xdisplay,
                                     resources, crtc_id);
-      crtc = meta_create_xrandr_crtc (gpu_xrandr,
-                                      xrandr_crtc, crtc_id, resources);
+      crtc_xrandr = meta_crtc_xrandr_new (gpu_xrandr,
+                                          xrandr_crtc, crtc_id, resources);
       XRRFreeCrtcInfo (xrandr_crtc);
 
-      crtcs = g_list_append (crtcs, crtc);
+      crtcs = g_list_append (crtcs, crtc_xrandr);
     }
 
   meta_gpu_take_crtcs (gpu, crtcs);
@@ -188,14 +196,14 @@ meta_gpu_xrandr_read_current (MetaGpu  *gpu,
 
       if (xrandr_output->connection != RR_Disconnected)
         {
-          MetaOutput *output;
+          MetaOutputXrandr *output_xrandr;
 
-          output = meta_create_xrandr_output (gpu_xrandr,
-                                              xrandr_output,
-                                              output_id,
-                                              primary_output);
-          if (output)
-            outputs = g_list_prepend (outputs, output);
+          output_xrandr = meta_output_xrandr_new (gpu_xrandr,
+                                                  xrandr_output,
+                                                  output_id,
+                                                  primary_output);
+          if (output_xrandr)
+            outputs = g_list_prepend (outputs, output_xrandr);
         }
 
       XRRFreeOutputInfo (xrandr_output);
@@ -210,19 +218,20 @@ meta_gpu_xrandr_read_current (MetaGpu  *gpu,
   for (l = outputs; l; l = l->next)
     {
       MetaOutput *output = l->data;
+      const MetaOutputInfo *output_info = meta_output_get_info (output);
       GList *k;
 
-      for (j = 0; j < output->n_possible_clones; j++)
+      for (j = 0; j < output_info->n_possible_clones; j++)
         {
-          RROutput clone = GPOINTER_TO_INT (output->possible_clones[j]);
+          RROutput clone = GPOINTER_TO_INT (output_info->possible_clones[j]);
 
           for (k = outputs; k; k = k->next)
             {
               MetaOutput *possible_clone = k->data;
 
-              if (clone == (XID) possible_clone->winsys_id)
+              if (clone == (XID) meta_output_get_id (possible_clone))
                 {
-                  output->possible_clones[j] = possible_clone;
+                  output_info->possible_clones[j] = possible_clone;
                   break;
                 }
             }

@@ -38,6 +38,7 @@
 #include "backends/meta-output.h"
 #include "backends/native/meta-backend-native.h"
 #include "backends/native/meta-crtc-kms.h"
+#include "backends/native/meta-crtc-mode-kms.h"
 #include "backends/native/meta-kms-connector.h"
 #include "backends/native/meta-kms-device.h"
 #include "backends/native/meta-kms-update.h"
@@ -182,16 +183,6 @@ timespec_to_nanoseconds (const struct timespec *ts)
   return ((int64_t) ts->tv_sec) * one_billion + ts->tv_nsec;
 }
 
-gboolean
-meta_gpu_kms_wait_for_flip (MetaGpuKms *gpu_kms,
-                            GError    **error)
-{
-  if (meta_kms_device_dispatch_sync (gpu_kms->kms_device, error) < 0)
-    return FALSE;
-
-  return TRUE;
-}
-
 MetaKmsDevice *
 meta_gpu_kms_get_kms_device (MetaGpuKms *gpu_kms)
 {
@@ -239,7 +230,8 @@ meta_gpu_kms_set_power_save_mode (MetaGpuKms    *gpu_kms,
     {
       MetaOutput *output = l->data;
 
-      meta_output_kms_set_power_save_mode (output, state, kms_update);
+      meta_output_kms_set_power_save_mode (META_OUTPUT_KMS (output),
+                                           state, kms_update);
     }
 
   if (state != META_POWER_SAVE_ON)
@@ -247,10 +239,10 @@ meta_gpu_kms_set_power_save_mode (MetaGpuKms    *gpu_kms,
       /* Turn off CRTCs for DPMS */
       for (l = meta_gpu_get_crtcs (gpu); l; l = l->next)
         {
-          MetaCrtc *crtc = META_CRTC (l->data);
+          MetaCrtcKms *crtc_kms = META_CRTC_KMS (l->data);
 
           meta_kms_update_mode_set (kms_update,
-                                    meta_crtc_kms_get_kms_crtc (crtc),
+                                    meta_crtc_kms_get_kms_crtc (crtc_kms),
                                     NULL, NULL);
         }
     }
@@ -278,15 +270,12 @@ static int
 compare_outputs (gconstpointer one,
                  gconstpointer two)
 {
-  const MetaOutput *o_one = one, *o_two = two;
+  MetaOutput *o_one = (MetaOutput *) one;
+  MetaOutput *o_two = (MetaOutput *) two;
+  const MetaOutputInfo *output_info_one = meta_output_get_info (o_one);
+  const MetaOutputInfo *output_info_two = meta_output_get_info (o_two);
 
-  return strcmp (o_one->name, o_two->name);
-}
-
-static void
-meta_crtc_mode_destroy_notify (MetaCrtcMode *mode)
-{
-  g_slice_free (drmModeModeInfo, mode->driver_private);
+  return strcmp (output_info_one->name, output_info_two->name);
 }
 
 gboolean
@@ -339,33 +328,15 @@ meta_gpu_kms_get_mode_from_drm_mode (MetaGpuKms            *gpu_kms,
 
   for (l = meta_gpu_get_modes (gpu); l; l = l->next)
     {
-      MetaCrtcMode *mode = l->data;
+      MetaCrtcModeKms *crtc_mode_kms = l->data;
 
-      if (meta_drm_mode_equal (drm_mode, mode->driver_private))
-        return mode;
+      if (meta_drm_mode_equal (drm_mode,
+                               meta_crtc_mode_kms_get_drm_mode (crtc_mode_kms)))
+        return META_CRTC_MODE (crtc_mode_kms);
     }
 
   g_assert_not_reached ();
   return NULL;
-}
-
-static MetaCrtcMode *
-create_mode (const drmModeModeInfo *drm_mode,
-             long                   mode_id)
-{
-  MetaCrtcMode *mode;
-
-  mode = g_object_new (META_TYPE_CRTC_MODE, NULL);
-  mode->mode_id = mode_id;
-  mode->name = g_strndup (drm_mode->name, DRM_DISPLAY_MODE_LEN);
-  mode->width = drm_mode->hdisplay;
-  mode->height = drm_mode->vdisplay;
-  mode->flags = drm_mode->flags;
-  mode->refresh_rate = meta_calculate_drm_mode_refresh_rate (drm_mode);
-  mode->driver_private = g_slice_dup (drmModeModeInfo, drm_mode);
-  mode->driver_notify = (GDestroyNotify) meta_crtc_mode_destroy_notify;
-
-  return mode;
 }
 
 static MetaOutput *
@@ -378,7 +349,8 @@ find_output_by_connector_id (GList    *outputs,
     {
       MetaOutput *output = l->data;
 
-      if (meta_output_kms_get_connector_id (output) == connector_id)
+      if (meta_output_kms_get_connector_id (META_OUTPUT_KMS (output)) ==
+          connector_id)
         return output;
     }
 
@@ -402,15 +374,9 @@ setup_output_clones (MetaGpu *gpu)
           if (other_output == output)
             continue;
 
-          if (meta_output_kms_can_clone (output, other_output))
-            {
-              output->n_possible_clones++;
-              output->possible_clones = g_renew (MetaOutput *,
-                                                 output->possible_clones,
-                                                 output->n_possible_clones);
-              output->possible_clones[output->n_possible_clones - 1] =
-                other_output;
-            }
+          if (meta_output_kms_can_clone (META_OUTPUT_KMS (output),
+                                         META_OUTPUT_KMS (other_output)))
+            meta_output_add_possible_clone (output, other_output);
         }
     }
 }
@@ -450,9 +416,9 @@ init_modes (MetaGpuKms *gpu_kms)
   mode_id = 0;
   while (g_hash_table_iter_next (&iter, NULL, (gpointer *) &drm_mode))
     {
-      MetaCrtcMode *mode;
+      MetaCrtcModeKms *mode;
 
-      mode = create_mode (drm_mode, (long) mode_id);
+      mode = meta_crtc_mode_kms_new (drm_mode, (long) mode_id);
       modes = g_list_append (modes, mode);
 
       mode_id++;
@@ -462,9 +428,10 @@ init_modes (MetaGpuKms *gpu_kms)
 
   for (i = 0; i < G_N_ELEMENTS (meta_default_landscape_drm_mode_infos); i++)
     {
-      MetaCrtcMode *mode;
+      MetaCrtcModeKms *mode;
 
-      mode = create_mode (&meta_default_landscape_drm_mode_infos[i], mode_id);
+      mode = meta_crtc_mode_kms_new (&meta_default_landscape_drm_mode_infos[i],
+                                     mode_id);
       modes = g_list_append (modes, mode);
 
       mode_id++;
@@ -472,9 +439,10 @@ init_modes (MetaGpuKms *gpu_kms)
 
   for (i = 0; i < G_N_ELEMENTS (meta_default_portrait_drm_mode_infos); i++)
     {
-      MetaCrtcMode *mode;
+      MetaCrtcModeKms *mode;
 
-      mode = create_mode (&meta_default_portrait_drm_mode_infos[i], mode_id);
+      mode = meta_crtc_mode_kms_new (&meta_default_portrait_drm_mode_infos[i],
+                                     mode_id);
       modes = g_list_append (modes, mode);
 
       mode_id++;
@@ -496,11 +464,11 @@ init_crtcs (MetaGpuKms *gpu_kms)
   for (l = meta_kms_device_get_crtcs (kms_device); l; l = l->next)
     {
       MetaKmsCrtc *kms_crtc = l->data;
-      MetaCrtc *crtc;
+      MetaCrtcKms *crtc_kms;
 
-      crtc = meta_create_kms_crtc (gpu_kms, kms_crtc);
+      crtc_kms = meta_crtc_kms_new (gpu_kms, kms_crtc);
 
-      crtcs = g_list_append (crtcs, crtc);
+      crtcs = g_list_append (crtcs, crtc_kms);
     }
 
   meta_gpu_take_crtcs (gpu, crtcs);
@@ -533,29 +501,29 @@ init_outputs (MetaGpuKms *gpu_kms)
     {
       MetaKmsConnector *kms_connector = l->data;
       const MetaKmsConnectorState *connector_state;
-      MetaOutput *output;
+      MetaOutputKms *output_kms;
       MetaOutput *old_output;
       GError *error = NULL;
 
       connector_state = meta_kms_connector_get_current_state (kms_connector);
-      if (!connector_state)
+      if (!connector_state || connector_state->non_desktop)
         continue;
 
       old_output =
         find_output_by_connector_id (old_outputs,
                                      meta_kms_connector_get_id (kms_connector));
-      output = meta_create_kms_output (gpu_kms,
-                                       kms_connector,
-                                       old_output,
-                                       &error);
-      if (!output)
+      output_kms = meta_output_kms_new (gpu_kms,
+                                        kms_connector,
+                                        old_output,
+                                        &error);
+      if (!output_kms)
         {
           g_warning ("Failed to create KMS output: %s", error->message);
           g_error_free (error);
         }
       else
         {
-          outputs = g_list_prepend (outputs, output);
+          outputs = g_list_prepend (outputs, output_kms);
         }
     }
 

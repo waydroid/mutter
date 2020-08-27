@@ -2,6 +2,8 @@
 #include <gmodule.h>
 #include <clutter/clutter.h>
 
+#include "tests/clutter-test-utils.h"
+
 #define PATH_DESCRIPTION        \
         "M 0, 0 "       \
         "L 0, 300 "     \
@@ -106,18 +108,17 @@ test_path_constraint_main (int   argc,
   ClutterPath *path;
   ClutterColor rect_color = { 0xcc, 0x00, 0x00, 0xff };
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init (&argc, &argv);
 
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Path Constraint");
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
 
   path = clutter_path_new ();
   clutter_path_set_description (path, PATH_DESCRIPTION);
 
-  rect = clutter_rectangle_new ();
-  clutter_rectangle_set_color (CLUTTER_RECTANGLE (rect), &rect_color);
+  rect = clutter_actor_new ();
+  clutter_actor_set_background_color (rect, &rect_color);
   clutter_actor_set_size (rect, 128, 128);
   clutter_actor_set_reactive (rect, TRUE);
   clutter_actor_add_constraint_with_name (rect, "path", clutter_path_constraint_new (path, 0.0));
@@ -131,7 +132,7 @@ test_path_constraint_main (int   argc,
 
   clutter_actor_show (stage);
 
-  clutter_main ();
+  clutter_test_main ();
 
   return EXIT_SUCCESS;
 }

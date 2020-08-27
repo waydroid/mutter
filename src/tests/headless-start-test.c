@@ -31,7 +31,6 @@
 #include "tests/test-utils.h"
 #include "wayland/meta-wayland.h"
 
-#define ALL_TRANSFORMS ((1 << (META_MONITOR_TRANSFORM_FLIPPED_270 + 1)) - 1)
 #define FRAME_WARNING "Frame has assigned frame counter but no frame drawn time"
 
 static gboolean
@@ -120,25 +119,34 @@ meta_test_headless_monitor_connect (void)
     META_MONITOR_MANAGER_TEST (monitor_manager);
   MetaMonitorTestSetup *test_setup;
   MetaCrtcMode **modes;
+  g_autoptr (MetaCrtcModeInfo) crtc_mode_info = NULL;
   MetaCrtcMode *crtc_mode;
+  MetaGpu *gpu;
   MetaCrtc *crtc;
   MetaCrtc **possible_crtcs;
+  g_autoptr (MetaOutputInfo) output_info = NULL;
   MetaOutput *output;
   GList *logical_monitors;
   ClutterActor *stage;
 
   test_setup = g_new0 (MetaMonitorTestSetup, 1);
 
-  crtc_mode = g_object_new (META_TYPE_CRTC_MODE, NULL);
-  crtc_mode->mode_id = 1;
-  crtc_mode->width = 1024;
-  crtc_mode->height = 768;
-  crtc_mode->refresh_rate = 60.0;
+  crtc_mode_info = meta_crtc_mode_info_new ();
+  crtc_mode_info->width = 1024;
+  crtc_mode_info->height = 768;
+  crtc_mode_info->refresh_rate = 60.0;
+
+  crtc_mode = g_object_new (META_TYPE_CRTC_MODE,
+                            "id", (uint64_t) 1,
+                            "info", crtc_mode_info,
+                            NULL);
   test_setup->modes = g_list_append (NULL, crtc_mode);
 
-  crtc = g_object_new (META_TYPE_CRTC, NULL);
-  crtc->crtc_id = 1;
-  crtc->all_transforms = ALL_TRANSFORMS;
+  gpu = META_GPU (meta_backend_get_gpus (meta_get_backend ())->data);
+  crtc = g_object_new (META_TYPE_CRTC_TEST,
+                       "id", (uint64_t) 1,
+                       "gpu", gpu,
+                       NULL);
   test_setup->crtcs = g_list_append (NULL, crtc);
 
   modes = g_new0 (MetaCrtcMode *, 1);
@@ -147,18 +155,25 @@ meta_test_headless_monitor_connect (void)
   possible_crtcs = g_new0 (MetaCrtc *, 1);
   possible_crtcs[0] = g_list_first (test_setup->crtcs)->data;
 
-  output = g_object_new (META_TYPE_OUTPUT, NULL);
-  output->winsys_id = 1;
-  output->name = g_strdup ("DP-1");
-  output->vendor = g_strdup ("MetaProduct's Inc.");
-  output->product = g_strdup ("MetaMonitor");
-  output->serial = g_strdup ("0x987654");
-  output->preferred_mode = modes[0];
-  output->n_modes = 1;
-  output->modes = modes;
-  output->n_possible_crtcs = 1;
-  output->possible_crtcs = possible_crtcs;
-  output->connector_type = META_CONNECTOR_TYPE_DisplayPort;
+  output_info = meta_output_info_new ();
+
+  output_info->name = g_strdup ("DP-1");
+  output_info->vendor = g_strdup ("MetaProduct's Inc.");
+  output_info->product = g_strdup ("MetaMonitor");
+  output_info->serial = g_strdup ("0x987654");
+  output_info->preferred_mode = modes[0];
+  output_info->n_modes = 1;
+  output_info->modes = modes;
+  output_info->n_possible_crtcs = 1;
+  output_info->possible_crtcs = possible_crtcs;
+  output_info->connector_type = META_CONNECTOR_TYPE_DisplayPort;
+
+  output = g_object_new (META_TYPE_OUTPUT_TEST,
+                         "id", (uint64_t) 1,
+                         "gpu", gpu,
+                         "info", output_info,
+                         NULL);
+
   test_setup->outputs = g_list_append (NULL, output);
 
   meta_monitor_manager_test_emulate_hotplug (monitor_manager_test, test_setup);
@@ -184,10 +199,7 @@ create_headless_test_setup (void)
 static void
 init_tests (int argc, char **argv)
 {
-  MetaMonitorTestSetup *initial_test_setup;
-
-  initial_test_setup = create_headless_test_setup ();
-  meta_monitor_manager_test_init_test_setup (initial_test_setup);
+  meta_monitor_manager_test_init_test_setup (create_headless_test_setup);
 
   g_test_add_func ("/headless-start/start", meta_test_headless_start);
   g_test_add_func ("/headless-start/monitor-getters",

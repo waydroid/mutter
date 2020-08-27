@@ -45,8 +45,6 @@ static gboolean
 _cogl_driver_update_features (CoglContext *ctx,
                               GError **error)
 {
-  /* _cogl_gpu_info_init (ctx, &ctx->gpu); */
-
   memset (ctx->private_features, 0, sizeof (ctx->private_features));
 
   return TRUE;
@@ -63,11 +61,19 @@ _cogl_driver_nop_context_deinit (CoglContext *context)
 {
 }
 
+static gboolean
+_cogl_driver_nop_is_hardware_accelerated (CoglContext *context)
+{
+  return FALSE;
+}
+
 const CoglDriverVtable
 _cogl_driver_nop =
   {
     _cogl_driver_nop_context_init,
     _cogl_driver_nop_context_deinit,
+    _cogl_driver_nop_is_hardware_accelerated,
+    NULL, /* get_graphics_reset_status */
     NULL, /* pixel_format_from_gl_internal */
     NULL, /* pixel_format_to_gl */
     _cogl_driver_update_features,

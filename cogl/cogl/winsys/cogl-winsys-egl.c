@@ -223,7 +223,7 @@ egl_attributes_from_framebuffer_config (CoglDisplay *display,
   attributes[i++] = 1;
 
   attributes[i++] = EGL_ALPHA_SIZE;
-  attributes[i++] = config->swap_chain->has_alpha ? 1 : EGL_DONT_CARE;
+  attributes[i++] = EGL_DONT_CARE;
 
   attributes[i++] = EGL_DEPTH_SIZE;
   attributes[i++] = 1;
@@ -726,7 +726,8 @@ _cogl_winsys_onscreen_get_buffer_age (CoglOnscreen *onscreen)
 static void
 _cogl_winsys_onscreen_swap_region (CoglOnscreen *onscreen,
                                    const int *user_rectangles,
-                                   int n_rectangles)
+                                   int n_rectangles,
+                                   CoglFrameInfo *info)
 {
   CoglContext *context = COGL_FRAMEBUFFER (onscreen)->context;
   CoglRenderer *renderer = context->display->renderer;
@@ -765,7 +766,8 @@ _cogl_winsys_onscreen_swap_region (CoglOnscreen *onscreen,
 static void
 _cogl_winsys_onscreen_swap_buffers_with_damage (CoglOnscreen *onscreen,
                                                 const int *rectangles,
-                                                int n_rectangles)
+                                                int n_rectangles,
+                                                CoglFrameInfo *info)
 {
   CoglContext *context = COGL_FRAMEBUFFER (onscreen)->context;
   CoglRenderer *renderer = context->display->renderer;

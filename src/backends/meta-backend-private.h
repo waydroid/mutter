@@ -68,6 +68,7 @@ struct _MetaBackendClass
   MetaMonitorManager * (* create_monitor_manager) (MetaBackend *backend,
                                                    GError     **error);
   MetaCursorRenderer * (* create_cursor_renderer) (MetaBackend *backend);
+  MetaCursorTracker * (* create_cursor_tracker) (MetaBackend *backend);
   MetaRenderer * (* create_renderer) (MetaBackend *backend,
                                       GError     **error);
   MetaInputSettings * (* create_input_settings) (MetaBackend *backend);
@@ -108,6 +109,14 @@ struct _MetaBackendClass
 
 void meta_init_backend (GType backend_gtype);
 
+#ifdef HAVE_WAYLAND
+MetaWaylandCompositor * meta_backend_get_wayland_compositor (MetaBackend *backend);
+
+void meta_backend_init_wayland_display (MetaBackend *backend);
+
+void meta_backend_init_wayland (MetaBackend *backend);
+#endif
+
 ClutterBackend * meta_backend_get_clutter_backend (MetaBackend *backend);
 
 MetaIdleMonitor * meta_backend_get_idle_monitor (MetaBackend        *backend,
@@ -147,10 +156,6 @@ struct xkb_keymap * meta_backend_get_keymap (MetaBackend *backend);
 xkb_layout_index_t meta_backend_get_keymap_layout_group (MetaBackend *backend);
 
 gboolean meta_backend_is_lid_closed (MetaBackend *backend);
-
-void meta_backend_freeze_updates (MetaBackend *backend);
-
-void meta_backend_thaw_updates (MetaBackend *backend);
 
 void meta_backend_update_last_device (MetaBackend        *backend,
                                       ClutterInputDevice *device);

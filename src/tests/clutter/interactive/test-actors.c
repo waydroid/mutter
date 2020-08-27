@@ -7,6 +7,7 @@
 #include <gmodule.h>
 
 #include "test-utils.h"
+#include "tests/clutter-test-utils.h"
 
 #define NHANDS  6
 
@@ -93,7 +94,7 @@ input_cb (ClutterActor *stage,
 
       if (clutter_event_get_key_symbol (event) == CLUTTER_KEY_q)
         {
-	  clutter_main_quit ();
+	  clutter_test_quit ();
 
           return TRUE;
         }
@@ -126,12 +127,7 @@ frame_cb (ClutterTimeline *timeline,
 
   /* Rotate everything clockwise about stage center*/
   if (oh->group != NULL)
-    clutter_actor_set_rotation (oh->group,
-                                CLUTTER_Z_AXIS,
-                                rotation,
-                                oh->stage_width / 2,
-                                oh->stage_height / 2,
-                                0);
+    clutter_actor_set_rotation_angle (oh->group, CLUTTER_Z_AXIS, rotation);
 
   for (i = 0; i < n_hands; i++)
     {
@@ -139,10 +135,9 @@ frame_cb (ClutterTimeline *timeline,
        * to take into account any scaling.
        */
       if (oh->hand[i] != NULL)
-        clutter_actor_set_rotation (oh->hand[i],
-                                    CLUTTER_Z_AXIS,
-                                    -6.0 * rotation,
-                                    0, 0, 0);
+        clutter_actor_set_rotation_angle (oh->hand[i],
+                                          CLUTTER_Z_AXIS,
+                                          -6.0 * rotation);
     }
 }
 
@@ -152,7 +147,7 @@ stop_and_quit (ClutterActor *stage,
 {
   clutter_timeline_stop (data->timeline);
 
-  clutter_main_quit ();
+  clutter_test_quit ();
 }
 
 G_MODULE_EXPORT int
@@ -166,22 +161,14 @@ test_actors_main (int argc, char *argv[])
 
   error = NULL;
 
-  if (clutter_init_with_args (&argc, &argv,
-                              NULL,
-                              super_oh_entries,
-                              NULL,
-                              &error) != CLUTTER_INIT_SUCCESS)
-    {
-      g_warning ("Unable to initialise Clutter:\n%s",
-                 error->message);
-      g_error_free (error);
-
-      return EXIT_FAILURE;
-    }
+  clutter_test_init_with_args (&argc, &argv,
+                               NULL,
+                               super_oh_entries,
+                               NULL);
 
   oh = g_new (SuperOH, 1);
 
-  oh->stage = clutter_stage_new ();
+  oh->stage = clutter_test_get_stage ();
   clutter_actor_set_size (oh->stage, 800, 600);
   clutter_actor_set_name (oh->stage, "Default Stage");
   clutter_actor_set_background_color (oh->stage, CLUTTER_COLOR_LightSkyBlue);
@@ -190,7 +177,7 @@ test_actors_main (int argc, char *argv[])
   clutter_stage_set_title (CLUTTER_STAGE (oh->stage), "Actors");
 
   /* Create a timeline to manage animation */
-  oh->timeline = clutter_timeline_new (6000);
+  oh->timeline = clutter_timeline_new_for_actor (oh->stage, 6000);
   clutter_timeline_set_repeat_count (oh->timeline, -1);
 
   /* fire a callback for frame change */
@@ -205,6 +192,7 @@ test_actors_main (int argc, char *argv[])
 
   /* create a new actor to hold other actors */
   oh->group = clutter_actor_new ();
+  clutter_actor_set_pivot_point (oh->group, 0.5, 0.5);
   clutter_actor_set_layout_manager (oh->group, clutter_fixed_layout_new ());
   clutter_actor_set_name (oh->group, "Group");
   g_signal_connect (oh->group, "destroy", G_CALLBACK (on_group_destroy), oh);
@@ -252,9 +240,7 @@ test_actors_main (int argc, char *argv[])
 	- h / 2;
 
       clutter_actor_set_position (oh->hand[i], x, y);
-
-      clutter_actor_move_anchor_point_from_gravity (oh->hand[i],
-						   CLUTTER_GRAVITY_CENTER);
+      clutter_actor_set_translation (oh->hand[i], -100.f, -106.5, 0);
 
       /* Add to our group group */
       clutter_container_add_actor (CLUTTER_CONTAINER (oh->group), oh->hand[i]);
@@ -281,7 +267,7 @@ test_actors_main (int argc, char *argv[])
   /* and start it */
   clutter_timeline_start (oh->timeline);
 
-  clutter_main ();
+  clutter_test_main ();
 
   clutter_timeline_stop (oh->timeline);
 

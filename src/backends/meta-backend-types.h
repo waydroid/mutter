@@ -21,6 +21,8 @@
 #ifndef META_BACKEND_TYPE_H
 #define META_BACKEND_TYPE_H
 
+typedef struct _MetaBackend MetaBackend;
+
 typedef struct _MetaMonitorManager MetaMonitorManager;
 
 typedef struct _MetaMonitorConfigManager MetaMonitorConfigManager;
@@ -42,15 +44,19 @@ typedef struct _MetaGpu MetaGpu;
 typedef struct _MetaCrtc MetaCrtc;
 typedef struct _MetaOutput MetaOutput;
 typedef struct _MetaCrtcMode MetaCrtcMode;
-typedef struct _MetaCrtcInfo MetaCrtcInfo;
-typedef struct _MetaOutputInfo MetaOutputInfo;
+typedef struct _MetaCrtcAssignment MetaCrtcAssignment;
+typedef struct _MetaOutputAssignment MetaOutputAssignment;
+
 typedef struct _MetaTileInfo MetaTileInfo;
 
 typedef struct _MetaRenderer MetaRenderer;
 typedef struct _MetaRendererView MetaRendererView;
 
+typedef struct _MetaRemoteDesktop MetaRemoteDesktop;
 typedef struct _MetaScreenCast MetaScreenCast;
 typedef struct _MetaScreenCastSession MetaScreenCastSession;
 typedef struct _MetaScreenCastStream MetaScreenCastStream;
+
+typedef struct _MetaWaylandCompositor MetaWaylandCompositor;
 
 #endif /* META_BACKEND_TYPE_H */

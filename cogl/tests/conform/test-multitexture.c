@@ -162,7 +162,7 @@ on_paint (ClutterActor        *actor,
 
   /* Comment this out if you want visual feedback for what this test paints */
 #if 1
-  clutter_main_quit ();
+  clutter_test_quit ();
 #endif
 }
 
@@ -185,21 +185,21 @@ test_multitexture (TestUtilsGTestFixture *fixture,
 
   stage = clutter_stage_get_default ();
 
-  clutter_stage_set_color (CLUTTER_STAGE (stage), &stage_color);
+  clutter_actor_set_background_color (CLUTTER_ACTOR (stage), &stage_color);
 
-  group = clutter_group_new ();
+  group = clutter_actor_new ();
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), group);
 
   /* We force continuous redrawing incase someone comments out the
-   * clutter_main_quit and wants visual feedback for the test since we
+   * clutter_test_quit and wants visual feedback for the test since we
    * wont be doing anything else that will trigger redrawing. */
   idle_source = g_idle_add (queue_redraw, stage);
 
   g_signal_connect (group, "paint", G_CALLBACK (on_paint), &state);
 
-  clutter_actor_show_all (stage);
+  clutter_actor_show (stage);
 
-  clutter_main ();
+  clutter_test_main ();
 
   g_clear_handle_id (&idle_source, g_source_remove);
 

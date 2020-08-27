@@ -16,7 +16,7 @@ opacity_label (void)
   label = clutter_text_new_with_text ("Sans 18px", "Label, 50% opacity");
   clutter_text_set_color (CLUTTER_TEXT (label), &label_color);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("label 50%%.get_color()/1\n");
   clutter_text_get_color (CLUTTER_TEXT (label), &color_check);
   g_assert (color_check.alpha == label_color.alpha);
@@ -24,19 +24,21 @@ opacity_label (void)
   clutter_actor_add_child (stage, label);
   clutter_actor_set_position (label, 10, 10);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("label 50%%.get_color()/2\n");
   clutter_text_get_color (CLUTTER_TEXT (label), &color_check);
   g_assert (color_check.alpha == label_color.alpha);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("label 50%%.get_paint_opacity()/1\n");
   g_assert (clutter_actor_get_paint_opacity (label) == 255);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("label 50%%.get_paint_opacity()/2\n");
   clutter_actor_set_opacity (label, 128);
   g_assert (clutter_actor_get_paint_opacity (label) == 128);
+
+  clutter_actor_destroy (label);
 }
 
 G_GNUC_BEGIN_IGNORE_DEPRECATIONS
@@ -50,25 +52,28 @@ opacity_rectangle (void)
 
   stage = clutter_test_get_stage ();
 
-  rect = clutter_rectangle_new_with_color (&rect_color);
+  rect = clutter_actor_new ();
+  clutter_actor_set_background_color (rect, &rect_color);
   clutter_actor_set_size (rect, 128, 128);
   clutter_actor_set_position (rect, 150, 90);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("rect 100%%.get_color()/1\n");
-  clutter_rectangle_get_color (CLUTTER_RECTANGLE (rect), &color_check);
+  clutter_actor_get_background_color (rect, &color_check);
   g_assert (color_check.alpha == rect_color.alpha);
 
   clutter_actor_add_child (stage, rect);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("rect 100%%.get_color()/2\n");
-  clutter_rectangle_get_color (CLUTTER_RECTANGLE (rect), &color_check);
+  clutter_actor_set_background_color (rect, &color_check);
   g_assert (color_check.alpha == rect_color.alpha);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("rect 100%%.get_paint_opacity()\n");
   g_assert (clutter_actor_get_paint_opacity (rect) == 255);
+
+  clutter_actor_destroy (rect);
 }
 G_GNUC_END_IGNORE_DEPRECATIONS
 
@@ -84,7 +89,7 @@ opacity_paint (void)
 
   stage = clutter_test_get_stage ();
 
-  group1 = clutter_group_new ();
+  group1 = clutter_actor_new ();
   clutter_actor_set_opacity (group1, 128);
   clutter_container_add (CLUTTER_CONTAINER (stage), group1, NULL);
   clutter_actor_set_position (group1, 10, 30);
@@ -93,46 +98,49 @@ opacity_paint (void)
   label = clutter_text_new_with_text ("Sans 18px", "Label+Group, 25% opacity");
   clutter_text_set_color (CLUTTER_TEXT (label), &label_color);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("label 50%% + group 50%%.get_color()/1\n");
   clutter_text_get_color (CLUTTER_TEXT (label), &color_check);
   g_assert (color_check.alpha == label_color.alpha);
 
   clutter_container_add (CLUTTER_CONTAINER (group1), label, NULL);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("label 50%% + group 50%%.get_color()/2\n");
   clutter_text_get_color (CLUTTER_TEXT (label), &color_check);
   g_assert (color_check.alpha == label_color.alpha);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("label 50%% + group 50%%.get_paint_opacity() = 128\n");
   g_assert (clutter_actor_get_paint_opacity (label) == 128);
 
   clutter_actor_destroy (label);
 
-  group2 = clutter_group_new ();
+  group2 = clutter_actor_new ();
   clutter_container_add (CLUTTER_CONTAINER (group1), group2, NULL);
   clutter_actor_set_position (group2, 10, 60);
 
-  rect = clutter_rectangle_new_with_color (&rect_color);
+  rect = clutter_actor_new ();
+  clutter_actor_set_background_color (rect, &rect_color);
   clutter_actor_set_size (rect, 128, 128);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("rect 100%% + group 100%% + group 50%%.get_color()/1\n");
-  clutter_rectangle_get_color (CLUTTER_RECTANGLE (rect), &color_check);
+  clutter_actor_get_background_color (rect, &color_check);
   g_assert (color_check.alpha == rect_color.alpha);
 
   clutter_container_add (CLUTTER_CONTAINER (group2), rect, NULL);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("rect 100%% + group 100%% + group 50%%.get_color()/2\n");
-  clutter_rectangle_get_color (CLUTTER_RECTANGLE (rect), &color_check);
+  clutter_actor_get_background_color (rect, &color_check);
   g_assert (color_check.alpha == rect_color.alpha);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("rect 100%%.get_paint_opacity()\n");
   g_assert (clutter_actor_get_paint_opacity (rect) == 128);
+
+  clutter_actor_destroy (group1);
 }
 G_GNUC_END_IGNORE_DEPRECATIONS
 

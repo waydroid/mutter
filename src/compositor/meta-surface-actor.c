@@ -68,17 +68,11 @@ effective_unobscured_region (MetaSurfaceActor *surface_actor)
 {
   MetaSurfaceActorPrivate *priv =
     meta_surface_actor_get_instance_private (surface_actor);
-  ClutterActor *actor;
+  ClutterActor *actor = CLUTTER_ACTOR (surface_actor);
 
   /* Fail if we have any mapped clones. */
-  actor = CLUTTER_ACTOR (surface_actor);
-  do
-    {
-      if (clutter_actor_has_mapped_clones (actor))
-        return NULL;
-      actor = clutter_actor_get_parent (actor);
-    }
-  while (actor != NULL);
+  if (clutter_actor_has_mapped_clones (actor))
+    return NULL;
 
   return priv->unobscured_region;
 }
@@ -429,9 +423,12 @@ meta_surface_actor_get_texture (MetaSurfaceActor *self)
   return priv->texture;
 }
 
-static void
+void
 meta_surface_actor_update_area (MetaSurfaceActor *self,
-                                int x, int y, int width, int height)
+                                int               x,
+                                int               y,
+                                int               width,
+                                int               height)
 {
   MetaSurfaceActorPrivate *priv =
     meta_surface_actor_get_instance_private (self);
@@ -556,21 +553,6 @@ meta_surface_actor_process_damage (MetaSurfaceActor *self,
     }
 
   META_SURFACE_ACTOR_GET_CLASS (self)->process_damage (self, x, y, width, height);
-
-  if (meta_surface_actor_is_visible (self))
-    meta_surface_actor_update_area (self, x, y, width, height);
-}
-
-void
-meta_surface_actor_pre_paint (MetaSurfaceActor *self)
-{
-  META_SURFACE_ACTOR_GET_CLASS (self)->pre_paint (self);
-}
-
-gboolean
-meta_surface_actor_is_visible (MetaSurfaceActor *self)
-{
-  return META_SURFACE_ACTOR_GET_CLASS (self)->is_visible (self);
 }
 
 void

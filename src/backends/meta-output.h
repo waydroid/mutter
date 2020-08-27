@@ -60,14 +60,10 @@ typedef enum
   META_CONNECTOR_TYPE_DSI = 16,
 } MetaConnectorType;
 
-struct _MetaOutput
+typedef struct _MetaOutputInfo
 {
-  GObject parent;
+  grefcount ref_count;
 
-  MetaGpu *gpu;
-
-  /* The low-level ID of this output, used to apply back configuration */
-  uint64_t winsys_id;
   char *name;
   char *vendor;
   char *product;
@@ -89,42 +85,81 @@ struct _MetaOutput
   MetaOutput **possible_clones;
   unsigned int n_possible_clones;
 
-  int backlight;
   int backlight_min;
   int backlight_max;
 
-  /* Used when changing configuration */
-  gboolean is_dirty;
-
-  gboolean is_primary;
-  gboolean is_presentation;
-
-  gboolean is_underscanning;
   gboolean supports_underscanning;
-
-  gpointer driver_private;
-  GDestroyNotify driver_notify;
 
   /*
    * Get a new preferred mode on hotplug events, to handle dynamic guest
    * resizing.
    */
   gboolean hotplug_mode_update;
-  gint suggested_x;
-  gint suggested_y;
+  int suggested_x;
+  int suggested_y;
 
   MetaTileInfo tile_info;
-};
+} MetaOutputInfo;
+
+#define META_TYPE_OUTPUT_INFO (meta_output_info_get_type ())
+META_EXPORT_TEST
+GType meta_output_info_get_type (void);
+
+META_EXPORT_TEST
+MetaOutputInfo * meta_output_info_new (void);
+
+META_EXPORT_TEST
+MetaOutputInfo * meta_output_info_ref (MetaOutputInfo *output_info);
+
+META_EXPORT_TEST
+void meta_output_info_unref (MetaOutputInfo *output_info);
+
+META_EXPORT_TEST
+void meta_output_info_parse_edid (MetaOutputInfo *output_info,
+                                  GBytes         *edid);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MetaOutputInfo, meta_output_info_unref)
 
 #define META_TYPE_OUTPUT (meta_output_get_type ())
-META_EXPORT_TEST G_DECLARE_FINAL_TYPE (MetaOutput, meta_output, META, OUTPUT, GObject)
+META_EXPORT_TEST
+G_DECLARE_DERIVABLE_TYPE (MetaOutput, meta_output, META, OUTPUT, GObject)
+
+struct _MetaOutputClass
+{
+  GObjectClass parent_class;
+};
+
+META_EXPORT_TEST
+uint64_t meta_output_get_id (MetaOutput *output);
 
 META_EXPORT_TEST
 MetaGpu * meta_output_get_gpu (MetaOutput *output);
 
+const char * meta_output_get_name (MetaOutput *output);
+
 META_EXPORT_TEST
-void meta_output_assign_crtc (MetaOutput *output,
-                              MetaCrtc   *crtc);
+gboolean meta_output_is_primary (MetaOutput *output);
+
+META_EXPORT_TEST
+gboolean meta_output_is_presentation (MetaOutput *output);
+
+META_EXPORT_TEST
+gboolean meta_output_is_underscanning (MetaOutput *output);
+
+void meta_output_set_backlight (MetaOutput *output,
+                                int         backlight);
+
+int meta_output_get_backlight (MetaOutput *output);
+
+void meta_output_add_possible_clone (MetaOutput *output,
+                                     MetaOutput *possible_clone);
+
+const MetaOutputInfo * meta_output_get_info (MetaOutput *output);
+
+META_EXPORT_TEST
+void meta_output_assign_crtc (MetaOutput                 *output,
+                              MetaCrtc                   *crtc,
+                              const MetaOutputAssignment *output_assignment);
 
 META_EXPORT_TEST
 void meta_output_unassign_crtc (MetaOutput *output);

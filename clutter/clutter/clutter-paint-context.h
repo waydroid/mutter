@@ -29,13 +29,22 @@
 
 typedef struct _ClutterPaintContext ClutterPaintContext;
 
+typedef enum _ClutterPaintFlag
+{
+  CLUTTER_PAINT_FLAG_NONE = 0,
+  CLUTTER_PAINT_FLAG_NO_CURSORS = 1 << 0,
+  CLUTTER_PAINT_FLAG_FORCE_CURSORS = 1 << 1,
+} ClutterPaintFlag;
+
 #define CLUTTER_TYPE_PAINT_CONTEXT (clutter_paint_context_get_type ())
 
 CLUTTER_EXPORT
 GType clutter_paint_context_get_type (void);
 
 CLUTTER_EXPORT
-ClutterPaintContext * clutter_paint_context_new_for_framebuffer (CoglFramebuffer *framebuffer);
+ClutterPaintContext * clutter_paint_context_new_for_framebuffer (CoglFramebuffer      *framebuffer,
+                                                                 const cairo_region_t *redraw_clip,
+                                                                 ClutterPaintFlag      paint_flags);
 
 CLUTTER_EXPORT
 ClutterPaintContext * clutter_paint_context_ref (ClutterPaintContext *paint_context);
@@ -61,5 +70,8 @@ void clutter_paint_context_pop_framebuffer (ClutterPaintContext *paint_context);
 
 CLUTTER_EXPORT
 const cairo_region_t * clutter_paint_context_get_redraw_clip (ClutterPaintContext *paint_context);
+
+CLUTTER_EXPORT
+ClutterPaintFlag clutter_paint_context_get_paint_flags (ClutterPaintContext *paint_context);
 
 #endif /* CLUTTER_PAINT_CONTEXT_H */

@@ -39,13 +39,13 @@ test_destroy_add (ClutterContainer *container,
 {
   TestDestroy *self = TEST_DESTROY (container);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("Adding '%s' (type:%s)\n",
              clutter_actor_get_name (actor),
              G_OBJECT_TYPE_NAME (actor));
 
   self->children = g_list_prepend (self->children, actor);
-  clutter_actor_set_parent (actor, CLUTTER_ACTOR (container));
+  clutter_actor_add_child (CLUTTER_ACTOR (container), actor);
 }
 
 static void
@@ -54,7 +54,7 @@ test_destroy_remove (ClutterContainer *container,
 {
   TestDestroy *self = TEST_DESTROY (container);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("Removing '%s' (type:%s)\n",
              clutter_actor_get_name (actor),
              G_OBJECT_TYPE_NAME (actor));
@@ -62,7 +62,7 @@ test_destroy_remove (ClutterContainer *container,
   g_assert_true (g_list_find (self->children, actor));
   self->children = g_list_remove (self->children, actor);
 
-  clutter_actor_unparent (actor);
+  clutter_actor_remove_child (CLUTTER_ACTOR (container), actor);
 }
 
 static void
@@ -81,7 +81,7 @@ test_destroy_destroy (ClutterActor *self)
 
   if (test->bg != NULL)
     {
-      if (g_test_verbose ())
+      if (!g_test_quiet ())
         g_print ("Destroying '%s' (type:%s)\n",
                  clutter_actor_get_name (test->bg),
                  G_OBJECT_TYPE_NAME (test->bg));
@@ -92,7 +92,7 @@ test_destroy_destroy (ClutterActor *self)
 
   if (test->label != NULL)
     {
-      if (g_test_verbose ())
+      if (!g_test_quiet ())
         g_print ("Destroying '%s' (type:%s)\n",
                  clutter_actor_get_name (test->label),
                  G_OBJECT_TYPE_NAME (test->label));
@@ -120,7 +120,7 @@ test_destroy_class_init (TestDestroyClass *klass)
 static void
 test_destroy_init (TestDestroy *self)
 {
-  self->bg = clutter_rectangle_new ();
+  self->bg = clutter_actor_new ();
   clutter_container_add_actor (CLUTTER_CONTAINER (self), self->bg);
   clutter_actor_set_name (self->bg, "Background");
 
@@ -164,7 +164,7 @@ static void
 actor_destruction (void)
 {
   ClutterActor *test = g_object_new (TEST_TYPE_DESTROY, NULL);
-  ClutterActor *child = clutter_rectangle_new ();
+  ClutterActor *child = clutter_actor_new ();
   gboolean destroy_called = FALSE;
   gboolean parent_set_called = FALSE;
   gboolean property_changed = FALSE;
@@ -174,7 +174,7 @@ actor_destruction (void)
   g_object_add_weak_pointer (G_OBJECT (test), (gpointer *) &test);
   g_object_add_weak_pointer (G_OBJECT (child), (gpointer *) &child);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("Adding external child...\n");
 
   clutter_actor_set_name (child, "Child");
@@ -184,7 +184,7 @@ actor_destruction (void)
   g_signal_connect (child, "notify", G_CALLBACK (on_notify), &property_changed);
   g_signal_connect (child, "destroy", G_CALLBACK (on_destroy), &destroy_called);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("Calling destroy()...\n");
 
   clutter_actor_destroy (test);

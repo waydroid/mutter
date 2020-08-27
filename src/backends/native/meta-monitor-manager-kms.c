@@ -95,7 +95,7 @@ static GBytes *
 meta_monitor_manager_kms_read_edid (MetaMonitorManager *manager,
                                     MetaOutput         *output)
 {
-  return meta_output_kms_read_edid (output);
+  return meta_output_kms_read_edid (META_OUTPUT_KMS (output));
 }
 
 static void
@@ -169,25 +169,41 @@ meta_monitor_manager_kms_ensure_initial_config (MetaMonitorManager *manager)
 }
 
 static void
-apply_crtc_assignments (MetaMonitorManager *manager,
-                        MetaCrtcInfo       **crtcs,
-                        unsigned int         n_crtcs,
-                        MetaOutputInfo     **outputs,
-                        unsigned int         n_outputs)
+apply_crtc_assignments (MetaMonitorManager    *manager,
+                        MetaCrtcAssignment   **crtcs,
+                        unsigned int           n_crtcs,
+                        MetaOutputAssignment **outputs,
+                        unsigned int           n_outputs)
 {
   MetaBackend *backend = meta_monitor_manager_get_backend (manager);
+  g_autoptr (GList) to_configure_outputs = NULL;
+  g_autoptr (GList) to_configure_crtcs = NULL;
   unsigned i;
   GList *gpus;
   GList *l;
 
+  gpus = meta_backend_get_gpus (backend);
+  for (l = gpus; l; l = l->next)
+    {
+      MetaGpu *gpu = l->data;
+      GList *crtcs;
+      GList *outputs;
+
+      outputs = g_list_copy (meta_gpu_get_outputs (gpu));
+      to_configure_outputs = g_list_concat (to_configure_outputs, outputs);
+
+      crtcs = g_list_copy (meta_gpu_get_crtcs (gpu));
+      to_configure_crtcs = g_list_concat (to_configure_crtcs, crtcs);
+    }
+
   for (i = 0; i < n_crtcs; i++)
     {
-      MetaCrtcInfo *crtc_info = crtcs[i];
-      MetaCrtc *crtc = crtc_info->crtc;
+      MetaCrtcAssignment *crtc_assignment = crtcs[i];
+      MetaCrtc *crtc = crtc_assignment->crtc;
 
-      crtc->is_dirty = TRUE;
+      to_configure_crtcs = g_list_remove (to_configure_crtcs, crtc);
 
-      if (crtc_info->mode == NULL)
+      if (crtc_assignment->mode == NULL)
         {
           meta_crtc_unset_config (crtc);
         }
@@ -196,71 +212,33 @@ apply_crtc_assignments (MetaMonitorManager *manager,
           unsigned int j;
 
           meta_crtc_set_config (crtc,
-                                &crtc_info->layout,
-                                crtc_info->mode,
-                                crtc_info->transform);
+                                &crtc_assignment->layout,
+                                crtc_assignment->mode,
+                                crtc_assignment->transform);
 
-          for (j = 0; j < crtc_info->outputs->len; j++)
+          for (j = 0; j < crtc_assignment->outputs->len; j++)
             {
-              MetaOutput *output = g_ptr_array_index (crtc_info->outputs, j);
+              MetaOutput *output = g_ptr_array_index (crtc_assignment->outputs,
+                                                      j);
+              MetaOutputAssignment *output_assignment;
 
-              output->is_dirty = TRUE;
-              meta_output_assign_crtc (output, crtc);
+              to_configure_outputs = g_list_remove (to_configure_outputs,
+                                                    output);
+
+              output_assignment = meta_find_output_assignment (outputs,
+                                                               n_outputs,
+                                                               output);
+              meta_output_assign_crtc (output, crtc, output_assignment);
             }
         }
     }
-  /* Disable CRTCs not mentioned in the list (they have is_dirty == FALSE,
-     because they weren't seen in the first loop) */
-  gpus = meta_backend_get_gpus (backend);
-  for (l = gpus; l; l = l->next)
-    {
-      MetaGpu *gpu = l->data;
-      GList *k;
 
-      for (k = meta_gpu_get_crtcs (gpu); k; k = k->next)
-        {
-          MetaCrtc *crtc = k->data;
-
-          if (crtc->is_dirty)
-            {
-              crtc->is_dirty = FALSE;
-              continue;
-            }
-
-          meta_crtc_unset_config (crtc);
-        }
-    }
-
-  for (i = 0; i < n_outputs; i++)
-    {
-      MetaOutputInfo *output_info = outputs[i];
-      MetaOutput *output = output_info->output;
-
-      output->is_primary = output_info->is_primary;
-      output->is_presentation = output_info->is_presentation;
-      output->is_underscanning = output_info->is_underscanning;
-    }
-
-  /* Disable outputs not mentioned in the list */
-  for (l = gpus; l; l = l->next)
-    {
-      MetaGpu *gpu = l->data;
-      GList *k;
-
-      for (k = meta_gpu_get_outputs (gpu); k; k = k->next)
-        {
-          MetaOutput *output = k->data;
-
-          if (output->is_dirty)
-            {
-              output->is_dirty = FALSE;
-              continue;
-            }
-
-          meta_output_unassign_crtc (output);
-          output->is_primary = FALSE;
-        }
-    }
+  g_list_foreach (to_configure_crtcs,
+                  (GFunc) meta_crtc_unset_config,
+                  NULL);
+  g_list_foreach (to_configure_outputs,
+                  (GFunc) meta_output_unassign_crtc,
+                  NULL);
 }
 
 static void
@@ -298,8 +276,8 @@ meta_monitor_manager_kms_apply_monitors_config (MetaMonitorManager      *manager
                                                 MetaMonitorsConfigMethod method,
                                                 GError                 **error)
 {
-  GPtrArray *crtc_infos;
-  GPtrArray *output_infos;
+  GPtrArray *crtc_assignments;
+  GPtrArray *output_assignments;
 
   if (!config)
     {
@@ -310,25 +288,26 @@ meta_monitor_manager_kms_apply_monitors_config (MetaMonitorManager      *manager
     }
 
   if (!meta_monitor_config_manager_assign (manager, config,
-                                           &crtc_infos, &output_infos,
+                                           &crtc_assignments,
+                                           &output_assignments,
                                            error))
     return FALSE;
 
   if (method == META_MONITORS_CONFIG_METHOD_VERIFY)
     {
-      g_ptr_array_free (crtc_infos, TRUE);
-      g_ptr_array_free (output_infos, TRUE);
+      g_ptr_array_free (crtc_assignments, TRUE);
+      g_ptr_array_free (output_assignments, TRUE);
       return TRUE;
     }
 
   apply_crtc_assignments (manager,
-                          (MetaCrtcInfo **) crtc_infos->pdata,
-                          crtc_infos->len,
-                          (MetaOutputInfo **) output_infos->pdata,
-                          output_infos->len);
+                          (MetaCrtcAssignment **) crtc_assignments->pdata,
+                          crtc_assignments->len,
+                          (MetaOutputAssignment **) output_assignments->pdata,
+                          output_assignments->len);
 
-  g_ptr_array_free (crtc_infos, TRUE);
-  g_ptr_array_free (output_infos, TRUE);
+  g_ptr_array_free (crtc_assignments, TRUE);
+  g_ptr_array_free (output_assignments, TRUE);
 
   update_screen_size (manager, config);
   meta_monitor_manager_rebuild (manager, config);
@@ -347,7 +326,7 @@ meta_monitor_manager_kms_get_crtc_gamma (MetaMonitorManager  *manager,
   MetaKmsCrtc *kms_crtc;
   const MetaKmsCrtcState *crtc_state;
 
-  kms_crtc = meta_crtc_kms_get_kms_crtc (crtc);
+  kms_crtc = meta_crtc_kms_get_kms_crtc (META_CRTC_KMS (crtc));
   crtc_state = meta_kms_crtc_get_current_state (kms_crtc);
 
   *size = crtc_state->gamma.size;
@@ -435,11 +414,12 @@ meta_monitor_manager_kms_set_crtc_gamma (MetaMonitorManager *manager,
   g_autoptr (MetaKmsFeedback) kms_feedback = NULL;
 
   gamma_ramp_string = generate_gamma_ramp_string (size, red, green, blue);
-  g_debug ("Setting CRTC (%ld) gamma to %s", crtc->crtc_id, gamma_ramp_string);
+  g_debug ("Setting CRTC (%ld) gamma to %s",
+           meta_crtc_get_id (crtc), gamma_ramp_string);
 
   kms_update = meta_kms_ensure_pending_update (kms);
 
-  kms_crtc = meta_crtc_kms_get_kms_crtc (crtc);
+  kms_crtc = meta_crtc_kms_get_kms_crtc (META_CRTC_KMS (crtc));
   meta_kms_crtc_set_gamma (kms_crtc, kms_update,
                            size, red, green, blue);
 
@@ -507,7 +487,7 @@ meta_monitor_manager_kms_is_transform_handled (MetaMonitorManager  *manager,
                                                MetaCrtc            *crtc,
                                                MetaMonitorTransform transform)
 {
-  return meta_crtc_kms_is_transform_handled (crtc, transform);
+  return meta_crtc_kms_is_transform_handled (META_CRTC_KMS (crtc), transform);
 }
 
 static float

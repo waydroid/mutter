@@ -22,16 +22,13 @@
 
 #include "compositor/meta-compositor-server.h"
 
-struct _MetaCompositorServer
-{
-  MetaCompositor parent;
-};
-
 G_DEFINE_TYPE (MetaCompositorServer, meta_compositor_server, META_TYPE_COMPOSITOR)
 
-static void
-meta_compositor_server_manage (MetaCompositor *compositor)
+static gboolean
+meta_compositor_server_manage (MetaCompositor  *compositor,
+                               GError         **error)
 {
+  return TRUE;
 }
 
 static void
@@ -40,10 +37,12 @@ meta_compositor_server_unmanage (MetaCompositor *compositor)
 }
 
 MetaCompositorServer *
-meta_compositor_server_new (MetaDisplay *display)
+meta_compositor_server_new (MetaDisplay *display,
+                            MetaBackend *backend)
 {
   return g_object_new (META_TYPE_COMPOSITOR_SERVER,
                        "display", display,
+                       "backend", backend,
                        NULL);
 }
 

@@ -19,6 +19,7 @@ struct _State
   guint failed_pass;
   guint failed_idx;
   gboolean pass;
+  GList *actor_list;
 };
 
 static const char *test_passes[] = {
@@ -49,7 +50,7 @@ on_timeout (gpointer data)
     {
       if (test_num == 0)
         {
-          if (g_test_verbose ())
+          if (!g_test_quiet ())
             g_print ("No covering actor:\n");
         }
       if (test_num == 1)
@@ -57,12 +58,14 @@ on_timeout (gpointer data)
           static const ClutterColor red = { 0xff, 0x00, 0x00, 0xff };
           /* Create an actor that covers the whole stage but that
              isn't visible so it shouldn't affect the picking */
-          over_actor = clutter_rectangle_new_with_color (&red);
+          over_actor = clutter_actor_new ();
+          clutter_actor_set_background_color (over_actor, &red);
           clutter_actor_set_size (over_actor, STAGE_WIDTH, STAGE_HEIGHT);
           clutter_actor_add_child (state->stage, over_actor);
+          state->actor_list = g_list_prepend (state->actor_list, over_actor);
           clutter_actor_hide (over_actor);
 
-          if (g_test_verbose ())
+          if (!g_test_quiet ())
             g_print ("Invisible covering actor:\n");
         }
       else if (test_num == 2)
@@ -82,9 +85,9 @@ on_timeout (gpointer data)
           /* Only allocated actors can be picked, so force an allocation
            * of the overlay actor here.
            */
-          clutter_actor_allocate (over_actor, &over_actor_box, 0);
+          clutter_actor_allocate (over_actor, &over_actor_box);
 
-          if (g_test_verbose ())
+          if (!g_test_quiet ())
             g_print ("Clipped covering actor:\n");
         }
       else if (test_num == 3)
@@ -98,7 +101,7 @@ on_timeout (gpointer data)
                                               "blur",
                                               clutter_blur_effect_new ());
 
-          if (g_test_verbose ())
+          if (!g_test_quiet ())
             g_print ("With blur effect:\n");
         }
 
@@ -121,13 +124,13 @@ on_timeout (gpointer data)
                                                 y * state->actor_height
                                                 + state->actor_height / 2);
 
-              if (g_test_verbose ())
+              if (!g_test_quiet ())
                 g_print ("% 3i,% 3i / %p -> ",
                          x, y, state->actors[y * ACTORS_X + x]);
 
               if (actor == NULL)
                 {
-                  if (g_test_verbose ())
+                  if (!g_test_quiet ())
                     g_print ("NULL:       FAIL\n");
                 }
               else if (actor == over_actor)
@@ -137,7 +140,7 @@ on_timeout (gpointer data)
                       && y >= 2 && y < ACTORS_Y - 2)
                     pass = TRUE;
 
-                  if (g_test_verbose ())
+                  if (!g_test_quiet ())
                     g_print ("over_actor: %s\n", pass ? "pass" : "FAIL");
                 }
               else
@@ -148,7 +151,7 @@ on_timeout (gpointer data)
                           || y < 2 || y >= ACTORS_Y - 2))
                     pass = TRUE;
 
-                  if (g_test_verbose ())
+                  if (!g_test_quiet ())
                     g_print ("%p: %s\n", actor, pass ? "pass" : "FAIL");
                 }
 
@@ -162,7 +165,7 @@ on_timeout (gpointer data)
         }
     }
 
-  clutter_main_quit ();
+  clutter_test_quit ();
 
   return G_SOURCE_REMOVE;
 }
@@ -171,7 +174,7 @@ static void
 actor_pick (void)
 {
   int y, x;
-  State state;
+  State state = { 0 };
   
   state.pass = TRUE;
 
@@ -186,8 +189,10 @@ actor_pick (void)
         ClutterColor color = { x * 255 / (ACTORS_X - 1),
                                y * 255 / (ACTORS_Y - 1),
                                128, 255 };
-        ClutterActor *rect = clutter_rectangle_new_with_color (&color);
+        ClutterActor *rect = clutter_actor_new ();
+        state.actor_list = g_list_prepend (state.actor_list, rect);
 
+        clutter_actor_set_background_color (rect, &color);
         clutter_actor_set_position (rect,
                                     x * state.actor_width,
                                     y * state.actor_height);
@@ -204,9 +209,9 @@ actor_pick (void)
 
   clutter_threads_add_idle (on_timeout, &state);
 
-  clutter_main ();
+  clutter_test_main ();
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     {
       if (!state.pass)
         g_test_message ("Failed pass: %s[%d], actor index: %d [%p]\n",
@@ -217,6 +222,8 @@ actor_pick (void)
     }
 
   g_assert (state.pass);
+
+  g_list_free_full (state.actor_list, (GDestroyNotify) clutter_actor_destroy);
 }
 
 CLUTTER_TEST_SUITE (

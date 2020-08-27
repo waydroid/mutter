@@ -67,9 +67,7 @@ struct _MetaStageX11
 
   MetaStageX11State wm_state;
 
-  guint is_cursor_visible     : 1;
   guint viewport_initialized  : 1;
-  guint accept_focus          : 1;
 };
 
 struct _MetaStageX11Class

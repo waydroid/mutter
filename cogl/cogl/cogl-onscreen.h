@@ -50,6 +50,8 @@ G_BEGIN_DECLS
 typedef struct _CoglOnscreen CoglOnscreen;
 #define COGL_ONSCREEN(X) ((CoglOnscreen *)(X))
 
+typedef struct _CoglScanout CoglScanout;
+
 /**
  * cogl_onscreen_get_gtype:
  *
@@ -176,7 +178,8 @@ cogl_onscreen_hide (CoglOnscreen *onscreen);
  * Stability: unstable
  */
 COGL_EXPORT void
-cogl_onscreen_swap_buffers (CoglOnscreen *onscreen);
+cogl_onscreen_swap_buffers (CoglOnscreen  *onscreen,
+                            CoglFrameInfo *frame_info);
 
 
 /**
@@ -282,7 +285,16 @@ cogl_onscreen_get_buffer_age (CoglOnscreen *onscreen);
 COGL_EXPORT void
 cogl_onscreen_swap_buffers_with_damage (CoglOnscreen *onscreen,
                                         const int *rectangles,
-                                        int n_rectangles);
+                                        int n_rectangles,
+                                        CoglFrameInfo *info);
+
+/**
+ * cogl_onscreen_direct_scanout: (skip)
+ */
+COGL_EXPORT void
+cogl_onscreen_direct_scanout (CoglOnscreen  *onscreen,
+                              CoglScanout   *scanout,
+                              CoglFrameInfo *info);
 
 /**
  * cogl_onscreen_swap_region:
@@ -307,7 +319,8 @@ cogl_onscreen_swap_buffers_with_damage (CoglOnscreen *onscreen,
 COGL_EXPORT void
 cogl_onscreen_swap_region (CoglOnscreen *onscreen,
                            const int *rectangles,
-                           int n_rectangles);
+                           int n_rectangles,
+                           CoglFrameInfo *info);
 
 /**
  * CoglFrameEvent:

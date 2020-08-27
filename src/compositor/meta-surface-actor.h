@@ -24,8 +24,6 @@ struct _MetaSurfaceActorClass
 
   void     (* process_damage)    (MetaSurfaceActor *actor,
                                   int x, int y, int width, int height);
-  void     (* pre_paint)         (MetaSurfaceActor *actor);
-  gboolean (* is_visible)        (MetaSurfaceActor *actor);
   gboolean (* is_opaque)         (MetaSurfaceActor *actor);
 };
 
@@ -33,6 +31,12 @@ cairo_surface_t *meta_surface_actor_get_image (MetaSurfaceActor      *self,
                                                cairo_rectangle_int_t *clip);
 
 MetaShapedTexture *meta_surface_actor_get_texture (MetaSurfaceActor *self);
+
+void meta_surface_actor_update_area (MetaSurfaceActor *self,
+                                     int               x,
+                                     int               y,
+                                     int               width,
+                                     int               height);
 
 gboolean meta_surface_actor_is_obscured (MetaSurfaceActor *self);
 
@@ -44,8 +48,7 @@ cairo_region_t * meta_surface_actor_get_opaque_region (MetaSurfaceActor *self);
 
 void meta_surface_actor_process_damage (MetaSurfaceActor *actor,
                                         int x, int y, int width, int height);
-void meta_surface_actor_pre_paint (MetaSurfaceActor *actor);
-gboolean meta_surface_actor_is_visible (MetaSurfaceActor *actor);
+
 gboolean meta_surface_actor_is_opaque (MetaSurfaceActor *actor);
 
 gboolean meta_surface_actor_is_frozen (MetaSurfaceActor *actor);

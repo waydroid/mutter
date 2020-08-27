@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <clutter/clutter.h>
 
+#include "tests/clutter-test-utils.h"
+
 enum
 {
   VERTICAL      = 0,
@@ -97,20 +99,33 @@ attach_action (ClutterActor *actor, guint axis)
   g_signal_connect (action, "gesture-cancel", G_CALLBACK (gesture_cancel_cb), NULL);
 }
 
+static ClutterActor *
+create_label (const char *markup)
+{
+  return CLUTTER_ACTOR (g_object_new (CLUTTER_TYPE_TEXT,
+                                      "text", markup,
+                                      "use-markup", TRUE,
+                                      "x-expand", TRUE,
+                                      "y-expand", TRUE,
+                                      "x-align", CLUTTER_ACTOR_ALIGN_START,
+                                      "y-align", CLUTTER_ACTOR_ALIGN_CENTER,
+                                      NULL));
+}
+
 G_MODULE_EXPORT int
 test_swipe_action_main (int argc, char *argv[])
 {
   ClutterActor *stage, *rect;
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init (&argc, &argv);
 
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Swipe action");
   clutter_actor_set_size (stage, 640, 480);
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
 
-  rect = clutter_rectangle_new_with_color (CLUTTER_COLOR_Red);
+  rect = clutter_actor_new ();
+  clutter_actor_set_background_color (rect, CLUTTER_COLOR_Red);
   clutter_actor_set_name (rect, "Vertical swipes");
   clutter_actor_set_size (rect, 150, 150);
   clutter_actor_set_position (rect, 10, 100);
@@ -118,7 +133,8 @@ test_swipe_action_main (int argc, char *argv[])
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), rect);
   attach_action (rect, VERTICAL);
 
-  rect = clutter_rectangle_new_with_color (CLUTTER_COLOR_Blue);
+  rect = clutter_actor_new ();
+  clutter_actor_set_background_color (rect, CLUTTER_COLOR_Blue);
   clutter_actor_set_name (rect, "Horizontal swipes");
   clutter_actor_set_size (rect, 150, 150);
   clutter_actor_set_position (rect, 170, 100);
@@ -126,7 +142,8 @@ test_swipe_action_main (int argc, char *argv[])
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), rect);
   attach_action (rect, HORIZONTAL);
 
-  rect = clutter_rectangle_new_with_color (CLUTTER_COLOR_Green);
+  rect = clutter_actor_new ();
+  clutter_actor_set_background_color (rect, CLUTTER_COLOR_Green);
   clutter_actor_set_name (rect, "All swipes");
   clutter_actor_set_size (rect, 150, 150);
   clutter_actor_set_position (rect, 330, 100);
@@ -136,43 +153,24 @@ test_swipe_action_main (int argc, char *argv[])
 
   {
     ClutterLayoutManager *layout = clutter_box_layout_new ();
-    ClutterActor *box, *label;
+    ClutterActor *box;
     float offset;
 
-    clutter_box_layout_set_vertical (CLUTTER_BOX_LAYOUT (layout), TRUE);
+    clutter_box_layout_set_orientation (CLUTTER_BOX_LAYOUT (layout),
+                                        CLUTTER_ORIENTATION_VERTICAL);
     clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (layout), 6);
 
-    box = clutter_box_new (layout);
+    box = clutter_actor_new ();
+    clutter_actor_set_layout_manager (box, layout);
 
-    label = clutter_text_new ();
-    clutter_text_set_markup (CLUTTER_TEXT (label),
-                             "<b>Red</b>: vertical swipes only");
-    clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout),
-                             label,
-                             TRUE,
-                             TRUE, TRUE,
-                             CLUTTER_BOX_ALIGNMENT_START,
-                             CLUTTER_BOX_ALIGNMENT_CENTER);
+    clutter_actor_add_child (box,
+                             create_label ("<b>Red</b>: vertical swipes only"));
 
-    label = clutter_text_new ();
-    clutter_text_set_markup (CLUTTER_TEXT (label),
-                             "<b>Blue</b>: horizontal swipes only");
-    clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout),
-                             label,
-                             TRUE,
-                             TRUE, TRUE,
-                             CLUTTER_BOX_ALIGNMENT_START,
-                             CLUTTER_BOX_ALIGNMENT_CENTER);
+    clutter_actor_add_child (box,
+                             create_label ("<b>Blue</b>: horizontal swipes only"));
 
-    label = clutter_text_new ();
-    clutter_text_set_markup (CLUTTER_TEXT (label),
-                             "<b>Green</b>: both");
-    clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (layout),
-                             label,
-                             TRUE,
-                             TRUE, TRUE,
-                             CLUTTER_BOX_ALIGNMENT_START,
-                             CLUTTER_BOX_ALIGNMENT_CENTER);
+    clutter_actor_add_child (box,
+                             create_label ("<b>Green</b>: both"));
 
     offset = clutter_actor_get_height (stage)
            - clutter_actor_get_height (box)
@@ -187,9 +185,9 @@ test_swipe_action_main (int argc, char *argv[])
                                                                     offset));
   }
 
-  clutter_actor_show_all (stage);
+  clutter_actor_show (stage);
 
-  clutter_main ();
+  clutter_test_main ();
 
   return EXIT_SUCCESS;
 }

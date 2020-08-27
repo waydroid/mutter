@@ -15,10 +15,17 @@
   G_STMT_START {                                                        \
     if (strcmp (#FUNC, argv[1]) == 0)                                   \
       {                                                                 \
-        test_utils_init (REQUIREMENTS, KNOWN_FAIL_REQUIREMENTS);        \
-        FUNC ();                                                        \
-        test_utils_fini ();                                             \
-        exit (0);                                                       \
+        if (test_utils_init (REQUIREMENTS, KNOWN_FAIL_REQUIREMENTS)     \
+            || g_getenv ("COGL_TEST_TRY_EVERYTHING") != NULL)           \
+          {                                                             \
+            FUNC ();                                                    \
+            test_utils_fini ();                                         \
+            exit (0);                                                   \
+          }                                                             \
+        else                                                            \
+          {                                                             \
+            exit (1);                                                   \
+          }                                                             \
       }                                                                 \
   } G_STMT_END
 
@@ -55,10 +62,8 @@ main (int argc, char **argv)
   ADD_TEST (test_pipeline_user_matrix, 0, 0);
   ADD_TEST (test_blend_strings, 0, 0);
   ADD_TEST (test_blend, 0, 0);
-  ADD_TEST (test_premult, 0, TEST_KNOWN_FAILURE);
+  ADD_TEST (test_premult, 0, 0);
   UNPORTED_TEST (test_readpixels);
-  ADD_TEST (test_path, 0, 0);
-  ADD_TEST (test_path_clip, 0, 0);
   ADD_TEST (test_depth_test, 0, 0);
   ADD_TEST (test_backface_culling, 0, TEST_REQUIREMENT_NPOT);
   ADD_TEST (test_layer_remove, 0, 0);
