@@ -207,7 +207,7 @@ verify_redraws (gpointer user_data)
   /* Modifying the transformation on the parent should not cause a redraw,
      since the FBO stores pre-transformed rendering that can be reused with
      any transformation. */
-  clutter_actor_set_anchor_point (data->parent_container, 0, 1);
+  clutter_actor_set_translation (data->parent_container, 0.f, -1.f, 0.f);
   verify_redraw (data, 0);
 
   /* Redrawing an unrelated actor shouldn't cause a redraw */
@@ -442,6 +442,9 @@ actor_offscreen_redirect (void)
 
   while (!data.was_painted)
     g_main_context_iteration (NULL, FALSE);
+
+  clutter_actor_destroy (data.parent_container);
+  clutter_actor_destroy (data.unrelated_actor);
 }
 
 CLUTTER_TEST_SUITE (

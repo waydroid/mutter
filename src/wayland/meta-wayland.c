@@ -31,6 +31,7 @@
 #include "clutter/clutter.h"
 #include "clutter/wayland/clutter-wayland-compositor.h"
 #include "core/main-private.h"
+#include "wayland/meta-wayland-buffer.h"
 #include "wayland/meta-wayland-data-device.h"
 #include "wayland/meta-wayland-dma-buf.h"
 #include "wayland/meta-wayland-egl-stream.h"
@@ -47,7 +48,6 @@
 #include "wayland/meta-xwayland-private.h"
 #include "wayland/meta-xwayland.h"
 
-static MetaWaylandCompositor *_meta_wayland_compositor = NULL;
 static char *_display_name_override;
 
 G_DEFINE_TYPE (MetaWaylandCompositor, meta_wayland_compositor, G_TYPE_OBJECT)
@@ -55,9 +55,14 @@ G_DEFINE_TYPE (MetaWaylandCompositor, meta_wayland_compositor, G_TYPE_OBJECT)
 MetaWaylandCompositor *
 meta_wayland_compositor_get_default (void)
 {
-  g_assert (_meta_wayland_compositor);
+  MetaBackend *backend;
+  MetaWaylandCompositor *wayland_compositor;
 
-  return _meta_wayland_compositor;
+  backend = meta_get_backend ();
+  wayland_compositor = meta_backend_get_wayland_compositor (backend);
+  g_assert (wayland_compositor);
+
+  return wayland_compositor;
 }
 
 typedef struct
@@ -190,18 +195,44 @@ meta_wayland_compositor_update (MetaWaylandCompositor *compositor,
     meta_wayland_seat_update (compositor->seat, event);
 }
 
-void
-meta_wayland_compositor_paint_finished (MetaWaylandCompositor *compositor)
+static void
+on_after_update (ClutterStage          *stage,
+                 ClutterStageView      *stage_view,
+                 MetaWaylandCompositor *compositor)
 {
-  gint64 current_time = g_get_monotonic_time ();
+  GList *l;
+  int64_t now_us;
 
-  while (!wl_list_empty (&compositor->frame_callbacks))
+  now_us = g_get_monotonic_time ();
+
+  l = compositor->frame_callback_surfaces;
+  while (l)
     {
-      MetaWaylandFrameCallback *callback =
-        wl_container_of (compositor->frame_callbacks.next, callback, link);
+      GList *l_cur = l;
+      MetaWaylandSurface *surface = l->data;
+      MetaSurfaceActor *actor;
+      MetaWaylandActorSurface *actor_surface;
 
-      wl_callback_send_done (callback->resource, current_time / 1000);
-      wl_resource_destroy (callback->resource);
+      l = l->next;
+
+      actor = meta_wayland_surface_get_actor (surface);
+      if (!actor)
+        continue;
+
+      if (!clutter_actor_has_mapped_clones (CLUTTER_ACTOR (actor)) &&
+          meta_surface_actor_is_obscured (actor))
+        continue;
+
+      if (!clutter_actor_is_effectively_on_stage_view (CLUTTER_ACTOR (actor),
+                                                       stage_view))
+        continue;
+
+      actor_surface = META_WAYLAND_ACTOR_SURFACE (surface->role);
+      meta_wayland_actor_surface_emit_frame_callbacks (actor_surface,
+                                                       now_us / 1000);
+
+      compositor->frame_callback_surfaces =
+        g_list_delete_link (compositor->frame_callback_surfaces, l_cur);
     }
 }
 
@@ -248,16 +279,22 @@ meta_wayland_compositor_update_key_state (MetaWaylandCompositor *compositor,
 }
 
 void
-meta_wayland_compositor_destroy_frame_callbacks (MetaWaylandCompositor *compositor,
-                                                 MetaWaylandSurface    *surface)
+meta_wayland_compositor_add_frame_callback_surface (MetaWaylandCompositor *compositor,
+                                                    MetaWaylandSurface    *surface)
 {
-  MetaWaylandFrameCallback *callback, *next;
+  if (g_list_find (compositor->frame_callback_surfaces, surface))
+    return;
 
-  wl_list_for_each_safe (callback, next, &compositor->frame_callbacks, link)
-    {
-      if (callback->surface == surface)
-        wl_resource_destroy (callback->resource);
-    }
+  compositor->frame_callback_surfaces =
+    g_list_prepend (compositor->frame_callback_surfaces, surface);
+}
+
+void
+meta_wayland_compositor_remove_frame_callback_surface (MetaWaylandCompositor *compositor,
+                                                       MetaWaylandSurface    *surface)
+{
+  compositor->frame_callback_surfaces =
+    g_list_remove (compositor->frame_callback_surfaces, surface);
 }
 
 static void
@@ -309,8 +346,6 @@ meta_wayland_log_func (const char *fmt,
 static void
 meta_wayland_compositor_init (MetaWaylandCompositor *compositor)
 {
-  wl_list_init (&compositor->frame_callbacks);
-
   compositor->scheduled_surface_associations = g_hash_table_new (NULL, NULL);
 
   wl_log_set_handler_server (meta_wayland_log_func);
@@ -318,24 +353,13 @@ meta_wayland_compositor_init (MetaWaylandCompositor *compositor)
   compositor->wayland_display = wl_display_create ();
   if (compositor->wayland_display == NULL)
     g_error ("Failed to create the global wl_display");
+
+  clutter_wayland_set_compositor_display (compositor->wayland_display);
 }
 
 static void
 meta_wayland_compositor_class_init (MetaWaylandCompositorClass *klass)
 {
-}
-
-void
-meta_wayland_pre_clutter_init (void)
-{
-  MetaWaylandCompositor *compositor;
-
-  g_assert (!_meta_wayland_compositor);
-
-  compositor = g_object_new (META_TYPE_WAYLAND_COMPOSITOR, NULL);
-  clutter_wayland_set_compositor_display (compositor->wayland_display);
-
-  _meta_wayland_compositor = compositor;
 }
 
 static bool
@@ -368,10 +392,21 @@ meta_wayland_get_xwayland_auth_file (MetaWaylandCompositor *compositor)
   return compositor->xwayland_manager.auth_file;
 }
 
-void
-meta_wayland_init (void)
+MetaWaylandCompositor *
+meta_wayland_compositor_new (MetaBackend *backend)
 {
-  MetaWaylandCompositor *compositor = meta_wayland_compositor_get_default ();
+  MetaWaylandCompositor *compositor;
+
+  compositor = g_object_new (META_TYPE_WAYLAND_COMPOSITOR, NULL);
+  compositor->backend = backend;
+
+  return compositor;
+}
+
+void
+meta_wayland_compositor_setup (MetaWaylandCompositor *compositor)
+{
+  ClutterActor *stage = meta_backend_get_stage (compositor->backend);
   GSource *wayland_event_source;
 
   wayland_event_source = wayland_event_source_new (compositor->wayland_display);
@@ -385,13 +420,16 @@ meta_wayland_init (void)
   g_source_set_priority (wayland_event_source, GDK_PRIORITY_EVENTS + 1);
   g_source_attach (wayland_event_source, NULL);
 
+  g_signal_connect (stage, "after-update",
+                    G_CALLBACK (on_after_update), compositor);
+
   if (!wl_global_create (compositor->wayland_display,
 			 &wl_compositor_interface,
 			 META_WL_COMPOSITOR_VERSION,
 			 compositor, compositor_bind))
     g_error ("Failed to register the global wl_compositor");
 
-  wl_display_init_shm (compositor->wayland_display);
+  meta_wayland_init_shm (compositor);
 
   meta_wayland_outputs_init (compositor);
   meta_wayland_data_device_manager_init (compositor);

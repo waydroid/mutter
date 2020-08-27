@@ -417,7 +417,7 @@ meta_ui_frame_calc_geometry (MetaUIFrame       *frame,
   MetaFrameType type;
   MetaButtonLayout button_layout;
   MetaWindowX11 *window_x11 = META_WINDOW_X11 (frame->meta_window);
-  MetaWindowX11Private *priv = window_x11->priv;
+  MetaRectangle client_rect;
 
   flags = meta_frame_get_flags (frame->meta_window->frame);
   type = meta_window_get_frame_type (frame->meta_window);
@@ -426,13 +426,15 @@ meta_ui_frame_calc_geometry (MetaUIFrame       *frame,
 
   meta_prefs_get_button_layout (&button_layout);
 
+  client_rect = meta_window_x11_get_client_rect (window_x11);
+
   meta_theme_calc_geometry (meta_theme_get_default (),
                             frame->style_info,
                             type,
                             frame->text_height,
                             flags,
-                            priv->client_rect.width,
-                            priv->client_rect.height,
+                            client_rect.width,
+                            client_rect.height,
                             &button_layout,
                             fgeom);
 }
@@ -493,7 +495,7 @@ meta_ui_frame_attach_style (MetaUIFrame *frame)
 
   variant = frame->meta_window->gtk_theme_variant;
   if (variant == NULL)
-    variant = get_global_theme_variant (frame->frames);;
+    variant = get_global_theme_variant (frame->frames);
 
   if (variant == NULL || *variant == '\0')
     frame->style_info = meta_style_info_ref (frames->normal_style);
@@ -1520,7 +1522,7 @@ meta_ui_frame_paint (MetaUIFrame  *frame,
   int button_type = -1;
   MetaButtonLayout button_layout;
   MetaWindowX11 *window_x11 = META_WINDOW_X11 (frame->meta_window);
-  MetaWindowX11Private *priv = window_x11->priv;
+  MetaRectangle client_rect;
 
   for (i = 0; i < META_BUTTON_TYPE_LAST; i++)
     button_states[i] = META_BUTTON_STATE_NORMAL;
@@ -1558,13 +1560,15 @@ meta_ui_frame_paint (MetaUIFrame  *frame,
 
   meta_prefs_get_button_layout (&button_layout);
 
+  client_rect = meta_window_x11_get_client_rect (window_x11);
+
   meta_theme_draw_frame (meta_theme_get_default (),
                          frame->style_info,
                          cr,
                          type,
                          flags,
-                         priv->client_rect.width,
-                         priv->client_rect.height,
+                         client_rect.width,
+                         client_rect.height,
                          frame->text_layout,
                          frame->text_height,
                          &button_layout,

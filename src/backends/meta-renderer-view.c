@@ -32,14 +32,17 @@
 
 #include "backends/meta-renderer-view.h"
 
+#include "backends/meta-crtc.h"
 #include "backends/meta-renderer.h"
 #include "clutter/clutter-mutter.h"
+#include "compositor/region-utils.h"
 
 enum
 {
   PROP_0,
 
   PROP_TRANSFORM,
+  PROP_CRTC,
 
   PROP_LAST
 };
@@ -51,6 +54,8 @@ struct _MetaRendererView
   ClutterStageViewCogl parent;
 
   MetaMonitorTransform transform;
+
+  MetaCrtc *crtc;
 };
 
 G_DEFINE_TYPE (MetaRendererView, meta_renderer_view,
@@ -60,6 +65,12 @@ MetaMonitorTransform
 meta_renderer_view_get_transform (MetaRendererView *view)
 {
   return view->transform;
+}
+
+MetaCrtc *
+meta_renderer_view_get_crtc (MetaRendererView *view)
+{
+  return view->crtc;
 }
 
 static void
@@ -118,6 +129,25 @@ meta_renderer_view_setup_offscreen_blit_pipeline (ClutterStageView *view,
 }
 
 static void
+meta_renderer_view_transform_rect_to_onscreen (ClutterStageView            *view,
+                                               const cairo_rectangle_int_t *src_rect,
+                                               int                          dst_width,
+                                               int                          dst_height,
+                                               cairo_rectangle_int_t       *dst_rect)
+{
+  MetaRendererView *renderer_view = META_RENDERER_VIEW (view);
+  MetaMonitorTransform inverted_transform;
+
+  inverted_transform =
+    meta_monitor_transform_invert (renderer_view->transform);
+  return meta_rectangle_transform (src_rect,
+                                   inverted_transform,
+                                   dst_width,
+                                   dst_height,
+                                   dst_rect);
+}
+
+static void
 meta_renderer_view_set_transform (MetaRendererView     *view,
                                   MetaMonitorTransform  transform)
 {
@@ -141,6 +171,9 @@ meta_renderer_view_get_property (GObject    *object,
     case PROP_TRANSFORM:
       g_value_set_uint (value, view->transform);
       break;
+    case PROP_CRTC:
+      g_value_set_object (value, view->crtc);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -159,6 +192,9 @@ meta_renderer_view_set_property (GObject      *object,
     {
     case PROP_TRANSFORM:
       meta_renderer_view_set_transform (view, g_value_get_uint (value));
+      break;
+    case PROP_CRTC:
+      view->crtc = g_value_get_object (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -181,6 +217,8 @@ meta_renderer_view_class_init (MetaRendererViewClass *klass)
     meta_renderer_view_setup_offscreen_blit_pipeline;
   view_class->get_offscreen_transformation_matrix =
     meta_renderer_view_get_offscreen_transformation_matrix;
+  view_class->transform_rect_to_onscreen =
+    meta_renderer_view_transform_rect_to_onscreen;
 
   object_class->get_property = meta_renderer_view_get_property;
   object_class->set_property = meta_renderer_view_set_property;
@@ -195,6 +233,15 @@ meta_renderer_view_class_init (MetaRendererViewClass *klass)
                        G_PARAM_READWRITE |
                        G_PARAM_CONSTRUCT_ONLY |
                        G_PARAM_STATIC_STRINGS);
+
+  obj_props[PROP_CRTC] =
+    g_param_spec_object ("crtc",
+                         "MetaCrtc",
+                         "MetaCrtc",
+                         META_TYPE_CRTC,
+                         G_PARAM_READWRITE |
+                         G_PARAM_CONSTRUCT_ONLY |
+                         G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST, obj_props);
 }

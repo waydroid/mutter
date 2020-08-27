@@ -64,6 +64,7 @@ typedef struct _MetaRendererPrivate
 {
   MetaBackend *backend;
   GList *views;
+  gboolean is_paused;
 } MetaRendererPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (MetaRenderer, meta_renderer, G_TYPE_OBJECT)
@@ -127,11 +128,10 @@ create_crtc_view (MetaLogicalMonitor *logical_monitor,
                   gpointer            user_data)
 {
   MetaRenderer *renderer = user_data;
-  MetaRendererPrivate *priv = meta_renderer_get_instance_private (renderer);
   MetaRendererView *view;
 
   view = meta_renderer_create_view (renderer, logical_monitor, output, crtc);
-  priv->views = g_list_append (priv->views, view);
+  meta_renderer_add_view (renderer, view);
 }
 
 static void
@@ -143,7 +143,7 @@ meta_renderer_real_rebuild_views (MetaRenderer *renderer)
     meta_backend_get_monitor_manager (backend);
   GList *logical_monitors, *l;
 
-  g_list_free_full (priv->views, g_object_unref);
+  g_list_free_full (priv->views, (GDestroyNotify) clutter_stage_view_destroy);
   priv->views = NULL;
 
   logical_monitors =
@@ -153,10 +153,92 @@ meta_renderer_real_rebuild_views (MetaRenderer *renderer)
     {
       MetaLogicalMonitor *logical_monitor = l->data;
 
+      if (meta_logical_monitor_is_primary (logical_monitor))
+        {
+          ClutterBackend *clutter_backend;
+          float scale;
+
+          clutter_backend = meta_backend_get_clutter_backend (backend);
+          scale = meta_is_stage_views_scaled ()
+            ? meta_logical_monitor_get_scale (logical_monitor)
+            : 1.f;
+
+          clutter_backend_set_fallback_resource_scale (clutter_backend, scale);
+        }
+
       meta_logical_monitor_foreach_crtc (logical_monitor,
                                          create_crtc_view,
                                          renderer);
     }
+}
+
+static MetaRendererView *
+meta_renderer_get_view_for_crtc (MetaRenderer *renderer,
+                                 MetaCrtc     *crtc)
+{
+  MetaRendererPrivate *priv = meta_renderer_get_instance_private (renderer);
+  GList *l;
+
+  for (l = priv->views; l; l = l->next)
+    {
+      MetaRendererView *view = l->data;
+
+      if (meta_renderer_view_get_crtc (view) == crtc)
+        return view;
+    }
+
+  return NULL;
+}
+
+typedef struct _CollectViewsData
+{
+  MetaRenderer *renderer;
+  GList *out_views;
+} CollectViewsData;
+
+static gboolean
+collect_views (MetaMonitor          *monitor,
+               MetaMonitorMode      *mode,
+               MetaMonitorCrtcMode  *monitor_crtc_mode,
+               gpointer              user_data,
+               GError              **error)
+{
+  CollectViewsData *data = user_data;
+  MetaCrtc *crtc;
+  MetaRendererView *view;
+
+  crtc = meta_output_get_assigned_crtc (monitor_crtc_mode->output);
+  view = meta_renderer_get_view_for_crtc (data->renderer, crtc);
+  if (!g_list_find (data->out_views, view))
+    data->out_views = g_list_prepend (data->out_views, view);
+
+  return TRUE;
+}
+
+static GList *
+meta_renderer_real_get_views_for_monitor (MetaRenderer *renderer,
+                                          MetaMonitor  *monitor)
+{
+  CollectViewsData data = { 0 };
+  MetaMonitorMode *monitor_mode;
+
+  data.renderer = renderer;
+
+  monitor_mode = meta_monitor_get_current_mode (monitor);
+  meta_monitor_mode_foreach_crtc (monitor, monitor_mode,
+                                  collect_views,
+                                  &data,
+                                  NULL);
+
+  return data.out_views;
+}
+
+GList *
+meta_renderer_get_views_for_monitor (MetaRenderer *renderer,
+                                     MetaMonitor  *monitor)
+{
+  return META_RENDERER_GET_CLASS (renderer)->get_views_for_monitor (renderer,
+                                                                    monitor);
 }
 
 void
@@ -166,6 +248,14 @@ meta_renderer_add_view (MetaRenderer     *renderer,
   MetaRendererPrivate *priv = meta_renderer_get_instance_private (renderer);
 
   priv->views = g_list_append (priv->views, view);
+
+  if (priv->is_paused)
+    {
+      ClutterFrameClock *frame_clock =
+        clutter_stage_view_get_frame_clock (CLUTTER_STAGE_VIEW (view));
+
+      clutter_frame_clock_inhibit (frame_clock);
+    }
 }
 
 /**
@@ -186,6 +276,44 @@ meta_renderer_get_views (MetaRenderer *renderer)
   return priv->views;
 }
 
+void
+meta_renderer_pause (MetaRenderer *renderer)
+{
+  MetaRendererPrivate *priv = meta_renderer_get_instance_private (renderer);
+  GList *l;
+
+  g_return_if_fail (!priv->is_paused);
+  priv->is_paused = TRUE;
+
+  for (l = priv->views; l; l = l->next)
+    {
+      ClutterStageView *stage_view = l->data;
+      ClutterFrameClock *frame_clock =
+        clutter_stage_view_get_frame_clock (stage_view);
+
+      clutter_frame_clock_inhibit (frame_clock);
+    }
+}
+
+void
+meta_renderer_resume (MetaRenderer *renderer)
+{
+  MetaRendererPrivate *priv = meta_renderer_get_instance_private (renderer);
+  GList *l;
+
+  g_return_if_fail (priv->is_paused);
+  priv->is_paused = FALSE;
+
+  for (l = priv->views; l; l = l->next)
+    {
+      ClutterStageView *stage_view = l->data;
+      ClutterFrameClock *frame_clock =
+        clutter_stage_view_get_frame_clock (stage_view);
+
+      clutter_frame_clock_uninhibit (frame_clock);
+    }
+}
+
 gboolean
 meta_renderer_is_hardware_accelerated (MetaRenderer *renderer)
 {
@@ -194,23 +322,8 @@ meta_renderer_is_hardware_accelerated (MetaRenderer *renderer)
   ClutterBackend *clutter_backend = meta_backend_get_clutter_backend (backend);
   CoglContext *cogl_context =
     clutter_backend_get_cogl_context (clutter_backend);
-  CoglGpuInfo *info = &cogl_context->gpu;
 
-  switch (info->architecture)
-    {
-    case COGL_GPU_INFO_ARCHITECTURE_UNKNOWN:
-    case COGL_GPU_INFO_ARCHITECTURE_SANDYBRIDGE:
-    case COGL_GPU_INFO_ARCHITECTURE_SGX:
-    case COGL_GPU_INFO_ARCHITECTURE_MALI:
-      return TRUE;
-    case COGL_GPU_INFO_ARCHITECTURE_LLVMPIPE:
-    case COGL_GPU_INFO_ARCHITECTURE_SOFTPIPE:
-    case COGL_GPU_INFO_ARCHITECTURE_SWRAST:
-      return FALSE;
-    }
-
-  g_assert_not_reached ();
-  return FALSE;
+  return cogl_context_is_hardware_accelerated (cogl_context);
 }
 
 static void
@@ -280,6 +393,7 @@ meta_renderer_class_init (MetaRendererClass *klass)
   object_class->finalize = meta_renderer_finalize;
 
   klass->rebuild_views = meta_renderer_real_rebuild_views;
+  klass->get_views_for_monitor = meta_renderer_real_get_views_for_monitor;
 
   obj_props[PROP_BACKEND] =
     g_param_spec_object ("backend",

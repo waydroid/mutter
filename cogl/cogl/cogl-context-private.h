@@ -46,13 +46,11 @@
 #include "cogl-pipeline-cache.h"
 #include "cogl-texture-2d.h"
 #include "cogl-sampler-cache-private.h"
-#include "cogl-gpu-info-private.h"
 #include "cogl-gl-header.h"
 #include "cogl-framebuffer-private.h"
 #include "cogl-onscreen-private.h"
 #include "cogl-fence-private.h"
 #include "cogl-poll-private.h"
-#include "cogl-path/cogl-path-types.h"
 #include "cogl-private.h"
 #include "winsys/cogl-winsys-private.h"
 
@@ -71,13 +69,11 @@ struct _CoglContext
 
   CoglDriver driver;
 
-  /* Information about the GPU and driver which we can use to
-     determine certain workarounds */
-  CoglGpuInfo gpu;
-
   /* vtables for the driver functions */
   const CoglDriverVtable *driver_vtable;
   const CoglTextureDriver *texture_driver;
+
+  void *driver_context;
 
   int glsl_major;
   int glsl_minor;
@@ -125,14 +121,6 @@ struct _CoglContext
 
   CoglMatrixEntry identity_entry;
 
-  /* A cache of the last (immutable) matrix stack entries that were
-   * flushed to the GL matrix builtins */
-  CoglMatrixEntryCache builtin_flushed_projection;
-  CoglMatrixEntryCache builtin_flushed_modelview;
-
-  GArray           *texture_units;
-  int               active_texture_unit;
-
   /* Only used for comparing other pipelines when reading pixels. */
   CoglPipeline     *opaque_color_pipeline;
 
@@ -152,8 +140,6 @@ struct _CoglContext
   /* Global journal buffers */
   GArray           *journal_flush_attributes_array;
   GArray           *journal_clip_bounds;
-
-  GArray           *polygon_vertices;
 
   /* Some simple caching, to minimize state changes... */
   CoglPipeline     *current_pipeline;
@@ -196,20 +182,12 @@ struct _CoglContext
   gboolean was_bound_to_onscreen;
 
   /* Primitives */
-  CoglPath         *current_path;
   CoglPipeline     *stencil_pipeline;
-
-  /* Pre-generated VBOs containing indices to generate GL_TRIANGLES
-     out of a vertex array of quads */
-  CoglIndices      *quad_buffer_indices_byte;
-  unsigned int      quad_buffer_indices_len;
-  CoglIndices      *quad_buffer_indices;
 
   CoglIndices      *rectangle_byte_indices;
   CoglIndices      *rectangle_short_indices;
   int               rectangle_short_indices_len;
 
-  CoglPipeline     *texture_download_pipeline;
   CoglPipeline     *blit_texture_pipeline;
 
   GSList           *atlases;
@@ -330,19 +308,5 @@ _cogl_context_set_current_projection_entry (CoglContext *context,
 void
 _cogl_context_set_current_modelview_entry (CoglContext *context,
                                            CoglMatrixEntry *entry);
-
-/*
- * _cogl_context_get_gl_extensions:
- * @context: A CoglContext
- *
- * Return value: a NULL-terminated array of strings representing the
- *   supported extensions by the current driver. This array is owned
- *   by the caller and should be freed with g_strfreev().
- */
-char **
-_cogl_context_get_gl_extensions (CoglContext *context);
-
-const char *
-_cogl_context_get_gl_version (CoglContext *context);
 
 #endif /* __COGL_CONTEXT_PRIVATE_H */

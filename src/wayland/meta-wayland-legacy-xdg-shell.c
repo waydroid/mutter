@@ -658,6 +658,8 @@ meta_wayland_zxdg_toplevel_v6_apply_state (MetaWaylandSurfaceRole  *surface_role
     META_WAYLAND_ZXDG_SURFACE_V6 (xdg_toplevel);
   MetaWaylandZxdgSurfaceV6Private *xdg_surface_priv =
     meta_wayland_zxdg_surface_v6_get_instance_private (xdg_surface);
+  MetaWaylandActorSurface *actor_surface =
+    META_WAYLAND_ACTOR_SURFACE (xdg_surface);
   MetaWaylandSurfaceRoleClass *surface_role_class;
   MetaWaylandSurface *surface =
     meta_wayland_surface_role_get_surface (surface_role);
@@ -666,7 +668,7 @@ meta_wayland_zxdg_toplevel_v6_apply_state (MetaWaylandSurfaceRole  *surface_role
   window = meta_wayland_surface_get_window (surface);
   if (!window)
     {
-      meta_wayland_surface_cache_pending_frame_callbacks (surface, pending);
+      meta_wayland_actor_surface_queue_frame_callbacks (actor_surface, pending);
       return;
     }
 
@@ -1017,7 +1019,7 @@ meta_wayland_zxdg_popup_v6_post_apply_state (MetaWaylandSurfaceRole  *surface_ro
   if (!pending->newly_attached)
     return;
 
-  if (!surface->buffer_ref.buffer)
+  if (!surface->buffer_ref->buffer)
     return;
 
   if (pending->has_acked_configure_serial)
@@ -1251,13 +1253,9 @@ meta_wayland_zxdg_surface_v6_send_configure (MetaWaylandZxdgSurfaceV6       *xdg
 static void
 zxdg_surface_v6_destructor (struct wl_resource *resource)
 {
-  MetaWaylandSurface *surface = surface_from_xdg_surface_resource (resource);
   MetaWaylandZxdgSurfaceV6 *xdg_surface = wl_resource_get_user_data (resource);
   MetaWaylandZxdgSurfaceV6Private *priv =
     meta_wayland_zxdg_surface_v6_get_instance_private (xdg_surface);
-
-  meta_wayland_compositor_destroy_frame_callbacks (surface->compositor,
-                                                   surface);
 
   priv->shell_client->surfaces = g_list_remove (priv->shell_client->surfaces,
                                                 xdg_surface);
@@ -1379,7 +1377,7 @@ meta_wayland_zxdg_surface_v6_apply_state (MetaWaylandSurfaceRole  *surface_role,
   if (!priv->resource)
     return;
 
-  if (surface->buffer_ref.buffer == NULL && priv->first_buffer_attached)
+  if (!surface->buffer_ref->buffer && priv->first_buffer_attached)
     {
       /* XDG surfaces can't commit NULL buffers */
       wl_resource_post_error (surface->resource,
@@ -1388,7 +1386,7 @@ meta_wayland_zxdg_surface_v6_apply_state (MetaWaylandSurfaceRole  *surface_role,
       return;
     }
 
-  if (surface->buffer_ref.buffer && !priv->configure_sent)
+  if (surface->buffer_ref->buffer && !priv->configure_sent)
     {
       wl_resource_post_error (surface->resource,
                               ZXDG_SURFACE_V6_ERROR_UNCONFIGURED_BUFFER,
@@ -1399,7 +1397,7 @@ meta_wayland_zxdg_surface_v6_apply_state (MetaWaylandSurfaceRole  *surface_role,
   if (!window)
     return;
 
-  if (surface->buffer_ref.buffer)
+  if (surface->buffer_ref->buffer)
     priv->first_buffer_attached = TRUE;
 }
 
@@ -1454,7 +1452,7 @@ meta_wayland_zxdg_surface_v6_assigned (MetaWaylandSurfaceRole *surface_role)
   priv->configure_sent = FALSE;
   priv->first_buffer_attached = FALSE;
 
-  if (surface->buffer_ref.buffer)
+  if (surface->buffer_ref->buffer)
     {
       wl_resource_post_error (xdg_shell_resource,
                               ZXDG_SHELL_V6_ERROR_INVALID_SURFACE_STATE,
@@ -2000,7 +1998,7 @@ zxdg_shell_v6_get_xdg_surface (struct wl_client   *client,
       return;
     }
 
-  if (surface->buffer_ref.buffer)
+  if (surface->buffer_ref->buffer)
     {
       wl_resource_post_error (resource,
                               ZXDG_SHELL_V6_ERROR_INVALID_SURFACE_STATE,

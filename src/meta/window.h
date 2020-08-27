@@ -284,12 +284,6 @@ META_EXPORT
 gboolean          meta_window_is_on_primary_monitor (MetaWindow *window);
 
 META_EXPORT
-gboolean          meta_window_requested_bypass_compositor (MetaWindow *window);
-
-META_EXPORT
-gboolean          meta_window_requested_dont_bypass_compositor (MetaWindow *window);
-
-META_EXPORT
 gboolean meta_window_get_icon_geometry (MetaWindow    *window,
                                         MetaRectangle *rect);
 
@@ -334,7 +328,7 @@ META_EXPORT
 guint32     meta_window_get_user_time (MetaWindow *window);
 
 META_EXPORT
-int         meta_window_get_pid (MetaWindow *window);
+pid_t       meta_window_get_pid (MetaWindow *window);
 
 META_EXPORT
 const char *meta_window_get_client_machine (MetaWindow *window);

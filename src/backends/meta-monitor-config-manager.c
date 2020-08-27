@@ -52,10 +52,10 @@ G_DEFINE_TYPE (MetaMonitorsConfig, meta_monitors_config,
                G_TYPE_OBJECT)
 
 static void
-meta_crtc_info_free (MetaCrtcInfo *info);
+meta_crtc_assignment_free (MetaCrtcAssignment *assignment);
 
 static void
-meta_output_info_free (MetaOutputInfo *info);
+meta_output_assignment_free (MetaOutputAssignment *assignment);
 
 MetaMonitorConfigManager *
 meta_monitor_config_manager_new (MetaMonitorManager *monitor_manager)
@@ -84,8 +84,10 @@ is_crtc_reserved (MetaCrtc *crtc,
 
   for (i = 0; i < reserved_crtcs->len; i++)
     {
-       glong id = g_array_index (reserved_crtcs, glong, i);
-       if (id == crtc->crtc_id)
+       uint64_t id;
+
+       id = g_array_index (reserved_crtcs, uint64_t, i);
+       if (id == meta_crtc_get_id (crtc))
          return TRUE;
     }
 
@@ -94,15 +96,16 @@ is_crtc_reserved (MetaCrtc *crtc,
 
 static gboolean
 is_crtc_assigned (MetaCrtc  *crtc,
-                  GPtrArray *crtc_infos)
+                  GPtrArray *crtc_assignments)
 {
   unsigned int i;
 
-  for (i = 0; i < crtc_infos->len; i++)
+  for (i = 0; i < crtc_assignments->len; i++)
     {
-      MetaCrtcInfo *assigned_crtc_info = g_ptr_array_index (crtc_infos, i);
+      MetaCrtcAssignment *assigned_crtc_assignment =
+        g_ptr_array_index (crtc_assignments, i);
 
-      if (assigned_crtc_info->crtc == crtc)
+      if (assigned_crtc_assignment->crtc == crtc)
         return TRUE;
     }
 
@@ -111,22 +114,25 @@ is_crtc_assigned (MetaCrtc  *crtc,
 
 static MetaCrtc *
 find_unassigned_crtc (MetaOutput *output,
-                      GPtrArray  *crtc_infos,
+                      GPtrArray  *crtc_assignments,
                       GArray     *reserved_crtcs)
 {
   MetaCrtc *crtc;
+  const MetaOutputInfo *output_info;
   unsigned int i;
 
   crtc = meta_output_get_assigned_crtc (output);
-  if (crtc && !is_crtc_assigned (crtc, crtc_infos))
+  if (crtc && !is_crtc_assigned (crtc, crtc_assignments))
     return crtc;
 
-  /* then try to assign a CRTC that wasn't used */
-  for (i = 0; i < output->n_possible_crtcs; i++)
-    {
-      crtc = output->possible_crtcs[i];
+  output_info = meta_output_get_info (output);
 
-      if (is_crtc_assigned (crtc, crtc_infos))
+  /* then try to assign a CRTC that wasn't used */
+  for (i = 0; i < output_info->n_possible_crtcs; i++)
+    {
+      crtc = output_info->possible_crtcs[i];
+
+      if (is_crtc_assigned (crtc, crtc_assignments))
         continue;
 
       if (is_crtc_reserved (crtc, reserved_crtcs))
@@ -136,11 +142,11 @@ find_unassigned_crtc (MetaOutput *output,
     }
 
   /* finally just give a CRTC that we haven't assigned */
-  for (i = 0; i < output->n_possible_crtcs; i++)
+  for (i = 0; i < output_info->n_possible_crtcs; i++)
     {
-      crtc = output->possible_crtcs[i];
+      crtc = output_info->possible_crtcs[i];
 
-      if (is_crtc_assigned (crtc, crtc_infos))
+      if (is_crtc_assigned (crtc, crtc_assignments))
         continue;
 
       return crtc;
@@ -155,8 +161,8 @@ typedef struct
   MetaMonitorsConfig *config;
   MetaLogicalMonitorConfig *logical_monitor_config;
   MetaMonitorConfig *monitor_config;
-  GPtrArray *crtc_infos;
-  GPtrArray *output_infos;
+  GPtrArray *crtc_assignments;
+  GPtrArray *output_assignments;
   GArray *reserved_crtcs;
 } MonitorAssignmentData;
 
@@ -178,16 +184,19 @@ assign_monitor_crtc (MetaMonitor         *monitor,
   float scale = 0.0;
   float width, height;
   MetaCrtcMode *crtc_mode;
+  const MetaCrtcModeInfo *crtc_mode_info;
   graphene_rect_t crtc_layout;
-  MetaCrtcInfo *crtc_info;
-  MetaOutputInfo *output_info;
+  MetaCrtcAssignment *crtc_assignment;
+  MetaOutputAssignment *output_assignment;
   MetaMonitorConfig *first_monitor_config;
   gboolean assign_output_as_primary;
   gboolean assign_output_as_presentation;
 
   output = monitor_crtc_mode->output;
 
-  crtc = find_unassigned_crtc (output, data->crtc_infos, data->reserved_crtcs);
+  crtc = find_unassigned_crtc (output,
+                               data->crtc_assignments,
+                               data->reserved_crtcs);
 
   if (!crtc)
     {
@@ -225,16 +234,17 @@ assign_monitor_crtc (MetaMonitor         *monitor,
     }
 
   crtc_mode = monitor_crtc_mode->crtc_mode;
+  crtc_mode_info = meta_crtc_mode_get_info (monitor_crtc_mode->crtc_mode);
 
   if (meta_monitor_transform_is_rotated (crtc_transform))
     {
-      width = crtc_mode->height / scale;
-      height = crtc_mode->width / scale;
+      width = crtc_mode_info->height / scale;
+      height = crtc_mode_info->width / scale;
     }
   else
     {
-      width = crtc_mode->width / scale;
-      height = crtc_mode->height / scale;
+      width = crtc_mode_info->width / scale;
+      height = crtc_mode_info->height / scale;
     }
 
   crtc_layout = GRAPHENE_RECT_INIT (x_offset + (crtc_x / scale),
@@ -242,15 +252,15 @@ assign_monitor_crtc (MetaMonitor         *monitor,
                                     width,
                                     height);
 
-  crtc_info = g_slice_new0 (MetaCrtcInfo);
-  *crtc_info = (MetaCrtcInfo) {
+  crtc_assignment = g_slice_new0 (MetaCrtcAssignment);
+  *crtc_assignment = (MetaCrtcAssignment) {
     .crtc = crtc,
     .mode = crtc_mode,
     .layout = crtc_layout,
     .transform = crtc_hw_transform,
     .outputs = g_ptr_array_new ()
   };
-  g_ptr_array_add (crtc_info->outputs, output);
+  g_ptr_array_add (crtc_assignment->outputs, output);
 
   /*
    * Only one output can be marked as primary (due to Xrandr limitation),
@@ -270,16 +280,16 @@ assign_monitor_crtc (MetaMonitor         *monitor,
   else
     assign_output_as_presentation = FALSE;
 
-  output_info = g_slice_new0 (MetaOutputInfo);
-  *output_info = (MetaOutputInfo) {
+  output_assignment = g_slice_new0 (MetaOutputAssignment);
+  *output_assignment = (MetaOutputAssignment) {
     .output = output,
     .is_primary = assign_output_as_primary,
     .is_presentation = assign_output_as_presentation,
     .is_underscanning = data->monitor_config->enable_underscanning
   };
 
-  g_ptr_array_add (data->crtc_infos, crtc_info);
-  g_ptr_array_add (data->output_infos, output_info);
+  g_ptr_array_add (data->crtc_assignments, crtc_assignment);
+  g_ptr_array_add (data->output_assignments, output_assignment);
 
   return TRUE;
 }
@@ -289,8 +299,8 @@ assign_monitor_crtcs (MetaMonitorManager       *manager,
                       MetaMonitorsConfig       *config,
                       MetaLogicalMonitorConfig *logical_monitor_config,
                       MetaMonitorConfig        *monitor_config,
-                      GPtrArray                *crtc_infos,
-                      GPtrArray                *output_infos,
+                      GPtrArray                *crtc_assignments,
+                      GPtrArray                *output_assignments,
                       GArray                   *reserved_crtcs,
                       GError                  **error)
 {
@@ -325,8 +335,8 @@ assign_monitor_crtcs (MetaMonitorManager       *manager,
     .config = config,
     .logical_monitor_config = logical_monitor_config,
     .monitor_config = monitor_config,
-    .crtc_infos = crtc_infos,
-    .output_infos = output_infos,
+    .crtc_assignments = crtc_assignments,
+    .output_assignments = output_assignments,
     .reserved_crtcs = reserved_crtcs
   };
   if (!meta_monitor_mode_foreach_crtc (monitor, monitor_mode,
@@ -342,8 +352,8 @@ static gboolean
 assign_logical_monitor_crtcs (MetaMonitorManager       *manager,
                               MetaMonitorsConfig       *config,
                               MetaLogicalMonitorConfig *logical_monitor_config,
-                              GPtrArray                *crtc_infos,
-                              GPtrArray                *output_infos,
+                              GPtrArray                *crtc_assignments,
+                              GPtrArray                *output_assignments,
                               GArray                   *reserved_crtcs,
                               GError                  **error)
 {
@@ -357,7 +367,7 @@ assign_logical_monitor_crtcs (MetaMonitorManager       *manager,
                                  config,
                                  logical_monitor_config,
                                  monitor_config,
-                                 crtc_infos, output_infos,
+                                 crtc_assignments, output_assignments,
                                  reserved_crtcs, error))
         return FALSE;
     }
@@ -368,20 +378,20 @@ assign_logical_monitor_crtcs (MetaMonitorManager       *manager,
 gboolean
 meta_monitor_config_manager_assign (MetaMonitorManager *manager,
                                     MetaMonitorsConfig *config,
-                                    GPtrArray         **out_crtc_infos,
-                                    GPtrArray         **out_output_infos,
+                                    GPtrArray         **out_crtc_assignments,
+                                    GPtrArray         **out_output_assignments,
                                     GError            **error)
 {
-  GPtrArray *crtc_infos;
-  GPtrArray *output_infos;
+  GPtrArray *crtc_assignments;
+  GPtrArray *output_assignments;
   GArray *reserved_crtcs;
   GList *l;
 
-  crtc_infos =
-    g_ptr_array_new_with_free_func ((GDestroyNotify) meta_crtc_info_free);
-  output_infos =
-    g_ptr_array_new_with_free_func ((GDestroyNotify) meta_output_info_free);
-  reserved_crtcs = g_array_new (FALSE, FALSE, sizeof (glong));
+  crtc_assignments =
+    g_ptr_array_new_with_free_func ((GDestroyNotify) meta_crtc_assignment_free);
+  output_assignments =
+    g_ptr_array_new_with_free_func ((GDestroyNotify) meta_output_assignment_free);
+  reserved_crtcs = g_array_new (FALSE, FALSE, sizeof (uint64_t));
 
   for (l = config->logical_monitor_configs; l; l = l->next)
     {
@@ -404,7 +414,11 @@ meta_monitor_config_manager_assign (MetaMonitorManager *manager,
 
               crtc = meta_output_get_assigned_crtc (output);
               if (crtc)
-                g_array_append_val (reserved_crtcs, crtc->crtc_id);
+                {
+                  uint64_t crtc_id = meta_crtc_get_id (crtc);
+
+                  g_array_append_val (reserved_crtcs, crtc_id);
+                }
             }
         }
     }
@@ -415,11 +429,11 @@ meta_monitor_config_manager_assign (MetaMonitorManager *manager,
 
       if (!assign_logical_monitor_crtcs (manager,
                                          config, logical_monitor_config,
-                                         crtc_infos, output_infos,
+                                         crtc_assignments, output_assignments,
                                          reserved_crtcs, error))
         {
-          g_ptr_array_free (crtc_infos, TRUE);
-          g_ptr_array_free (output_infos, TRUE);
+          g_ptr_array_free (crtc_assignments, TRUE);
+          g_ptr_array_free (output_assignments, TRUE);
           g_array_free (reserved_crtcs, TRUE);
           return FALSE;
         }
@@ -427,8 +441,8 @@ meta_monitor_config_manager_assign (MetaMonitorManager *manager,
 
   g_array_free (reserved_crtcs, TRUE);
 
-  *out_crtc_infos = crtc_infos;
-  *out_output_infos = output_infos;
+  *out_crtc_assignments = crtc_assignments;
+  *out_output_assignments = output_assignments;
 
   return TRUE;
 }
@@ -736,6 +750,7 @@ meta_monitor_config_manager_create_linear (MetaMonitorConfigManager *config_mana
   int x;
   GList *monitors;
   GList *l;
+  MetaMonitorsConfig *monitors_config;
 
   primary_monitor = find_primary_monitor (monitor_manager);
   if (!primary_monitor)
@@ -779,10 +794,15 @@ meta_monitor_config_manager_create_linear (MetaMonitorConfigManager *config_mana
       x += logical_monitor_config->layout.width;
     }
 
-  return meta_monitors_config_new (monitor_manager,
-                                   logical_monitor_configs,
-                                   layout_mode,
-                                   META_MONITORS_CONFIG_FLAG_NONE);
+  monitors_config = meta_monitors_config_new (monitor_manager,
+                                              logical_monitor_configs,
+                                              layout_mode,
+                                              META_MONITORS_CONFIG_FLAG_NONE);
+
+  if (monitors_config)
+    meta_monitors_config_set_switch_config (monitors_config, META_MONITOR_SWITCH_CONFIG_ALL_LINEAR);
+
+  return monitors_config;
 }
 
 MetaMonitorsConfig *
@@ -1064,6 +1084,7 @@ create_for_switch_config_all_mirror (MetaMonitorConfigManager *config_manager)
   GList *modes;
   GList *monitors;
   GList *l;
+  MetaMonitorsConfig *monitors_config;
 
   monitors = meta_monitor_manager_get_monitors (monitor_manager);
   monitor = monitors->data;
@@ -1156,10 +1177,15 @@ create_for_switch_config_all_mirror (MetaMonitorConfigManager *config_manager)
 
   logical_monitor_configs = g_list_append (NULL, logical_monitor_config);
   layout_mode = meta_monitor_manager_get_default_layout_mode (monitor_manager);
-  return meta_monitors_config_new (monitor_manager,
-                                   logical_monitor_configs,
-                                   layout_mode,
-                                   META_MONITORS_CONFIG_FLAG_NONE);
+  monitors_config = meta_monitors_config_new (monitor_manager,
+                                              logical_monitor_configs,
+                                              layout_mode,
+                                              META_MONITORS_CONFIG_FLAG_NONE);
+
+  if (monitors_config)
+    meta_monitors_config_set_switch_config (monitors_config, META_MONITOR_SWITCH_CONFIG_ALL_MIRROR);
+
+  return monitors_config;
 }
 
 static MetaMonitorsConfig *
@@ -1171,6 +1197,7 @@ create_for_switch_config_external (MetaMonitorConfigManager *config_manager)
   MetaLogicalMonitorLayoutMode layout_mode;
   GList *monitors;
   GList *l;
+  MetaMonitorsConfig *monitors_config;
 
   layout_mode = meta_monitor_manager_get_default_layout_mode (monitor_manager);
 
@@ -1198,10 +1225,15 @@ create_for_switch_config_external (MetaMonitorConfigManager *config_manager)
       x += logical_monitor_config->layout.width;
     }
 
-  return meta_monitors_config_new (monitor_manager,
-                                   logical_monitor_configs,
-                                   layout_mode,
-                                   META_MONITORS_CONFIG_FLAG_NONE);
+  monitors_config = meta_monitors_config_new (monitor_manager,
+                                              logical_monitor_configs,
+                                              layout_mode,
+                                              META_MONITORS_CONFIG_FLAG_NONE);
+
+  if (monitors_config)
+    meta_monitors_config_set_switch_config (monitors_config, META_MONITOR_SWITCH_CONFIG_EXTERNAL);
+
+  return monitors_config;
 }
 
 static MetaMonitorsConfig *
@@ -1212,6 +1244,7 @@ create_for_switch_config_builtin (MetaMonitorConfigManager *config_manager)
   GList *logical_monitor_configs;
   MetaLogicalMonitorConfig *primary_logical_monitor_config;
   MetaMonitor *monitor;
+  MetaMonitorsConfig *monitors_config;
 
   monitor = meta_monitor_manager_get_laptop_panel (monitor_manager);
   if (!monitor)
@@ -1229,10 +1262,15 @@ create_for_switch_config_builtin (MetaMonitorConfigManager *config_manager)
   logical_monitor_configs = g_list_append (NULL,
                                            primary_logical_monitor_config);
 
-  return meta_monitors_config_new (monitor_manager,
-                                   logical_monitor_configs,
-                                   layout_mode,
-                                   META_MONITORS_CONFIG_FLAG_NONE);
+  monitors_config = meta_monitors_config_new (monitor_manager,
+                                              logical_monitor_configs,
+                                              layout_mode,
+                                              META_MONITORS_CONFIG_FLAG_NONE);
+
+  if (monitors_config)
+    meta_monitors_config_set_switch_config (monitors_config, META_MONITOR_SWITCH_CONFIG_BUILTIN);
+
+  return monitors_config;
 }
 
 MetaMonitorsConfig *
@@ -1264,9 +1302,6 @@ meta_monitor_config_manager_create_for_switch_config (MetaMonitorConfigManager  
       g_warn_if_reached ();
       return NULL;
     }
-
-  if (config)
-    meta_monitors_config_set_switch_config (config, config_type);
 
   return config;
 }
@@ -1557,16 +1592,16 @@ meta_monitors_config_class_init (MetaMonitorsConfigClass *klass)
 }
 
 static void
-meta_crtc_info_free (MetaCrtcInfo *info)
+meta_crtc_assignment_free (MetaCrtcAssignment *assignment)
 {
-  g_ptr_array_free (info->outputs, TRUE);
-  g_slice_free (MetaCrtcInfo, info);
+  g_ptr_array_free (assignment->outputs, TRUE);
+  g_slice_free (MetaCrtcAssignment, assignment);
 }
 
 static void
-meta_output_info_free (MetaOutputInfo *info)
+meta_output_assignment_free (MetaOutputAssignment *assignment)
 {
-  g_slice_free (MetaOutputInfo, info);
+  g_slice_free (MetaOutputAssignment, assignment);
 }
 
 gboolean

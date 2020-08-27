@@ -46,6 +46,8 @@ struct _MetaRendererClass
                                       MetaOutput         *output,
                                       MetaCrtc           *crtc);
   void (* rebuild_views) (MetaRenderer *renderer);
+  GList * (* get_views_for_monitor) (MetaRenderer *renderer,
+                                     MetaMonitor  *monitor);
 };
 
 MetaBackend * meta_renderer_get_backend (MetaRenderer *renderer);
@@ -57,9 +59,16 @@ void meta_renderer_rebuild_views (MetaRenderer *renderer);
 void meta_renderer_add_view (MetaRenderer     *renderer,
                              MetaRendererView *view);
 
+GList * meta_renderer_get_views_for_monitor (MetaRenderer *renderer,
+                                             MetaMonitor  *monitor);
+
 META_EXPORT_TEST
 GList * meta_renderer_get_views (MetaRenderer *renderer);
 
 gboolean meta_renderer_is_hardware_accelerated (MetaRenderer *renderer);
+
+void meta_renderer_pause (MetaRenderer *renderer);
+
+void meta_renderer_resume (MetaRenderer *renderer);
 
 #endif /* META_RENDERER_H */

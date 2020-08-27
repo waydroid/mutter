@@ -190,7 +190,7 @@ typedef enum /*< prefix=CLUTTER_REQUEST >*/
  * @CLUTTER_ANIMATION_LAST: last animation mode, used as a guard for
  *   registered global alpha functions
  *
- * The animation modes used by #ClutterAlpha and #ClutterAnimation. This
+ * The animation modes used by #ClutterAnimatable. This
  * enumeration can be expanded in later versions of Clutter.
  *
  * <figure id="easing-modes">
@@ -555,32 +555,6 @@ typedef enum /*< prefix=CLUTTER_OFFSCREEN_REDIRECT >*/
 } ClutterOffscreenRedirect;
 
 /**
- * ClutterAllocationFlags:
- * @CLUTTER_ALLOCATION_NONE: No flag set
- * @CLUTTER_ABSOLUTE_ORIGIN_CHANGED: Whether the absolute origin of the
- *   actor has changed; this implies that any ancestor of the actor has
- *   been moved.
- * @CLUTTER_DELEGATE_LAYOUT: Whether the allocation should be delegated
- *   to the #ClutterLayoutManager instance stored inside the
- *   #ClutterActor:layout-manager property of #ClutterActor. This flag
- *   should only be used if you are subclassing #ClutterActor and
- *   overriding the #ClutterActorClass.allocate() virtual function, but
- *   you wish to use the default implementation of the virtual function
- *   inside #ClutterActor. Added in Clutter 1.10.
- *
- * Flags passed to the #ClutterActorClass.allocate() virtual function
- * and to the clutter_actor_allocate() function.
- *
- * Since: 1.0
- */
-typedef enum
-{
-  CLUTTER_ALLOCATION_NONE         = 0,
-  CLUTTER_ABSOLUTE_ORIGIN_CHANGED = 1 << 1,
-  CLUTTER_DELEGATE_LAYOUT         = 1 << 2
-} ClutterAllocationFlags;
-
-/**
  * ClutterAlignAxis:
  * @CLUTTER_ALIGN_X_AXIS: Maintain the alignment on the X axis
  * @CLUTTER_ALIGN_Y_AXIS: Maintain the alignment on the Y axis
@@ -883,7 +857,6 @@ typedef enum /*< flags prefix=CLUTTER_EVENT >*/
  * @CLUTTER_STAGE_STATE: Stage state change event
  * @CLUTTER_DESTROY_NOTIFY: Destroy notification event
  * @CLUTTER_CLIENT_MESSAGE: Client message event
- * @CLUTTER_DELETE: Stage delete event
  * @CLUTTER_TOUCH_BEGIN: A new touch event sequence has started;
  *   event added in 1.10
  * @CLUTTER_TOUCH_UPDATE: A touch event sequence has been updated;
@@ -921,7 +894,6 @@ typedef enum /*< prefix=CLUTTER >*/
   CLUTTER_STAGE_STATE,
   CLUTTER_DESTROY_NOTIFY,
   CLUTTER_CLIENT_MESSAGE,
-  CLUTTER_DELETE,
   CLUTTER_TOUCH_BEGIN,
   CLUTTER_TOUCH_UPDATE,
   CLUTTER_TOUCH_END,
@@ -977,7 +949,6 @@ typedef enum
 
 /**
  * ClutterFeatureFlags:
- * @CLUTTER_FEATURE_SWAP_THROTTLE: Set if backend throttles buffer swaps.
  * @CLUTTER_FEATURE_STAGE_STATIC: Set if stage size if fixed (i.e framebuffer)
  * @CLUTTER_FEATURE_STAGE_CURSOR: Set if stage has a graphical cursor.
  * @CLUTTER_FEATURE_SHADERS_GLSL: Set if the backend supports GLSL shaders.
@@ -992,7 +963,6 @@ typedef enum
  */
 typedef enum
 {
-  CLUTTER_FEATURE_SWAP_THROTTLE          = (1 << 3),
   CLUTTER_FEATURE_STAGE_STATIC           = (1 << 6),
   CLUTTER_FEATURE_STAGE_CURSOR           = (1 << 8),
   CLUTTER_FEATURE_SHADERS_GLSL           = (1 << 9),
@@ -1343,8 +1313,6 @@ typedef enum
  *   painting the stages
  * @CLUTTER_REPAINT_FLAGS_POST_PAINT: Run the repaint function after
  *   painting the stages
- * @CLUTTER_REPAINT_FLAGS_QUEUE_REDRAW_ON_ADD: Ensure that a new frame
- *   is queued after adding the repaint function
  *
  * Flags to pass to clutter_threads_add_repaint_func_full().
  *
@@ -1354,7 +1322,6 @@ typedef enum
 {
   CLUTTER_REPAINT_FLAGS_PRE_PAINT = 1 << 0,
   CLUTTER_REPAINT_FLAGS_POST_PAINT = 1 << 1,
-  CLUTTER_REPAINT_FLAGS_QUEUE_REDRAW_ON_ADD = 1 << 2
 } ClutterRepaintFlags;
 
 /**

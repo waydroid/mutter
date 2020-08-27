@@ -1,8 +1,9 @@
+#define CLUTTER_DISABLE_DEPRECATION_WARNINGS
 #include <stdlib.h>
 #include <glib.h>
 #include <clutter/clutter.h>
 
-#include "test-conform-common.h"
+#include "tests/clutter-test-utils.h"
 
 #define TEST_TIMELINE_DURATION 500
 #define TEST_WATCHDOG_KICK_IN_SECONDS 10
@@ -29,7 +30,7 @@ watchdog_timeout (gpointer data)
   else
     {
       g_test_message ("Passed");
-      clutter_main_quit ();
+      clutter_test_quit ();
     }
 
   return G_SOURCE_REMOVE;
@@ -66,13 +67,16 @@ new_frame_cb (ClutterTimeline *timeline,
     }
 }
 
-void
+static void
 timeline_rewind (void)
 {
+  ClutterActor *stage;
   TestState state;
 
+  stage = clutter_test_get_stage ();
+
   state.timeline = 
-    clutter_timeline_new (TEST_TIMELINE_DURATION);
+    clutter_timeline_new_for_actor (stage, TEST_TIMELINE_DURATION);
   g_signal_connect (G_OBJECT(state.timeline),
                     "new-frame",
                     G_CALLBACK(new_frame_cb),
@@ -84,9 +88,15 @@ timeline_rewind (void)
                                &state);
   state.rewind_count = 0;
 
+  clutter_actor_show (stage);
+
   clutter_timeline_start (state.timeline);
   
-  clutter_main();
+  clutter_test_main ();
 
   g_object_unref (state.timeline);
 }
+
+CLUTTER_TEST_SUITE (
+  CLUTTER_TEST_UNIT ("/timeline/rewind", timeline_rewind)
+)

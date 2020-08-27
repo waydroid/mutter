@@ -172,6 +172,8 @@ mutter_sources = [
   'backends/meta-backend-private.h',
   'backends/meta-barrier.c',
   'backends/meta-barrier-private.h',
+  'backends/meta-crtc-mode.c',
+  'backends/meta-crtc-mode.h',
   'backends/meta-crtc.c',
   'backends/meta-crtc.h',
   'backends/meta-cursor.c',
@@ -195,6 +197,8 @@ mutter_sources = [
   'backends/meta-input-mapper-private.h',
   'backends/meta-input-settings.c',
   'backends/meta-input-settings-private.h',
+  'backends/meta-keymap-utils.c',
+  'backends/meta-keymap-utils.h',
   'backends/meta-logical-monitor.c',
   'backends/meta-logical-monitor.h',
   'backends/meta-monitor.c',
@@ -245,6 +249,8 @@ mutter_sources = [
   'backends/x11/meta-crtc-xrandr.h',
   'backends/x11/meta-cursor-renderer-x11.c',
   'backends/x11/meta-cursor-renderer-x11.h',
+  'backends/x11/meta-cursor-tracker-x11.c',
+  'backends/x11/meta-cursor-tracker-x11.h',
   'backends/x11/meta-event-x11.c',
   'backends/x11/meta-event-x11.h',
   'backends/x11/meta-gpu-xrandr.c',
@@ -287,10 +293,14 @@ mutter_sources = [
   'compositor/compositor-private.h',
   'compositor/meta-background-actor.c',
   'compositor/meta-background-actor-private.h',
+  'compositor/meta-background-content.c',
+  'compositor/meta-background-content-private.h',
   'compositor/meta-background.c',
   'compositor/meta-background-group.c',
   'compositor/meta-background-image.c',
   'compositor/meta-background-private.h',
+  'compositor/meta-compositor-server.c',
+  'compositor/meta-compositor-server.h',
   'compositor/meta-compositor-x11.c',
   'compositor/meta-compositor-x11.h',
   'compositor/meta-cullable.c',
@@ -300,6 +310,7 @@ mutter_sources = [
   'compositor/meta-dnd.c',
   'compositor/meta-feedback-actor.c',
   'compositor/meta-feedback-actor-private.h',
+  'compositor/meta-later.c',
   'compositor/meta-module.c',
   'compositor/meta-module.h',
   'compositor/meta-plugin.c',
@@ -346,6 +357,8 @@ mutter_sources = [
   'core/main-private.h',
   'core/meta-accel-parse.c',
   'core/meta-accel-parse.h',
+  'core/meta-anonymous-file.c',
+  'core/meta-anonymous-file.h',
   'core/meta-border.c',
   'core/meta-border.h',
   'core/meta-clipboard-manager.c',
@@ -453,6 +466,10 @@ if have_remote_desktop
     'backends/meta-remote-desktop-session.h',
     'backends/meta-screen-cast.c',
     'backends/meta-screen-cast.h',
+    'backends/meta-screen-cast-area-stream.c',
+    'backends/meta-screen-cast-area-stream.h',
+    'backends/meta-screen-cast-area-stream-src.c',
+    'backends/meta-screen-cast-area-stream-src.h',
     'backends/meta-screen-cast-monitor-stream.c',
     'backends/meta-screen-cast-monitor-stream.h',
     'backends/meta-screen-cast-monitor-stream-src.c',
@@ -476,8 +493,6 @@ if have_wayland
     'compositor/meta-surface-actor-wayland.h',
     'compositor/meta-window-actor-wayland.c',
     'compositor/meta-window-actor-wayland.h',
-    'compositor/meta-compositor-server.c',
-    'compositor/meta-compositor-server.h',
     'wayland/meta-cursor-sprite-wayland.c',
     'wayland/meta-cursor-sprite-wayland.h',
     'wayland/meta-pointer-confinement-wayland.c',
@@ -491,6 +506,7 @@ if have_wayland
     'wayland/meta-wayland-buffer.c',
     'wayland/meta-wayland-buffer.h',
     'wayland/meta-wayland.c',
+    'wayland/meta-wayland-client.c',
     'wayland/meta-wayland-cursor-surface.c',
     'wayland/meta-wayland-cursor-surface.h',
     'wayland/meta-wayland-data-device.c',
@@ -619,6 +635,8 @@ if have_native_backend
     'backends/native/meta-clutter-backend-native.h',
     'backends/native/meta-crtc-kms.c',
     'backends/native/meta-crtc-kms.h',
+    'backends/native/meta-crtc-mode-kms.c',
+    'backends/native/meta-crtc-mode-kms.h',
     'backends/native/meta-cursor-renderer-native.c',
     'backends/native/meta-cursor-renderer-native.h',
     'backends/native/meta-drm-buffer-dumb.c',
@@ -690,6 +708,8 @@ if have_native_backend
     'backends/native/meta-virtual-input-device-native.h',
     'backends/native/meta-xkb-utils.c',
     'backends/native/meta-xkb-utils.h',
+    'compositor/meta-compositor-native.c',
+    'compositor/meta-compositor-native.h',
   ]
 endif
 
@@ -701,6 +721,18 @@ if have_wayland_eglstream
 endif
 
 mutter_built_sources = []
+
+if have_remote_desktop
+  mutter_private_enum_types = gnome.mkenums('meta-private-enum-types',
+    sources: [
+      'backends/meta-screen-cast.h',
+    ],
+    c_template: 'meta-private-enum-types.c.in',
+    h_template: 'meta-private-enum-types.h.in',
+  )
+
+  mutter_built_sources += mutter_private_enum_types
+endif
 
 dbus_display_config_built_sources = gnome.gdbus_codegen('meta-dbus-display-config',
     'org.gnome.Mutter.DisplayConfig.xml',
@@ -731,9 +763,13 @@ if have_profiler
     'backends/meta-profiler.h',
   ]
 
-  sysprof_dbus_interfaces_dir = join_paths(sysprof_dep.get_pkgconfig_variable('datadir'), 'dbus-1', 'interfaces')
-  sysprof3_dbus_file = join_paths(sysprof_dbus_interfaces_dir, 'org.gnome.Sysprof3.Profiler.xml')
+  if sysprof_dep.type_name() == 'pkgconfig'
+    sysprof_dbus_interfaces_dir = join_paths(sysprof_dep.get_pkgconfig_variable('datadir'), 'dbus-1', 'interfaces')
+  else
+    sysprof_dbus_interfaces_dir = join_paths(meson.source_root(), 'subprojects', 'sysprof', 'src')
+  endif
 
+  sysprof3_dbus_file = join_paths(sysprof_dbus_interfaces_dir, 'org.gnome.Sysprof3.Profiler.xml')
   dbus_sysprof3_profiler_built_sources = gnome.gdbus_codegen('meta-dbus-sysprof3-profiler',
       sysprof3_dbus_file,
       interface_prefix: 'org.gnome.',

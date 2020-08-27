@@ -27,34 +27,22 @@
  * @short_description: Interface for animatable classes
  *
  * #ClutterAnimatable is an interface that allows a #GObject class
- * to control how a #ClutterAnimation will animate a property.
+ * to control how an actor will animate a property.
  *
  * Each #ClutterAnimatable should implement the
  * #ClutterAnimatableInterface.interpolate_property() virtual function of the
  * interface to compute the animation state between two values of an interval
  * depending on a progress factor, expressed as a floating point value.
  *
- * If a #ClutterAnimatable is animated by a #ClutterAnimation
- * instance, the #ClutterAnimation will call
- * clutter_animatable_interpolate_property() passing the name of the
- * currently animated property; the values interval; and the progress factor.
- * The #ClutterAnimatable implementation should return the computed value for
- * the animated
- * property.
- *
  * #ClutterAnimatable is available since Clutter 1.0
  */
 
 #include "clutter-build-config.h"
 
-#define CLUTTER_DISABLE_DEPRECATION_WARNINGS
-
 #include "clutter-animatable.h"
 #include "clutter-interval.h"
 #include "clutter-debug.h"
 #include "clutter-private.h"
-
-#include "deprecated/clutter-animation.h"
 
 G_DEFINE_INTERFACE (ClutterAnimatable, clutter_animatable, G_TYPE_OBJECT);
 
@@ -205,4 +193,26 @@ clutter_animatable_interpolate_value (ClutterAnimatable *animatable,
     }
   else
     return clutter_interval_compute_value (interval, progress, value);
+}
+
+/**
+ * clutter_animatable_get_actor:
+ * @animatable: a #ClutterAnimatable
+ *
+ * Get animated actor.
+ *
+ * Return value: (transfer none): a #ClutterActor
+ */
+ClutterActor *
+clutter_animatable_get_actor (ClutterAnimatable *animatable)
+{
+  ClutterAnimatableInterface *iface;
+
+  g_return_val_if_fail (CLUTTER_IS_ANIMATABLE (animatable), NULL);
+
+  iface = CLUTTER_ANIMATABLE_GET_IFACE (animatable);
+
+  g_return_val_if_fail (iface->get_actor, NULL);
+
+  return iface->get_actor (animatable);
 }

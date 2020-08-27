@@ -93,7 +93,7 @@ make_ui (ClutterActor *stage)
   ClutterColor     color_rect    = { 0x00, 0xff, 0xff, 0x55 };
   float label_geom_y, editable_geom_y;
 
-  clutter_stage_set_color (CLUTTER_STAGE (stage), CLUTTER_COLOR_White);
+  clutter_actor_set_background_color (CLUTTER_ACTOR (stage), CLUTTER_COLOR_White);
   clutter_actor_set_size (stage, WIDTH, HEIGHT);
 
   label_geom_y = 50;
@@ -121,7 +121,8 @@ make_ui (ClutterActor *stage)
       clutter_actor_set_reactive (editable, TRUE);
 
       /* rectangle: to create a entry "feeling" */
-      rectangle = clutter_rectangle_new_with_color (&color_rect);
+      rectangle = clutter_actor_new ();
+      clutter_actor_set_background_color (rectangle, &color_rect);
       clutter_actor_set_position (rectangle, 150, editable_geom_y);
       clutter_actor_set_size (rectangle, 500, 75);
 
@@ -142,9 +143,6 @@ main (int argc, char *argv[])
   guint id_1 = 0, id_2 = 0, id_3 = 0;
 
   g_set_application_name ("AtkText");
-
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
 
   if (cally_util_a11y_init (&argc, &argv) == FALSE)
     {
@@ -173,24 +171,24 @@ main (int argc, char *argv[])
   atk_add_global_event_listener (window_event_listener, "Atk:AtkWindow:activate");
   atk_add_global_event_listener (window_event_listener, "Atk:AtkWindow:deactivate");
 
-  stage_main = clutter_stage_new ();
+  stage_main = clutter_test_get_stage ();
   clutter_stage_set_title (CLUTTER_STAGE (stage_main), "Cally - AtkEvents/1");
-  g_signal_connect (stage_main, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage_main, "destroy", G_CALLBACK (clutter_test_quit), NULL);
   make_ui (stage_main);
 
-  clutter_actor_show_all (stage_main);
+  clutter_actor_show (stage_main);
 
   if (clutter_feature_available (CLUTTER_FEATURE_STAGE_MULTIPLE))
     {
-      stage = clutter_stage_new ();
+      stage = clutter_test_get_stage ();
       clutter_stage_set_title (CLUTTER_STAGE (stage), "Cally - AtkEvents/2");
-      g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+      g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
 
       make_ui (stage);
-      clutter_actor_show_all (stage);
+      clutter_actor_show (stage);
     }
 
-  clutter_main ();
+  clutter_test_main ();
 
   return 0;
 }

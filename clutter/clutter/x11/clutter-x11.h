@@ -110,14 +110,6 @@ void         clutter_x11_remove_filter (ClutterX11FilterFunc func,
                                         gpointer             data);
 
 CLUTTER_EXPORT
-gboolean clutter_x11_has_composite_extension (void);
-
-CLUTTER_EXPORT
-void     clutter_x11_set_use_argb_visual (gboolean use_argb);
-CLUTTER_EXPORT
-gboolean clutter_x11_get_use_argb_visual (void);
-
-CLUTTER_EXPORT
 void     clutter_x11_set_use_stereo_stage (gboolean use_stereo);
 CLUTTER_EXPORT
 gboolean clutter_x11_get_use_stereo_stage (void);

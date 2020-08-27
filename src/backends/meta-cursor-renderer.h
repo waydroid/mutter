@@ -54,7 +54,7 @@ struct _MetaCursorRendererClass
                               MetaCursorSprite   *cursor_sprite);
 };
 
-MetaCursorRenderer * meta_cursor_renderer_new (void);
+MetaCursorRenderer * meta_cursor_renderer_new (MetaBackend *backend);
 
 void meta_cursor_renderer_set_cursor (MetaCursorRenderer *renderer,
                                       MetaCursorSprite   *cursor_sprite);
@@ -66,6 +66,8 @@ graphene_point_t meta_cursor_renderer_get_position (MetaCursorRenderer *renderer
 void meta_cursor_renderer_force_update (MetaCursorRenderer *renderer);
 
 MetaCursorSprite * meta_cursor_renderer_get_cursor (MetaCursorRenderer *renderer);
+
+gboolean meta_cursor_renderer_is_overlay_visible (MetaCursorRenderer *renderer);
 
 void meta_cursor_renderer_add_hw_cursor_inhibitor (MetaCursorRenderer    *renderer,
                                                    MetaHwCursorInhibitor *inhibitor);
@@ -81,5 +83,8 @@ graphene_rect_t meta_cursor_renderer_calculate_rect (MetaCursorRenderer *rendere
 
 void meta_cursor_renderer_emit_painted (MetaCursorRenderer *renderer,
                                         MetaCursorSprite   *cursor_sprite);
+
+void meta_cursor_renderer_update_stage_overlay (MetaCursorRenderer *renderer,
+                                                MetaCursorSprite   *cursor_sprite);
 
 #endif /* META_CURSOR_RENDERER_H */

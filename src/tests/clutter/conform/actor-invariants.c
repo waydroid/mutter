@@ -15,7 +15,7 @@ actor_initial_state (void)
   g_object_ref_sink (actor);
   g_object_add_weak_pointer (G_OBJECT (actor), (gpointer *) &actor);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("initial state - visible: %s, realized: %s, mapped: %s\n",
              CLUTTER_ACTOR_IS_VISIBLE (actor) ? "yes" : "no",
              CLUTTER_ACTOR_IS_REALIZED (actor) ? "yes" : "no",
@@ -40,7 +40,7 @@ actor_shown_not_parented (void)
 
   clutter_actor_show (actor);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("show without a parent - visible: %s, realized: %s, mapped: %s\n",
              CLUTTER_ACTOR_IS_VISIBLE (actor) ? "yes" : "no",
              CLUTTER_ACTOR_IS_REALIZED (actor) ? "yes" : "no",
@@ -74,6 +74,8 @@ actor_realized (void)
 
   g_assert (!(CLUTTER_ACTOR_IS_MAPPED (actor)));
   g_assert (!(CLUTTER_ACTOR_IS_VISIBLE (actor)));
+
+  clutter_actor_destroy (actor);
 }
 
 static void
@@ -92,7 +94,7 @@ actor_mapped (void)
 
   clutter_actor_add_child (stage, actor);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("adding to a container should map - "
              "visible: %s, realized: %s, mapped: %s\n",
              CLUTTER_ACTOR_IS_VISIBLE (actor) ? "yes" : "no",
@@ -105,7 +107,7 @@ actor_mapped (void)
 
   clutter_actor_hide (actor);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("hiding should unmap - "
              "visible: %s, realized: %s, mapped: %s\n",
              CLUTTER_ACTOR_IS_VISIBLE (actor) ? "yes" : "no",
@@ -115,6 +117,8 @@ actor_mapped (void)
   g_assert (CLUTTER_ACTOR_IS_REALIZED (actor));
   g_assert (!CLUTTER_ACTOR_IS_MAPPED (actor));
   g_assert (!CLUTTER_ACTOR_IS_VISIBLE (actor));
+
+  clutter_actor_destroy (actor);
 }
 
 static void
@@ -155,6 +159,9 @@ actor_visibility_not_recursive (void)
 
   clutter_actor_show (stage);
   g_assert (!CLUTTER_ACTOR_IS_VISIBLE (actor));
+
+  clutter_actor_destroy (actor);
+  clutter_actor_destroy (group);
 }
 
 static void
@@ -190,6 +197,9 @@ actor_realize_not_recursive (void)
   g_assert (!CLUTTER_ACTOR_IS_REALIZED (actor));
   g_assert (!(CLUTTER_ACTOR_IS_MAPPED (actor)));
   g_assert (!(CLUTTER_ACTOR_IS_VISIBLE (actor)));
+
+  clutter_actor_destroy (actor);
+  clutter_actor_destroy (group);
 }
 
 static void
@@ -235,6 +245,9 @@ actor_map_recursive (void)
   g_assert (CLUTTER_ACTOR_IS_MAPPED (actor));
   g_assert (CLUTTER_ACTOR_IS_VISIBLE (group));
   g_assert (CLUTTER_ACTOR_IS_VISIBLE (actor));
+
+  clutter_actor_destroy (actor);
+  clutter_actor_destroy (group);
 }
 
 static void
@@ -337,27 +350,10 @@ clone_no_map (void)
   g_assert (!(CLUTTER_ACTOR_IS_MAPPED (group)));
   g_assert (!(CLUTTER_ACTOR_IS_MAPPED (actor)));
 
+  clutter_actor_destroy (actor);
   clutter_actor_destroy (CLUTTER_ACTOR (clone));
   clutter_actor_destroy (CLUTTER_ACTOR (group));
 }
-
-G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-static void
-default_stage (void)
-{
-  ClutterActor *stage, *def_stage;
-
-  stage = clutter_test_get_stage ();
-  def_stage = clutter_stage_get_default ();
-
-  if (clutter_feature_available (CLUTTER_FEATURE_STAGE_MULTIPLE))
-    g_assert (stage != def_stage);
-  else
-    g_assert (stage == def_stage);
-
-  g_assert (CLUTTER_ACTOR_IS_REALIZED (def_stage));
-}
-G_GNUC_END_IGNORE_DEPRECATIONS
 
 CLUTTER_TEST_SUITE (
   CLUTTER_TEST_UNIT ("/actor/invariants/initial-state", actor_initial_state)
@@ -369,5 +365,4 @@ CLUTTER_TEST_SUITE (
   CLUTTER_TEST_UNIT ("/actor/invariants/map-recursive", actor_map_recursive)
   CLUTTER_TEST_UNIT ("/actor/invariants/show-on-set-parent", actor_show_on_set_parent)
   CLUTTER_TEST_UNIT ("/actor/invariants/clone-no-map", clone_no_map)
-  CLUTTER_TEST_UNIT ("/actor/invariants/default-stage", default_stage)
 )

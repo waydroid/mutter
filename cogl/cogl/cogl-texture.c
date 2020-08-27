@@ -62,11 +62,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-/* This isn't defined in the GLES headers */
-#ifndef GL_RED
-#define GL_RED 0x1903
-#endif
-
 COGL_GTYPE_DEFINE_INTERFACE (Texture, texture);
 
 uint32_t
@@ -115,7 +110,8 @@ _cogl_texture_init (CoglTexture *texture,
                     const CoglTextureVtable *vtable)
 {
   texture->context = context;
-  texture->max_level = 0;
+  texture->max_level_set = 0;
+  texture->max_level_requested = 1000; /* OpenGL default GL_TEXTURE_MAX_LEVEL */
   texture->width = width;
   texture->height = height;
   texture->allocated = FALSE;
@@ -229,8 +225,16 @@ _cogl_texture_get_n_levels (CoglTexture *texture)
   int width = cogl_texture_get_width (texture);
   int height = cogl_texture_get_height (texture);
   int max_dimension = MAX (width, height);
+  int n_levels = _cogl_util_fls (max_dimension);
 
-  return _cogl_util_fls (max_dimension);
+  return MIN (n_levels, texture->max_level_requested + 1);
+}
+
+void
+cogl_texture_set_max_level (CoglTexture *texture,
+                            int          max_level)
+{
+  texture->max_level_requested = max_level;
 }
 
 void
@@ -777,8 +781,6 @@ cogl_texture_get_data (CoglTexture *texture,
       if (texture_format == COGL_PIXEL_FORMAT_A_8)
         {
           closest_format = COGL_PIXEL_FORMAT_A_8;
-          closest_gl_format = GL_RED;
-          closest_gl_type = GL_UNSIGNED_BYTE;
         }
       else if (format == COGL_PIXEL_FORMAT_A_8)
         {
@@ -789,8 +791,6 @@ cogl_texture_get_data (CoglTexture *texture,
            * pre-multiplied here because we're only going to look at
            * the alpha component */
           closest_format = COGL_PIXEL_FORMAT_RGBA_8888;
-          closest_gl_format = GL_RGBA;
-          closest_gl_type = GL_UNSIGNED_BYTE;
         }
     }
 

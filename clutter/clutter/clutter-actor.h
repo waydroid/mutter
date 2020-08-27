@@ -142,11 +142,6 @@ struct _ClutterActor
  * ClutterActorClass:
  * @show: signal class handler for #ClutterActor::show; it must chain
  *   up to the parent's implementation
- * @show_all: virtual function for containers and composite actors, to
- *   determine which children should be shown when calling
- *   clutter_actor_show_all() on the actor. Defaults to calling
- *   clutter_actor_show(). This virtual function is deprecated and it
- *   should not be overridden.
  * @hide: signal class handler for #ClutterActor::hide; it must chain
  *   up to the parent's implementation
  * @hide_all: virtual function for containers and composite actors, to
@@ -175,12 +170,18 @@ struct _ClutterActor
  * @get_preferred_height: virtual function, used when querying the minimum
  *   and natural heights of an actor for a given width; it is used by
  *   clutter_actor_get_preferred_height()
- * @allocate: virtual function, used when settings the coordinates of an
- *   actor; it is used by clutter_actor_allocate(); it must chain up to
- *   the parent's implementation, or call clutter_actor_set_allocation()
+ * @allocate: virtual function, used when setting the coordinates of an
+ *   actor; it is used by clutter_actor_allocate(); when overriding this
+ *   function without chaining up, clutter_actor_set_allocation() must be
+ *   called and children must be allocated by the implementation, when
+ *   chaining up though, those things will be done by the parent's
+ *   implementation.
  * @apply_transform: virtual function, used when applying the transformations
  *   to an actor before painting it or when transforming coordinates or
- *   the allocation; it must chain up to the parent's implementation
+ *   the allocation; if the transformation calculated by this function may
+ *   have changed, the cached transformation must be invalidated by calling
+ *   clutter_actor_invalidate_transform(); it must chain up to the parent's
+ *   implementation
  * @parent_set: signal class handler for the #ClutterActor::parent-set
  * @destroy: signal class handler for #ClutterActor::destroy. It must
  *   chain up to the parent's implementation
@@ -223,7 +224,6 @@ struct _ClutterActorClass
 
   /*< public >*/
   void (* show)                 (ClutterActor          *self);
-  void (* show_all)             (ClutterActor          *self);
   void (* hide)                 (ClutterActor          *self);
   void (* hide_all)             (ClutterActor          *self);
   void (* realize)              (ClutterActor          *self);
@@ -253,8 +253,7 @@ struct _ClutterActorClass
                                  gfloat                 *min_height_p,
                                  gfloat                 *natural_height_p);
   void (* allocate)             (ClutterActor           *self,
-                                 const ClutterActorBox  *box,
-                                 ClutterAllocationFlags  flags);
+                                 const ClutterActorBox  *box);
 
   /* transformations */
   void (* apply_transform)      (ClutterActor           *actor,
@@ -300,6 +299,9 @@ struct _ClutterActorClass
   gboolean (* touch_event)          (ClutterActor         *self,
                                      ClutterTouchEvent    *event);
   gboolean (* has_accessible)       (ClutterActor         *self);
+  void     (* resource_scale_changed) (ClutterActor *self);
+  float    (* calculate_resource_scale) (ClutterActor *self,
+                                         int           phase);
 
   /*< private >*/
   /* padding for future expansion */
@@ -415,37 +417,30 @@ void                            clutter_actor_get_preferred_size                
                                                                                  gfloat                      *natural_height_p);
 CLUTTER_EXPORT
 void                            clutter_actor_allocate                          (ClutterActor                *self,
-                                                                                 const ClutterActorBox       *box,
-                                                                                 ClutterAllocationFlags       flags);
+                                                                                 const ClutterActorBox       *box);
 CLUTTER_EXPORT
 void                            clutter_actor_allocate_preferred_size           (ClutterActor                *self,
-                                                                                 ClutterAllocationFlags       flags);
+                                                                                 float                        x,
+                                                                                 float                        y);
 CLUTTER_EXPORT
 void                            clutter_actor_allocate_available_size           (ClutterActor                *self,
                                                                                  gfloat                       x,
                                                                                  gfloat                       y,
                                                                                  gfloat                       available_width,
-                                                                                 gfloat                       available_height,
-                                                                                 ClutterAllocationFlags       flags);
+                                                                                 gfloat                       available_height);
 CLUTTER_EXPORT
 void                            clutter_actor_allocate_align_fill               (ClutterActor                *self,
                                                                                  const ClutterActorBox       *box,
                                                                                  gdouble                      x_align,
                                                                                  gdouble                      y_align,
                                                                                  gboolean                     x_fill,
-                                                                                 gboolean                     y_fill,
-                                                                                 ClutterAllocationFlags       flags);
+                                                                                 gboolean                     y_fill);
 CLUTTER_EXPORT
 void                            clutter_actor_set_allocation                    (ClutterActor                *self,
-                                                                                 const ClutterActorBox       *box,
-                                                                                 ClutterAllocationFlags       flags);
+                                                                                 const ClutterActorBox       *box);
 CLUTTER_EXPORT
 void                            clutter_actor_get_allocation_box                (ClutterActor                *self,
                                                                                  ClutterActorBox             *box);
-CLUTTER_EXPORT
-void                            clutter_actor_get_allocation_vertices           (ClutterActor                *self,
-                                                                                 ClutterActor                *ancestor,
-                                                                                 graphene_point3d_t          *verts);
 CLUTTER_EXPORT
 gboolean                        clutter_actor_has_allocation                    (ClutterActor                *self);
 CLUTTER_EXPORT
@@ -460,6 +455,10 @@ CLUTTER_EXPORT
 void                            clutter_actor_set_position                      (ClutterActor                *self,
                                                                                  gfloat                       x,
                                                                                  gfloat                       y);
+CLUTTER_EXPORT
+gboolean clutter_actor_get_fixed_position (ClutterActor *self,
+                                           float        *x,
+                                           float        *y);
 CLUTTER_EXPORT
 void                            clutter_actor_get_position                      (ClutterActor                *self,
                                                                                  gfloat                      *x,
@@ -600,8 +599,7 @@ gboolean                        clutter_actor_get_paint_box                     
                                                                                  ClutterActorBox            *box);
 
 CLUTTER_EXPORT
-gboolean                        clutter_actor_get_resource_scale                (ClutterActor *self,
-                                                                                 gfloat       *resource_scale);
+float                           clutter_actor_get_resource_scale                (ClutterActor *self);
 
 CLUTTER_EXPORT
 gboolean                        clutter_actor_has_overlaps                      (ClutterActor               *self);
@@ -815,6 +813,11 @@ void                            clutter_actor_set_child_transform               
 CLUTTER_EXPORT
 void                            clutter_actor_get_child_transform               (ClutterActor               *self,
                                                                                  ClutterMatrix              *transform);
+
+CLUTTER_EXPORT
+void                            clutter_actor_get_transformed_extents          (ClutterActor               *self,
+                                                                                graphene_rect_t            *rect);
+
 CLUTTER_EXPORT
 void                            clutter_actor_get_transformed_position          (ClutterActor               *self,
                                                                                  gfloat                     *x,
@@ -925,6 +928,12 @@ CLUTTER_EXPORT
 void clutter_actor_pick_box (ClutterActor          *self,
                              ClutterPickContext    *pick_context,
                              const ClutterActorBox *box);
+
+CLUTTER_EXPORT
+GList * clutter_actor_peek_stage_views (ClutterActor *self);
+
+CLUTTER_EXPORT
+void clutter_actor_invalidate_transform (ClutterActor *self);
 
 G_END_DECLS
 

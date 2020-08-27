@@ -57,6 +57,7 @@ typedef struct _ClutterActorIter                ClutterActorIter;
 typedef struct _ClutterPaintNode                ClutterPaintNode;
 typedef struct _ClutterContent                  ClutterContent; /* dummy */
 typedef struct _ClutterScrollActor	        ClutterScrollActor;
+typedef struct _ClutterFrameClock               ClutterFrameClock;
 
 typedef struct _ClutterInterval         	ClutterInterval;
 typedef struct _ClutterAnimatable       	ClutterAnimatable; /* dummy */
@@ -78,10 +79,6 @@ typedef struct _ClutterColor                    ClutterColor;
 typedef struct _ClutterKnot                     ClutterKnot;
 typedef struct _ClutterMargin                   ClutterMargin;
 typedef struct _ClutterPerspective              ClutterPerspective;
-
-typedef struct _ClutterAlpha            	ClutterAlpha;
-typedef struct _ClutterAnimation                ClutterAnimation;
-typedef struct _ClutterState            	ClutterState;
 
 typedef struct _ClutterInputDeviceTool          ClutterInputDeviceTool;
 typedef struct _ClutterInputDevice              ClutterInputDevice;
@@ -178,6 +175,20 @@ struct _ClutterActorBox
  */
 #define CLUTTER_ACTOR_BOX_INIT_ZERO                     CLUTTER_ACTOR_BOX_INIT (0.f, 0.f, 0.f, 0.f)
 
+/**
+ * CLUTTER_ACTOR_BOX_UNINITIALIZED:
+ *
+ * A simple macro for creating a #ClutterActorBox with a size of -1 when
+ * declaring it, e.g.:
+ *
+ * |[
+ *   ClutterActorBox box = CLUTTER_ACTOR_BOX_UNINITIALIZED;
+ * ]|
+ */
+
+
+#define CLUTTER_ACTOR_BOX_UNINITIALIZED { .x1 = INFINITY, .y1 = INFINITY, .x2 = -INFINITY, .y2 = -INFINITY }
+
 CLUTTER_EXPORT
 GType            clutter_actor_box_get_type      (void) G_GNUC_CONST;
 CLUTTER_EXPORT
@@ -255,6 +266,9 @@ void             clutter_actor_box_set_size       (ClutterActorBox       *box,
 CLUTTER_EXPORT
 void             clutter_actor_box_scale          (ClutterActorBox       *box,
                                                    gfloat                 scale);
+
+CLUTTER_EXPORT
+gboolean         clutter_actor_box_is_initialized (ClutterActorBox       *box);
 
 /**
  * ClutterKnot:

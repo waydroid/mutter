@@ -87,7 +87,7 @@ sync_actor_subsurface_state (MetaWaylandSurface *surface)
   clutter_actor_set_position (actor, x, y);
   clutter_actor_set_reactive (actor, TRUE);
 
-  if (surface->buffer_ref.buffer)
+  if (surface->buffer_ref->buffer)
     clutter_actor_show (actor);
   else
     clutter_actor_hide (actor);
@@ -275,7 +275,8 @@ meta_wayland_subsurface_notify_subsurface_state_changed (MetaWaylandSurfaceRole 
     meta_wayland_surface_role_get_surface (surface_role);
   MetaWaylandSurface *parent = surface->sub.parent;
 
-  return meta_wayland_surface_notify_subsurface_state_changed (parent);
+  if (parent)
+    return meta_wayland_surface_notify_subsurface_state_changed (parent);
 }
 
 static double
@@ -361,9 +362,6 @@ static void
 wl_subsurface_destructor (struct wl_resource *resource)
 {
   MetaWaylandSurface *surface = wl_resource_get_user_data (resource);
-
-  meta_wayland_compositor_destroy_frame_callbacks (surface->compositor,
-                                                   surface);
 
   g_node_unlink (surface->subsurface_branch_node);
   unparent_actor (surface);

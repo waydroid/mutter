@@ -21,14 +21,56 @@
 
 #include "backends/meta-crtc.h"
 
-G_DEFINE_TYPE (MetaCrtc, meta_crtc, G_TYPE_OBJECT)
+#include "backends/meta-gpu.h"
 
-G_DEFINE_TYPE (MetaCrtcMode, meta_crtc_mode, G_TYPE_OBJECT)
+enum
+{
+  PROP_0,
+
+  PROP_ID,
+  PROP_GPU,
+  PROP_ALL_TRANSFORMS,
+
+  N_PROPS
+};
+
+static GParamSpec *obj_props[N_PROPS];
+
+typedef struct _MetaCrtcPrivate
+{
+  uint64_t id;
+
+  MetaGpu *gpu;
+
+  MetaMonitorTransform all_transforms;
+
+  MetaCrtcConfig *config;
+} MetaCrtcPrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (MetaCrtc, meta_crtc, G_TYPE_OBJECT)
+
+uint64_t
+meta_crtc_get_id (MetaCrtc *crtc)
+{
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  return priv->id;
+}
 
 MetaGpu *
 meta_crtc_get_gpu (MetaCrtc *crtc)
 {
-  return crtc->gpu;
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  return priv->gpu;
+}
+
+MetaMonitorTransform
+meta_crtc_get_all_transforms (MetaCrtc *crtc)
+{
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  return priv->all_transforms;
 }
 
 void
@@ -37,6 +79,7 @@ meta_crtc_set_config (MetaCrtc             *crtc,
                       MetaCrtcMode         *mode,
                       MetaMonitorTransform  transform)
 {
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
   MetaCrtcConfig *config;
 
   meta_crtc_unset_config (crtc);
@@ -46,24 +89,82 @@ meta_crtc_set_config (MetaCrtc             *crtc,
   config->mode = mode;
   config->transform = transform;
 
-  crtc->config = config;
+  priv->config = config;
 }
 
 void
 meta_crtc_unset_config (MetaCrtc *crtc)
 {
-  g_clear_pointer (&crtc->config, g_free);
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  g_clear_pointer (&priv->config, g_free);
+}
+
+const MetaCrtcConfig *
+meta_crtc_get_config (MetaCrtc *crtc)
+{
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  return priv->config;
+}
+
+static void
+meta_crtc_set_property (GObject      *object,
+                        guint         prop_id,
+                        const GValue *value,
+                        GParamSpec   *pspec)
+{
+  MetaCrtc *crtc = META_CRTC (object);
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  switch (prop_id)
+    {
+    case PROP_ID:
+      priv->id = g_value_get_uint64 (value);
+      break;
+    case PROP_GPU:
+      priv->gpu = g_value_get_object (value);
+      break;
+    case PROP_ALL_TRANSFORMS:
+      priv->all_transforms = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
+}
+
+static void
+meta_crtc_get_property (GObject    *object,
+                        guint       prop_id,
+                        GValue     *value,
+                        GParamSpec *pspec)
+{
+  MetaCrtc *crtc = META_CRTC (object);
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  switch (prop_id)
+    {
+    case PROP_ID:
+      g_value_set_uint64 (value, priv->id);
+      break;
+    case PROP_GPU:
+      g_value_set_object (value, priv->gpu);
+      break;
+    case PROP_ALL_TRANSFORMS:
+      g_value_set_uint (value, priv->all_transforms);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
 }
 
 static void
 meta_crtc_finalize (GObject *object)
 {
   MetaCrtc *crtc = META_CRTC (object);
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
 
-  if (crtc->driver_notify)
-    crtc->driver_notify (crtc);
-
-  g_clear_pointer (&crtc->config, g_free);
+  g_clear_pointer (&priv->config, g_free);
 
   G_OBJECT_CLASS (meta_crtc_parent_class)->finalize (object);
 }
@@ -71,6 +172,9 @@ meta_crtc_finalize (GObject *object)
 static void
 meta_crtc_init (MetaCrtc *crtc)
 {
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  priv->all_transforms = META_MONITOR_ALL_TRANSFORMS;
 }
 
 static void
@@ -78,31 +182,35 @@ meta_crtc_class_init (MetaCrtcClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->set_property = meta_crtc_set_property;
+  object_class->get_property = meta_crtc_get_property;
   object_class->finalize = meta_crtc_finalize;
-}
 
-static void
-meta_crtc_mode_finalize (GObject *object)
-{
-  MetaCrtcMode *crtc_mode = META_CRTC_MODE (object);
-
-  if (crtc_mode->driver_notify)
-    crtc_mode->driver_notify (crtc_mode);
-
-  g_clear_pointer (&crtc_mode->name, g_free);
-
-  G_OBJECT_CLASS (meta_crtc_mode_parent_class)->finalize (object);
-}
-
-static void
-meta_crtc_mode_init (MetaCrtcMode *crtc_mode)
-{
-}
-
-static void
-meta_crtc_mode_class_init (MetaCrtcModeClass *klass)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  object_class->finalize = meta_crtc_mode_finalize;
+  obj_props[PROP_ID] =
+    g_param_spec_uint64 ("id",
+                         "id",
+                         "CRTC id",
+                         0, UINT64_MAX, 0,
+                         G_PARAM_READWRITE |
+                         G_PARAM_CONSTRUCT_ONLY |
+                         G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_GPU] =
+    g_param_spec_object ("gpu",
+                         "gpu",
+                         "MetaGpu",
+                         META_TYPE_GPU,
+                         G_PARAM_READWRITE |
+                         G_PARAM_CONSTRUCT_ONLY |
+                         G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_ALL_TRANSFORMS] =
+    g_param_spec_uint ("all-transforms",
+                       "all-transforms",
+                       "All transforms",
+                       0,
+                       META_MONITOR_ALL_TRANSFORMS,
+                       META_MONITOR_ALL_TRANSFORMS,
+                       G_PARAM_READWRITE |
+                       G_PARAM_CONSTRUCT_ONLY |
+                       G_PARAM_STATIC_STRINGS);
+  g_object_class_install_properties (object_class, N_PROPS, obj_props);
 }

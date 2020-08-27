@@ -1,6 +1,6 @@
 project('mutter', 'c',
-  version: '3.36.5',
-  meson_version: '>= 0.50.0',
+  version: '3.37.91',
+  meson_version: '>= 0.51.0',
   license: 'GPLv2+'
 )
 
@@ -24,7 +24,7 @@ uprof_req = '>= 0.3'
 pango_req = '>= 1.2.0'
 cairo_req = '>= 1.10.0'
 pangocairo_req = '>= 1.20'
-gsettings_desktop_schemas_req = '>= 3.33.0'
+gsettings_desktop_schemas_req = '>= 3.37.2'
 json_glib_req = '>= 0.12.0'
 upower_glib_req = '>= 0.99.0'
 xcomposite_req = '>= 0.4'
@@ -42,7 +42,7 @@ udev_req = '>= 228'
 gudev_req = '>= 232'
 
 # wayland version requirements
-wayland_server_req = '>= 1.13.0'
+wayland_server_req = '>= 1.18'
 wayland_protocols_req = '>= 1.19'
 
 # native backend version requirements
@@ -53,7 +53,7 @@ gbm_req = '>= 10.3'
 libpipewire_req = '>= 0.3.0'
 
 # profiler requirements
-sysprof_req = '>= 3.35.2'
+sysprof_req = '>= 3.37.2'
 
 gnome = import('gnome')
 pkg = import('pkgconfig')
@@ -279,7 +279,20 @@ endif
 
 have_profiler = get_option('profiler')
 if have_profiler
-  sysprof_dep = dependency('sysprof-capture-3', version: sysprof_req)
+  # libsysprof-capture support
+  sysprof_dep = dependency('sysprof-capture-4',
+    required: true,
+    default_options: [
+      'enable_examples=false',
+      'enable_gtk=false',
+      'enable_tests=false',
+      'enable_tools=false',
+      'libsysprof=false',
+      'with_sysprofd=none',
+      'help=false',
+    ],
+    fallback: ['sysprof', 'libsysprof_capture_dep'],
+  )
 endif
 
 required_functions = [
@@ -408,6 +421,20 @@ if have_wayland
   endif
 endif
 
+optional_functions = [
+  'mkostemp',
+  'posix_fallocate',
+  'memfd_create',
+]
+
+foreach function : optional_functions
+  if cc.has_function(function)
+    cdata.set('HAVE_' + function.to_upper(), 1)
+  else
+    message('Optional function ' + function + ' missing')
+  endif
+endforeach
+
 xwayland_grab_default_access_rules = get_option('xwayland_grab_default_access_rules')
 cdata.set_quoted('XWAYLAND_GRAB_DEFAULT_ACCESS_RULES',
                  xwayland_grab_default_access_rules)
@@ -473,6 +500,7 @@ output = [
   '        Cogl tests............... ' + have_cogl_tests.to_string(),
   '        Clutter tests............ ' + have_clutter_tests.to_string(),
   '        Installed tests.......... ' + have_installed_tests.to_string(),
+  '        Coverage................. ' + get_option('b_coverage').to_string(),
   '',
   '  Now type \'ninja -C ' + meson.build_root() + '\' to build ' + meson.project_name(),
   '',

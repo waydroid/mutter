@@ -32,6 +32,7 @@
 #include "backends/native/meta-kms-connector.h"
 #include "backends/native/meta-kms-utils.h"
 #include "backends/native/meta-crtc-kms.h"
+#include "backends/native/meta-crtc-mode-kms.h"
 
 #include "meta-default-modes.h"
 
@@ -44,33 +45,37 @@ typedef struct _MetaOutputKms
   MetaKmsConnector *kms_connector;
 } MetaOutputKms;
 
-MetaKmsConnector *
-meta_output_kms_get_kms_connector (MetaOutput *output)
-{
-  MetaOutputKms *output_kms = output->driver_private;
+G_DEFINE_TYPE (MetaOutputKms, meta_output_kms, META_TYPE_OUTPUT)
 
+MetaKmsConnector *
+meta_output_kms_get_kms_connector (MetaOutputKms *output_kms)
+{
   return output_kms->kms_connector;
 }
 
 void
-meta_output_kms_set_underscan (MetaOutput    *output,
+meta_output_kms_set_underscan (MetaOutputKms *output_kms,
                                MetaKmsUpdate *kms_update)
 {
-  MetaOutputKms *output_kms = output->driver_private;
+  MetaOutput *output = META_OUTPUT (output_kms);
+  const MetaOutputInfo *output_info = meta_output_get_info (output);
 
-  if (!output->supports_underscanning)
+  if (!output_info->supports_underscanning)
     return;
 
-  if (output->is_underscanning)
+  if (meta_output_is_underscanning (output))
     {
       MetaCrtc *crtc;
-      MetaCrtcConfig *crtc_config;
+      const MetaCrtcConfig *crtc_config;
+      const MetaCrtcModeInfo *crtc_mode_info;
       uint64_t hborder, vborder;
 
       crtc = meta_output_get_assigned_crtc (output);
-      crtc_config = crtc->config;
-      hborder = MIN (128, (uint64_t) round (crtc_config->mode->width * 0.05));
-      vborder = MIN (128, (uint64_t) round (crtc_config->mode->height * 0.05));
+      crtc_config = meta_crtc_get_config (crtc);
+      crtc_mode_info = meta_crtc_mode_get_info (crtc_config->mode);
+
+      hborder = MIN (128, (uint64_t) round (crtc_mode_info->width * 0.05));
+      vborder = MIN (128, (uint64_t) round (crtc_mode_info->height * 0.05));
 
       g_debug ("Setting underscan of connector %s to %" G_GUINT64_FORMAT " x %" G_GUINT64_FORMAT,
                meta_kms_connector_get_name (output_kms->kms_connector),
@@ -92,20 +97,16 @@ meta_output_kms_set_underscan (MetaOutput    *output,
 }
 
 uint32_t
-meta_output_kms_get_connector_id (MetaOutput *output)
+meta_output_kms_get_connector_id (MetaOutputKms *output_kms)
 {
-  MetaOutputKms *output_kms = output->driver_private;
-
   return meta_kms_connector_get_id (output_kms->kms_connector);
 }
 
 void
-meta_output_kms_set_power_save_mode (MetaOutput    *output,
+meta_output_kms_set_power_save_mode (MetaOutputKms *output_kms,
                                      uint64_t       dpms_state,
                                      MetaKmsUpdate *kms_update)
 {
-  MetaOutputKms *output_kms = output->driver_private;
-
   g_debug ("Setting DPMS state of connector %s to %" G_GUINT64_FORMAT,
            meta_kms_connector_get_name (output_kms->kms_connector),
            dpms_state);
@@ -116,20 +117,16 @@ meta_output_kms_set_power_save_mode (MetaOutput    *output,
 }
 
 gboolean
-meta_output_kms_can_clone (MetaOutput *output,
-                           MetaOutput *other_output)
+meta_output_kms_can_clone (MetaOutputKms *output_kms,
+                           MetaOutputKms *other_output_kms)
 {
-  MetaOutputKms *output_kms = output->driver_private;
-  MetaOutputKms *other_output_kms = other_output->driver_private;
-
   return meta_kms_connector_can_clone (output_kms->kms_connector,
                                        other_output_kms->kms_connector);
 }
 
 GBytes *
-meta_output_kms_read_edid (MetaOutput *output)
+meta_output_kms_read_edid (MetaOutputKms *output_kms)
 {
-  MetaOutputKms *output_kms = output->driver_private;
   const MetaKmsConnectorState *connector_state;
   GBytes *edid_data;
 
@@ -143,18 +140,8 @@ meta_output_kms_read_edid (MetaOutput *output)
 }
 
 static void
-meta_output_destroy_notify (MetaOutput *output)
-{
-  MetaOutputKms *output_kms;
-
-  output_kms = output->driver_private;
-
-  g_slice_free (MetaOutputKms, output_kms);
-}
-
-static void
-add_common_modes (MetaOutput *output,
-                  MetaGpuKms *gpu_kms)
+add_common_modes (MetaOutputInfo *output_info,
+                  MetaGpuKms     *gpu_kms)
 {
   const drmModeModeInfo *drm_mode;
   MetaCrtcMode *crtc_mode;
@@ -165,9 +152,12 @@ add_common_modes (MetaOutput *output,
   unsigned max_vdisplay = 0;
   float max_refresh_rate = 0.0;
 
-  for (i = 0; i < output->n_modes; i++)
+  for (i = 0; i < output_info->n_modes; i++)
     {
-      drm_mode = output->modes[i]->driver_private;
+      MetaCrtcMode *crtc_mode = output_info->modes[i];
+      MetaCrtcModeKms *crtc_mode_kms = META_CRTC_MODE_KMS (crtc_mode);
+
+      drm_mode = meta_crtc_mode_kms_get_drm_mode (crtc_mode_kms);
       refresh_rate = meta_calculate_drm_mode_refresh_rate (drm_mode);
       max_hdisplay = MAX (max_hdisplay, drm_mode->hdisplay);
       max_vdisplay = MAX (max_vdisplay, drm_mode->vdisplay);
@@ -211,11 +201,11 @@ add_common_modes (MetaOutput *output,
         }
     }
 
-  output->modes = g_renew (MetaCrtcMode *, output->modes,
-                           output->n_modes + array->len);
-  memcpy (output->modes + output->n_modes, array->pdata,
+  output_info->modes = g_renew (MetaCrtcMode *, output_info->modes,
+                                output_info->n_modes + array->len);
+  memcpy (output_info->modes + output_info->n_modes, array->pdata,
           array->len * sizeof (MetaCrtcMode *));
-  output->n_modes += array->len;
+  output_info->n_modes += array->len;
 
   g_ptr_array_free (array, TRUE);
 }
@@ -224,135 +214,148 @@ static int
 compare_modes (const void *one,
                const void *two)
 {
-  MetaCrtcMode *a = *(MetaCrtcMode **) one;
-  MetaCrtcMode *b = *(MetaCrtcMode **) two;
+  MetaCrtcMode *crtc_mode_one = *(MetaCrtcMode **) one;
+  MetaCrtcMode *crtc_mode_two = *(MetaCrtcMode **) two;
+  const MetaCrtcModeInfo *crtc_mode_info_one =
+    meta_crtc_mode_get_info (crtc_mode_one);
+  const MetaCrtcModeInfo *crtc_mode_info_two =
+    meta_crtc_mode_get_info (crtc_mode_two);
 
-  if (a->width != b->width)
-    return a->width > b->width ? -1 : 1;
-  if (a->height != b->height)
-    return a->height > b->height ? -1 : 1;
-  if (a->refresh_rate != b->refresh_rate)
-    return a->refresh_rate > b->refresh_rate ? -1 : 1;
+  if (crtc_mode_info_one->width != crtc_mode_info_two->width)
+    return crtc_mode_info_one->width > crtc_mode_info_two->width ? -1 : 1;
+  if (crtc_mode_info_one->height != crtc_mode_info_two->height)
+    return crtc_mode_info_one->height > crtc_mode_info_two->height ? -1 : 1;
+  if (crtc_mode_info_one->refresh_rate != crtc_mode_info_two->refresh_rate)
+    return (crtc_mode_info_one->refresh_rate > crtc_mode_info_two->refresh_rate
+            ? -1 : 1);
 
-  return g_strcmp0 (b->name, a->name);
+  return g_strcmp0 (meta_crtc_mode_get_name (crtc_mode_one),
+                    meta_crtc_mode_get_name (crtc_mode_two));
 }
 
 static gboolean
-init_output_modes (MetaOutput  *output,
-                   MetaGpuKms  *gpu_kms,
-                   GError     **error)
+init_output_modes (MetaOutputInfo    *output_info,
+                   MetaGpuKms        *gpu_kms,
+                   MetaKmsConnector  *kms_connector,
+                   GError           **error)
 {
-  MetaOutputKms *output_kms = output->driver_private;
   const MetaKmsConnectorState *connector_state;
   int i;
 
-  connector_state =
-    meta_kms_connector_get_current_state (output_kms->kms_connector);
+  connector_state = meta_kms_connector_get_current_state (kms_connector);
 
-  output->preferred_mode = NULL;
+  output_info->preferred_mode = NULL;
 
-  output->n_modes = connector_state->n_modes;
-  output->modes = g_new0 (MetaCrtcMode *, output->n_modes);
+  output_info->n_modes = connector_state->n_modes;
+  output_info->modes = g_new0 (MetaCrtcMode *, output_info->n_modes);
   for (i = 0; i < connector_state->n_modes; i++)
     {
       drmModeModeInfo *drm_mode = &connector_state->modes[i];
       MetaCrtcMode *crtc_mode;
 
       crtc_mode = meta_gpu_kms_get_mode_from_drm_mode (gpu_kms, drm_mode);
-      output->modes[i] = crtc_mode;
+      output_info->modes[i] = crtc_mode;
       if (drm_mode->type & DRM_MODE_TYPE_PREFERRED)
-        output->preferred_mode = output->modes[i];
+        output_info->preferred_mode = output_info->modes[i];
     }
 
-  /* FIXME: MSC feature bit? */
   /* Presume that if the output supports scaling, then we have
    * a panel fitter capable of adjusting any mode to suit.
    */
   if (connector_state->has_scaling)
-    add_common_modes (output, gpu_kms);
+    add_common_modes (output_info, gpu_kms);
 
-  if (!output->modes)
+  if (!output_info->modes)
     {
       g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                    "No modes available");
       return FALSE;
     }
 
-  qsort (output->modes, output->n_modes,
+  qsort (output_info->modes, output_info->n_modes,
          sizeof (MetaCrtcMode *), compare_modes);
 
-  if (!output->preferred_mode)
-    output->preferred_mode = output->modes[0];
+  if (!output_info->preferred_mode)
+    output_info->preferred_mode = output_info->modes[0];
 
   return TRUE;
 }
 
-MetaOutput *
-meta_create_kms_output (MetaGpuKms        *gpu_kms,
-                        MetaKmsConnector  *kms_connector,
-                        MetaOutput        *old_output,
-                        GError           **error)
+MetaOutputKms *
+meta_output_kms_new (MetaGpuKms        *gpu_kms,
+                     MetaKmsConnector  *kms_connector,
+                     MetaOutput        *old_output,
+                     GError           **error)
 {
   MetaGpu *gpu = META_GPU (gpu_kms);
+  uint32_t connector_id;
+  uint32_t gpu_id;
+  g_autoptr (MetaOutputInfo) output_info = NULL;
   MetaOutput *output;
   MetaOutputKms *output_kms;
   const MetaKmsConnectorState *connector_state;
-  uint32_t connector_id;
   GArray *crtcs;
   GList *l;
-  uint32_t gpu_id;
-
-  output = g_object_new (META_TYPE_OUTPUT, NULL);
-
-  output_kms = g_slice_new0 (MetaOutputKms);
-  output->driver_private = output_kms;
-  output->driver_notify = (GDestroyNotify) meta_output_destroy_notify;
-
-  output->gpu = gpu;
-  output->name = g_strdup (meta_kms_connector_get_name (kms_connector));
 
   gpu_id = meta_gpu_kms_get_id (gpu_kms);
   connector_id = meta_kms_connector_get_id (kms_connector);
-  output->winsys_id = ((uint64_t) gpu_id << 32) | connector_id;
 
-  output_kms->kms_connector = kms_connector;
+  output_info = meta_output_info_new ();
+  output_info->name = g_strdup (meta_kms_connector_get_name (kms_connector));
 
   connector_state = meta_kms_connector_get_current_state (kms_connector);
 
-  output->panel_orientation_transform =
+  output_info->panel_orientation_transform =
     connector_state->panel_orientation_transform;
-  if (meta_monitor_transform_is_rotated (output->panel_orientation_transform))
+  if (meta_monitor_transform_is_rotated (output_info->panel_orientation_transform))
     {
-      output->width_mm = connector_state->height_mm;
-      output->height_mm = connector_state->width_mm;
+      output_info->width_mm = connector_state->height_mm;
+      output_info->height_mm = connector_state->width_mm;
     }
   else
     {
-      output->width_mm = connector_state->width_mm;
-      output->height_mm = connector_state->height_mm;
+      output_info->width_mm = connector_state->width_mm;
+      output_info->height_mm = connector_state->height_mm;
     }
 
-  if (!init_output_modes (output, gpu_kms, error))
-    {
-      g_object_unref (output);
-      return NULL;
-    }
+  if (!init_output_modes (output_info, gpu_kms, kms_connector, error))
+    return NULL;
 
   crtcs = g_array_new (FALSE, FALSE, sizeof (MetaCrtc *));
 
   for (l = meta_gpu_get_crtcs (gpu); l; l = l->next)
     {
-      MetaCrtc *crtc = l->data;
-      MetaKmsCrtc *kms_crtc = meta_crtc_kms_get_kms_crtc (crtc);
+      MetaCrtcKms *crtc_kms = META_CRTC_KMS (l->data);
+      MetaKmsCrtc *kms_crtc = meta_crtc_kms_get_kms_crtc (crtc_kms);
       uint32_t crtc_idx;
 
       crtc_idx = meta_kms_crtc_get_idx (kms_crtc);
       if (connector_state->common_possible_crtcs & (1 << crtc_idx))
-        g_array_append_val (crtcs, crtc);
+        g_array_append_val (crtcs, crtc_kms);
     }
 
-  output->n_possible_crtcs = crtcs->len;
-  output->possible_crtcs = (MetaCrtc **) g_array_free (crtcs, FALSE);
+  output_info->n_possible_crtcs = crtcs->len;
+  output_info->possible_crtcs = (MetaCrtc **) g_array_free (crtcs, FALSE);
+
+  output_info->suggested_x = connector_state->suggested_x;
+  output_info->suggested_y = connector_state->suggested_y;
+  output_info->hotplug_mode_update = connector_state->hotplug_mode_update;
+  output_info->supports_underscanning =
+    meta_kms_connector_is_underscanning_supported (kms_connector);
+
+  meta_output_info_parse_edid (output_info, connector_state->edid_data);
+
+  output_info->connector_type = meta_kms_connector_get_connector_type (kms_connector);
+
+  output_info->tile_info = connector_state->tile_info;
+
+  output = g_object_new (META_TYPE_OUTPUT_KMS,
+                         "id", ((uint64_t) gpu_id << 32) | connector_id,
+                         "gpu", gpu,
+                         "info", output_info,
+                         NULL);
+  output_kms = META_OUTPUT_KMS (output);
+  output_kms->kms_connector = kms_connector;
 
   if (connector_state->current_crtc_id)
     {
@@ -360,9 +363,25 @@ meta_create_kms_output (MetaGpuKms        *gpu_kms,
         {
           MetaCrtc *crtc = l->data;
 
-          if (crtc->crtc_id == connector_state->current_crtc_id)
+          if (meta_crtc_get_id (crtc) == connector_state->current_crtc_id)
             {
-              meta_output_assign_crtc (output, crtc);
+              MetaOutputAssignment output_assignment;
+
+              if (old_output)
+                {
+                  output_assignment = (MetaOutputAssignment) {
+                    .is_primary = meta_output_is_primary (old_output),
+                    .is_presentation = meta_output_is_presentation (old_output),
+                  };
+                }
+              else
+                {
+                  output_assignment = (MetaOutputAssignment) {
+                    .is_primary = FALSE,
+                    .is_presentation = FALSE,
+                  };
+                }
+              meta_output_assign_crtc (output, crtc, &output_assignment);
               break;
             }
         }
@@ -372,41 +391,15 @@ meta_create_kms_output (MetaGpuKms        *gpu_kms,
       meta_output_unassign_crtc (output);
     }
 
-  if (old_output)
-    {
-      output->is_primary = old_output->is_primary;
-      output->is_presentation = old_output->is_presentation;
-    }
-  else
-    {
-      output->is_primary = FALSE;
-      output->is_presentation = FALSE;
-    }
+  return output_kms;
+}
 
-  output->suggested_x = connector_state->suggested_x;
-  output->suggested_y = connector_state->suggested_y;
-  output->hotplug_mode_update = connector_state->hotplug_mode_update;
-  output->supports_underscanning =
-    meta_kms_connector_is_underscanning_supported (kms_connector);
+static void
+meta_output_kms_init (MetaOutputKms *output_kms)
+{
+}
 
-  meta_output_parse_edid (output, connector_state->edid_data);
-
-  output->connector_type = meta_kms_connector_get_connector_type (kms_connector);
-
-  output->tile_info = connector_state->tile_info;
-
-  /* FIXME: backlight is a very driver specific thing unfortunately,
-     every DDX does its own thing, and the dumb KMS API does not include it.
-
-     For example, xf86-video-intel has a list of paths to probe in /sys/class/backlight
-     (one for each major HW maker, and then some).
-     We can't do the same because we're not root.
-     It might be best to leave backlight out of the story and rely on the setuid
-     helper in gnome-settings-daemon.
-     */
-  output->backlight_min = 0;
-  output->backlight_max = 0;
-  output->backlight = -1;
-
-  return output;
+static void
+meta_output_kms_class_init (MetaOutputKmsClass *klass)
+{
 }

@@ -31,21 +31,21 @@ static ClutterActor *
 create_source (void)
 {
   int x, y;
-  ClutterActor *group = clutter_group_new ();
+  ClutterActor *group = clutter_actor_new ();
 
   /* Create a group with a different coloured rectangle at each
      corner */
   for (y = 0; y < SOURCE_DIVISIONS_Y; y++)
     for (x = 0; x < SOURCE_DIVISIONS_X; x++)
       {
-        ClutterActor *rect = clutter_rectangle_new ();
+        ClutterActor *rect = clutter_actor_new ();
+        clutter_actor_set_background_color (rect,
+                                            corner_colors +
+                                            (y * SOURCE_DIVISIONS_X + x));
         clutter_actor_set_size (rect, DIVISION_WIDTH, DIVISION_HEIGHT);
         clutter_actor_set_position (rect,
                                     DIVISION_WIDTH * x,
                                     DIVISION_HEIGHT * y);
-        clutter_rectangle_set_color (CLUTTER_RECTANGLE (rect),
-                                     corner_colors +
-                                     (y * SOURCE_DIVISIONS_X + x));
         clutter_container_add (CLUTTER_CONTAINER (group), rect, NULL);
       }
 
@@ -116,24 +116,24 @@ validate_result (TestState *state)
 {
   int ypos = 0;
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("Testing onscreen clone...\n");
   validate_part (state, SOURCE_SIZE, ypos * SOURCE_SIZE, 0);
   ypos++;
 
 #if 0 /* this doesn't work */
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("Testing offscreen clone...\n");
   validate_part (state, SOURCE_SIZE, ypos * SOURCE_SIZE, 0);
 #endif
   ypos++;
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("Testing onscreen clone with rectangular clip...\n");
   validate_part (state, SOURCE_SIZE, ypos * SOURCE_SIZE, ~1);
   ypos++;
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("Testing onscreen clone with path clip...\n");
   validate_part (state, SOURCE_SIZE, ypos * SOURCE_SIZE, 1);
   ypos++;
@@ -167,9 +167,9 @@ texture_fbo (TestConformSimpleFixture *fixture,
 
   state.frame = 0;
 
-  state.stage = clutter_stage_new ();
+  state.stage = clutter_test_get_stage ();
 
-  clutter_stage_set_color (CLUTTER_STAGE (state.stage), &stage_color);
+  clutter_actor_set_background_color (CLUTTER_ACTOR (state.stage), &stage_color);
 
   /* Onscreen source with clone next to it */
   actor = create_source ();

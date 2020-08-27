@@ -477,10 +477,6 @@ clutter_pipeline_node_draw (ClutterPaintNode    *node,
                                                          op->multitex_coords->len);
           break;
 
-        case PAINT_OP_PATH:
-          cogl_framebuffer_fill_path (fb, pnode->pipeline, op->op.path);
-          break;
-
         case PAINT_OP_PRIMITIVE:
           cogl_framebuffer_draw_primitive (fb,
                                            pnode->pipeline,
@@ -876,7 +872,6 @@ clutter_text_node_draw (ClutterPaintNode    *node,
           break;
 
         case PAINT_OP_MULTITEX_RECT:
-        case PAINT_OP_PATH:
         case PAINT_OP_PRIMITIVE:
         case PAINT_OP_INVALID:
           break;
@@ -1037,11 +1032,6 @@ clutter_clip_node_pre_draw (ClutterPaintNode    *node,
           retval = TRUE;
           break;
 
-        case PAINT_OP_PATH:
-          cogl_framebuffer_push_path_clip (fb, op->op.path);
-          retval = TRUE;
-          break;
-
         case PAINT_OP_MULTITEX_RECT:
         case PAINT_OP_PRIMITIVE:
         case PAINT_OP_INVALID:
@@ -1072,7 +1062,6 @@ clutter_clip_node_post_draw (ClutterPaintNode    *node,
 
       switch (op->opcode)
         {
-        case PAINT_OP_PATH:
         case PAINT_OP_TEX_RECT:
           cogl_framebuffer_pop_clip (fb);
           break;
@@ -1242,9 +1231,8 @@ struct _ClutterLayerNode
   float fbo_width;
   float fbo_height;
 
-  CoglPipeline *state;
+  CoglPipeline *pipeline;
   CoglFramebuffer *offscreen;
-  CoglTexture *texture;
 
   guint8 opacity;
 };
@@ -1334,7 +1322,7 @@ clutter_layer_node_post_draw (ClutterPaintNode    *node,
         case PAINT_OP_TEX_RECT:
           /* now we need to paint the texture */
           cogl_framebuffer_draw_textured_rectangle (fb,
-                                                    lnode->state,
+                                                    lnode->pipeline,
                                                     op->op.texrect[0],
                                                     op->op.texrect[1],
                                                     op->op.texrect[2],
@@ -1347,7 +1335,7 @@ clutter_layer_node_post_draw (ClutterPaintNode    *node,
 
         case PAINT_OP_MULTITEX_RECT:
           cogl_framebuffer_draw_multitextured_rectangle (fb,
-                                                         lnode->state,
+                                                         lnode->pipeline,
                                                          op->op.texrect[0],
                                                          op->op.texrect[1],
                                                          op->op.texrect[2],
@@ -1356,12 +1344,10 @@ clutter_layer_node_post_draw (ClutterPaintNode    *node,
                                                          op->multitex_coords->len);
           break;
 
-        case PAINT_OP_PATH:
-          cogl_framebuffer_fill_path (fb, lnode->state, op->op.path);
-          break;
-
         case PAINT_OP_PRIMITIVE:
-          cogl_framebuffer_draw_primitive (fb, lnode->state, op->op.primitive);
+          cogl_framebuffer_draw_primitive (fb,
+                                           lnode->pipeline,
+                                           op->op.primitive);
           break;
         }
     }
@@ -1372,8 +1358,8 @@ clutter_layer_node_finalize (ClutterPaintNode *node)
 {
   ClutterLayerNode *lnode = CLUTTER_LAYER_NODE (node);
 
-  if (lnode->state != NULL)
-    cogl_object_unref (lnode->state);
+  if (lnode->pipeline != NULL)
+    cogl_object_unref (lnode->pipeline);
 
   if (lnode->offscreen != NULL)
     cogl_object_unref (lnode->offscreen);
@@ -1425,6 +1411,9 @@ clutter_layer_node_new (const CoglMatrix        *projection,
                         guint8                   opacity)
 {
   ClutterLayerNode *res;
+  CoglContext *context;
+  CoglTexture2D *tex_2d;
+  CoglTexture *texture;
   CoglColor color;
 
   res = _clutter_paint_node_create (CLUTTER_TYPE_LAYER_NODE);
@@ -1436,19 +1425,18 @@ clutter_layer_node_new (const CoglMatrix        *projection,
   res->opacity = opacity;
 
   /* the texture backing the FBO */
-  res->texture = cogl_texture_new_with_size (MAX (res->fbo_width, 1),
-                                             MAX (res->fbo_height, 1),
-                                             COGL_TEXTURE_NO_SLICING,
-                                             COGL_PIXEL_FORMAT_RGBA_8888_PRE);
+  context = clutter_backend_get_cogl_context (clutter_get_default_backend ());
 
-  res->offscreen = COGL_FRAMEBUFFER (cogl_offscreen_new_to_texture (res->texture));
+  tex_2d = cogl_texture_2d_new_with_size (context,
+                                          MAX (res->fbo_width, 1),
+                                          MAX (res->fbo_height, 1));
+  texture = COGL_TEXTURE (tex_2d);
+  cogl_texture_set_premultiplied (texture, TRUE);
+
+  res->offscreen = COGL_FRAMEBUFFER (cogl_offscreen_new_to_texture (texture));
   if (res->offscreen == NULL)
     {
       g_critical ("%s: Unable to create an offscreen buffer", G_STRLOC);
-
-      cogl_object_unref (res->texture);
-      res->texture = NULL;
-
       goto out;
     }
 
@@ -1458,14 +1446,15 @@ clutter_layer_node_new (const CoglMatrix        *projection,
    * interpolation filters because the texture is always
    * going to be painted at a 1:1 texel:pixel ratio
    */
-  res->state = cogl_pipeline_copy (default_texture_pipeline);
-  cogl_pipeline_set_layer_filters (res->state, 0,
+  res->pipeline = cogl_pipeline_copy (default_texture_pipeline);
+  cogl_pipeline_set_layer_filters (res->pipeline, 0,
                                    COGL_PIPELINE_FILTER_NEAREST,
                                    COGL_PIPELINE_FILTER_NEAREST);
-  cogl_pipeline_set_layer_texture (res->state, 0, res->texture);
-  cogl_pipeline_set_color (res->state, &color);
-  cogl_object_unref (res->texture);
+  cogl_pipeline_set_layer_texture (res->pipeline, 0, texture);
+  cogl_pipeline_set_color (res->pipeline, &color);
 
 out:
+  cogl_object_unref (texture);
+
   return (ClutterPaintNode *) res;
 }

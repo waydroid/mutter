@@ -67,13 +67,6 @@ typedef enum
 
 typedef enum
 {
-  _NET_WM_BYPASS_COMPOSITOR_HINT_AUTO = 0,
-  _NET_WM_BYPASS_COMPOSITOR_HINT_ON = 1,
-  _NET_WM_BYPASS_COMPOSITOR_HINT_OFF = 2,
-} MetaBypassCompositorHintValue;
-
-typedef enum
-{
   META_MOVE_RESIZE_CONFIGURE_REQUEST = 1 << 0,
   META_MOVE_RESIZE_USER_ACTION = 1 << 1,
   META_MOVE_RESIZE_MOVE_ACTION = 1 << 2,
@@ -207,8 +200,6 @@ struct _MetaWindow
   char *gtk_window_object_path;
   char *gtk_app_menu_object_path;
   char *gtk_menubar_object_path;
-
-  int net_wm_pid;
 
   Window xtransient_for;
   Window xgroup_leader;
@@ -371,6 +362,7 @@ struct _MetaWindow
   /* Computed whether to skip taskbar or not */
   guint skip_taskbar : 1;
   guint skip_pager : 1;
+  guint skip_from_window_list : 1;
 
   /* TRUE if client set these */
   guint wm_state_above : 1;
@@ -539,9 +531,6 @@ struct _MetaWindow
   /* The currently complementary tiled window, if any */
   MetaWindow *tile_match;
 
-  /* Bypass compositor hints */
-  guint bypass_compositor;
-
   struct {
     MetaPlacementRule *rule;
     MetaPlacementState state;
@@ -560,6 +549,8 @@ struct _MetaWindow
   } placement;
 
   guint unmanage_idle_id;
+
+  pid_t client_pid;
 };
 
 struct _MetaWindowClass
@@ -596,7 +587,7 @@ struct _MetaWindowClass
   gboolean (*update_icon)        (MetaWindow       *window,
                                   cairo_surface_t **icon,
                                   cairo_surface_t **mini_icon);
-  uint32_t (*get_client_pid)     (MetaWindow *window);
+  pid_t (*get_client_pid)        (MetaWindow *window);
   void (*update_main_monitor)    (MetaWindow                   *window,
                                   MetaWindowUpdateMonitorFlags  flags);
   void (*main_monitor_changed)   (MetaWindow *window,
@@ -656,6 +647,9 @@ void        meta_window_unmanage           (MetaWindow  *window,
 void        meta_window_unmanage_on_idle   (MetaWindow *window);
 void        meta_window_queue              (MetaWindow  *window,
                                             guint queuebits);
+META_EXPORT_TEST
+void        meta_window_untile             (MetaWindow        *window);
+
 META_EXPORT_TEST
 void        meta_window_tile               (MetaWindow        *window,
                                             MetaTileMode       mode);
@@ -828,8 +822,6 @@ gboolean meta_window_handle_ui_frame_event (MetaWindow         *window,
 void meta_window_handle_ungrabbed_event (MetaWindow         *window,
                                          const ClutterEvent *event);
 
-uint32_t meta_window_get_client_pid (MetaWindow *window);
-
 void meta_window_get_client_area_rect (const MetaWindow      *window,
                                        cairo_rectangle_int_t *rect);
 void meta_window_get_titlebar_rect (MetaWindow    *window,
@@ -840,6 +832,7 @@ void meta_window_activate_full (MetaWindow     *window,
                                 MetaClientType  source_indication,
                                 MetaWorkspace  *workspace);
 
+META_EXPORT_TEST
 MetaLogicalMonitor * meta_window_calculate_main_logical_monitor (MetaWindow *window);
 
 MetaLogicalMonitor * meta_window_get_main_logical_monitor (MetaWindow *window);

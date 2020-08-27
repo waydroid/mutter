@@ -296,7 +296,7 @@ meta_window_real_update_icon (MetaWindow       *window,
   return FALSE;
 }
 
-static uint32_t
+static pid_t
 meta_window_real_get_client_pid (MetaWindow *window)
 {
   return 0;
@@ -730,7 +730,8 @@ is_desktop_or_dock_foreach (MetaWindow *window,
 
   *result =
     window->type == META_WINDOW_DESKTOP ||
-    window->type == META_WINDOW_DOCK;
+    window->type == META_WINDOW_DOCK ||
+    window->skip_from_window_list;
   if (*result)
     return FALSE; /* stop as soon as we find one */
   else
@@ -898,13 +899,13 @@ meta_window_update_snap_id (MetaWindow *window,
 static void
 meta_window_update_sandboxed_app_id (MetaWindow *window)
 {
-  uint32_t pid;
+  pid_t pid;
 
   g_clear_pointer (&window->sandboxed_app_id, g_free);
 
-  pid = meta_window_get_client_pid (window);
+  pid = meta_window_get_pid (window);
 
-  if (pid == 0)
+  if (pid < 1)
     return;
 
   if (meta_window_update_flatpak_id (window, pid))
@@ -1137,6 +1138,7 @@ _meta_window_shared_new (MetaDisplay         *display,
 
   window->skip_taskbar = FALSE;
   window->skip_pager = FALSE;
+  window->skip_from_window_list = FALSE;
   window->wm_state_above = FALSE;
   window->wm_state_below = FALSE;
   window->wm_state_demands_attention = FALSE;
@@ -1149,7 +1151,7 @@ _meta_window_shared_new (MetaDisplay         *display,
   window->is_remote = FALSE;
   window->startup_id = NULL;
 
-  window->net_wm_pid = -1;
+  window->client_pid = 0;
 
   window->xtransient_for = None;
   window->xclient_leader = None;
@@ -2833,7 +2835,7 @@ meta_window_maximize_internal (MetaWindow        *window,
     window->maximized_vertically   || maximize_vertically;
 
   /* Update the edge constraints */
-  update_edge_constraints (window);;
+  update_edge_constraints (window);
 
   meta_window_recalc_features (window);
   set_net_wm_state (window);
@@ -3018,30 +3020,6 @@ meta_window_is_on_primary_monitor (MetaWindow *window)
   return window->monitor->is_primary;
 }
 
-/**
- * meta_window_requested_bypass_compositor:
- * @window: a #MetaWindow
- *
- * Return value: %TRUE if the window requested to bypass the compositor
- */
-gboolean
-meta_window_requested_bypass_compositor (MetaWindow *window)
-{
-  return window->bypass_compositor == _NET_WM_BYPASS_COMPOSITOR_HINT_ON;
-}
-
-/**
- * meta_window_requested_dont_bypass_compositor:
- * @window: a #MetaWindow
- *
- * Return value: %TRUE if the window requested to opt out of unredirecting
- */
-gboolean
-meta_window_requested_dont_bypass_compositor (MetaWindow *window)
-{
-  return window->bypass_compositor == _NET_WM_BYPASS_COMPOSITOR_HINT_OFF;
-}
-
 static void
 meta_window_get_tile_fraction (MetaWindow   *window,
                                MetaTileMode  tile_mode,
@@ -3149,6 +3127,22 @@ update_edge_constraints (MetaWindow *window)
 }
 
 void
+meta_window_untile (MetaWindow *window)
+{
+  window->tile_monitor_number =
+    window->saved_maximize ? window->monitor->number
+                           : -1;
+  window->tile_mode =
+    window->saved_maximize ? META_TILE_MAXIMIZED
+                           : META_TILE_NONE;
+
+  if (window->saved_maximize)
+    meta_window_maximize (window, META_MAXIMIZE_BOTH);
+  else
+    meta_window_unmaximize (window, META_MAXIMIZE_BOTH);
+}
+
+void
 meta_window_tile (MetaWindow   *window,
                   MetaTileMode  tile_mode)
 {
@@ -3163,6 +3157,10 @@ meta_window_tile (MetaWindow   *window,
     {
       window->tile_monitor_number = -1;
       return;
+    }
+  else
+    {
+      window->tile_monitor_number = window->monitor->number;
     }
 
   if (window->tile_mode == META_TILE_MAXIMIZED)
@@ -5613,15 +5611,15 @@ meta_window_recalc_skip_features (MetaWindow *window)
       if (window->transient_for != NULL)
         window->skip_taskbar = TRUE;
       else
-        window->skip_taskbar = FALSE;
+        window->skip_taskbar = window->skip_from_window_list;
       break;
 
     case META_WINDOW_NORMAL:
       {
         gboolean skip_taskbar_hint, skip_pager_hint;
         meta_window_get_default_skip_hints (window, &skip_taskbar_hint, &skip_pager_hint);
-        window->skip_taskbar = skip_taskbar_hint;
-        window->skip_pager = skip_pager_hint;
+        window->skip_taskbar = skip_taskbar_hint | window->skip_from_window_list;
+        window->skip_pager = skip_pager_hint | window->skip_from_window_list;
       }
       break;
     }
@@ -7588,35 +7586,26 @@ meta_window_get_transient_for (MetaWindow *window)
 }
 
 /**
- * meta_window_get_client_pid:
+ * meta_window_get_pid:
  * @window: a #MetaWindow
  *
  * Returns the pid of the process that created this window, if available
  * to the windowing system.
  *
+ * Note that the value returned by this is vulnerable to spoofing attacks
+ * by the client.
+ *
  * Return value: the pid, or 0 if not known.
  */
-uint32_t
-meta_window_get_client_pid (MetaWindow *window)
-{
-  return META_WINDOW_GET_CLASS (window)->get_client_pid (window);
-}
-
-/**
- * meta_window_get_pid:
- * @window: a #MetaWindow
- *
- * Returns pid of the process that created this window, if known (obtained from
- * the _NET_WM_PID property).
- *
- * Return value: the pid, or -1 if not known.
- */
-int
+pid_t
 meta_window_get_pid (MetaWindow *window)
 {
-  g_return_val_if_fail (META_IS_WINDOW (window), -1);
+  g_return_val_if_fail (META_IS_WINDOW (window), 0);
 
-  return window->net_wm_pid;
+  if (window->client_pid == 0)
+    window->client_pid = META_WINDOW_GET_CLASS (window)->get_client_pid (window);
+
+  return window->client_pid;
 }
 
 /**
@@ -8148,7 +8137,7 @@ window_has_pointer_wayland (MetaWindow *window)
 
   seat = clutter_backend_get_default_seat (clutter_get_default_backend ());
   dev = clutter_seat_get_pointer (seat);
-  pointer_actor = clutter_input_device_get_pointer_actor (dev);
+  pointer_actor = clutter_input_device_get_actor (dev, NULL);
   window_actor = CLUTTER_ACTOR (meta_window_get_compositor_private (window));
 
   return pointer_actor && clutter_actor_contains (window_actor, pointer_actor);

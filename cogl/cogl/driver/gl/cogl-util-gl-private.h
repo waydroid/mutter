@@ -76,6 +76,18 @@ _cogl_gl_error_to_string (GLenum error_code);
 
 #endif /* COGL_GL_DEBUG */
 
+typedef struct _CoglGLContext {
+  GArray           *texture_units;
+  int               active_texture_unit;
+
+  /* This is used for generated fake unique sampler object numbers
+   when the sampler object extension is not supported */
+  GLuint next_fake_sampler_object_number;
+} CoglGLContext;
+
+CoglGLContext *
+_cogl_driver_gl_context (CoglContext *context);
+
 gboolean
 _cogl_driver_gl_context_init (CoglContext *context);
 
@@ -91,6 +103,23 @@ _cogl_gl_util_clear_gl_errors (CoglContext *ctx);
 gboolean
 _cogl_gl_util_catch_out_of_memory (CoglContext *ctx, GError **error);
 
+gboolean
+_cogl_driver_gl_is_hardware_accelerated (CoglContext *context);
+
+/*
+ * _cogl_context_get_gl_extensions:
+ * @context: A CoglContext
+ *
+ * Return value: a NULL-terminated array of strings representing the
+ *   supported extensions by the current driver. This array is owned
+ *   by the caller and should be freed with g_strfreev().
+ */
+char **
+_cogl_context_get_gl_extensions (CoglContext *context);
+
+const char *
+_cogl_context_get_gl_version (CoglContext *context);
+
 /* Parses a GL version number stored in a string. @version_string must
  * point to the beginning of the version number (ie, it can't point to
  * the "OpenGL ES" part on GLES). The version number can be followed
@@ -101,5 +130,8 @@ gboolean
 _cogl_gl_util_parse_gl_version (const char *version_string,
                                 int *major_out,
                                 int *minor_out);
+
+CoglGraphicsResetStatus
+_cogl_gl_get_graphics_reset_status (CoglContext *context);
 
 #endif /* _COGL_UTIL_GL_PRIVATE_H_ */

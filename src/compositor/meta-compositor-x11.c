@@ -39,6 +39,8 @@ struct _MetaCompositorX11
 
   Window output;
 
+  gulong before_update_handler_id;
+
   gboolean frame_has_updated_xsurfaces;
   gboolean have_x11_sync_object;
 
@@ -100,14 +102,38 @@ meta_compositor_x11_process_xevent (MetaCompositorX11 *compositor_x11,
     meta_x11_handle_event (xevent);
 }
 
-static void
-meta_compositor_x11_manage (MetaCompositor *compositor)
+static gboolean
+meta_compositor_x11_manage (MetaCompositor  *compositor,
+                            GError         **error)
 {
   MetaCompositorX11 *compositor_x11 = META_COMPOSITOR_X11 (compositor);
   MetaDisplay *display = meta_compositor_get_display (compositor);
-  Display *xdisplay = meta_x11_display_get_xdisplay (display->x11_display);
+  MetaX11Display *x11_display = display->x11_display;
+  Display *xdisplay = meta_x11_display_get_xdisplay (x11_display);
+  int composite_version;
   MetaBackend *backend = meta_get_backend ();
   Window xwindow;
+
+  if (!META_X11_DISPLAY_HAS_COMPOSITE (x11_display) ||
+      !META_X11_DISPLAY_HAS_DAMAGE (x11_display))
+    {
+      g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                   "Missing required extension %s",
+                   !META_X11_DISPLAY_HAS_COMPOSITE (x11_display) ?
+                   "composite" : "damage");
+      return FALSE;
+    }
+
+  composite_version = ((x11_display->composite_major_version * 10) +
+                       x11_display->composite_minor_version);
+  if (composite_version < 3)
+    {
+      g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                   "COMPOSITE extension 3.0 required (found %d.%d)",
+                   x11_display->composite_major_version,
+                   x11_display->composite_minor_version);
+      return FALSE;
+    }
 
   meta_x11_display_set_cm_selection (display->x11_display);
 
@@ -139,6 +165,8 @@ meta_compositor_x11_manage (MetaCompositor *compositor)
   compositor_x11->have_x11_sync_object = meta_sync_ring_init (xdisplay);
 
   meta_compositor_redirect_x11_windows (META_COMPOSITOR (compositor));
+
+  return TRUE;
 }
 
 static void
@@ -265,15 +293,11 @@ out:
 }
 
 static void
-meta_compositor_x11_pre_paint (MetaCompositor *compositor)
+on_before_update (ClutterStage     *stage,
+                  ClutterStageView *stage_view,
+                  MetaCompositor   *compositor)
 {
   MetaCompositorX11 *compositor_x11 = META_COMPOSITOR_X11 (compositor);
-  MetaCompositorClass *parent_class;
-
-  maybe_unredirect_top_window (compositor_x11);
-
-  parent_class = META_COMPOSITOR_CLASS (meta_compositor_x11_parent_class);
-  parent_class->pre_paint (compositor);
 
   if (compositor_x11->frame_has_updated_xsurfaces)
     {
@@ -307,7 +331,21 @@ meta_compositor_x11_pre_paint (MetaCompositor *compositor)
 }
 
 static void
-meta_compositor_x11_post_paint (MetaCompositor *compositor)
+meta_compositor_x11_before_paint (MetaCompositor   *compositor,
+                                  ClutterStageView *stage_view)
+{
+  MetaCompositorX11 *compositor_x11 = META_COMPOSITOR_X11 (compositor);
+  MetaCompositorClass *parent_class;
+
+  maybe_unredirect_top_window (compositor_x11);
+
+  parent_class = META_COMPOSITOR_CLASS (meta_compositor_x11_parent_class);
+  parent_class->before_paint (compositor, stage_view);
+}
+
+static void
+meta_compositor_x11_after_paint (MetaCompositor   *compositor,
+                                 ClutterStageView *stage_view)
 {
   MetaCompositorX11 *compositor_x11 = META_COMPOSITOR_X11 (compositor);
   MetaCompositorClass *parent_class;
@@ -321,7 +359,7 @@ meta_compositor_x11_post_paint (MetaCompositor *compositor)
     }
 
   parent_class = META_COMPOSITOR_CLASS (meta_compositor_x11_parent_class);
-  parent_class->post_paint (compositor);
+  parent_class->after_paint (compositor, stage_view);
 }
 
 static void
@@ -345,23 +383,43 @@ meta_compositor_x11_get_output_xwindow (MetaCompositorX11 *compositor_x11)
 }
 
 MetaCompositorX11 *
-meta_compositor_x11_new (MetaDisplay *display)
+meta_compositor_x11_new (MetaDisplay *display,
+                         MetaBackend *backend)
 {
   return g_object_new (META_TYPE_COMPOSITOR_X11,
                        "display", display,
+                       "backend", backend,
                        NULL);
+}
+
+static void
+meta_compositor_x11_constructed (GObject *object)
+{
+  MetaCompositorX11 *compositor_x11 = META_COMPOSITOR_X11 (object);
+  MetaCompositor *compositor = META_COMPOSITOR (compositor_x11);
+  ClutterStage *stage = meta_compositor_get_stage (compositor);
+
+  compositor_x11->before_update_handler_id =
+    g_signal_connect (stage, "before-update",
+                      G_CALLBACK (on_before_update), compositor);
+
+  G_OBJECT_CLASS (meta_compositor_x11_parent_class)->constructed (object);
 }
 
 static void
 meta_compositor_x11_dispose (GObject *object)
 {
   MetaCompositorX11 *compositor_x11 = META_COMPOSITOR_X11 (object);
+  MetaCompositor *compositor = META_COMPOSITOR (compositor_x11);
+  ClutterStage *stage = meta_compositor_get_stage (compositor);
 
   if (compositor_x11->have_x11_sync_object)
     {
       meta_sync_ring_destroy ();
       compositor_x11->have_x11_sync_object = FALSE;
     }
+
+  g_clear_signal_handler (&compositor_x11->before_update_handler_id, stage);
 
   G_OBJECT_CLASS (meta_compositor_x11_parent_class)->dispose (object);
 }
@@ -377,11 +435,12 @@ meta_compositor_x11_class_init (MetaCompositorX11Class *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   MetaCompositorClass *compositor_class = META_COMPOSITOR_CLASS (klass);
 
+  object_class->constructed = meta_compositor_x11_constructed;
   object_class->dispose = meta_compositor_x11_dispose;
 
   compositor_class->manage = meta_compositor_x11_manage;
   compositor_class->unmanage = meta_compositor_x11_unmanage;
-  compositor_class->pre_paint = meta_compositor_x11_pre_paint;
-  compositor_class->post_paint = meta_compositor_x11_post_paint;
+  compositor_class->before_paint = meta_compositor_x11_before_paint;
+  compositor_class->after_paint = meta_compositor_x11_after_paint;
   compositor_class->remove_window = meta_compositor_x11_remove_window;
 }

@@ -292,6 +292,30 @@ test_case_assert_focused (TestCase    *test,
 }
 
 static gboolean
+test_case_assert_size (TestCase    *test,
+                       MetaWindow  *window,
+                       int          expected_width,
+                       int          expected_height,
+                       GError     **error)
+{
+  MetaRectangle frame_rect;
+
+  meta_window_get_frame_rect (window, &frame_rect);
+
+  if (frame_rect.width != expected_width ||
+      frame_rect.height != expected_height)
+    {
+      g_set_error (error, TEST_RUNNER_ERROR, TEST_RUNNER_ERROR_ASSERTION_FAILED,
+                   "Expected size %dx%d didn't match actual size %dx%d",
+                   expected_width, expected_height,
+                   frame_rect.width, frame_rect.height);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+static gboolean
 test_case_check_xserver_stacking (TestCase *test,
                                   GError  **error)
 {
@@ -342,6 +366,56 @@ test_case_check_xserver_stacking (TestCase *test,
   g_string_free (x11_string, TRUE);
 
   return *error == NULL;
+}
+
+static int
+maybe_divide (const char *str,
+              int         value)
+{
+  if (strstr (str, "/") == str)
+    {
+      int divisor;
+
+      str += 1;
+      divisor = atoi (str);
+
+      value /= divisor;
+    }
+
+  return value;
+}
+
+static int
+parse_window_size (MetaWindow *window,
+                   const char *size_str)
+{
+  MetaLogicalMonitor *logical_monitor;
+  MetaRectangle logical_monitor_layout;
+  int value;
+
+  logical_monitor = meta_window_calculate_main_logical_monitor (window);
+  g_assert_nonnull (logical_monitor);
+
+  logical_monitor_layout = meta_logical_monitor_get_layout (logical_monitor);
+
+  if (strstr (size_str, "MONITOR_WIDTH") == size_str)
+    {
+      value = logical_monitor_layout.width;
+      size_str += strlen ("MONITOR_WIDTH");
+      value = maybe_divide (size_str, value);
+    }
+  else if (strstr (size_str, "MONITOR_HEIGHT") == size_str)
+    {
+      value = logical_monitor_layout.height;
+      size_str += strlen ("MONITOR_HEIGHT");
+      value = maybe_divide (size_str, value);
+    }
+  else
+    {
+      value = atoi (size_str);
+    }
+
+  return value;
 }
 
 static gboolean
@@ -498,11 +572,94 @@ test_case_do (TestCase *test,
       if (!test_client_do (client, error, argv[0], window_id, NULL))
         return FALSE;
 
+      if (!test_case_wait (test, error))
+        return FALSE;
+
       MetaWindow *window = test_client_find_window (client, window_id, error);
       if (!window)
         return FALSE;
 
       test_client_wait_for_window_shown (client, window);
+    }
+  else if (strcmp (argv[0], "resize") == 0)
+    {
+      if (argc != 4)
+        BAD_COMMAND("usage: %s <client-id>/<window-id> width height", argv[0]);
+
+      TestClient *client;
+      const char *window_id;
+      if (!test_case_parse_window_id (test, argv[1], &client, &window_id, error))
+        return FALSE;
+
+      if (!test_client_do (client, error, argv[0], window_id,
+                           argv[2], argv[3], NULL))
+        return FALSE;
+    }
+  else if (strcmp (argv[0], "move") == 0)
+    {
+      if (argc != 4)
+        BAD_COMMAND("usage: %s <client-id>/<window-id> x y", argv[0]);
+
+      TestClient *client;
+      const char *window_id;
+      if (!test_case_parse_window_id (test, argv[1], &client, &window_id, error))
+        return FALSE;
+
+      MetaWindow *window = test_client_find_window (client, window_id, error);
+      if (!window)
+        return FALSE;
+
+      meta_window_move_frame (window, TRUE, atoi (argv[2]), atoi (argv[3]));
+    }
+  else if (strcmp (argv[0], "tile") == 0)
+    {
+      if (argc != 3)
+        BAD_COMMAND("usage: %s <client-id>/<window-id> [right|left]", argv[0]);
+
+      TestClient *client;
+      const char *window_id;
+      if (!test_case_parse_window_id (test, argv[1], &client, &window_id, error))
+        return FALSE;
+
+      MetaWindow *window = test_client_find_window (client, window_id, error);
+      if (!window)
+        return FALSE;
+
+      MetaTileMode tile_mode;
+      if (strcmp (argv[2], "right") == 0)
+        {
+          tile_mode = META_TILE_RIGHT;
+        }
+      else if (strcmp (argv[2], "left") == 0)
+        {
+          tile_mode = META_TILE_LEFT;
+        }
+      else
+        {
+          g_set_error (error,
+                       TEST_RUNNER_ERROR,
+                       TEST_RUNNER_ERROR_ASSERTION_FAILED,
+                       "Invalid tile mode '%s'", argv[2]);
+          return FALSE;
+        }
+
+      meta_window_tile (window, tile_mode);
+    }
+  else if (strcmp (argv[0], "untile") == 0)
+    {
+      if (argc != 2)
+        BAD_COMMAND("usage: %s <client-id>/<window-id>", argv[0]);
+
+      TestClient *client;
+      const char *window_id;
+      if (!test_case_parse_window_id (test, argv[1], &client, &window_id, error))
+        return FALSE;
+
+      MetaWindow *window = test_client_find_window (client, window_id, error);
+      if (!window)
+        return FALSE;
+
+      meta_window_untile (window);
     }
   else if (strcmp (argv[0], "hide") == 0 ||
            strcmp (argv[0], "activate") == 0 ||
@@ -510,6 +667,10 @@ test_case_do (TestCase *test,
            strcmp (argv[0], "lower") == 0 ||
            strcmp (argv[0], "minimize") == 0 ||
            strcmp (argv[0], "unminimize") == 0 ||
+           strcmp (argv[0], "maximize") == 0 ||
+           strcmp (argv[0], "unmaximize") == 0 ||
+           strcmp (argv[0], "fullscreen") == 0 ||
+           strcmp (argv[0], "unfullscreen") == 0 ||
            strcmp (argv[0], "destroy") == 0)
     {
       if (argc != 2)
@@ -547,6 +708,24 @@ test_case_do (TestCase *test,
       if (!test_case_wait (test, error))
         return FALSE;
     }
+  else if (strcmp (argv[0], "wait_reconfigure") == 0)
+    {
+      if (argc != 1)
+        BAD_COMMAND("usage: %s", argv[0]);
+
+      /*
+       * Wait twice, so that we
+       *  1) First wait for any requests to configure being made
+       *  2) Then wait until the new configuration has been applied
+       */
+
+      if (!test_case_wait (test, error))
+        return FALSE;
+      if (!test_case_dispatch (test, error))
+        return FALSE;
+      if (!test_case_wait (test, error))
+        return FALSE;
+    }
   else if (strcmp (argv[0], "dispatch") == 0)
     {
       if (argc != 1)
@@ -581,6 +760,80 @@ test_case_do (TestCase *test,
     {
       if (!test_case_assert_focused (test, argv[1], error))
         return FALSE;
+    }
+  else if (strcmp (argv[0], "assert_size") == 0)
+    {
+      if (argc != 4)
+        {
+          BAD_COMMAND("usage: %s <client-id>/<window-id> <width> <height>",
+                      argv[0]);
+        }
+
+      TestClient *client;
+      const char *window_id;
+      if (!test_case_parse_window_id (test, argv[1], &client, &window_id, error))
+        return FALSE;
+
+      MetaWindow *window = test_client_find_window (client, window_id, error);
+      if (!window)
+        return FALSE;
+
+      if (meta_window_get_frame (window))
+        {
+          g_set_error (error,
+                       TEST_RUNNER_ERROR,
+                       TEST_RUNNER_ERROR_ASSERTION_FAILED,
+                       "Can only assert size of CSD window");
+          return FALSE;
+        }
+
+      int width = parse_window_size (window, argv[2]);
+      int height = parse_window_size (window, argv[3]);
+      g_autofree char *width_str = g_strdup_printf ("%d", width);
+      g_autofree char *height_str = g_strdup_printf ("%d", height);
+
+      if (!test_client_do (client, error, argv[0],
+                           window_id,
+                           width_str,
+                           height_str,
+                           NULL))
+        return FALSE;
+
+      if (!test_case_assert_size (test, window,
+                                  width, height,
+                                  error))
+        return FALSE;
+    }
+  else if (strcmp (argv[0], "assert_position") == 0)
+    {
+      if (argc != 4)
+        {
+          BAD_COMMAND("usage: %s <client-id>/<window-id> <x> <y>",
+                      argv[0]);
+        }
+
+      TestClient *client;
+      const char *window_id;
+      if (!test_case_parse_window_id (test, argv[1], &client, &window_id, error))
+        return FALSE;
+
+      MetaWindow *window = test_client_find_window (client, window_id, error);
+      if (!window)
+        return FALSE;
+
+      MetaRectangle frame_rect;
+      meta_window_get_frame_rect (window, &frame_rect);
+      int x = atoi (argv[2]);
+      int y = atoi (argv[3]);
+      if (frame_rect.x != x || frame_rect.y != y)
+        {
+          g_set_error (error,
+                       TEST_RUNNER_ERROR,
+                       TEST_RUNNER_ERROR_ASSERTION_FAILED,
+                       "Expected window position (%d, %d) doesn't match (%d, %d)",
+                       x, y, frame_rect.x, frame_rect.y);
+          return FALSE;
+        }
     }
   else
     {

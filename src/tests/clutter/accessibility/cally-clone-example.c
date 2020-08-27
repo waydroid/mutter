@@ -45,7 +45,7 @@ make_ui (ClutterActor *stage)
   ClutterActor    *cloned_entry  = NULL;
 
 
-  clutter_stage_set_color (CLUTTER_STAGE (stage), &color_stage);
+  clutter_actor_set_background_color (CLUTTER_ACTOR (stage), &color_stage);
   clutter_actor_set_size (stage, WIDTH, HEIGHT);
 
   label = clutter_text_new_full ("Sans Bold 32px",
@@ -66,17 +66,17 @@ make_ui (ClutterActor *stage)
   clutter_actor_set_reactive (editable, TRUE);
 
   /* rectangle: to create a entry "feeling" */
-  rectangle = clutter_rectangle_new_with_color (&color_rect);
+  rectangle = clutter_actor_new ();
+  clutter_actor_set_background_color (rectangle, &color_rect);
   clutter_actor_set_position (rectangle, 150, 50);
   clutter_actor_add_constraint (rectangle, clutter_bind_constraint_new (editable, CLUTTER_BIND_SIZE, 0));
 
-  full_entry = clutter_group_new ();
+  full_entry = clutter_actor_new ();
   clutter_actor_set_position (full_entry, 0, 50);
   clutter_actor_set_size (full_entry, 100, 75);
   clutter_container_add_actor (CLUTTER_CONTAINER (full_entry), label);
   clutter_container_add_actor (CLUTTER_CONTAINER (full_entry), editable);
   clutter_container_add_actor (CLUTTER_CONTAINER (full_entry), rectangle);
-  clutter_actor_show_all (full_entry);
   clutter_actor_set_scale (full_entry, 2, 1);
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), full_entry);
 
@@ -84,7 +84,6 @@ make_ui (ClutterActor *stage)
   cloned_entry = clutter_clone_new (full_entry);
   clutter_actor_set_position (cloned_entry, 50, 200);
   clutter_actor_set_scale (cloned_entry, 1, 2);
-  clutter_actor_show_all (cloned_entry);
   clutter_actor_set_reactive (cloned_entry, TRUE);
 
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), cloned_entry);
@@ -97,20 +96,17 @@ main (int argc, char *argv[])
 
   g_set_application_name ("Clone Example");
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
-
   cally_util_a11y_init (&argc, &argv);
 
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Cally - Clone Test");
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
 
   make_ui (stage);
 
-  clutter_actor_show_all (stage);
+  clutter_actor_show (stage);
 
-  clutter_main ();
+  clutter_test_main ();
 
   return 0;
 }

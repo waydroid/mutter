@@ -2,6 +2,8 @@
 #include <gmodule.h>
 #include <clutter/clutter.h>
 
+#include "tests/clutter-test-utils.h"
+
 /* all the easing modes provided by Clutter */
 static const struct {
   const gchar *name;
@@ -53,8 +55,6 @@ static gboolean recenter = FALSE;
 static ClutterActor *main_stage = NULL;
 static ClutterActor *easing_mode_label = NULL;
 
-static ClutterAnimation *last_animation = NULL;
-
 int
 test_easing_main (int argc, char *argv[]);
 
@@ -66,21 +66,23 @@ test_easing_describe (void);
  * repositions (through an animation) the bouncer at the center of the stage
  */
 static void
-recenter_bouncer (ClutterAnimation *animation,
-                  ClutterActor     *rectangle)
+recenter_bouncer (ClutterActor *rectangle)
 {
   gfloat base_x, base_y;
   gint cur_mode;
 
+
+  cur_mode = easing_modes[current_mode].mode;
   base_x = clutter_actor_get_width (main_stage) / 2;
   base_y = clutter_actor_get_height (main_stage) / 2;
 
-  cur_mode = easing_modes[current_mode].mode;
+  clutter_actor_set_easing_duration (rectangle, 250);
+  clutter_actor_set_easing_mode (rectangle, cur_mode);
+  clutter_actor_set_position (rectangle, base_x, base_y);
 
-  clutter_actor_animate (rectangle, cur_mode, 250,
-                         "x", base_x,
-                         "y", base_y,
-                         NULL);
+  g_signal_connect_after (rectangle, "transition-completed",
+                          G_CALLBACK (clutter_actor_restore_easing_state),
+                          NULL);
 }
 
 static gboolean
@@ -108,28 +110,22 @@ on_button_press (ClutterActor       *actor,
     }
   else if (event->button == CLUTTER_BUTTON_PRIMARY)
     {
-      ClutterAnimation *animation;
       ClutterAnimationMode cur_mode;
 
       cur_mode = easing_modes[current_mode].mode;
 
-      /* tween the actor using the current easing mode */
-      animation =
-        clutter_actor_animate (rectangle, cur_mode, duration * 1000,
-                               "x", event->x,
-                               "y", event->y,
-                               NULL);
+      clutter_actor_save_easing_state (rectangle);
+      clutter_actor_set_easing_duration (rectangle, duration * 1000);
+      clutter_actor_set_easing_mode (rectangle, cur_mode);
+      clutter_actor_set_position (rectangle, event->x, event->y);
 
       /* if we were asked to, recenter the bouncer at the end of the
        * animation. we keep track of the animation to avoid connecting
        * the signal handler to the same Animation twice.
        */
-      if (recenter && last_animation != animation)
-        g_signal_connect_after (animation, "completed",
-                                G_CALLBACK (recenter_bouncer),
-                                rectangle);
-
-      last_animation = animation;
+      g_signal_connect_after (rectangle, "transition-completed",
+                              G_CALLBACK (recenter_bouncer),
+                              rectangle);
     }
 
   return TRUE;
@@ -195,7 +191,7 @@ make_bouncer (gfloat width,
                          NULL);
   clutter_actor_set_name (retval, "bouncer");
   clutter_actor_set_size (retval, width, height);
-  clutter_actor_set_anchor_point (retval, width / 2, height / 2);
+  clutter_actor_set_translation (retval, -width / 2.f, -height / 2.f, 0.f);
   clutter_actor_set_reactive (retval, TRUE);
 
   clutter_content_invalidate (canvas);
@@ -228,19 +224,16 @@ test_easing_main (int argc, char *argv[])
   ClutterActor *stage, *rect, *label;
   gchar *text;
   gfloat stage_width, stage_height;
-  GError *error = NULL;
 
-  if (clutter_init_with_args (&argc, &argv,
-                              NULL,
-                              test_easing_entries,
-                              NULL,
-                              &error) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init_with_args (&argc, &argv,
+                               NULL,
+                               test_easing_entries,
+                               NULL);
 
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Easing Modes");
   clutter_actor_set_background_color (stage, CLUTTER_COLOR_LightSkyBlue);
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
   main_stage = stage;
 
   clutter_actor_get_size (stage, &stage_width, &stage_height);
@@ -270,7 +263,7 @@ test_easing_main (int argc, char *argv[])
 
   clutter_actor_show (stage);
 
-  clutter_main ();
+  clutter_test_main ();
 
   return EXIT_SUCCESS;
 }

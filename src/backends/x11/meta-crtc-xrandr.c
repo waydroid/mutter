@@ -46,17 +46,19 @@
 #include "backends/x11/meta-gpu-xrandr.h"
 #include "backends/x11/meta-monitor-manager-xrandr.h"
 
-#define ALL_TRANSFORMS ((1 << (META_MONITOR_TRANSFORM_FLIPPED_270 + 1)) - 1)
-
-typedef struct _MetaCrtcXrandr
+struct _MetaCrtcXrandr
 {
+  MetaCrtc parent;
+
   MetaRectangle rect;
   MetaMonitorTransform transform;
   MetaCrtcMode *current_mode;
-} MetaCrtcXrandr;
+};
+
+G_DEFINE_TYPE (MetaCrtcXrandr, meta_crtc_xrandr, META_TYPE_CRTC)
 
 gboolean
-meta_crtc_xrandr_set_config (MetaCrtc            *crtc,
+meta_crtc_xrandr_set_config (MetaCrtcXrandr      *crtc_xrandr,
                              xcb_randr_crtc_t     xrandr_crtc,
                              xcb_timestamp_t      timestamp,
                              int                  x,
@@ -67,7 +69,7 @@ meta_crtc_xrandr_set_config (MetaCrtc            *crtc,
                              int                  n_outputs,
                              xcb_timestamp_t     *out_timestamp)
 {
-  MetaGpu *gpu = meta_crtc_get_gpu (crtc);
+  MetaGpu *gpu = meta_crtc_get_gpu (META_CRTC (crtc_xrandr));
   MetaGpuXrandr *gpu_xrandr = META_GPU_XRANDR (gpu);
   MetaBackend *backend = meta_gpu_get_backend (gpu);
   MetaMonitorManager *monitor_manager =
@@ -161,7 +163,7 @@ meta_monitor_transform_from_xrandr_all (Rotation rotation)
   /* All rotations and one reflection -> all of them by composition */
   if ((rotation & ALL_ROTATIONS) &&
       ((rotation & RR_Reflect_X) || (rotation & RR_Reflect_Y)))
-    return ALL_TRANSFORMS;
+    return META_MONITOR_ALL_TRANSFORMS;
 
   ret = 1 << META_MONITOR_TRANSFORM_NORMAL;
   if (rotation & RR_Rotate_90)
@@ -183,31 +185,30 @@ meta_monitor_transform_from_xrandr_all (Rotation rotation)
 }
 
 gboolean
-meta_crtc_xrandr_is_assignment_changed (MetaCrtc     *crtc,
-                                        MetaCrtcInfo *crtc_info)
+meta_crtc_xrandr_is_assignment_changed (MetaCrtcXrandr     *crtc_xrandr,
+                                        MetaCrtcAssignment *crtc_assignment)
 {
-  MetaCrtcXrandr *crtc_xrandr = crtc->driver_private;
   unsigned int i;
 
-  if (crtc_xrandr->current_mode != crtc_info->mode)
+  if (crtc_xrandr->current_mode != crtc_assignment->mode)
     return TRUE;
 
-  if (crtc_xrandr->rect.x != (int) roundf (crtc_info->layout.origin.x))
+  if (crtc_xrandr->rect.x != (int) roundf (crtc_assignment->layout.origin.x))
     return TRUE;
 
-  if (crtc_xrandr->rect.y != (int) roundf (crtc_info->layout.origin.y))
+  if (crtc_xrandr->rect.y != (int) roundf (crtc_assignment->layout.origin.y))
     return TRUE;
 
-  if (crtc_xrandr->transform != crtc_info->transform)
+  if (crtc_xrandr->transform != crtc_assignment->transform)
     return TRUE;
 
-  for (i = 0; i < crtc_info->outputs->len; i++)
+  for (i = 0; i < crtc_assignment->outputs->len; i++)
     {
-      MetaOutput *output = ((MetaOutput**) crtc_info->outputs->pdata)[i];
+      MetaOutput *output = ((MetaOutput**) crtc_assignment->outputs->pdata)[i];
       MetaCrtc *assigned_crtc;
 
       assigned_crtc = meta_output_get_assigned_crtc (output);
-      if (assigned_crtc != crtc)
+      if (assigned_crtc != META_CRTC (crtc_xrandr))
         return TRUE;
     }
 
@@ -215,24 +216,16 @@ meta_crtc_xrandr_is_assignment_changed (MetaCrtc     *crtc,
 }
 
 MetaCrtcMode *
-meta_crtc_xrandr_get_current_mode (MetaCrtc *crtc)
+meta_crtc_xrandr_get_current_mode (MetaCrtcXrandr *crtc_xrandr)
 {
-  MetaCrtcXrandr *crtc_xrandr = crtc->driver_private;
-
   return crtc_xrandr->current_mode;
 }
 
-static void
-meta_crtc_destroy_notify (MetaCrtc *crtc)
-{
-  g_free (crtc->driver_private);
-}
-
-MetaCrtc *
-meta_create_xrandr_crtc (MetaGpuXrandr      *gpu_xrandr,
-                         XRRCrtcInfo        *xrandr_crtc,
-                         RRCrtc              crtc_id,
-                         XRRScreenResources *resources)
+MetaCrtcXrandr *
+meta_crtc_xrandr_new (MetaGpuXrandr      *gpu_xrandr,
+                      XRRCrtcInfo        *xrandr_crtc,
+                      RRCrtc              crtc_id,
+                      XRRScreenResources *resources)
 {
   MetaGpu *gpu = META_GPU (gpu_xrandr);
   MetaBackend *backend = meta_gpu_get_backend (gpu);
@@ -242,22 +235,22 @@ meta_create_xrandr_crtc (MetaGpuXrandr      *gpu_xrandr,
     META_MONITOR_MANAGER_XRANDR (monitor_manager);
   Display *xdisplay =
     meta_monitor_manager_xrandr_get_xdisplay (monitor_manager_xrandr);
-  MetaCrtc *crtc;
+  MetaMonitorTransform all_transforms;
   MetaCrtcXrandr *crtc_xrandr;
   XRRPanning *panning;
   unsigned int i;
   GList *modes;
 
-  crtc = g_object_new (META_TYPE_CRTC, NULL);
+  all_transforms =
+    meta_monitor_transform_from_xrandr_all (xrandr_crtc->rotations);
+  crtc_xrandr = g_object_new (META_TYPE_CRTC_XRANDR,
+                              "id", (uint64_t) crtc_id,
+                              "gpu", gpu,
+                              "all-transforms", all_transforms,
+                              NULL);
 
-  crtc_xrandr = g_new0 (MetaCrtcXrandr, 1);
   crtc_xrandr->transform =
     meta_monitor_transform_from_xrandr (xrandr_crtc->rotation);
-
-  crtc->driver_private = crtc_xrandr;
-  crtc->driver_notify = (GDestroyNotify) meta_crtc_destroy_notify;
-  crtc->gpu = META_GPU (gpu_xrandr);
-  crtc->crtc_id = crtc_id;
 
   panning = XRRGetPanning (xdisplay, resources, crtc_id);
   if (panning && panning->width > 0 && panning->height > 0)
@@ -279,11 +272,7 @@ meta_create_xrandr_crtc (MetaGpuXrandr      *gpu_xrandr,
       };
     }
 
-  crtc->is_dirty = FALSE;
-  crtc->all_transforms =
-    meta_monitor_transform_from_xrandr_all (xrandr_crtc->rotations);
-
-  modes = meta_gpu_get_modes (crtc->gpu);
+  modes = meta_gpu_get_modes (gpu);
   for (i = 0; i < (unsigned int) resources->nmode; i++)
     {
       if (resources->modes[i].id == xrandr_crtc->mode)
@@ -295,7 +284,7 @@ meta_create_xrandr_crtc (MetaGpuXrandr      *gpu_xrandr,
 
   if (crtc_xrandr->current_mode)
     {
-      meta_crtc_set_config (crtc,
+      meta_crtc_set_config (META_CRTC (crtc_xrandr),
                             &GRAPHENE_RECT_INIT (crtc_xrandr->rect.x,
                                                  crtc_xrandr->rect.y,
                                                  crtc_xrandr->rect.width,
@@ -304,5 +293,15 @@ meta_create_xrandr_crtc (MetaGpuXrandr      *gpu_xrandr,
                             crtc_xrandr->transform);
     }
 
-  return crtc;
+  return crtc_xrandr;
+}
+
+static void
+meta_crtc_xrandr_init (MetaCrtcXrandr *crtc_xrandr)
+{
+}
+
+static void
+meta_crtc_xrandr_class_init (MetaCrtcXrandrClass *klass)
+{
 }

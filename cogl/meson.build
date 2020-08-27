@@ -17,6 +17,7 @@ cogl_config_h = configure_file(
 
 cogl_pkg_deps = [
   glib_dep,
+  gio_dep,
   gobject_dep,
   graphene_dep,
 ]
@@ -116,7 +117,6 @@ if have_cogl_tests
   subdir('test-fixtures')
 endif
 subdir('cogl')
-subdir('cogl-path')
 subdir('cogl-pango')
 if have_cogl_tests
   subdir('tests')

@@ -36,6 +36,7 @@ enum _MetaMonitorTransform
   META_MONITOR_TRANSFORM_FLIPPED_270,
 };
 #define META_MONITOR_N_TRANSFORMS (META_MONITOR_TRANSFORM_FLIPPED_270 + 1)
+#define META_MONITOR_ALL_TRANSFORMS ((1 << META_MONITOR_N_TRANSFORMS) - 1)
 
 /* Returns true if transform causes width and height to be inverted
    This is true for the odd transforms in the enum */
@@ -49,9 +50,10 @@ meta_monitor_transform_is_rotated (MetaMonitorTransform transform)
 static inline gboolean
 meta_monitor_transform_is_flipped (MetaMonitorTransform transform)
 {
-  return (abs(transform) >= META_MONITOR_TRANSFORM_FLIPPED);
+  return (transform >= META_MONITOR_TRANSFORM_FLIPPED);
 }
 
+META_EXPORT_TEST
 MetaMonitorTransform meta_monitor_transform_invert (MetaMonitorTransform transform);
 
 META_EXPORT_TEST

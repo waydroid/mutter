@@ -7,6 +7,7 @@ clutter_tests_interactive_c_args = [
   '-DGLIB_DISABLE_DEPRECATION_WARNINGS',
   '-DCOGL_DISABLE_DEPRECATION_WARNINGS',
   '-DCLUTTER_DISABLE_DEPRECATION_WARNINGS',
+  '-DGETTEXT_PACKAGE="@0@"'.format(meson.project_name()),
 ]
 clutter_tests_interactive_c_args += clutter_debug_c_args
 
@@ -17,18 +18,14 @@ clutter_tests_interactive_link_args = [
 clutter_tests_interactive_test_sources = [
   'test-events.c',
   'test-actors.c',
-  'test-shader-effects.c',
   'test-script.c',
   'test-grab.c',
   'test-cogl-shader-glsl.c',
-  'test-state.c',
   'test-cogl-tex-tile.c',
   'test-cogl-tex-convert.c',
   'test-cogl-offscreen.c',
   'test-cogl-tex-polygon.c',
-  'test-cogl-multitexture.c',
   'test-paint-wrapper.c',
-  'test-layout.c',
   'test-animation.c',
   'test-easing.c',
   'test-binding-pool.c',
@@ -37,15 +34,11 @@ clutter_tests_interactive_test_sources = [
   'test-cairo-clock.c',
   'test-cairo-flowers.c',
   'test-stage-sizing.c',
-  'test-scrolling.c',
   'test-swipe-action.c',
   'test-cogl-point-sprites.c',
-  'test-path-constraint.c',
-  'test-state-script.c',
   'test-devices.c',
   'test-content.c',
   'test-keyframe-transition.c',
-  'test-bind-constraint.c',
   'test-touch-events.c',
   'test-rotate-zoom.c',
   'test-image.c',
@@ -62,7 +55,8 @@ clutter_interactive_test_unit_names_h = custom_target('gen-test-unit-names',
 clutter_tests_interactive_sources = [
   'test-main.c',
   clutter_interactive_test_unit_names_h,
-  clutter_tests_interactive_test_sources 
+  clutter_tests_interactive_test_sources,
+  clutter_test_utils,
 ]
 
 executable('test-interactive',

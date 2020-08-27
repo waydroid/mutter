@@ -7,6 +7,7 @@
 
 #include <clutter/clutter.h>
 #include "test-utils.h"
+#include "tests/clutter-test-utils.h"
 
 int
 test_shader_effects_main (int argc, char *argv[]);
@@ -18,17 +19,16 @@ test_shader_effects_main (int argc, char *argv[])
   ClutterActor *stage, *hand, *label, *rect;
   gchar *file;
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init (&argc, &argv);
 
-  /* Make a timeline */
-  timeline = clutter_timeline_new (7692);
-  clutter_timeline_set_repeat_count (timeline, -1);
-
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Rotations");
   clutter_actor_set_background_color (stage, CLUTTER_COLOR_Aluminium3);
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
+
+  /* Make a timeline */
+  timeline = clutter_timeline_new_for_actor (stage, 7692);
+  clutter_timeline_set_repeat_count (timeline, -1);
 
   /* Make a hand */
   file = g_build_filename (TESTS_DATADIR, "redhand.png", NULL);
@@ -49,7 +49,8 @@ test_shader_effects_main (int argc, char *argv[])
                                        "opacity", 128,
                                        NULL);
 
-  rect = clutter_rectangle_new_with_color (CLUTTER_COLOR_DarkOrange);
+  rect = clutter_actor_new ();
+  clutter_actor_set_background_color (rect, CLUTTER_COLOR_DarkOrange);
   clutter_actor_add_effect_with_name (rect, "blur", clutter_blur_effect_new ());
   clutter_actor_set_position (rect, 415, 215);
   clutter_actor_set_size (rect, 150, 150);
@@ -77,9 +78,9 @@ test_shader_effects_main (int argc, char *argv[])
   /* start the timeline and thus the animations */
   clutter_timeline_start (timeline);
 
-  clutter_actor_show_all (stage);
+  clutter_actor_show (stage);
 
-  clutter_main();
+  clutter_test_main ();
 
   g_object_unref (timeline);
 

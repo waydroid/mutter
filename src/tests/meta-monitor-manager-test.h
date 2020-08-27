@@ -20,7 +20,9 @@
 #ifndef META_MONITOR_MANAGER_TEST_H
 #define META_MONITOR_MANAGER_TEST_H
 
+#include "backends/meta-crtc.h"
 #include "backends/meta-monitor-manager-private.h"
+#include "backends/meta-output.h"
 
 typedef struct _MetaMonitorTestSetup
 {
@@ -29,16 +31,35 @@ typedef struct _MetaMonitorTestSetup
   GList *crtcs;
 } MetaMonitorTestSetup;
 
-typedef struct _MetaOutputTest
+struct _MetaCrtcTest
 {
+  MetaCrtc parent;
+};
+
+struct _MetaOutputTest
+{
+  MetaOutput parent;
+
   float scale;
-} MetaOutputTest;
+};
+
+typedef MetaMonitorTestSetup * (* CreateTestSetupFunc) (void);
+
+#define META_TYPE_CRTC_TEST (meta_crtc_test_get_type ())
+G_DECLARE_FINAL_TYPE (MetaCrtcTest, meta_crtc_test,
+                      META, CRTC_TEST,
+                      MetaCrtc)
+
+#define META_TYPE_OUTPUT_TEST (meta_output_test_get_type ())
+G_DECLARE_FINAL_TYPE (MetaOutputTest, meta_output_test,
+                      META, OUTPUT_TEST,
+                      MetaOutput)
 
 #define META_TYPE_MONITOR_MANAGER_TEST (meta_monitor_manager_test_get_type ())
 G_DECLARE_FINAL_TYPE (MetaMonitorManagerTest, meta_monitor_manager_test,
                       META, MONITOR_MANAGER_TEST, MetaMonitorManager)
 
-void meta_monitor_manager_test_init_test_setup (MetaMonitorTestSetup *test_setup);
+void meta_monitor_manager_test_init_test_setup (CreateTestSetupFunc func);
 
 void meta_monitor_manager_test_read_current (MetaMonitorManager *manager);
 

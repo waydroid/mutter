@@ -1,3 +1,45 @@
+mutter (3.37.91-1) experimental; urgency=medium
+
+  * New upstream release
+    - Support unredirecting fullscreen wayland surfaces
+    - Support area screencasts
+    - Allow inhibiting remote access
+    - Drive each monitor by its own frame clock (LP: #1730460)
+    - Fix copy/paste failures on X11 (LP: #1879968)
+    - Make window-aliveness checks less aggressive
+    - Limit mipmap levels when rendering background (LP: #1862308)
+    - Remove more long-deprecated Clutter APIs
+    - Support custom keyboard layouts in $XDG_CONFIG_HOME/xkb
+    - Optimize resource scale computation for wayland fractional scaling
+    - Support tap-button-map and tap-drag-lock touchpad settings
+    - Fix wine copy & paste
+    - Add API to launch trusted wayland clients
+    - Invalidate offscreen effect cache on video memory purge (LP: #1855757)
+  * debian: Update package and file names to mutter API version
+  * debian/control: Bump dependencies to match upstream requirements
+  * debian/clean: Remove as HOME and XRD are managed now by dh
+  * debian/copyright: Avoid redundant globbing patterns
+  * debian/gbp.conf: target upstream/latest branch
+  * debian/libmutter-7-0.symbols: Update symbols file
+  * debian/patches: Refresh
+  * d/p/debian/tests-Tag-closed-transient-no-input-tests-as-flaky.patch:
+    - Renamed into d/p/debian/tests-Tag-unstable-tests-as-flaky.patch
+    - Reduced the number of "flaky" tests to the ones time-dependent only
+  * debian/rules:
+    - Compute and generate a MUTTER_API_VERSION and replace it everywhere
+    - Remove XDG_RUNTIME_DIR wrapper workaround
+    - Don't run tests at all in riscv64
+    - Don't set again default configuration values (it makes the delta clearer)
+    - Never ignore test failures in amd64
+    - Remove test num processes re-configuration
+    - Run tests in s390x, no failures currently
+    - Don't test in alpha hppa powerpc sparc64 x32 (Closes: #959415)
+  * debian/with-temp-xdg-runtime-dir: Dropped, new dh will handle it for us
+  * debian/watch: Scan for all versions, not just the stable-branch
+  * debian/*.install: Use dh variable substitution in install files
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Thu, 27 Aug 2020 16:39:49 +0100
+
 mutter (3.36.5-1) unstable; urgency=medium
 
   * Team upload

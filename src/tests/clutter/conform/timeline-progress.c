@@ -1,16 +1,18 @@
+#define CLUTTER_DISABLE_DEPRECATION_WARNINGS
 #include <glib.h>
 #include <clutter/clutter.h>
-#include "test-conform-common.h"
 
-void
-timeline_progress_step (TestConformSimpleFixture *fixture G_GNUC_UNUSED,
-                        gconstpointer dummy G_GNUC_UNUSED)
+#include "tests/clutter-test-utils.h"
+
+static void
+timeline_progress_step (void)
 {
+  ClutterActor *stage = clutter_test_get_stage ();
   ClutterTimeline *timeline;
 
-  timeline = clutter_timeline_new (1000);
+  timeline = clutter_timeline_new_for_actor (stage, 1000);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("mode: step(3, end)\n");
 
   clutter_timeline_rewind (timeline);
@@ -45,7 +47,7 @@ timeline_progress_step (TestConformSimpleFixture *fixture G_GNUC_UNUSED,
   clutter_timeline_advance (timeline, 1000);
   g_assert_cmpfloat (clutter_timeline_get_progress (timeline), ==, 1.0);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("mode: step-start\n");
 
   clutter_timeline_rewind (timeline);
@@ -64,7 +66,7 @@ timeline_progress_step (TestConformSimpleFixture *fixture G_GNUC_UNUSED,
   clutter_timeline_advance (timeline, 1000);
   g_assert_cmpfloat (clutter_timeline_get_progress (timeline), ==, 1.0);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("mode: step-end\n");
 
   clutter_timeline_rewind (timeline);
@@ -86,13 +88,13 @@ timeline_progress_step (TestConformSimpleFixture *fixture G_GNUC_UNUSED,
   g_object_unref (timeline);
 }
 
-void
-timeline_progress_mode (TestConformSimpleFixture *fixture G_GNUC_UNUSED,
-                        gconstpointer dummy G_GNUC_UNUSED)
+static void
+timeline_progress_mode (void)
 {
+  ClutterActor *stage = clutter_test_get_stage ();
   ClutterTimeline *timeline;
 
-  timeline = clutter_timeline_new (1000);
+  timeline = clutter_timeline_new_for_actor (stage, 1000);
 
   g_assert (clutter_timeline_get_progress_mode (timeline) == CLUTTER_LINEAR);
   g_assert_cmpfloat (clutter_timeline_get_progress (timeline), ==, 0.0);
@@ -108,3 +110,8 @@ timeline_progress_mode (TestConformSimpleFixture *fixture G_GNUC_UNUSED,
 
   g_object_unref (timeline);
 }
+
+CLUTTER_TEST_SUITE (
+  CLUTTER_TEST_UNIT ("/timeline/progress/step", timeline_progress_step);
+  CLUTTER_TEST_UNIT ("/timeline/progress/mode", timeline_progress_mode)
+)

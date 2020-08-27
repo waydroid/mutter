@@ -73,7 +73,12 @@ meta_window_x11_maybe_focus_delayed (MetaWindow *window,
 static void
 meta_window_x11_init (MetaWindowX11 *window_x11)
 {
-  window_x11->priv = meta_window_x11_get_instance_private (window_x11);
+}
+
+MetaWindowX11Private *
+meta_window_x11_get_private (MetaWindowX11 *window_x11)
+{
+  return meta_window_x11_get_instance_private (window_x11);
 }
 
 static void
@@ -828,6 +833,18 @@ focus_candidates_maybe_take_and_focus_next (GQueue  **focus_candidates_ptr,
   meta_window_x11_maybe_focus_delayed (focus_window, focus_candidates, timestamp);
 }
 
+static void
+focus_window_delayed_unmanaged (gpointer user_data)
+{
+  MetaWindowX11DelayedFocusData *data = user_data;
+  uint32_t timestamp = data->timestamp;
+
+  focus_candidates_maybe_take_and_focus_next (&data->pending_focus_candidates,
+                                              timestamp);
+
+  meta_window_x11_delayed_focus_data_free (data);
+}
+
 static gboolean
 focus_window_delayed_timeout (gpointer user_data)
 {
@@ -863,7 +880,7 @@ meta_window_x11_maybe_focus_delayed (MetaWindow *window,
 
   data->unmanaged_id =
     g_signal_connect_swapped (window, "unmanaged",
-                              G_CALLBACK (meta_window_x11_delayed_focus_data_free),
+                              G_CALLBACK (focus_window_delayed_unmanaged),
                               data);
 
   data->focused_changed_id =
@@ -1774,7 +1791,7 @@ meta_window_x11_main_monitor_changed (MetaWindow               *window,
 {
 }
 
-static uint32_t
+static pid_t
 meta_window_x11_get_client_pid (MetaWindow *window)
 {
   MetaX11Display *x11_display = window->display->x11_display;
@@ -1808,7 +1825,7 @@ meta_window_x11_get_client_pid (MetaWindow *window)
     }
 
   free (reply);
-  return pid;
+  return (pid_t) pid;
 }
 
 static void
@@ -4107,4 +4124,71 @@ meta_window_x11_surface_rect_to_client_rect (MetaWindow    *window,
   client_rect->y += borders.total.top;
   client_rect->width -= borders.total.left + borders.total.right;
   client_rect->height -= borders.total.top + borders.total.bottom;
+}
+
+MetaRectangle
+meta_window_x11_get_client_rect (MetaWindowX11 *window_x11)
+{
+  MetaWindowX11Private *priv = meta_window_x11_get_instance_private (window_x11);
+
+  return priv->client_rect;
+}
+
+static gboolean
+has_requested_bypass_compositor (MetaWindowX11 *window_x11)
+{
+  MetaWindowX11Private *priv = meta_window_x11_get_instance_private (window_x11);
+
+  return priv->bypass_compositor == META_BYPASS_COMPOSITOR_HINT_ON;
+}
+
+static gboolean
+has_requested_dont_bypass_compositor (MetaWindowX11 *window_x11)
+{
+  MetaWindowX11Private *priv = meta_window_x11_get_instance_private (window_x11);
+
+  return priv->bypass_compositor == META_BYPASS_COMPOSITOR_HINT_OFF;
+}
+
+gboolean
+meta_window_x11_can_unredirect (MetaWindowX11 *window_x11)
+{
+  MetaWindow *window = META_WINDOW (window_x11);
+
+  if (has_requested_dont_bypass_compositor (window_x11))
+    return FALSE;
+
+  if (window->opacity != 0xFF)
+    return FALSE;
+
+  if (window->shape_region != NULL)
+    return FALSE;
+
+  if (!window->monitor)
+    return FALSE;
+
+  if (window->fullscreen)
+    return TRUE;
+
+  if (meta_window_is_screen_sized (window))
+    return TRUE;
+
+  if (has_requested_bypass_compositor (window_x11))
+    return TRUE;
+
+  if (window->override_redirect)
+    {
+      MetaRectangle window_rect;
+      MetaRectangle logical_monitor_layout;
+      MetaLogicalMonitor *logical_monitor = window->monitor;
+
+      meta_window_get_frame_rect (window, &window_rect);
+      logical_monitor_layout =
+        meta_logical_monitor_get_layout (logical_monitor);
+
+      if (meta_rectangle_equal (&window_rect, &logical_monitor_layout))
+        return TRUE;
+    }
+
+  return FALSE;
 }

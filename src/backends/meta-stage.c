@@ -25,6 +25,7 @@
 #include "backends/meta-stage-private.h"
 
 #include "backends/meta-backend-private.h"
+#include "backends/meta-cursor-tracker-private.h"
 #include "clutter/clutter-mutter.h"
 #include "meta/meta-backend.h"
 #include "meta/meta-monitor-manager.h"
@@ -50,7 +51,9 @@ struct _MetaStageWatch
 
 struct _MetaOverlay
 {
-  gboolean enabled;
+  MetaStage *stage;
+
+  gboolean is_visible;
 
   CoglPipeline *pipeline;
   CoglTexture *texture;
@@ -64,6 +67,8 @@ struct _MetaStage
 {
   ClutterStage parent;
 
+  MetaBackend *backend;
+
   GPtrArray *watchers[N_WATCH_MODES];
 
   GList *overlays;
@@ -73,12 +78,15 @@ struct _MetaStage
 G_DEFINE_TYPE (MetaStage, meta_stage, CLUTTER_TYPE_STAGE);
 
 static MetaOverlay *
-meta_overlay_new (void)
+meta_overlay_new (MetaStage *stage)
 {
+  ClutterBackend *clutter_backend =
+    meta_backend_get_clutter_backend (stage->backend);
+  CoglContext *ctx = clutter_backend_get_cogl_context (clutter_backend);
   MetaOverlay *overlay;
-  CoglContext *ctx = clutter_backend_get_cogl_context (clutter_get_default_backend ());
 
   overlay = g_slice_new0 (MetaOverlay);
+  overlay->stage = stage;
   overlay->pipeline = cogl_pipeline_new (ctx);
 
   return overlay;
@@ -103,15 +111,9 @@ meta_overlay_set (MetaOverlay     *overlay,
       overlay->texture = texture;
 
       if (texture)
-        {
-          cogl_pipeline_set_layer_texture (overlay->pipeline, 0, texture);
-          overlay->enabled = TRUE;
-        }
+        cogl_pipeline_set_layer_texture (overlay->pipeline, 0, texture);
       else
-        {
-          cogl_pipeline_set_layer_texture (overlay->pipeline, 0, NULL);
-          overlay->enabled = FALSE;
-        }
+        cogl_pipeline_set_layer_texture (overlay->pipeline, 0, NULL);
     }
 
   overlay->current_rect = *rect;
@@ -123,10 +125,13 @@ meta_overlay_paint (MetaOverlay         *overlay,
 {
   CoglFramebuffer *framebuffer;
 
-  if (!overlay->enabled)
+  if (!overlay->texture)
     return;
 
-  g_assert (meta_is_wayland_compositor ());
+  if (!overlay->is_visible &&
+      !(clutter_paint_context_get_paint_flags (paint_context) &
+        CLUTTER_PAINT_FLAG_FORCE_CURSORS))
+    return;
 
   framebuffer = clutter_paint_context_get_framebuffer (paint_context);
   cogl_framebuffer_draw_rectangle (framebuffer,
@@ -193,7 +198,6 @@ meta_stage_paint (ClutterActor        *actor,
 {
   MetaStage *stage = META_STAGE (actor);
   ClutterStageView *view;
-  GList *l;
 
   CLUTTER_ACTOR_CLASS (meta_stage_parent_class)->paint (actor, paint_context);
 
@@ -204,15 +208,28 @@ meta_stage_paint (ClutterActor        *actor,
                                 META_STAGE_WATCH_AFTER_ACTOR_PAINT);
     }
 
-  if (!(clutter_paint_context_get_paint_flags (paint_context) &
-        CLUTTER_PAINT_FLAG_NO_PAINT_SIGNAL))
-    g_signal_emit (stage, signals[ACTORS_PAINTED], 0);
+  g_signal_emit (stage, signals[ACTORS_PAINTED], 0);
+
+  if ((clutter_paint_context_get_paint_flags (paint_context) &
+       CLUTTER_PAINT_FLAG_FORCE_CURSORS))
+    {
+      MetaCursorTracker *cursor_tracker =
+        meta_backend_get_cursor_tracker (stage->backend);
+
+      meta_cursor_tracker_track_position (cursor_tracker);
+    }
 
   if (!(clutter_paint_context_get_paint_flags (paint_context) &
         CLUTTER_PAINT_FLAG_NO_CURSORS))
+    g_list_foreach (stage->overlays, (GFunc) meta_overlay_paint, paint_context);
+
+  if ((clutter_paint_context_get_paint_flags (paint_context) &
+       CLUTTER_PAINT_FLAG_FORCE_CURSORS))
     {
-      for (l = stage->overlays; l; l = l->next)
-        meta_overlay_paint (l->data, paint_context);
+      MetaCursorTracker *cursor_tracker =
+        meta_backend_get_cursor_tracker (stage->backend);
+
+      meta_cursor_tracker_untrack_position (cursor_tracker);
     }
 
   if (view)
@@ -306,9 +323,8 @@ meta_stage_new (MetaBackend *backend)
   MetaStage *stage;
   MetaMonitorManager *monitor_manager;
 
-  stage = g_object_new (META_TYPE_STAGE,
-                        "cursor-visible", FALSE,
-                        NULL);
+  stage = g_object_new (META_TYPE_STAGE, NULL);
+  stage->backend = backend;
 
   monitor_manager = meta_backend_get_monitor_manager (backend);
   g_signal_connect (monitor_manager, "power-save-mode-changed",
@@ -350,7 +366,7 @@ queue_redraw_for_overlay (MetaStage   *stage,
     }
 
   /* Draw the overlay at the new position */
-  if (overlay->enabled)
+  if (overlay->is_visible && overlay->texture)
     queue_redraw_clutter_rect (stage, overlay, &overlay->current_rect);
 }
 
@@ -359,7 +375,7 @@ meta_stage_create_cursor_overlay (MetaStage *stage)
 {
   MetaOverlay *overlay;
 
-  overlay = meta_overlay_new ();
+  overlay = meta_overlay_new (stage);
   stage->overlays = g_list_prepend (stage->overlays, overlay);
 
   return overlay;
@@ -385,10 +401,25 @@ meta_stage_update_cursor_overlay (MetaStage       *stage,
                                   CoglTexture     *texture,
                                   graphene_rect_t *rect)
 {
-  g_assert (meta_is_wayland_compositor () || texture == NULL);
-
   meta_overlay_set (overlay, texture, rect);
   queue_redraw_for_overlay (stage, overlay);
+}
+
+void
+meta_overlay_set_visible (MetaOverlay *overlay,
+                          gboolean     is_visible)
+{
+  if (overlay->is_visible == is_visible)
+    return;
+
+  overlay->is_visible = is_visible;
+  queue_redraw_for_overlay (overlay->stage, overlay);
+}
+
+gboolean
+meta_overlay_is_visible (MetaOverlay *overlay)
+{
+  return overlay->is_visible;
 }
 
 void

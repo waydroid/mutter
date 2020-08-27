@@ -3,7 +3,6 @@ Source: https://download.gnome.org/sources/mutter/
 
 Files:
  *
- debian/*
 Copyright:
    2002-2020  the mutter authors
    1991-2000  Silicon Graphics Inc

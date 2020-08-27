@@ -20,13 +20,6 @@
 
 #include "clutter-paint-context.h"
 
-typedef enum _ClutterPaintFlag
-{
-  CLUTTER_PAINT_FLAG_NONE = 0,
-  CLUTTER_PAINT_FLAG_NO_CURSORS = 1 << 0,
-  CLUTTER_PAINT_FLAG_NO_PAINT_SIGNAL = 1 << 1,
-} ClutterPaintFlag;
-
 ClutterPaintContext * clutter_paint_context_new_for_view (ClutterStageView     *view,
                                                           const cairo_region_t *redraw_clip,
                                                           ClutterPaintFlag      paint_flags);
@@ -34,8 +27,5 @@ ClutterPaintContext * clutter_paint_context_new_for_view (ClutterStageView     *
 gboolean clutter_paint_context_is_drawing_off_stage (ClutterPaintContext *paint_context);
 
 CoglFramebuffer * clutter_paint_context_get_base_framebuffer (ClutterPaintContext *paint_context);
-
-CLUTTER_EXPORT
-ClutterPaintFlag clutter_paint_context_get_paint_flags (ClutterPaintContext *paint_context);
 
 #endif /* CLUTTER_PAINT_CONTEXT_PRIVATE_H */

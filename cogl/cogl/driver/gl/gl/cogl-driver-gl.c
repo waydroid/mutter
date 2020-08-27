@@ -42,6 +42,7 @@
 #include "driver/gl/cogl-attribute-gl-private.h"
 #include "driver/gl/cogl-clip-stack-gl-private.h"
 #include "driver/gl/cogl-buffer-gl-private.h"
+#include "driver/gl/cogl-pipeline-opengl-private.h"
 
 static gboolean
 _cogl_driver_gl_real_context_init (CoglContext *context)
@@ -287,6 +288,31 @@ _cogl_driver_pixel_format_to_gl (CoglContext     *context,
       gltype = GL_UNSIGNED_SHORT_5_5_5_1;
       break;
 
+    case COGL_PIXEL_FORMAT_RGBA_FP_16161616:
+    case COGL_PIXEL_FORMAT_RGBA_FP_16161616_PRE:
+      glintformat = GL_RGBA;
+      glformat = GL_RGBA;
+      gltype = GL_HALF_FLOAT;
+      break;
+    case COGL_PIXEL_FORMAT_BGRA_FP_16161616:
+    case COGL_PIXEL_FORMAT_BGRA_FP_16161616_PRE:
+      glintformat = GL_RGBA;
+      glformat = GL_BGRA;
+      gltype = GL_HALF_FLOAT;
+      break;
+    case COGL_PIXEL_FORMAT_ARGB_FP_16161616:
+    case COGL_PIXEL_FORMAT_ARGB_FP_16161616_PRE:
+      glintformat = GL_RGBA;
+      glformat = GL_BGRA;
+      gltype = GL_HALF_FLOAT;
+      break;
+    case COGL_PIXEL_FORMAT_ABGR_FP_16161616:
+    case COGL_PIXEL_FORMAT_ABGR_FP_16161616_PRE:
+      glintformat = GL_RGBA;
+      glformat = GL_RGBA;
+      gltype = GL_HALF_FLOAT;
+      break;
+
     case COGL_PIXEL_FORMAT_DEPTH_16:
       glintformat = GL_DEPTH_COMPONENT16;
       glformat = GL_DEPTH_COMPONENT;
@@ -419,8 +445,6 @@ _cogl_driver_update_features (CoglContext *ctx,
 
   _cogl_get_gl_version (ctx, &gl_major, &gl_minor);
 
-  _cogl_gpu_info_init (ctx, &ctx->gpu);
-
   ctx->glsl_major = 1;
   ctx->glsl_minor = 2;
   ctx->glsl_version_to_use = 120;
@@ -455,8 +479,8 @@ _cogl_driver_update_features (CoglContext *ctx,
                   TRUE);
 
   if (ctx->glBlitFramebuffer)
-    COGL_FLAGS_SET (private_features,
-                    COGL_PRIVATE_FEATURE_BLIT_FRAMEBUFFER, TRUE);
+    COGL_FLAGS_SET (ctx->features,
+                    COGL_FEATURE_ID_BLIT_FRAMEBUFFER, TRUE);
 
   COGL_FLAGS_SET (private_features, COGL_PRIVATE_FEATURE_PBOS, TRUE);
 
@@ -507,6 +531,14 @@ _cogl_driver_update_features (CoglContext *ctx,
                     COGL_FEATURE_ID_TEXTURE_RG,
                     TRUE);
 
+  COGL_FLAGS_SET (private_features,
+                  COGL_PRIVATE_FEATURE_TEXTURE_FORMAT_RGBA1010102, TRUE);
+
+  if (COGL_CHECK_GL_VERSION (gl_major, gl_minor, 3, 0))
+    COGL_FLAGS_SET (private_features,
+                    COGL_PRIVATE_FEATURE_TEXTURE_FORMAT_HALF_FLOAT,
+                    TRUE);
+
   /* Cache features */
   for (i = 0; i < G_N_ELEMENTS (private_features); i++)
     ctx->private_features[i] |= private_features[i];
@@ -532,6 +564,8 @@ _cogl_driver_gl =
   {
     _cogl_driver_gl_real_context_init,
     _cogl_driver_gl_context_deinit,
+    _cogl_driver_gl_is_hardware_accelerated,
+    _cogl_gl_get_graphics_reset_status,
     _cogl_driver_pixel_format_from_gl_internal,
     _cogl_driver_pixel_format_to_gl,
     _cogl_driver_update_features,
@@ -563,4 +597,7 @@ _cogl_driver_gl =
     _cogl_buffer_gl_map_range,
     _cogl_buffer_gl_unmap,
     _cogl_buffer_gl_set_data,
+    _cogl_sampler_gl_init,
+    _cogl_sampler_gl_free,
+    _cogl_gl_set_uniform, /* XXX name is weird... */
   };

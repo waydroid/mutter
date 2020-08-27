@@ -68,7 +68,7 @@ check_result (CallbackData *data, const char *note,
   PangoRectangle test_extents;
   gboolean fail = FALSE;
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("%s: ", note);
 
   /* Force a redraw to get the on_paint handler to run */
@@ -79,7 +79,7 @@ check_result (CallbackData *data, const char *note,
   pango_layout_get_extents (data->test_layout, NULL, &test_extents);
   if (memcmp (&test_extents, &data->label_extents, sizeof (PangoRectangle)))
     {
-      if (g_test_verbose ())
+      if (!g_test_quiet ())
         g_print ("extents are different: expected: %d, %d, %d, %d "
                  "-> text: %d, %d, %d, %d\n",
                  test_extents.x / 1024,
@@ -95,18 +95,18 @@ check_result (CallbackData *data, const char *note,
     }
   else
     {
-      if (g_test_verbose ())
+      if (!g_test_quiet ())
         g_print ("extents are the same, ");
     }
 
   if (data->layout_changed)
     {
-      if (g_test_verbose ())
+      if (!g_test_quiet ())
         g_print ("layout changed, ");
     }
   else
     {
-      if (g_test_verbose ())
+      if (!g_test_quiet ())
         g_print ("layout did not change, ");
     }
 
@@ -115,14 +115,14 @@ check_result (CallbackData *data, const char *note,
 
   if (fail)
     {
-      if (g_test_verbose ())
+      if (!g_test_quiet ())
         g_print ("FAIL\n");
 
       data->test_failed = TRUE;
     }
   else
     {
-      if (g_test_verbose ())
+      if (!g_test_quiet ())
         g_print ("pass\n");
     }
 
@@ -234,7 +234,7 @@ do_tests (CallbackData *data)
   pango_layout_set_alignment (data->test_layout, PANGO_ALIGN_RIGHT);
   g_assert (check_result (data, "Change alignment", TRUE) == FALSE);
 
-  clutter_main_quit ();
+  clutter_test_quit ();
 
   return FALSE;
 }
@@ -265,7 +265,7 @@ text_cache (void)
 
   memset (&data, 0, sizeof (data));
 
-  data.stage = clutter_stage_new ();
+  data.stage = clutter_test_get_stage ();
 
   data.label = clutter_text_new_with_text (TEST_FONT, "");
 
@@ -279,14 +279,14 @@ text_cache (void)
 
   clutter_threads_add_idle ((GSourceFunc) do_tests, &data);
 
-  clutter_main ();
+  clutter_test_main ();
 
   clutter_actor_destroy (data.stage);
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     g_print ("\nOverall result: ");
 
-  if (g_test_verbose ())
+  if (!g_test_quiet ())
     {
       if (data.test_failed)
         g_print ("FAIL\n");

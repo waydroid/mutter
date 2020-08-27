@@ -272,11 +272,23 @@ meta_window_actor_set_frozen (MetaWindowActor *self,
   META_WINDOW_ACTOR_GET_CLASS (self)->set_frozen (self, frozen);
 }
 
-static void
+/**
+ * meta_window_actor_freeze:
+ * @self: The #MetaWindowActor
+ *
+ * Freezes the #MetaWindowActor, which inhibits updates and geometry
+ * changes of the window. This property is refcounted, so make sure
+ * to call meta_window_actor_thaw() the exact same amount of times
+ * as this function to allow updates again.
+ */
+void
 meta_window_actor_freeze (MetaWindowActor *self)
 {
-  MetaWindowActorPrivate *priv =
-    meta_window_actor_get_instance_private (self);
+  MetaWindowActorPrivate *priv;
+
+  g_return_if_fail (META_IS_WINDOW_ACTOR (self));
+
+  priv = meta_window_actor_get_instance_private (self);
 
   if (priv->freeze_count == 0 && priv->surface)
     meta_window_actor_set_frozen (self, TRUE);
@@ -300,11 +312,21 @@ meta_window_actor_sync_thawed_state (MetaWindowActor *self)
   meta_window_actor_sync_actor_geometry (self, FALSE);
 }
 
-static void
+/**
+ * meta_window_actor_thaw:
+ * @self: The #MetaWindowActor
+ *
+ * Thaws/unfreezes the #MetaWindowActor to allow updates and geometry
+ * changes after a window was frozen using meta_window_actor_freeze().
+ */
+void
 meta_window_actor_thaw (MetaWindowActor *self)
 {
-  MetaWindowActorPrivate *priv =
-    meta_window_actor_get_instance_private (self);
+  MetaWindowActorPrivate *priv;
+
+  g_return_if_fail (META_IS_WINDOW_ACTOR (self));
+
+  priv = meta_window_actor_get_instance_private (self);
 
   if (priv->freeze_count <= 0)
     g_error ("Error in freeze/thaw accounting");
@@ -567,7 +589,6 @@ is_freeze_thaw_effect (MetaPluginEffect event)
   switch (event)
   {
   case META_PLUGIN_DESTROY:
-  case META_PLUGIN_SIZE_CHANGE:
     return TRUE;
     break;
   default:
@@ -792,9 +813,6 @@ meta_window_actor_sync_actor_geometry (MetaWindowActor *self,
   if (meta_window_actor_is_frozen (self) && !did_placement)
     return META_WINDOW_ACTOR_CHANGE_POSITION | META_WINDOW_ACTOR_CHANGE_SIZE;
 
-  if (meta_window_actor_effect_in_progress (self))
-    return META_WINDOW_ACTOR_CHANGE_POSITION | META_WINDOW_ACTOR_CHANGE_SIZE;
-
   if (clutter_actor_has_allocation (actor))
     {
       ClutterActorBox box;
@@ -918,14 +936,10 @@ meta_window_actor_size_change (MetaWindowActor    *self,
     meta_compositor_get_plugin_manager (compositor);
 
   priv->size_change_in_progress++;
-  meta_window_actor_freeze (self);
 
   if (!meta_plugin_manager_event_size_change (plugin_mgr, self,
                                               which_change, old_frame_rect, old_buffer_rect))
-    {
-      priv->size_change_in_progress--;
-      meta_window_actor_thaw (self);
-    }
+    priv->size_change_in_progress--;
 }
 
 #if 0
@@ -1007,21 +1021,23 @@ meta_window_actor_sync_visibility (MetaWindowActor *self)
 }
 
 void
-meta_window_actor_pre_paint (MetaWindowActor *self)
+meta_window_actor_before_paint (MetaWindowActor  *self,
+                                ClutterStageView *stage_view)
 {
   if (meta_window_actor_is_destroyed (self))
     return;
 
-  META_WINDOW_ACTOR_GET_CLASS (self)->pre_paint (self);
+  META_WINDOW_ACTOR_GET_CLASS (self)->before_paint (self, stage_view);
 }
 
 void
-meta_window_actor_post_paint (MetaWindowActor *self)
+meta_window_actor_after_paint (MetaWindowActor  *self,
+                               ClutterStageView *stage_view)
 {
   MetaWindowActorPrivate *priv =
     meta_window_actor_get_instance_private (self);
 
-  META_WINDOW_ACTOR_GET_CLASS (self)->post_paint (self);
+  META_WINDOW_ACTOR_GET_CLASS (self)->after_paint (self, stage_view);
 
   if (meta_window_actor_is_destroyed (self))
     return;
@@ -1287,8 +1303,7 @@ meta_window_actor_blit_to_framebuffer (MetaScreenCastWindow *screen_cast_window,
   if (width == 0 || height == 0)
     return FALSE;
 
-  if (!clutter_actor_get_resource_scale (actor, &resource_scale))
-    return FALSE;
+  resource_scale = clutter_actor_get_resource_scale (actor);
 
   clutter_actor_inhibit_culling (actor);
 
@@ -1321,7 +1336,9 @@ meta_window_actor_blit_to_framebuffer (MetaScreenCastWindow *screen_cast_window,
   cogl_framebuffer_scale (framebuffer, resource_scale, resource_scale, 1);
   cogl_framebuffer_translate (framebuffer, -x, -y, 0);
 
-  paint_context = clutter_paint_context_new_for_framebuffer (framebuffer);
+  paint_context =
+    clutter_paint_context_new_for_framebuffer (framebuffer, NULL,
+                                               CLUTTER_PAINT_FLAG_NONE);
   clutter_actor_paint (actor, paint_context);
   clutter_paint_context_destroy (paint_context);
 
@@ -1444,8 +1461,7 @@ meta_window_actor_get_image (MetaWindowActor *self,
   if (width == 0 || height == 0)
     goto out;
 
-  if (!clutter_actor_get_resource_scale (actor, &resource_scale))
-    goto out;
+  resource_scale = clutter_actor_get_resource_scale (actor);
 
   width = ceilf (width * resource_scale);
   height = ceilf (height * resource_scale);
@@ -1479,7 +1495,9 @@ meta_window_actor_get_image (MetaWindowActor *self,
   cogl_framebuffer_scale (framebuffer, resource_scale, resource_scale, 1);
   cogl_framebuffer_translate (framebuffer, -x, -y, 0);
 
-  paint_context = clutter_paint_context_new_for_framebuffer (framebuffer);
+  paint_context =
+    clutter_paint_context_new_for_framebuffer (framebuffer, NULL,
+                                               CLUTTER_PAINT_FLAG_NONE);
   clutter_actor_paint (actor, paint_context);
   clutter_paint_context_destroy (paint_context);
 

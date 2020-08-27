@@ -5,6 +5,8 @@
 #include <clutter/clutter.h>
 #include <cogl/cogl.h>
 
+#include "tests/clutter-test-utils.h"
+
 /* Coglbox declaration
  *--------------------------------------------------*/
 
@@ -201,28 +203,27 @@ test_cogl_tex_tile_main (int argc, char *argv[])
   ClutterActor     *coglbox;
   ClutterTimeline  *timeline;
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init (&argc, &argv);
 
   /* Stage */
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_actor_set_size (stage, 400, 400);
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Cogl Texture Tiling");
-  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_test_quit), NULL);
 
   /* Cogl Box */
   coglbox = test_coglbox_new ();
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), coglbox);
 
   /* Timeline for animation */
-  timeline = clutter_timeline_new (6000); /* 6 second duration */
-  clutter_timeline_set_loop (timeline, TRUE);
+  timeline = clutter_timeline_new_for_actor (stage, 6000); /* 6 second duration */
+  clutter_timeline_set_repeat_count (timeline, -1);
   g_signal_connect (timeline, "new-frame", G_CALLBACK (frame_cb), coglbox);
   clutter_timeline_start (timeline);
 
-  clutter_actor_show_all (stage);
+  clutter_actor_show (stage);
 
-  clutter_main ();
+  clutter_test_main ();
 
   return 0;
 }

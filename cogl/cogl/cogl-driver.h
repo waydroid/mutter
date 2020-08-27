@@ -35,6 +35,7 @@
 #include "cogl-offscreen.h"
 #include "cogl-framebuffer-private.h"
 #include "cogl-attribute-private.h"
+#include "cogl-sampler-cache-private.h"
 
 typedef struct _CoglDriverVtable CoglDriverVtable;
 
@@ -45,6 +46,12 @@ struct _CoglDriverVtable
 
   void
   (* context_deinit) (CoglContext *context);
+
+  gboolean
+  (* is_hardware_accelerated) (CoglContext *context);
+
+  CoglGraphicsResetStatus
+  (* get_graphics_reset_status) (CoglContext *context);
 
   /* TODO: factor this out since this is OpenGL specific and
    * so can be ignored by non-OpenGL drivers. */
@@ -262,6 +269,19 @@ struct _CoglDriverVtable
                        const void *data,
                        unsigned int size,
                        GError **error);
+
+  void
+  (*sampler_init) (CoglContext *context,
+                   CoglSamplerCacheEntry *entry);
+
+  void
+  (*sampler_free) (CoglContext *context,
+                   CoglSamplerCacheEntry *entry);
+
+  void
+  (* set_uniform) (CoglContext *ctx,
+                   GLint location,
+                   const CoglBoxedValue *value);
 };
 
 #define COGL_DRIVER_ERROR (_cogl_driver_error_quark ())

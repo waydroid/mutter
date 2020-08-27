@@ -110,34 +110,11 @@ typedef ClutterActorTraverseVisitFlags (*ClutterTraverseCallback) (ClutterActor 
 typedef gboolean (*ClutterForeachCallback) (ClutterActor *actor,
                                             gpointer      user_data);
 
-typedef struct _AnchorCoord             AnchorCoord;
 typedef struct _SizeRequest             SizeRequest;
 
 typedef struct _ClutterLayoutInfo       ClutterLayoutInfo;
 typedef struct _ClutterTransformInfo    ClutterTransformInfo;
 typedef struct _ClutterAnimationInfo    ClutterAnimationInfo;
-
-/* Internal helper struct to represent a point that can be stored in
-   either direct pixel coordinates or as a fraction of the actor's
-   size. It is used for the anchor point, scale center and rotation
-   centers. */
-struct _AnchorCoord
-{
-  gboolean is_fractional;
-
-  union
-  {
-    /* Used when is_fractional == TRUE */
-    struct
-    {
-      gdouble x;
-      gdouble y;
-    } fraction;
-
-    /* Use when is_fractional == FALSE */
-    graphene_point3d_t units;
-  } v;
-};
 
 struct _SizeRequest
 {
@@ -183,24 +160,15 @@ ClutterLayoutInfo *             _clutter_actor_peek_layout_info                 
 
 struct _ClutterTransformInfo
 {
-  /* rotation (angle and center) */
+  /* rotation */
   gdouble rx_angle;
-  AnchorCoord rx_center;
-
   gdouble ry_angle;
-  AnchorCoord ry_center;
-
   gdouble rz_angle;
-  AnchorCoord rz_center;
 
   /* scaling */
   gdouble scale_x;
   gdouble scale_y;
   gdouble scale_z;
-  AnchorCoord scale_center;
-
-  /* anchor point */
-  AnchorCoord anchor;
 
   /* translation */
   graphene_point3d_t translation;
@@ -313,13 +281,17 @@ void                            _clutter_actor_detach_clone                     
 void                            _clutter_actor_queue_redraw_on_clones                   (ClutterActor *actor);
 void                            _clutter_actor_queue_relayout_on_clones                 (ClutterActor *actor);
 void                            _clutter_actor_queue_only_relayout                      (ClutterActor *actor);
-void                            _clutter_actor_queue_update_resource_scale_recursive    (ClutterActor *actor);
+void                            clutter_actor_clear_stage_views_recursive               (ClutterActor *actor);
 
-gboolean                        _clutter_actor_get_real_resource_scale                  (ClutterActor *actor,
-                                                                                         float        *resource_scale);
+float                           clutter_actor_get_real_resource_scale                   (ClutterActor *actor);
 
 ClutterPaintNode *              clutter_actor_create_texture_paint_node                 (ClutterActor *self,
                                                                                          CoglTexture  *texture);
+
+void clutter_actor_update_stage_views (ClutterActor *self,
+                                       int           phase);
+
+void clutter_actor_queue_immediate_relayout (ClutterActor *self);
 
 G_END_DECLS
 

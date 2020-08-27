@@ -138,6 +138,13 @@ struct _MetaWaylandDragDestFuncs
                       MetaWaylandSurface    *surface);
 };
 
+typedef struct _MetaWaylandBufferRef
+{
+  grefcount ref_count;
+  MetaWaylandBuffer *buffer;
+  unsigned int use_count;
+} MetaWaylandBufferRef;
+
 struct _MetaWaylandSurface
 {
   GObject parent;
@@ -152,27 +159,20 @@ struct _MetaWaylandSurface
   int32_t offset_x, offset_y;
   GNode *subsurface_branch_node;
   GNode *subsurface_leaf_node;
-  GHashTable *outputs_to_destroy_notify_id;
+  GHashTable *outputs;
   MetaMonitorTransform buffer_transform;
 
   CoglTexture *texture;
 
   /* Buffer reference state. */
-  struct {
-    MetaWaylandBuffer *buffer;
-    unsigned int use_count;
-  } buffer_ref;
+  MetaWaylandBufferRef *buffer_ref;
 
   /* Buffer renderer state. */
   gboolean buffer_held;
 
-  /* List of pending frame callbacks that needs to stay queued longer than one
-   * commit sequence, such as when it has not yet been assigned a role.
-   */
-  struct wl_list pending_frame_callback_list;
-
   /* Intermediate state for when no role has been assigned. */
   struct {
+    struct wl_list pending_frame_callback_list;
     MetaWaylandBuffer *buffer;
   } unassigned;
 
@@ -286,9 +286,6 @@ gboolean            meta_wayland_surface_should_cache_state (MetaWaylandSurface 
 
 MetaWindow *        meta_wayland_surface_get_toplevel_window (MetaWaylandSurface *surface);
 
-void                meta_wayland_surface_cache_pending_frame_callbacks (MetaWaylandSurface      *surface,
-                                                                        MetaWaylandSurfaceState *pending);
-
 void                meta_wayland_surface_queue_pending_frame_callbacks (MetaWaylandSurface *surface);
 
 void                meta_wayland_surface_queue_pending_state_frame_callbacks (MetaWaylandSurface      *surface,
@@ -343,6 +340,9 @@ void                meta_wayland_surface_update_outputs_recursively (MetaWayland
 
 int                 meta_wayland_surface_get_width (MetaWaylandSurface *surface);
 int                 meta_wayland_surface_get_height (MetaWaylandSurface *surface);
+
+CoglScanout *       meta_wayland_surface_try_acquire_scanout (MetaWaylandSurface *surface,
+                                                              CoglOnscreen       *onscreen);
 
 static inline GNode *
 meta_get_next_subsurface_sibling (GNode *n)

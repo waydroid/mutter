@@ -11,6 +11,7 @@ mutter_public_headers = [
   'meta-backend.h',
   'meta-background.h',
   'meta-background-actor.h',
+  'meta-background-content.h',
   'meta-background-group.h',
   'meta-background-image.h',
   'meta-close-dialog.h',
@@ -19,6 +20,7 @@ mutter_public_headers = [
   'meta-idle-monitor.h',
   'meta-inhibit-shortcuts-dialog.h',
   'meta-launch-context.h',
+  'meta-later.h',
   'meta-monitor-manager.h',
   'meta-plugin.h',
   'meta-remote-access-controller.h',
@@ -42,6 +44,12 @@ mutter_public_headers = [
   'window.h',
   'workspace.h',
 ]
+
+if have_wayland
+  mutter_public_headers += [
+    'meta-wayland-client.h',
+  ]
+endif
 
 if have_x11
   mutter_public_headers += [

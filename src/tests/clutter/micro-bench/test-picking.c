@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <clutter/clutter.h>
 
+#include "tests/clutter-test-utils.h"
+
 #define N_ACTORS 100
 #define N_EVENTS 5
 
@@ -76,22 +78,19 @@ main (int argc, char **argv)
   gdouble angle;
   ClutterColor color = { 0x00, 0x00, 0x00, 0xff };
   ClutterActor *stage, *rect;
-  GError *error = NULL;
 
   g_setenv ("CLUTTER_VBLANK", "none", FALSE);
   g_setenv ("CLUTTER_DEFAULT_FPS", "1000", FALSE);
   g_setenv ("CLUTTER_SHOW_FPS", "1", FALSE);
 
-  if (clutter_init_with_args (&argc, &argv,
-                              NULL,
-                              entries,
-                              NULL,
-                              &error) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init_with_args (&argc, &argv,
+                               NULL,
+                               entries,
+                               NULL);
 
-  stage = clutter_stage_new ();
+  stage = clutter_test_get_stage ();
   clutter_actor_set_size (stage, 512, 512);
-  clutter_stage_set_color (CLUTTER_STAGE (stage), CLUTTER_COLOR_Black);
+  clutter_actor_set_background_color (CLUTTER_ACTOR (stage), CLUTTER_COLOR_Black);
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Picking");
 
   printf ("Picking performance test with "
@@ -112,10 +111,10 @@ main (int argc, char **argv)
                    fmod ((i + (n_actors/3.0)), n_actors)))) /
                    (gdouble)(n_actors/4.0) - 1.0)) * 255.0;
 
-      rect = clutter_rectangle_new_with_color (&color);
+      rect = clutter_actor_new ();
+      clutter_actor_set_background_color (rect, &color);
       clutter_actor_set_size (rect, 100, 100);
-      clutter_actor_set_anchor_point_from_gravity (rect,
-                                                   CLUTTER_GRAVITY_CENTER);
+      clutter_actor_set_translation (rect, -50.f, -50.f, 0.f);
       clutter_actor_set_position (rect,
                                   256 + 206 * cos (angle),
                                   256 + 206 * sin (angle));
@@ -132,7 +131,7 @@ main (int argc, char **argv)
 
   g_signal_connect (stage, "paint", G_CALLBACK (on_paint), NULL);
 
-  clutter_main ();
+  clutter_test_main ();
 
   clutter_actor_destroy (stage);
 

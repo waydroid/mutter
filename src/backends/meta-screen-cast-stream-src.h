@@ -78,6 +78,12 @@ void meta_screen_cast_stream_src_maybe_record_frame (MetaScreenCastStreamSrc  *s
 
 gboolean meta_screen_cast_stream_src_pending_follow_up_frame (MetaScreenCastStreamSrc *src);
 
+int meta_screen_cast_stream_src_get_stride (MetaScreenCastStreamSrc *src);
+
+int meta_screen_cast_stream_src_get_width (MetaScreenCastStreamSrc *src);
+
+int meta_screen_cast_stream_src_get_height (MetaScreenCastStreamSrc *src);
+
 MetaScreenCastStream * meta_screen_cast_stream_src_get_stream (MetaScreenCastStreamSrc *src);
 
 gboolean meta_screen_cast_stream_src_draw_cursor_into (MetaScreenCastStreamSrc  *src,

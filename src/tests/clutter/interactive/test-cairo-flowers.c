@@ -3,6 +3,8 @@
  */
 #include <clutter/clutter.h>
 
+#include "tests/clutter-test-utils.h"
+
 #ifndef _MSC_VER
 #include <unistd.h> 		/* for sleep(), used for screenshots */
 #endif
@@ -157,6 +159,7 @@ make_flower_actor (void)
                        "width", (gfloat) size,
                        "height", (gfloat) size,
                        NULL);
+  clutter_actor_set_pivot_point (ctex, 0.5, 0.5);
 
   g_object_unref (canvas);
 
@@ -182,12 +185,9 @@ tick (ClutterTimeline *timeline,
       clutter_actor_set_position (flowers[i]->ctex,
 				  flowers[i]->x, flowers[i]->y);
 
-      clutter_actor_set_rotation (flowers[i]->ctex,
-                                  CLUTTER_Z_AXIS,
-                                  flowers[i]->rot,
-                                  clutter_actor_get_width (flowers[i]->ctex)/2,
-                                  clutter_actor_get_height (flowers[i]->ctex)/2,
-                                  0);
+      clutter_actor_set_rotation_angle (flowers[i]->ctex,
+                                        CLUTTER_Z_AXIS,
+                                        flowers[i]->rot);
     }
 }
 
@@ -196,7 +196,7 @@ stop_and_quit (ClutterActor    *actor,
                ClutterTimeline *timeline)
 {
   clutter_timeline_stop (timeline);
-  clutter_main_quit ();
+  clutter_test_quit ();
 }
 
 G_MODULE_EXPORT int
@@ -208,15 +208,14 @@ test_cairo_flowers_main (int argc, char **argv)
 
   srand (time (NULL));
 
-  if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
-    return 1;
+  clutter_test_init (&argc, &argv);
+
+  stage = clutter_test_get_stage ();
+  clutter_stage_set_title (CLUTTER_STAGE (stage), "Cairo Flowers");
 
   /* Create a timeline to manage animation */
-  timeline = clutter_timeline_new (6000);
+  timeline = clutter_timeline_new_for_actor (stage, 6000);
   clutter_timeline_set_repeat_count (timeline, -1);
-
-  stage = clutter_stage_new ();
-  clutter_stage_set_title (CLUTTER_STAGE (stage), "Cairo Flowers");
   g_signal_connect (stage, "destroy", G_CALLBACK (stop_and_quit), timeline);
 
   clutter_actor_set_background_color (stage, CLUTTER_COLOR_Black);
@@ -245,10 +244,10 @@ test_cairo_flowers_main (int argc, char **argv)
   clutter_timeline_start (timeline);
 
   g_signal_connect (stage, "key-press-event",
-		    G_CALLBACK (clutter_main_quit),
+		    G_CALLBACK (clutter_test_quit),
 		    NULL);
 
-  clutter_main();
+  clutter_test_main ();
 
   g_object_unref (timeline);
 

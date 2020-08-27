@@ -30,8 +30,6 @@ struct _ClutterStageWindowInterface
 
   void              (* set_title)               (ClutterStageWindow *stage_window,
                                                  const gchar        *title);
-  void              (* set_cursor_visible)      (ClutterStageWindow *stage_window,
-                                                 gboolean            cursor_visible);
 
   gboolean          (* realize)                 (ClutterStageWindow *stage_window);
   void              (* unrealize)               (ClutterStageWindow *stage_window);
@@ -46,23 +44,14 @@ struct _ClutterStageWindowInterface
   void              (* get_geometry)            (ClutterStageWindow *stage_window,
                                                  cairo_rectangle_int_t *geometry);
 
-  void              (* schedule_update)         (ClutterStageWindow *stage_window,
-                                                 int                 sync_delay);
-  gint64            (* get_update_time)         (ClutterStageWindow *stage_window);
-  void              (* clear_update_time)       (ClutterStageWindow *stage_window);
-
-  void              (* set_accept_focus)        (ClutterStageWindow *stage_window,
-                                                 gboolean            accept_focus);
-
-  void              (* redraw)                  (ClutterStageWindow *stage_window);
+  void              (* redraw_view)             (ClutterStageWindow *stage_window,
+                                                 ClutterStageView   *view);
 
   gboolean          (* can_clip_redraws)        (ClutterStageWindow *stage_window);
 
   GList            *(* get_views)               (ClutterStageWindow *stage_window);
   int64_t           (* get_frame_counter)       (ClutterStageWindow *stage_window);
   void              (* finish_frame)            (ClutterStageWindow *stage_window);
-
-  int64_t           (* get_next_presentation_time) (ClutterStageWindow *stage_window);
 };
 
 ClutterActor *    _clutter_stage_window_get_wrapper        (ClutterStageWindow *window);
@@ -85,15 +74,12 @@ void              _clutter_stage_window_resize                  (ClutterStageWin
 CLUTTER_EXPORT
 void              _clutter_stage_window_get_geometry            (ClutterStageWindow *window,
                                                                  cairo_rectangle_int_t *geometry);
-void              _clutter_stage_window_schedule_update         (ClutterStageWindow *window,
-                                                                 int                 sync_delay);
-gint64            _clutter_stage_window_get_update_time         (ClutterStageWindow *window);
-void              _clutter_stage_window_clear_update_time       (ClutterStageWindow *window);
 
 void              _clutter_stage_window_set_accept_focus        (ClutterStageWindow *window,
                                                                  gboolean            accept_focus);
 
-void              _clutter_stage_window_redraw                  (ClutterStageWindow *window);
+void               _clutter_stage_window_redraw_view            (ClutterStageWindow *window,
+                                                                 ClutterStageView   *view);
 
 gboolean          _clutter_stage_window_can_clip_redraws        (ClutterStageWindow *window);
 
@@ -102,8 +88,6 @@ GList *           _clutter_stage_window_get_views               (ClutterStageWin
 void              _clutter_stage_window_finish_frame            (ClutterStageWindow *window);
 
 int64_t           _clutter_stage_window_get_frame_counter       (ClutterStageWindow *window);
-
-int64_t           _clutter_stage_window_get_next_presentation_time (ClutterStageWindow *window);
 
 G_END_DECLS
 
