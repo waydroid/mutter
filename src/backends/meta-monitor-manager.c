@@ -67,6 +67,7 @@ enum
   PROP_0,
 
   PROP_BACKEND,
+  PROP_PANEL_ORIENTATION_MANAGED,
 
   PROP_LAST
 };
@@ -684,6 +685,9 @@ orientation_changed (MetaOrientationManager *orientation_manager,
   GError *error = NULL;
   MetaMonitorsConfig *config;
 
+  if (!manager->panel_orientation_managed)
+    return;
+
   switch (meta_orientation_manager_get_orientation (orientation_manager))
     {
     case META_ORIENTATION_NORMAL:
@@ -748,6 +752,34 @@ experimental_features_changed (MetaSettings           *settings,
   meta_settings_update_ui_scaling_factor (settings);
 }
 
+static void
+update_panel_orientation_managed (MetaMonitorManager *manager)
+{
+  MetaOrientationManager *orientation_manager;
+  ClutterBackend *clutter_backend;
+  ClutterSeat *seat;
+  gboolean panel_orientation_managed;
+
+  clutter_backend = meta_backend_get_clutter_backend (manager->backend);
+  seat = clutter_backend_get_default_seat (clutter_backend);
+
+  orientation_manager = meta_backend_get_orientation_manager (manager->backend);
+
+  panel_orientation_managed =
+    (clutter_seat_get_touch_mode (seat) &&
+     meta_orientation_manager_has_accelerometer (orientation_manager));
+
+  if (manager->panel_orientation_managed == panel_orientation_managed)
+    return;
+
+  manager->panel_orientation_managed = panel_orientation_managed;
+  g_object_notify_by_pspec (G_OBJECT (manager),
+                            obj_props[PROP_PANEL_ORIENTATION_MANAGED]);
+
+  meta_dbus_display_config_set_panel_orientation_managed (manager->display_config,
+                                                          manager->panel_orientation_managed);
+}
+
 void
 meta_monitor_manager_setup (MetaMonitorManager *manager)
 {
@@ -787,6 +819,11 @@ meta_monitor_manager_constructed (GObject *object)
                            "orientation-changed",
                            G_CALLBACK (orientation_changed),
                            manager, 0);
+
+  g_signal_connect_object (meta_backend_get_orientation_manager (backend),
+                           "notify::has-accelerometer",
+                           G_CALLBACK (update_panel_orientation_managed), manager,
+                           G_CONNECT_SWAPPED);
 
   g_signal_connect_object (backend,
                            "lid-is-closed-changed",
@@ -848,6 +885,7 @@ meta_monitor_manager_set_property (GObject      *object,
     case PROP_BACKEND:
       manager->backend = g_value_get_object (value);
       break;
+    case PROP_PANEL_ORIENTATION_MANAGED:
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
@@ -865,6 +903,9 @@ meta_monitor_manager_get_property (GObject    *object,
     {
     case PROP_BACKEND:
       g_value_set_object (value, manager->backend);
+      break;
+    case PROP_PANEL_ORIENTATION_MANAGED:
+      g_value_set_boolean (value, manager->panel_orientation_managed);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -925,6 +966,15 @@ meta_monitor_manager_class_init (MetaMonitorManagerClass *klass)
                          G_PARAM_READWRITE |
                          G_PARAM_CONSTRUCT_ONLY |
                          G_PARAM_STATIC_STRINGS);
+
+  obj_props[PROP_PANEL_ORIENTATION_MANAGED] =
+    g_param_spec_boolean ("panel-orientation-managed",
+                          "Panel orientation managed",
+                          "Panel orientation is managed",
+                          FALSE,
+                          G_PARAM_READABLE |
+                          G_PARAM_EXPLICIT_NOTIFY |
+                          G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, PROP_LAST, obj_props);
 }
 
@@ -3174,4 +3224,26 @@ meta_monitor_manager_get_vendor_name (MetaMonitorManager *manager,
     manager->pnp_ids = gnome_pnp_ids_new ();
 
   return gnome_pnp_ids_get_pnp_id (manager->pnp_ids, vendor);
+}
+
+gboolean
+meta_monitor_manager_get_panel_orientation_managed (MetaMonitorManager *manager)
+{
+  g_return_val_if_fail (META_IS_MONITOR_MANAGER (manager), FALSE);
+
+  return manager->panel_orientation_managed;
+}
+
+void
+meta_monitor_manager_post_init (MetaMonitorManager *manager)
+{
+  ClutterBackend *clutter_backend;
+  ClutterSeat *seat;
+
+  clutter_backend = meta_backend_get_clutter_backend (manager->backend);
+  seat = clutter_backend_get_default_seat (clutter_backend);
+
+  g_signal_connect_object (seat, "notify::touch-mode",
+                           G_CALLBACK (update_panel_orientation_managed), manager,
+                           G_CONNECT_SWAPPED);
 }

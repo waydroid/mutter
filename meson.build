@@ -1,5 +1,5 @@
 project('mutter', 'c',
-  version: '3.37.91',
+  version: '3.37.92',
   meson_version: '>= 0.51.0',
   license: 'GPLv2+'
 )
@@ -47,7 +47,7 @@ wayland_protocols_req = '>= 1.19'
 
 # native backend version requirements
 libinput_req = '>= 1.7'
-gbm_req = '>= 10.3'
+gbm_req = '>= 17.3'
 
 # screen cast version requirements
 libpipewire_req = '>= 0.3.0'

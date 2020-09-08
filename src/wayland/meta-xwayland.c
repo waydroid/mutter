@@ -39,8 +39,10 @@
 #include <unistd.h>
 #include <X11/Xauth.h>
 
+#include "backends/meta-settings-private.h"
 #include "core/main-private.h"
 #include "meta/main.h"
+#include "meta/meta-backend.h"
 #include "wayland/meta-xwayland-surface.h"
 #include "x11/meta-x11-display-private.h"
 
@@ -236,46 +238,6 @@ create_lock_file (int display, int *display_out)
 }
 
 static int
-bind_to_abstract_socket (int       display,
-                         gboolean *fatal)
-{
-  struct sockaddr_un addr;
-  socklen_t size, name_size;
-  int fd;
-
-  fd = socket (PF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
-  if (fd < 0)
-    {
-      *fatal = TRUE;
-      g_warning ("Failed to create socket: %m");
-      return -1;
-    }
-
-  addr.sun_family = AF_LOCAL;
-  name_size = snprintf (addr.sun_path, sizeof addr.sun_path,
-                        "%c/tmp/.X11-unix/X%d", 0, display);
-  size = offsetof (struct sockaddr_un, sun_path) + name_size;
-  if (bind (fd, (struct sockaddr *) &addr, size) < 0)
-    {
-      *fatal = errno != EADDRINUSE;
-      g_warning ("failed to bind to @%s: %m", addr.sun_path + 1);
-      close (fd);
-      return -1;
-    }
-
-  if (listen (fd, 1) < 0)
-    {
-      *fatal = errno != EADDRINUSE;
-      g_warning ("Failed to listen on abstract socket @%s: %m",
-                 addr.sun_path + 1);
-      close (fd);
-      return -1;
-    }
-
-  return fd;
-}
-
-static int
 bind_to_unix_socket (int display)
 {
   struct sockaddr_un addr;
@@ -381,26 +343,18 @@ meta_xwayland_override_display_number (int number)
 static gboolean
 open_display_sockets (MetaXWaylandManager *manager,
                       int                  display_index,
-                      int                 *abstract_fd_out,
                       int                 *unix_fd_out,
                       gboolean            *fatal)
 {
-  int abstract_fd, unix_fd;
-
-  abstract_fd = bind_to_abstract_socket (display_index,
-                                         fatal);
-  if (abstract_fd < 0)
-    return FALSE;
+  int unix_fd;
 
   unix_fd = bind_to_unix_socket (display_index);
   if (unix_fd < 0)
     {
       *fatal = FALSE;
-      close (abstract_fd);
       return FALSE;
     }
 
-  *abstract_fd_out = abstract_fd;
   *unix_fd_out = unix_fd;
 
   return TRUE;
@@ -429,7 +383,6 @@ choose_xdisplay (MetaXWaylandManager    *manager,
         }
 
       if (!open_display_sockets (manager, display,
-                                 &connection->abstract_fd,
                                  &connection->unix_fd,
                                  &fatal))
         {
@@ -574,12 +527,25 @@ meta_xwayland_start_xserver (MetaXWaylandManager *manager,
                              GAsyncReadyCallback  callback,
                              gpointer             user_data)
 {
+  struct {
+    const char *extension_name;
+    MetaXwaylandExtension disable_extension;
+  } x11_extension_names[] = {
+    { "SECURITY", META_XWAYLAND_EXTENSION_SECURITY },
+    { "XTEST", META_XWAYLAND_EXTENSION_XTEST },
+  };
+
   int xwayland_client_fd[2];
   int displayfd[2];
   g_autoptr(GSubprocessLauncher) launcher = NULL;
   GSubprocessFlags flags;
   GError *error = NULL;
   g_autoptr (GTask) task = NULL;
+  MetaBackend *backend;
+  MetaSettings *settings;
+  const char *args[32];
+  int xwayland_disable_extensions;
+  int i, j;
 
   task = g_task_new (NULL, cancellable, callback, user_data);
   g_task_set_source_tag (task, meta_xwayland_start_xserver);
@@ -614,33 +580,58 @@ meta_xwayland_start_xserver (MetaXWaylandManager *manager,
       flags |= G_SUBPROCESS_FLAGS_STDERR_SILENCE;
     }
 
+  backend = meta_get_backend ();
+  settings = meta_backend_get_settings (backend);
+  xwayland_disable_extensions =
+    meta_settings_get_xwayland_disable_extensions (settings);
+
   launcher = g_subprocess_launcher_new (flags);
 
   g_subprocess_launcher_take_fd (launcher, xwayland_client_fd[1], 3);
-  g_subprocess_launcher_take_fd (launcher, manager->public_connection.abstract_fd, 4);
-  g_subprocess_launcher_take_fd (launcher, manager->public_connection.unix_fd, 5);
-  g_subprocess_launcher_take_fd (launcher, displayfd[1], 6);
-  g_subprocess_launcher_take_fd (launcher, manager->private_connection.abstract_fd, 7);
+  g_subprocess_launcher_take_fd (launcher, manager->public_connection.unix_fd, 4);
+  g_subprocess_launcher_take_fd (launcher, displayfd[1], 5);
+  g_subprocess_launcher_take_fd (launcher, manager->private_connection.unix_fd, 6);
 
   g_subprocess_launcher_setenv (launcher, "WAYLAND_SOCKET", "3", TRUE);
 
-  manager->proc = g_subprocess_launcher_spawn (launcher, &error,
-                                               XWAYLAND_PATH,
-                                               manager->public_connection.name,
-                                               "-rootless",
-                                               "-noreset",
-                                               "-accessx",
-                                               "-core",
-                                               "-auth", manager->auth_file,
-                                               "-listen", "4",
-                                               "-listen", "5",
-                                               "-displayfd", "6",
+  i = 0;
+  args[i++] = XWAYLAND_PATH;
+  args[i++] = manager->public_connection.name;
+  args[i++] = "-rootless";
+  args[i++] = "-noreset";
+  args[i++] = "-accessx";
+  args[i++] = "-core";
+  args[i++] = "-auth";
+  args[i++] = manager->auth_file;
+  args[i++] = "-listen";
+  args[i++] = "4";
+  args[i++] = "-displayfd";
+  args[i++] = "5";
 #ifdef HAVE_XWAYLAND_INITFD
-                                               "-initfd", "7",
+  args[i++] = "-initfd";
+  args[i++] = "6";
 #else
-                                               "-listen", "7",
+  args[i++] = "-listen";
+  args[i++] = "6";
 #endif
-                                               NULL);
+  for (j = 0; j <  G_N_ELEMENTS (x11_extension_names); j++)
+    {
+      /* Make sure we don't go past the array size - We need room for
+       * 2 arguments, plus the last NULL terminator.
+       */
+      if (i + 3 > G_N_ELEMENTS (args))
+        break;
+
+      if (xwayland_disable_extensions & x11_extension_names[j].disable_extension)
+        {
+          args[i++] = "-extension";
+          args[i++] = x11_extension_names[j].extension_name;
+        }
+  }
+  /* Terminator */
+  args[i++] = NULL;
+
+  manager->proc = g_subprocess_launcher_spawnv (launcher, args, &error);
 
   if (!manager->proc)
     {
@@ -756,14 +747,12 @@ meta_xwayland_init (MetaXWaylandManager *manager,
     {
       if (!open_display_sockets (manager,
                                  manager->public_connection.display_index,
-                                 &manager->public_connection.abstract_fd,
                                  &manager->public_connection.unix_fd,
                                  &fatal))
         return FALSE;
 
       if (!open_display_sockets (manager,
                                  manager->private_connection.display_index,
-                                 &manager->private_connection.abstract_fd,
                                  &manager->private_connection.unix_fd,
                                  &fatal))
         return FALSE;
@@ -774,7 +763,7 @@ meta_xwayland_init (MetaXWaylandManager *manager,
 
   if (policy == META_DISPLAY_POLICY_ON_DEMAND)
     {
-      g_unix_fd_add (manager->public_connection.abstract_fd, G_IO_IN,
+      g_unix_fd_add (manager->public_connection.unix_fd, G_IO_IN,
                      xdisplay_connection_activity_cb, manager);
     }
 

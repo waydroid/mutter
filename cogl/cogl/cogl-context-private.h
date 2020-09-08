@@ -256,6 +256,8 @@ struct _CoglContext
   CoglPollSource *fences_poll_source;
   CoglList fences;
 
+  GHashTable *named_pipelines;
+
   /* This defines a list of function pointers that Cogl uses from
      either GL or GLES. All functions are accessed indirectly through
      these pointers rather than linking to them directly */
@@ -286,7 +288,7 @@ _cogl_context_get_winsys (CoglContext *context);
 
 /* Query the GL extensions and lookup the corresponding function
  * pointers. Theoretically the list of extensions can change for
- * different GL contexts so it is the winsys backend's responsiblity
+ * different GL contexts so it is the winsys backend's responsibility
  * to know when to re-query the GL extensions. The backend should also
  * check whether the GL context is supported by Cogl. If not it should
  * return FALSE and set @error */
