@@ -2,6 +2,7 @@ libmutter-7.so.0 libmutter-7-0 #MINVER#
 * Build-Depends-Package: libmutter-7-dev
  (arch=linux-any)meta_activate_session@Base 3.28.2
  meta_add_clutter_debug_flags@Base 3.35.90
+ meta_add_debug_paint_flag@Base 3.37.92
  meta_add_verbose_topic@Base 3.28.2
  meta_anonymous_file_close_fd@Base 3.37.91
  meta_anonymous_file_free@Base 3.37.91
@@ -104,6 +105,7 @@ libmutter-7.so.0 libmutter-7-0 #MINVER#
  meta_cursor_tracker_get_sprite@Base 3.28.2
  meta_cursor_tracker_get_type@Base 3.28.2
  meta_cursor_tracker_set_pointer_visible@Base 3.28.2
+ meta_debug_paint_flag_get_type@Base 3.37.92
  meta_debug_spew_real@Base 3.28.2
  meta_debug_topic_get_type@Base 3.28.2
  meta_direction_get_type@Base 3.28.2
@@ -174,6 +176,7 @@ libmutter-7.so.0 libmutter-7-0 #MINVER#
  meta_frame_type_to_string@Base 3.28.2
  meta_g_utf8_strndup@Base 3.28.2
  meta_get_backend@Base 3.28.2
+ meta_get_debug_paint_flags@Base 3.37.92
  meta_get_display@Base 3.28.2
  meta_get_feedback_group_for_display@Base 3.29.4
  meta_get_locale_direction@Base 3.28.2
@@ -309,6 +312,7 @@ libmutter-7.so.0 libmutter-7-0 #MINVER#
  meta_monitor_manager_get_monitor_for_connector@Base 3.28.2
  meta_monitor_manager_get_monitors@Base 3.28.2
  meta_monitor_manager_get_num_logical_monitors@Base 3.28.2
+ meta_monitor_manager_get_panel_orientation_managed@Base 3.37.92
  meta_monitor_manager_get_switch_config@Base 3.28.2
  meta_monitor_manager_get_type@Base 3.28.2
  meta_monitor_manager_lid_is_closed_changed@Base 3.28.2
@@ -465,6 +469,7 @@ libmutter-7.so.0 libmutter-7-0 #MINVER#
  meta_remote_access_handle_get_type@Base 3.29.90
  meta_remote_access_handle_stop@Base 3.29.90
  meta_remove_clutter_debug_flags@Base 3.35.90
+ meta_remove_debug_paint_flag@Base 3.37.92
  meta_remove_verbose_topic@Base 3.28.2
  meta_renderer_get_views@Base 3.28.2
  meta_restart@Base 3.28.2
@@ -744,12 +749,12 @@ libmutter-clutter-7.so.0 libmutter-7-0 #MINVER#
  _clutter_event_set_state_full@Base 3.33.92
  _clutter_input_device_add_axis@Base 3.33.92
  _clutter_input_device_add_event_sequence@Base 3.33.92
+ _clutter_input_device_add_physical_device@Base 3.37.92
  _clutter_input_device_add_scroll_info@Base 3.33.92
- _clutter_input_device_add_slave@Base 3.33.92
  _clutter_input_device_get_scroll_delta@Base 3.33.92
  _clutter_input_device_get_stage@Base 3.33.92
  _clutter_input_device_remove_event_sequence@Base 3.33.92
- _clutter_input_device_remove_slave@Base 3.33.92
+ _clutter_input_device_remove_physical_device@Base 3.37.92
  _clutter_input_device_reset_axes@Base 3.33.92
  _clutter_input_device_reset_scroll_info@Base 3.33.92
  _clutter_input_device_set_associated_device@Base 3.33.92
@@ -1409,10 +1414,10 @@ libmutter-clutter-7.so.0 libmutter-7-0 #MINVER#
  clutter_input_device_get_n_mode_groups@Base 3.29.4
  clutter_input_device_get_n_rings@Base 3.29.4
  clutter_input_device_get_n_strips@Base 3.29.4
+ clutter_input_device_get_physical_devices@Base 3.37.92
  clutter_input_device_get_pointer_stage@Base 3.29.4
  clutter_input_device_get_product_id@Base 3.29.4
  clutter_input_device_get_seat@Base 3.35.90
- clutter_input_device_get_slave_devices@Base 3.29.4
  clutter_input_device_get_type@Base 3.29.4
  clutter_input_device_get_vendor_id@Base 3.29.4
  clutter_input_device_grab@Base 3.29.4
@@ -1438,7 +1443,7 @@ libmutter-clutter-7.so.0 libmutter-7-0 #MINVER#
  clutter_input_device_update@Base 3.35.90
  clutter_input_device_update_from_event@Base 3.29.4
  clutter_input_device_update_from_tool@Base 3.33.92
- clutter_input_focus_filter_key_event@Base 3.29.4
+ clutter_input_focus_filter_event@Base 3.37.92
  clutter_input_focus_get_type@Base 3.29.4
  clutter_input_focus_is_focused@Base 3.29.4
  clutter_input_focus_reset@Base 3.29.4
@@ -1793,6 +1798,7 @@ libmutter-clutter-7.so.0 libmutter-7-0 #MINVER#
  clutter_stage_view_get_scale@Base 3.29.4
  clutter_stage_view_get_type@Base 3.29.4
  clutter_stage_view_invalidate_offscreen_blit_pipeline@Base 3.29.4
+ clutter_stage_view_peek_scanout@Base 3.37.92
  clutter_stage_window_get_type@Base 3.31.92
  clutter_static_color_get_type@Base 3.29.4
  clutter_step_mode_get_type@Base 3.29.4
@@ -2153,9 +2159,11 @@ libmutter-cogl-7.so.0 libmutter-7-0 #MINVER#
  cogl_context_format_supports_upload@Base 3.37.91
  cogl_context_get_display@Base 3.29.4
  cogl_context_get_gtype@Base 3.29.4
+ cogl_context_get_named_pipeline@Base 3.37.92
  cogl_context_get_renderer@Base 3.29.4
  cogl_context_is_hardware_accelerated@Base 3.37.91
  cogl_context_new@Base 3.29.4
+ cogl_context_set_named_pipeline@Base 3.37.92
  cogl_create_program@Base 3.29.4
  cogl_create_shader@Base 3.29.4
  cogl_debug_matrix_entry_print@Base 3.29.4
@@ -2528,6 +2536,7 @@ libmutter-cogl-7.so.0 libmutter-7-0 #MINVER#
  cogl_renderer_set_custom_winsys@Base 3.29.4
  cogl_renderer_set_driver@Base 3.29.4
  cogl_renderer_set_winsys_id@Base 3.29.4
+ cogl_scanout_blit_to_framebuffer@Base 3.37.92
  cogl_scanout_get_type@Base 3.37.91
  cogl_set_backface_culling_enabled@Base 3.29.4
  cogl_set_depth_test_enabled@Base 3.29.4

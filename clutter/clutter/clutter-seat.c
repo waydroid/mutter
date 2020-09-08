@@ -326,9 +326,9 @@ clutter_seat_init (ClutterSeat *seat)
  * clutter_seat_get_pointer:
  * @seat: a #ClutterSeat
  *
- * Returns the master pointer
+ * Returns the logical pointer
  *
- * Returns: (transfer none): the master pointer
+ * Returns: (transfer none): the logical pointer
  **/
 ClutterInputDevice *
 clutter_seat_get_pointer (ClutterSeat *seat)
@@ -342,9 +342,9 @@ clutter_seat_get_pointer (ClutterSeat *seat)
  * clutter_seat_get_keyboard:
  * @seat: a #ClutterSeat
  *
- * Returns the master keyboard
+ * Returns the logical keyboard
  *
- * Returns: (transfer none): the master keyboard
+ * Returns: (transfer none): the logical keyboard
  **/
 ClutterInputDevice *
 clutter_seat_get_keyboard (ClutterSeat *seat)
@@ -672,6 +672,46 @@ clutter_seat_compress_motion (ClutterSeat        *seat,
 
   if (seat_class->compress_motion)
     seat_class->compress_motion (seat, event, to_discard);
+}
+
+gboolean
+clutter_seat_handle_device_event (ClutterSeat  *seat,
+                                  ClutterEvent *event)
+{
+  ClutterSeatClass *seat_class;
+  ClutterInputDevice *device;
+
+  g_return_val_if_fail (CLUTTER_IS_SEAT (seat), FALSE);
+  g_return_val_if_fail (event, FALSE);
+
+  g_assert (event->type == CLUTTER_DEVICE_ADDED ||
+            event->type == CLUTTER_DEVICE_REMOVED);
+
+  seat_class = CLUTTER_SEAT_GET_CLASS (seat);
+
+  if (seat_class->handle_device_event)
+    {
+      if (!seat_class->handle_device_event (seat, event))
+        return FALSE;
+    }
+
+  device = clutter_event_get_source_device (event);
+  g_assert_true (CLUTTER_IS_INPUT_DEVICE (device));
+
+  switch (event->type)
+    {
+      case CLUTTER_DEVICE_ADDED:
+        g_signal_emit (seat, signals[DEVICE_ADDED], 0, device);
+        break;
+      case CLUTTER_DEVICE_REMOVED:
+        g_signal_emit (seat, signals[DEVICE_REMOVED], 0, device);
+        g_object_run_dispose (G_OBJECT (device));
+        break;
+      default:
+        break;
+    }
+
+  return TRUE;
 }
 
 void

@@ -101,7 +101,7 @@
 			                     or not
 			    - "presentation" (b): whether this output is
 			                          for presentation only
-			    Note: properties might be ignored if not consistenly
+			    Note: properties might be ignored if not consistently
 			    applied to all outputs in the same clone group. In
 			    general, it's expected that presentation or primary
 			    outputs will not be cloned.
@@ -283,6 +283,14 @@
     <property name="PowerSaveMode" type="i" access="readwrite" />
 
     <!--
+        PanelOrientationManaged:
+
+        Whether the built-in panel orientation is automatically managed
+        by mutter.
+    -->
+    <property name="PanelOrientationManaged" type="b" access="read" />
+
+    <!--
         MonitorsChanged:
 
 	The signal is emitted every time the screen configuration
@@ -360,7 +368,7 @@
 
 
 	@layout_mode current layout mode represents the way logical monitors
-	are layed out on the screen. Possible modes include:
+	are laid out on the screen. Possible modes include:
 
 	  1 : physical
 	  2 : logical

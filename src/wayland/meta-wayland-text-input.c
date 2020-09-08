@@ -118,10 +118,9 @@ increment_serial (MetaWaylandTextInput *text_input,
                        GUINT_TO_POINTER (serial + 1));
 }
 
-static gboolean
-done_idle_cb (gpointer user_data)
+static void
+clutter_input_focus_send_done (ClutterInputFocus *focus)
 {
-  ClutterInputFocus *focus = user_data;
   MetaWaylandTextInput *text_input;
   struct wl_resource *resource;
 
@@ -132,6 +131,16 @@ done_idle_cb (gpointer user_data)
       zwp_text_input_v3_send_done (resource,
                                    lookup_serial (text_input, resource));
     }
+}
+
+static gboolean
+done_idle_cb (gpointer user_data)
+{
+  ClutterInputFocus *focus = user_data;
+  MetaWaylandTextInput *text_input;
+
+  text_input = META_WAYLAND_TEXT_INPUT_FOCUS (focus)->text_input;
+  clutter_input_focus_send_done (focus);
 
   text_input->done_idle_id = 0;
   return G_SOURCE_REMOVE;
@@ -147,21 +156,32 @@ meta_wayland_text_input_focus_defer_done (ClutterInputFocus *focus)
   if (text_input->done_idle_id != 0)
     return;
 
-  /* This operates on 3 principles:
-   * - GDBus uses G_PRIORITY_DEFAULT to put messages in the thread default main
-   *   context.
-   * - All relevant ClutterInputFocus methods are ultimately backed by
-   *   DBus methods inside IBus.
+  /* This operates on 2 principles:
+   * - IM operations come as individual ClutterEvents
    * - We want to run .done after them all. The slightly lower
-   *   G_PRIORITY_DEFAULT + 1 priority should ensure we at least group
-   *   all messages seen so far.
+   *   CLUTTER_PRIORITY_EVENTS + 1 priority should ensure we at least group
+   *   all events seen so far.
    *
    * FIXME: .done may be delayed indefinitely if there's a high enough
    *        priority idle source in the main loop. It's unlikely that
    *        recurring idles run at this high priority though.
    */
-  text_input->done_idle_id = g_idle_add_full (G_PRIORITY_DEFAULT + 1,
+  text_input->done_idle_id = g_idle_add_full (CLUTTER_PRIORITY_EVENTS + 1,
                                               done_idle_cb, focus, NULL);
+}
+
+static void
+meta_wayland_text_input_focus_flush_done (ClutterInputFocus *focus)
+{
+  MetaWaylandTextInput *text_input;
+
+  text_input = META_WAYLAND_TEXT_INPUT_FOCUS (focus)->text_input;
+
+  if (text_input->done_idle_id == 0)
+    return;
+
+  g_clear_handle_id (&text_input->done_idle_id, g_source_remove);
+  clutter_input_focus_send_done (focus);
 }
 
 static void
@@ -737,6 +757,10 @@ meta_wayland_text_input_handle_event (MetaWaylandTextInput *text_input,
       !clutter_input_focus_is_focused (text_input->input_focus))
     return FALSE;
 
-  return clutter_input_focus_filter_key_event (text_input->input_focus,
-                                               (const ClutterKeyEvent *) event);
+  if ((event->type == CLUTTER_KEY_PRESS ||
+       event->type == CLUTTER_KEY_RELEASE) &&
+      clutter_event_get_flags (event) & CLUTTER_EVENT_FLAG_INPUT_METHOD)
+    meta_wayland_text_input_focus_flush_done (text_input->input_focus);
+
+  return clutter_input_focus_filter_event (text_input->input_focus, event);
 }

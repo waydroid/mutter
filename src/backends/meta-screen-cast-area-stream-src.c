@@ -172,9 +172,6 @@ sync_cursor_state (MetaScreenCastAreaStreamSrc *area_src)
   MetaScreenCastStreamSrc *src = META_SCREEN_CAST_STREAM_SRC (area_src);
   MetaScreenCastRecordFlag flags;
 
-  if (!is_cursor_in_stream (area_src))
-    return;
-
   if (is_redraw_queued (area_src))
     return;
 
@@ -508,6 +505,8 @@ meta_screen_cast_area_stream_src_set_cursor_metadata (MetaScreenCastStreamSrc *s
   MetaBackend *backend = get_backend (area_src);
   MetaCursorRenderer *cursor_renderer =
     meta_backend_get_cursor_renderer (backend);
+  MetaCursorTracker *cursor_tracker =
+    meta_backend_get_cursor_tracker (backend);
   MetaCursorSprite *cursor_sprite;
   MetaRectangle *area;
   float scale;
@@ -516,7 +515,8 @@ meta_screen_cast_area_stream_src_set_cursor_metadata (MetaScreenCastStreamSrc *s
 
   cursor_sprite = meta_cursor_renderer_get_cursor (cursor_renderer);
 
-  if (!is_cursor_in_stream (area_src))
+  if (!meta_cursor_tracker_get_pointer_visible (cursor_tracker) ||
+      !is_cursor_in_stream (area_src))
     {
       meta_screen_cast_stream_src_unset_cursor_metadata (src,
                                                          spa_meta_cursor);

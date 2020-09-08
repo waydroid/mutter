@@ -171,6 +171,10 @@ static MetaWaylandSurface *
 surface_from_xdg_surface_resource (struct wl_resource *resource)
 {
   MetaWaylandSurfaceRole *surface_role = wl_resource_get_user_data (resource);
+
+  if (!META_IS_WAYLAND_SURFACE_ROLE (surface_role))
+    return NULL;
+
   return meta_wayland_surface_role_get_surface (surface_role);
 }
 
@@ -1845,12 +1849,39 @@ xdg_surface_constructor_get_popup (struct wl_client   *client,
   MetaWaylandSurface *surface = constructor->surface;
   struct wl_resource *xdg_wm_base_resource = constructor->shell_client->resource;
   struct wl_resource *xdg_surface_resource = constructor->resource;
-  MetaWaylandSurface *parent_surface =
-    surface_from_xdg_surface_resource (parent_resource);
+  MetaWaylandSurface *parent_surface;
   MetaWindow *parent_window;
   MetaWaylandXdgPositioner *xdg_positioner;
   MetaWaylandXdgPopup *xdg_popup;
   MetaWaylandXdgSurface *xdg_surface;
+
+  if (!parent_resource)
+    {
+      wl_resource_post_error (xdg_wm_base_resource,
+                              XDG_WM_BASE_ERROR_INVALID_POPUP_PARENT,
+                              "Parent surface is null but Mutter does not yet "
+                              "support specifying parent surfaces via other "
+                              "protocols");
+      return;
+    }
+
+  parent_surface = surface_from_xdg_surface_resource (parent_resource);
+  if (!parent_surface || !META_IS_WAYLAND_XDG_SURFACE (parent_surface->role))
+    {
+      wl_resource_post_error (xdg_wm_base_resource,
+                              XDG_WM_BASE_ERROR_INVALID_POPUP_PARENT,
+                              "Invalid popup parent role");
+      return;
+    }
+
+  parent_window = meta_wayland_surface_get_window (parent_surface);
+  if (!parent_window)
+    {
+      wl_resource_post_error (xdg_wm_base_resource,
+                              XDG_WM_BASE_ERROR_INVALID_POPUP_PARENT,
+                              "Invalid popup parent window");
+      return;
+    }
 
   if (!meta_wayland_surface_assign_role (surface,
                                          META_TYPE_WAYLAND_XDG_POPUP,
@@ -1861,14 +1892,6 @@ xdg_surface_constructor_get_popup (struct wl_client   *client,
       wl_resource_post_error (xdg_wm_base_resource, XDG_WM_BASE_ERROR_ROLE,
                               "wl_surface@%d already has a different role",
                               wl_resource_get_id (surface->resource));
-      return;
-    }
-
-  if (!META_IS_WAYLAND_XDG_SURFACE (parent_surface->role))
-    {
-      wl_resource_post_error (xdg_wm_base_resource,
-                              XDG_WM_BASE_ERROR_INVALID_POPUP_PARENT,
-                              "Invalid popup parent role");
       return;
     }
 
@@ -1885,8 +1908,6 @@ xdg_surface_constructor_get_popup (struct wl_client   *client,
 
   xdg_surface = META_WAYLAND_XDG_SURFACE (xdg_popup);
   meta_wayland_xdg_surface_constructor_finalize (constructor, xdg_surface);
-
-  parent_window = meta_wayland_surface_get_window (parent_surface);
 
   xdg_positioner = wl_resource_get_user_data (positioner_resource);
   xdg_popup->setup.placement_rule =

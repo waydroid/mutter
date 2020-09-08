@@ -127,6 +127,25 @@ stage_painted (MetaStage           *stage,
   meta_screen_cast_stream_src_maybe_record_frame (src, flags);
 }
 
+static void
+before_stage_painted (MetaStage           *stage,
+                      ClutterStageView    *view,
+                      ClutterPaintContext *paint_context,
+                      gpointer             user_data)
+{
+  MetaScreenCastStreamSrc *src = META_SCREEN_CAST_STREAM_SRC (user_data);
+  CoglScanout *scanout;
+
+  scanout = clutter_stage_view_peek_scanout (view);
+  if (scanout)
+    {
+      MetaScreenCastRecordFlag flags;
+
+      flags = META_SCREEN_CAST_RECORD_FLAG_NONE;
+      meta_screen_cast_stream_src_maybe_record_frame (src, flags);
+    }
+}
+
 static MetaBackend *
 get_backend (MetaScreenCastMonitorStreamSrc *monitor_src)
 {
@@ -206,9 +225,6 @@ sync_cursor_state (MetaScreenCastMonitorStreamSrc *monitor_src)
   MetaScreenCastStreamSrc *src = META_SCREEN_CAST_STREAM_SRC (monitor_src);
   MetaScreenCastRecordFlag flags;
 
-  if (!is_cursor_in_stream (monitor_src))
-    return;
-
   if (is_redraw_queued (monitor_src))
     return;
 
@@ -280,8 +296,9 @@ uninhibit_hw_cursor (MetaScreenCastMonitorStreamSrc *monitor_src)
 }
 
 static void
-add_view_painted_watches (MetaScreenCastMonitorStreamSrc *monitor_src,
-                          MetaStageWatchPhase             watch_phase)
+add_view_watches (MetaScreenCastMonitorStreamSrc *monitor_src,
+                  MetaStageWatchPhase             watch_phase,
+                  MetaStageWatchFunc              callback)
 {
   MetaBackend *backend = get_backend (monitor_src);
   MetaRenderer *renderer = meta_backend_get_renderer (backend);
@@ -311,7 +328,7 @@ add_view_painted_watches (MetaScreenCastMonitorStreamSrc *monitor_src,
           watch = meta_stage_watch_view (meta_stage,
                                          CLUTTER_STAGE_VIEW (view),
                                          watch_phase,
-                                         stage_painted,
+                                         callback,
                                          monitor_src);
 
           monitor_src->watches = g_list_prepend (monitor_src->watches, watch);
@@ -346,14 +363,19 @@ meta_screen_cast_monitor_stream_src_enable (MetaScreenCastStreamSrc *src)
       meta_cursor_tracker_track_position (cursor_tracker);
       G_GNUC_FALLTHROUGH;
     case META_SCREEN_CAST_CURSOR_MODE_HIDDEN:
-      add_view_painted_watches (monitor_src,
-                                META_STAGE_WATCH_AFTER_ACTOR_PAINT);
+      add_view_watches (monitor_src,
+                        META_STAGE_WATCH_BEFORE_PAINT,
+                        before_stage_painted);
+      add_view_watches (monitor_src,
+                        META_STAGE_WATCH_AFTER_ACTOR_PAINT,
+                        stage_painted);
       break;
     case META_SCREEN_CAST_CURSOR_MODE_EMBEDDED:
       inhibit_hw_cursor (monitor_src);
       meta_cursor_tracker_track_position (cursor_tracker);
-      add_view_painted_watches (monitor_src,
-                                META_STAGE_WATCH_AFTER_PAINT);
+      add_view_watches (monitor_src,
+                        META_STAGE_WATCH_AFTER_PAINT,
+                        stage_painted);
       break;
     }
 
@@ -523,6 +545,7 @@ meta_screen_cast_monitor_stream_src_record_to_framebuffer (MetaScreenCastStreamS
     {
       ClutterStageView *view = CLUTTER_STAGE_VIEW (l->data);
       CoglFramebuffer *view_framebuffer;
+      CoglScanout *scanout;
       MetaRectangle view_layout;
       int x, y;
 
@@ -531,19 +554,30 @@ meta_screen_cast_monitor_stream_src_record_to_framebuffer (MetaScreenCastStreamS
       if (!meta_rectangle_overlap (&logical_monitor_layout, &view_layout))
         continue;
 
-      view_framebuffer = clutter_stage_view_get_framebuffer (view);
-
       x = (int) roundf ((view_layout.x - logical_monitor_layout.x) * view_scale);
       y = (int) roundf ((view_layout.y - logical_monitor_layout.y) * view_scale);
 
-      if (!cogl_blit_framebuffer (view_framebuffer,
-                                  framebuffer,
-                                  0, 0,
-                                  x, y,
-                                  cogl_framebuffer_get_width (view_framebuffer),
-                                  cogl_framebuffer_get_height (view_framebuffer),
-                                  error))
-        return FALSE;
+      scanout = clutter_stage_view_peek_scanout (view);
+      if (scanout)
+        {
+          if (!cogl_scanout_blit_to_framebuffer (scanout,
+                                                 framebuffer,
+                                                 x, y,
+                                                 error))
+            return FALSE;
+        }
+      else
+        {
+          view_framebuffer = clutter_stage_view_get_framebuffer (view);
+          if (!cogl_blit_framebuffer (view_framebuffer,
+                                      framebuffer,
+                                      0, 0,
+                                      x, y,
+                                      cogl_framebuffer_get_width (view_framebuffer),
+                                      cogl_framebuffer_get_height (view_framebuffer),
+                                      error))
+            return FALSE;
+        }
     }
 
   cogl_framebuffer_finish (framebuffer);
@@ -598,6 +632,8 @@ meta_screen_cast_monitor_stream_src_set_cursor_metadata (MetaScreenCastStreamSrc
   MetaBackend *backend = get_backend (monitor_src);
   MetaCursorRenderer *cursor_renderer =
     meta_backend_get_cursor_renderer (backend);
+  MetaCursorTracker *cursor_tracker =
+    meta_backend_get_cursor_tracker (backend);
   MetaCursorSprite *cursor_sprite;
   MetaMonitor *monitor;
   MetaLogicalMonitor *logical_monitor;
@@ -609,7 +645,8 @@ meta_screen_cast_monitor_stream_src_set_cursor_metadata (MetaScreenCastStreamSrc
 
   cursor_sprite = meta_cursor_renderer_get_cursor (cursor_renderer);
 
-  if (!is_cursor_in_stream (monitor_src))
+  if (!meta_cursor_tracker_get_pointer_visible (cursor_tracker) ||
+      !is_cursor_in_stream (monitor_src))
     {
       meta_screen_cast_stream_src_unset_cursor_metadata (src,
                                                          spa_meta_cursor);

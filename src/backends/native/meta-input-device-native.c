@@ -494,7 +494,7 @@ update_stickykeys_event (ClutterEvent          *event,
 static void
 notify_stickykeys_change (MetaInputDeviceNative *device)
 {
-  /* Everytime sticky keys setting is changed, clear the masks */
+  /* Every time sticky keys setting is changed, clear the masks */
   device->stickykeys_depressed_mask = 0;
   update_internal_xkb_state (device, 0, 0);
 
@@ -1348,7 +1348,7 @@ meta_input_device_native_new (MetaSeatNative         *seat,
                          "id", device_id,
                          "name", libinput_device_get_name (libinput_device),
                          "device-type", type,
-                         "device-mode", CLUTTER_INPUT_MODE_SLAVE,
+                         "device-mode", CLUTTER_INPUT_MODE_PHYSICAL,
                          "enabled", TRUE,
                          "vendor-id", vendor,
                          "product-id", product,

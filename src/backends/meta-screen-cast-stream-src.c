@@ -280,7 +280,7 @@ void
 meta_screen_cast_stream_src_unset_cursor_metadata (MetaScreenCastStreamSrc *src,
                                                    struct spa_meta_cursor  *spa_meta_cursor)
 {
-  spa_meta_cursor->id = 1;
+  spa_meta_cursor->id = 0;
 }
 
 void
@@ -708,7 +708,7 @@ on_stream_param_changed (void                 *data,
     &pod_builder,
     SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta,
     SPA_PARAM_META_type, SPA_POD_Id (SPA_META_Cursor),
-    SPA_PARAM_META_size, SPA_POD_Int (CURSOR_META_SIZE (64, 64)));
+    SPA_PARAM_META_size, SPA_POD_Int (CURSOR_META_SIZE (384, 384)));
 
   pw_stream_update_params (priv->pipewire_stream, params, G_N_ELEMENTS (params));
 }
@@ -720,10 +720,10 @@ on_stream_add_buffer (void             *data,
   MetaScreenCastStreamSrc *src = data;
   MetaScreenCastStreamSrcPrivate *priv =
     meta_screen_cast_stream_src_get_instance_private (src);
-  CoglContext *context =
-    clutter_backend_get_cogl_context (clutter_get_default_backend ());
-  CoglRenderer *renderer = cogl_context_get_renderer (context);
-  g_autoptr (GError) error = NULL;
+  MetaScreenCastStream *stream = meta_screen_cast_stream_src_get_stream (src);
+  MetaScreenCastSession *session = meta_screen_cast_stream_get_session (stream);
+  MetaScreenCast *screen_cast =
+    meta_screen_cast_session_get_screen_cast (session);
   CoglDmaBufHandle *dmabuf_handle;
   struct spa_buffer *spa_buffer = buffer->buffer;
   struct spa_data *spa_data = spa_buffer->datas;
@@ -735,13 +735,9 @@ on_stream_add_buffer (void             *data,
   spa_data[0].mapoffset = 0;
   spa_data[0].maxsize = stride * priv->video_format.size.height;
 
-  dmabuf_handle = cogl_renderer_create_dma_buf (renderer,
-                                                priv->stream_width,
-                                                priv->stream_height,
-                                                &error);
-
-  if (error)
-    g_debug ("Error exporting DMA buffer handle: %s", error->message);
+  dmabuf_handle = meta_screen_cast_create_dma_buf_handle (screen_cast,
+                                                          priv->stream_width,
+                                                          priv->stream_height);
 
   if (dmabuf_handle)
     {

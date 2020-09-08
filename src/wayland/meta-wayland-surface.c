@@ -1296,17 +1296,6 @@ meta_wayland_surface_update_outputs (MetaWaylandSurface *surface)
 }
 
 void
-meta_wayland_surface_update_outputs_recursively (MetaWaylandSurface *surface)
-{
-  MetaWaylandSurface *subsurface_surface;
-
-  meta_wayland_surface_update_outputs (surface);
-
-  META_WAYLAND_SURFACE_FOREACH_SUBSURFACE (surface, subsurface_surface)
-    meta_wayland_surface_update_outputs_recursively (subsurface_surface);
-}
-
-void
 meta_wayland_surface_notify_unmapped (MetaWaylandSurface *surface)
 {
   g_signal_emit (surface, surface_signals[SURFACE_UNMAPPED], 0);
@@ -1613,10 +1602,6 @@ meta_wayland_surface_init (MetaWaylandSurface *surface)
   surface->subsurface_branch_node = g_node_new (surface);
   surface->subsurface_leaf_node =
     g_node_prepend_data (surface->subsurface_branch_node, surface);
-
-  g_signal_connect (surface, "geometry-changed",
-                    G_CALLBACK (meta_wayland_surface_update_outputs_recursively),
-                    NULL);
 }
 
 static void

@@ -487,7 +487,7 @@ _cogl_pipeline_update_layers_cache (CoglPipeline *pipeline)
   g_warn_if_reached ();
 }
 
-/* XXX: Be carefull when using this API that the callback given doesn't result
+/* XXX: Be careful when using this API that the callback given doesn't result
  * in the layer cache being invalidated during the iteration! */
 void
 _cogl_pipeline_foreach_layer_internal (CoglPipeline *pipeline,
@@ -2180,7 +2180,7 @@ _cogl_pipeline_prune_redundant_ancestry (CoglPipeline *pipeline)
    * ancestors to define the state of those 4 layers.
    *
    * If a pipeline depends on any ancestors for layer state then we
-   * immediatly bail out.
+   * immediately bail out.
    */
   if (pipeline->differences & COGL_PIPELINE_STATE_LAYERS)
     {
@@ -2206,7 +2206,7 @@ void
 _cogl_pipeline_update_authority (CoglPipeline *pipeline,
                                  CoglPipeline *authority,
                                  CoglPipelineState state,
-                                 CoglPipelineStateComparitor comparitor)
+                                 CoglPipelineStateComparator comparator)
 {
   /* If we are the current authority see if we can revert to one of
    * our ancestors being the authority */
@@ -2217,7 +2217,7 @@ _cogl_pipeline_update_authority (CoglPipeline *pipeline,
       CoglPipeline *old_authority =
         _cogl_pipeline_get_authority (parent, state);
 
-      if (comparitor (authority, old_authority))
+      if (comparator (authority, old_authority))
         pipeline->differences &= ~state;
     }
   else if (pipeline != authority)
@@ -2655,7 +2655,7 @@ add_layer_to_array_cb (CoglPipelineLayer *layer,
 
 /* This tries to find the oldest ancestor whose pipeline and layer
    state matches the given flags. This is mostly used to detect code
-   gen authorities so that we can reduce the numer of programs
+   gen authorities so that we can reduce the number of programs
    generated */
 CoglPipeline *
 _cogl_pipeline_find_equivalent_parent (CoglPipeline *pipeline,

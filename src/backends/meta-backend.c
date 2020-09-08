@@ -34,7 +34,7 @@
  * - Input device configuration (using the #ClutterDeviceManager)
  * - Creating the #MetaRenderer
  * - Setting up the stage of the scene graph (using #MetaStage)
- * - Creating the object that deals wih the cursor (using #MetaCursorTracker)
+ * - Creating the object that deals with the cursor (using #MetaCursorTracker)
  *     and its possible pointer constraint (using #MetaPointerConstraint)
  * - Setting the cursor sprite (using #MetaCursorRenderer)
  * - Interacting with logind (using the appropriate D-Bus interface)
@@ -360,9 +360,9 @@ on_device_added (ClutterSeat        *seat,
 }
 
 static inline gboolean
-device_is_slave_touchscreen (ClutterInputDevice *device)
+device_is_physical_touchscreen (ClutterInputDevice *device)
 {
-  return (clutter_input_device_get_device_mode (device) != CLUTTER_INPUT_MODE_MASTER &&
+  return (clutter_input_device_get_device_mode (device) != CLUTTER_INPUT_MODE_LOGICAL &&
           clutter_input_device_get_device_type (device) == CLUTTER_TOUCHSCREEN_DEVICE);
 }
 
@@ -378,7 +378,7 @@ check_has_pointing_device (ClutterSeat *seat)
     {
       ClutterInputDevice *device = l->data;
 
-      if (clutter_input_device_get_device_mode (device) == CLUTTER_INPUT_MODE_MASTER)
+      if (clutter_input_device_get_device_mode (device) == CLUTTER_INPUT_MODE_LOGICAL)
         continue;
       if (clutter_input_device_get_device_type (device) == CLUTTER_TOUCHSCREEN_DEVICE ||
           clutter_input_device_get_device_type (device) == CLUTTER_KEYBOARD_DEVICE)
@@ -394,7 +394,7 @@ check_has_pointing_device (ClutterSeat *seat)
 }
 
 static inline gboolean
-check_has_slave_touchscreen (ClutterSeat *seat)
+check_has_physical_touchscreen (ClutterSeat *seat)
 {
   GList *l, *devices;
   gboolean found = FALSE;
@@ -405,7 +405,7 @@ check_has_slave_touchscreen (ClutterSeat *seat)
     {
       ClutterInputDevice *device = l->data;
 
-      if (clutter_input_device_get_device_mode (device) != CLUTTER_INPUT_MODE_MASTER &&
+      if (clutter_input_device_get_device_mode (device) != CLUTTER_INPUT_MODE_LOGICAL &&
           clutter_input_device_get_device_type (device) == CLUTTER_TOUCHSCREEN_DEVICE)
         {
           found = TRUE;
@@ -438,9 +438,10 @@ on_device_removed (ClutterSeat        *seat,
       ClutterInputDeviceType device_type;
 
       priv->current_device = NULL;
+      g_clear_handle_id (&priv->device_update_idle_id, g_source_remove);
 
       device_type = clutter_input_device_get_device_type (device);
-      has_touchscreen = check_has_slave_touchscreen (seat);
+      has_touchscreen = check_has_physical_touchscreen (seat);
 
       if (device_type == CLUTTER_TOUCHSCREEN_DEVICE && has_touchscreen)
         {
@@ -490,7 +491,7 @@ set_initial_pointer_visibility (MetaBackend *backend,
     {
       ClutterInputDevice *device = l->data;
 
-      has_touchscreen |= device_is_slave_touchscreen (device);
+      has_touchscreen |= device_is_physical_touchscreen (device);
     }
 
   g_list_free (devices);
@@ -529,7 +530,8 @@ meta_backend_real_post_init (MetaBackend *backend)
   g_signal_connect_object (seat, "device-added",
                            G_CALLBACK (on_device_added), backend, 0);
   g_signal_connect_object (seat, "device-removed",
-                           G_CALLBACK (on_device_removed), backend, 0);
+                           G_CALLBACK (on_device_removed), backend,
+                           G_CONNECT_AFTER);
 
   set_initial_pointer_visibility (backend, seat);
 
@@ -558,6 +560,8 @@ meta_backend_real_post_init (MetaBackend *backend)
       reset_pointer_position (backend);
       priv->is_pointer_position_initialized = TRUE;
     }
+
+  meta_monitor_manager_post_init (priv->monitor_manager);
 }
 
 static gboolean
@@ -1131,6 +1135,17 @@ meta_backend_get_remote_desktop (MetaBackend *backend)
 
   return priv->remote_desktop;
 }
+
+/**
+ * meta_backend_get_screen_cast: (skip)
+ */
+MetaScreenCast *
+meta_backend_get_screen_cast (MetaBackend *backend)
+{
+  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+
+  return priv->screen_cast;
+}
 #endif /* HAVE_REMOTE_DESKTOP */
 
 /**
@@ -1301,7 +1316,7 @@ meta_backend_update_last_device (MetaBackend        *backend,
     return;
 
   if (!device ||
-      clutter_input_device_get_device_mode (device) == CLUTTER_INPUT_MODE_MASTER)
+      clutter_input_device_get_device_mode (device) == CLUTTER_INPUT_MODE_LOGICAL)
     return;
 
   priv->current_device = device;
@@ -1329,7 +1344,7 @@ meta_backend_get_client_pointer_constraint (MetaBackend *backend)
  * @constraint: (nullable): the client constraint to follow.
  *
  * Sets the current pointer constraint and removes (and unrefs) the previous
- * one. If @constrant is %NULL, this means that there is no
+ * one. If @constraint is %NULL, this means that there is no
  * #MetaPointerConstraint active.
  */
 void

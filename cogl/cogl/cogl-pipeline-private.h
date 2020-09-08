@@ -272,7 +272,7 @@ struct _CoglPipeline
   /* Layers represent their state in a tree structure where some of
    * the state relating to a given pipeline or layer may actually be
    * owned by one if is ancestors in the tree. We have a common data
-   * type to track the tree heirachy so we can share code... */
+   * type to track the tree hierarchy so we can share code... */
   CoglNode _parent;
 
   /* When weak pipelines are destroyed the user is notified via this
@@ -457,14 +457,14 @@ _cogl_pipeline_get_authority (CoglPipeline *pipeline,
   return authority;
 }
 
-typedef gboolean (*CoglPipelineStateComparitor) (CoglPipeline *authority0,
+typedef gboolean (*CoglPipelineStateComparator) (CoglPipeline *authority0,
                                                  CoglPipeline *authority1);
 
 void
 _cogl_pipeline_update_authority (CoglPipeline *pipeline,
                                  CoglPipeline *authority,
                                  CoglPipelineState state,
-                                 CoglPipelineStateComparitor comparitor);
+                                 CoglPipelineStateComparator comparator);
 
 void
 _cogl_pipeline_pre_change_notify (CoglPipeline     *pipeline,
@@ -529,7 +529,7 @@ _cogl_pipeline_pre_paint_for_layer (CoglPipeline *pipeline,
  *      supplied texture and need to be replaced with fallback textures. (1 =
  *      fallback, and the least significant bit = layer 0)
  * @COGL_PIPELINE_FLUSH_DISABLE_MASK: The disable_layers member is set to
- *      a uint32_t mask of the layers that you want to completly disable
+ *      a uint32_t mask of the layers that you want to completely disable
  *      texturing for (1 = fallback, and the least significant bit = layer 0)
  * @COGL_PIPELINE_FLUSH_LAYER0_OVERRIDE: The layer0_override_texture member is
  *      set to a GLuint OpenGL texture name to override the texture used for
