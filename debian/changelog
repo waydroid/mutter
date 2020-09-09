@@ -1,3 +1,11 @@
+mutter (3.37.92-2) experimental; urgency=medium
+
+  * Team upload
+  * d/p/input-mapper-Don-t-match-touchscreens-to-the-absence-of-a.patch:
+    Add patch to work around a crash with gnome-remote-desktop
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 09 Sep 2020 12:00:31 +0100
+
 mutter (3.37.92-1) experimental; urgency=medium
 
   * Team upload

@@ -260,7 +260,7 @@ index d563f27..633116a 100644
    switch (mode)
      {
 diff --git a/src/backends/x11/meta-seat-x11.c b/src/backends/x11/meta-seat-x11.c
-index 1a29bbb..46bfd42 100644
+index 17d2a96..2e678b9 100644
 --- a/src/backends/x11/meta-seat-x11.c
 +++ b/src/backends/x11/meta-seat-x11.c
 @@ -248,7 +248,8 @@ is_touch_device (XIAnyClassInfo         **classes,

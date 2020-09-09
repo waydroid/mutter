@@ -17,7 +17,7 @@ Forwarded: yes
  4 files changed, 16 insertions(+)
 
 diff --git a/cogl/cogl-config.h.meson b/cogl/cogl-config.h.meson
-index f2d46b2..e9e4a0e 100644
+index 29ca429..85fd0c6 100644
 --- a/cogl/cogl-config.h.meson
 +++ b/cogl/cogl-config.h.meson
 @@ -10,4 +10,7 @@
@@ -44,7 +44,7 @@ index a3c61cf..c45614c 100644
    input: 'cogl-config.h.meson',
    output: 'cogl-config.h',
 diff --git a/meson.build b/meson.build
-index 0a4a3ce..0fb6a88 100644
+index cb6c6a2..0323554 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -222,6 +222,8 @@ if have_wayland_eglstream
@@ -65,7 +65,7 @@ index 0a4a3ce..0fb6a88 100644
    '        gudev.................... ' + have_libgudev.to_string(),
    '        Wacom.................... ' + have_libwacom.to_string(),
 diff --git a/meson_options.txt b/meson_options.txt
-index 655ef43..b4c0375 100644
+index 601f0a7..7824c2d 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -158,3 +158,9 @@ option('xwayland_initfd',
