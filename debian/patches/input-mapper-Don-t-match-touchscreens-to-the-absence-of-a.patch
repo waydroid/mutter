@@ -1,0 +1,40 @@
+From: Simon McVittie <smcv@debian.org>
+Date: Wed, 9 Sep 2020 10:15:32 +0100
+Subject: input-mapper: Don't match touchscreens to the absence of a monitor
+
+If there is no laptop panel (for example on a desktop PC or a virtual
+machine), attempting to put a NULL monitor in the list of matches
+will just make mapping_helper_apply() crash.
+
+Mitigates: https://gitlab.gnome.org/GNOME/mutter/-/issues/1414
+Signed-off-by: Simon McVittie <smcv@debian.org>
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1435
+---
+ src/backends/meta-input-mapper.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/backends/meta-input-mapper.c b/src/backends/meta-input-mapper.c
+index 64be9f9..db85d09 100644
+--- a/src/backends/meta-input-mapper.c
++++ b/src/backends/meta-input-mapper.c
+@@ -367,6 +367,8 @@ guess_candidates (MetaInputMapper     *mapper,
+       MetaOutputMatchType edid_match;
+       DeviceMatch match = { l->data, 0 };
+ 
++      g_assert (META_IS_MONITOR (l->data));
++
+       if (match_edid (input, l->data, &edid_match))
+         match.score |= 1 << edid_match;
+ 
+@@ -386,7 +388,10 @@ guess_candidates (MetaInputMapper     *mapper,
+ 
+       match.monitor =
+         meta_monitor_manager_get_laptop_panel (mapper->monitor_manager);
+-      g_array_append_val (info->matches, match);
++
++      if (match.monitor != NULL)
++        g_array_append_val (info->matches, match);
++
+       info->best = 0;
+     }
+   else
