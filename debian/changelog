@@ -1,3 +1,14 @@
+mutter (3.36.6-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Update symbols file
+  * d/control.in, d/rules: Enable Pipewire on Debian (but not Ubuntu).
+    Now that we have Pipewire 0.3, we can enable screencasting and remote
+    desktop support again.
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 10 Sep 2020 12:46:31 +0100
+
 mutter (3.36.5-1) unstable; urgency=medium
 
   * Team upload
