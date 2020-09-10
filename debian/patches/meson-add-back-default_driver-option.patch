@@ -44,7 +44,7 @@ index 2dfe5bc..3d4c2d3 100644
    input: 'cogl-config.h.meson',
    output: 'cogl-config.h',
 diff --git a/meson.build b/meson.build
-index 5e22824..58d0150 100644
+index 4726c26..791b690 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -222,6 +222,8 @@ if have_wayland_eglstream
@@ -65,7 +65,7 @@ index 5e22824..58d0150 100644
    '        gudev.................... ' + have_libgudev.to_string(),
    '        Wacom.................... ' + have_libwacom.to_string(),
 diff --git a/meson_options.txt b/meson_options.txt
-index 75a1961..8b1088d 100644
+index 655ef43..b4c0375 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -158,3 +158,9 @@ option('xwayland_initfd',

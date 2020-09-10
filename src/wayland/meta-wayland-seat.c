@@ -74,10 +74,18 @@ seat_get_touch (struct wl_client *client,
     meta_wayland_touch_create_new_resource (touch, client, resource, id);
 }
 
+static void
+seat_release (struct wl_client   *client,
+              struct wl_resource *resource)
+{
+  wl_resource_destroy (resource);
+}
+
 static const struct wl_seat_interface seat_interface = {
   seat_get_pointer,
   seat_get_keyboard,
-  seat_get_touch
+  seat_get_touch,
+  seat_release
 };
 
 static void
@@ -405,6 +413,16 @@ meta_wayland_seat_handle_event (MetaWaylandSeat *seat,
     case CLUTTER_TOUCH_END:
       if (meta_wayland_seat_has_touch (seat))
         return meta_wayland_touch_handle_event (seat->touch, event);
+
+      break;
+    case CLUTTER_IM_COMMIT:
+    case CLUTTER_IM_DELETE:
+    case CLUTTER_IM_PREEDIT:
+      if (meta_wayland_text_input_handle_event (seat->text_input, event))
+        return TRUE;
+      if (meta_wayland_gtk_text_input_handle_event (seat->gtk_text_input,
+                                                    event))
+        return TRUE;
 
       break;
     default:

@@ -1481,7 +1481,7 @@ libmutter-clutter-6.so.0 libmutter-6-0 #MINVER#
  clutter_input_device_update@Base 3.35.90
  clutter_input_device_update_from_event@Base 3.29.4
  clutter_input_device_update_from_tool@Base 3.33.92
- clutter_input_focus_filter_key_event@Base 3.29.4
+ clutter_input_focus_filter_event@Base 3.36.6
  clutter_input_focus_get_type@Base 3.29.4
  clutter_input_focus_is_focused@Base 3.29.4
  clutter_input_focus_reset@Base 3.29.4
@@ -2530,6 +2530,7 @@ libmutter-cogl-6.so.0 libmutter-6-0 #MINVER#
  cogl_pipeline_set_layer_combine_constant@Base 3.29.4
  cogl_pipeline_set_layer_filters@Base 3.29.4
  cogl_pipeline_set_layer_matrix@Base 3.29.4
+ cogl_pipeline_set_layer_max_mipmap_level@Base 3.36.6
  cogl_pipeline_set_layer_null_texture@Base 3.29.4
  cogl_pipeline_set_layer_point_sprite_coords_enabled@Base 3.29.4
  cogl_pipeline_set_layer_texture@Base 3.29.4
