@@ -1,3 +1,14 @@
+mutter (3.38.0-1) experimental; urgency=medium
+
+  * New upstream release:
+    - screencast: Only use DMA buffers for i915
+    - Fixed crashes
+  * debian/patches: Refresh
+  * d/p/input-mapper-Don-t-match-touchscreens-to-the-absence-of-a.patch:
+    - Dropped, applied upstream
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 15 Sep 2020 15:45:52 +0200
+
 mutter (3.37.92-2) experimental; urgency=medium
 
   * Team upload
