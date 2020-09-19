@@ -510,12 +510,35 @@ meta_monitor_manager_kms_is_transform_handled (MetaMonitorManager  *manager,
   return meta_crtc_kms_is_transform_handled (crtc, transform);
 }
 
-static float
-meta_monitor_manager_kms_calculate_monitor_mode_scale (MetaMonitorManager *manager,
-                                                       MetaMonitor        *monitor,
-                                                       MetaMonitorMode    *monitor_mode)
+static MetaMonitorScalesConstraint
+get_monitor_scale_constraints_per_layout_mode (MetaLogicalMonitorLayoutMode layout_mode)
 {
-  return meta_monitor_calculate_mode_scale (monitor, monitor_mode);
+  MetaMonitorScalesConstraint constraints =
+    META_MONITOR_SCALES_CONSTRAINT_NONE;
+
+  switch (layout_mode)
+    {
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_LOGICAL:
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL:
+      break;
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_PHYSICAL:
+      constraints |= META_MONITOR_SCALES_CONSTRAINT_NO_FRAC;
+      break;
+    }
+
+  return constraints;
+}
+
+static float
+meta_monitor_manager_kms_calculate_monitor_mode_scale (MetaMonitorManager           *manager,
+                                                       MetaLogicalMonitorLayoutMode  layout_mode,
+                                                       MetaMonitor                  *monitor,
+                                                       MetaMonitorMode              *monitor_mode)
+{
+  MetaMonitorScalesConstraint constraints =
+    get_monitor_scale_constraints_per_layout_mode (layout_mode);
+
+  return meta_monitor_calculate_mode_scale (monitor, monitor_mode, constraints);
 }
 
 static float *
@@ -526,16 +549,7 @@ meta_monitor_manager_kms_calculate_supported_scales (MetaMonitorManager         
                                                      int                          *n_supported_scales)
 {
   MetaMonitorScalesConstraint constraints =
-    META_MONITOR_SCALES_CONSTRAINT_NONE;
-
-  switch (layout_mode)
-    {
-    case META_LOGICAL_MONITOR_LAYOUT_MODE_LOGICAL:
-      break;
-    case META_LOGICAL_MONITOR_LAYOUT_MODE_PHYSICAL:
-      constraints |= META_MONITOR_SCALES_CONSTRAINT_NO_FRAC;
-      break;
-    }
+    get_monitor_scale_constraints_per_layout_mode (layout_mode);
 
   return meta_monitor_calculate_supported_scales (monitor, monitor_mode,
                                                   constraints,
@@ -548,7 +562,7 @@ meta_monitor_manager_kms_get_capabilities (MetaMonitorManager *manager)
   MetaBackend *backend = meta_monitor_manager_get_backend (manager);
   MetaSettings *settings = meta_backend_get_settings (backend);
   MetaMonitorManagerCapability capabilities =
-    META_MONITOR_MANAGER_CAPABILITY_NONE;
+    META_MONITOR_MANAGER_CAPABILITY_TILING;
 
   if (meta_settings_is_experimental_feature_enabled (
         settings,
