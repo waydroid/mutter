@@ -1,0 +1,33 @@
+From: =?utf-8?b?Ik1hcmNvIFRyZXZpc2FuIChUcmV2acOxbyki?= <mail@3v1n0.net>
+Date: Wed, 15 Jul 2020 17:52:37 +0200
+Subject: backend: Use connect-after to perform actions on device removed
+
+When a device is removed we perform some actions such as stopping the
+"::last-device-changed" signal emission and unsetting the current device.
+And we want to be sure that these actions happen after all the
+device-removed operations are sorted out.
+
+Related to: https://gitlab.gnome.org/GNOME/mutter/-/issues/1345
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1371
+
+(cherry picked from commit 5730b998fd98887df93553237b639d63357a9871)
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/commits/gnome-3-36/
+---
+ src/backends/meta-backend.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/backends/meta-backend.c b/src/backends/meta-backend.c
+index a08d811..9ad95a8 100644
+--- a/src/backends/meta-backend.c
++++ b/src/backends/meta-backend.c
+@@ -537,7 +537,8 @@ meta_backend_real_post_init (MetaBackend *backend)
+   g_signal_connect_object (seat, "device-added",
+                            G_CALLBACK (on_device_added), backend, 0);
+   g_signal_connect_object (seat, "device-removed",
+-                           G_CALLBACK (on_device_removed), backend, 0);
++                           G_CALLBACK (on_device_removed), backend,
++                           G_CONNECT_AFTER);
+ 
+   set_initial_pointer_visibility (backend, seat);
+ 

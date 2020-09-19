@@ -1,9 +1,10 @@
 Source: mutter
 Section: x11
 Priority: optional
-Maintainer: Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>
 Uploaders: @GNOME_TEAM@
-Build-Depends: debhelper-compat (= 13),
+Build-Depends: debhelper-compat (= 12),
                dh-sequence-gir,
                dh-sequence-gnome,
                at-spi2-core <!nocheck>,
@@ -38,7 +39,7 @@ Build-Depends: debhelper-compat (= 13),
                libnvidia-egl-wayland-dev [linux-any],
                libpam0g-dev,
                libpango1.0-dev (>= 1.2.0),
-               libpipewire-0.3-dev [linux-any],
+               libpipewire-0.2-dev (>= 0.2.2) [linux-any],
                libsm-dev,
                libstartup-notification0-dev (>= 0.7),
                libsystemd-dev (>= 212) [linux-any],
@@ -73,8 +74,10 @@ Build-Depends: debhelper-compat (= 13),
                zenity
 Rules-Requires-Root: no
 Standards-Version: 4.5.0
-Vcs-Git: https://salsa.debian.org/gnome-team/mutter.git
-Vcs-Browser: https://salsa.debian.org/gnome-team/mutter
+XS-Debian-Vcs-Git: https://salsa.debian.org/gnome-team/mutter.git
+XS-Debian-Vcs-Browser: https://salsa.debian.org/gnome-team/mutter
+Vcs-Git: https://salsa.debian.org/gnome-team/mutter.git -b ubuntu/focal
+Vcs-Browser: https://salsa.debian.org/gnome-team/mutter/tree/ubuntu/focal
 
 Package: mutter
 Architecture: any

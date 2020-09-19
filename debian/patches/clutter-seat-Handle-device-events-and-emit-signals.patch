@@ -1,0 +1,118 @@
+From: =?utf-8?b?Ik1hcmNvIFRyZXZpc2FuIChUcmV2acOxbyki?= <mail@3v1n0.net>
+Date: Fri, 17 Jul 2020 17:40:12 +0200
+Subject: clutter-seat: Handle device events and emit signals
+
+Clutter device events are special events coming from the backend when an
+input device is added or removed.
+
+When such events are processed, we should make the seat to handle them by
+calling vfunc that can be implemented by each backend and eventually
+emitting the appropriate signal.
+
+If a device is removed, we can also safely dispose it, as it can be
+considered stale at this point.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1371
+
+(cherry picked from commit cf67c54f87e7ae035a6bf0f19fd37e1751af41d1)
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/commits/gnome-3-36/
+---
+ clutter/clutter/clutter-main.c |  7 +++++++
+ clutter/clutter/clutter-seat.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ clutter/clutter/clutter-seat.h |  6 ++++++
+ 3 files changed, 53 insertions(+)
+
+diff --git a/clutter/clutter/clutter-main.c b/clutter/clutter/clutter-main.c
+index 445941c..d6149e1 100644
+--- a/clutter/clutter/clutter-main.c
++++ b/clutter/clutter/clutter-main.c
+@@ -2121,6 +2121,13 @@ _clutter_process_event_details (ClutterActor        *stage,
+ 
+       case CLUTTER_DEVICE_ADDED:
+       case CLUTTER_DEVICE_REMOVED:
++        if (!_clutter_event_process_filters (event))
++          {
++            ClutterSeat *seat;
++
++            seat = clutter_backend_get_default_seat (context->backend);
++            clutter_seat_handle_device_event (seat, event);
++          }
+         break;
+ 
+       case CLUTTER_EVENT_LAST:
+diff --git a/clutter/clutter/clutter-seat.c b/clutter/clutter/clutter-seat.c
+index d0852fa..fca0722 100644
+--- a/clutter/clutter/clutter-seat.c
++++ b/clutter/clutter/clutter-seat.c
+@@ -663,6 +663,46 @@ clutter_seat_compress_motion (ClutterSeat        *seat,
+     seat_class->compress_motion (seat, event, to_discard);
+ }
+ 
++gboolean
++clutter_seat_handle_device_event (ClutterSeat  *seat,
++                                  ClutterEvent *event)
++{
++  ClutterSeatClass *seat_class;
++  ClutterInputDevice *device;
++
++  g_return_val_if_fail (CLUTTER_IS_SEAT (seat), FALSE);
++  g_return_val_if_fail (event, FALSE);
++
++  g_assert (event->type == CLUTTER_DEVICE_ADDED ||
++            event->type == CLUTTER_DEVICE_REMOVED);
++
++  seat_class = CLUTTER_SEAT_GET_CLASS (seat);
++
++  if (seat_class->handle_device_event)
++    {
++      if (!seat_class->handle_device_event (seat, event))
++        return FALSE;
++    }
++
++  device = clutter_event_get_source_device (event);
++  g_assert_true (CLUTTER_IS_INPUT_DEVICE (device));
++
++  switch (event->type)
++    {
++      case CLUTTER_DEVICE_ADDED:
++        g_signal_emit (seat, signals[DEVICE_ADDED], 0, device);
++        break;
++      case CLUTTER_DEVICE_REMOVED:
++        g_signal_emit (seat, signals[DEVICE_REMOVED], 0, device);
++        g_object_run_dispose (G_OBJECT (device));
++        break;
++      default:
++        break;
++    }
++
++  return TRUE;
++}
++
+ void
+ clutter_seat_warp_pointer (ClutterSeat *seat,
+                            int          x,
+diff --git a/clutter/clutter/clutter-seat.h b/clutter/clutter/clutter-seat.h
+index e12965e..eb1dd82 100644
+--- a/clutter/clutter/clutter-seat.h
++++ b/clutter/clutter/clutter-seat.h
+@@ -106,6 +106,9 @@ struct _ClutterSeatClass
+                             ClutterEvent       *event,
+                             const ClutterEvent *to_discard);
+ 
++  gboolean (* handle_device_event) (ClutterSeat  *seat,
++                                    ClutterEvent *event);
++
+   void (* warp_pointer) (ClutterSeat *seat,
+                          int          x,
+                          int          y);
+@@ -180,6 +183,9 @@ void clutter_seat_compress_motion (ClutterSeat        *seat,
+                                    ClutterEvent       *event,
+                                    const ClutterEvent *to_discard);
+ 
++gboolean clutter_seat_handle_device_event (ClutterSeat  *seat,
++                                           ClutterEvent *event);
++
+ CLUTTER_EXPORT
+ void clutter_seat_warp_pointer (ClutterSeat *seat,
+                                 int          x,
