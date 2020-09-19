@@ -44,9 +44,15 @@ gboolean meta_crtc_xrandr_is_assignment_changed (MetaCrtc     *crtc,
 
 MetaCrtcMode * meta_crtc_xrandr_get_current_mode (MetaCrtc *crtc);
 
-MetaCrtc * meta_create_xrandr_crtc (MetaGpuXrandr      *gpu_xrandr,
-                                    XRRCrtcInfo        *xrandr_crtc,
-                                    RRCrtc              crtc_id,
-                                    XRRScreenResources *resources);
+gboolean meta_crtc_xrandr_set_scale (MetaCrtc         *crtc,
+                                     xcb_randr_crtc_t  xrandr_crtc,
+                                     float             scale);
+
+MetaCrtc * meta_create_xrandr_crtc (MetaGpuXrandr              *gpu_xrandr,
+                                    XRRCrtcInfo                *xrandr_crtc,
+                                    RRCrtc                      crtc_id,
+                                    XRRScreenResources         *resources,
+                                    XRRCrtcTransformAttributes *transform_attributes,
+                                    float                       scale_multiplier);
 
 #endif /* META_CRTC_XRANDR_H */

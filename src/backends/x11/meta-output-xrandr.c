@@ -651,8 +651,6 @@ output_get_tile_info (MetaOutput *output)
   MetaBackend *backend = meta_gpu_get_backend (gpu);
   MetaMonitorManager *monitor_manager =
     meta_backend_get_monitor_manager (backend);
-  MetaMonitorManagerXrandr *monitor_manager_xrandr =
-    META_MONITOR_MANAGER_XRANDR (monitor_manager);
   Display *xdisplay = xdisplay_from_output (output);
   Atom tile_atom;
   unsigned char *prop;
@@ -660,7 +658,8 @@ output_get_tile_info (MetaOutput *output)
   int actual_format;
   Atom actual_type;
 
-  if (!meta_monitor_manager_xrandr_has_randr15 (monitor_manager_xrandr))
+  if (!(meta_monitor_manager_get_capabilities (monitor_manager) &
+        META_MONITOR_MANAGER_CAPABILITY_TILING))
     return;
 
   tile_atom = XInternAtom (xdisplay, "TILE", FALSE);

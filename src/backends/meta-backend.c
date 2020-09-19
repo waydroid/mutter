@@ -445,6 +445,7 @@ on_device_removed (ClutterSeat        *seat,
       ClutterInputDeviceType device_type;
 
       priv->current_device = NULL;
+      g_clear_handle_id (&priv->device_update_idle_id, g_source_remove);
 
       device_type = clutter_input_device_get_device_type (device);
       has_touchscreen = check_has_slave_touchscreen (seat);
@@ -536,7 +537,8 @@ meta_backend_real_post_init (MetaBackend *backend)
   g_signal_connect_object (seat, "device-added",
                            G_CALLBACK (on_device_added), backend, 0);
   g_signal_connect_object (seat, "device-removed",
-                           G_CALLBACK (on_device_removed), backend, 0);
+                           G_CALLBACK (on_device_removed), backend,
+                           G_CONNECT_AFTER);
 
   set_initial_pointer_visibility (backend, seat);
 

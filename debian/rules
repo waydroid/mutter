@@ -1,10 +1,13 @@
 #!/usr/bin/make -f
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-export DEB_LDFLAGS_MAINT_APPEND = -Wl,-O1
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,-O1 -Wl,--as-needed
 
 %:
 	dh $@
+
+override_dh_autoreconf:
+	dh_autoreconf --as-needed
 
 ifeq ($(DEB_HOST_ARCH_OS),linux)
 CONFFLAGS = \
@@ -52,10 +55,16 @@ override_dh_auto_configure:
 # Use meson test directly as it allows us to use the timeout multiplier
 BUILDDIR=$(CURDIR)/obj-$(DEB_HOST_GNU_TYPE)
 TEST_COMMAND_BASE=env \
+	-u XDG_CACHE_HOME \
+	-u XDG_CONFIG_DIRS \
+	-u XDG_CONFIG_HOME \
+	-u XDG_DATA_DIRS \
+	-u XDG_DATA_HOME \
+	HOME=$(BUILDDIR)/HOME \
+	XDG_RUNTIME_DIR=$(BUILDDIR)/XRD \
 	GSETTINGS_SCHEMA_DIR=$(BUILDDIR)/data \
 	dbus-run-session -- xvfb-run -s '+iglx -noreset' -a \
-	dh_auto_test -- -C $(BUILDDIR) --no-rebuild --verbose --timeout-multiplier 6 \
-	           --wrapper=$(CURDIR)/debian/with-temp-xdg-runtime-dir \
+	meson test -C $(BUILDDIR) --no-rebuild --verbose --timeout-multiplier 6 \
 	           --no-stdsplit --print-errorlogs
 TEST_COMMAND=$(TEST_COMMAND_BASE) --no-suite flaky
 TEST_COMMAND_FLAKY=$(TEST_COMMAND_BASE) --suite flaky
@@ -71,7 +80,10 @@ endif
 # Don't run the tests on mips since they either time out or fail too much,
 # blocking migration to testing
 override_dh_auto_test:
+ifeq (,$(filter nocheck, $(DEB_BUILD_OPTIONS)))
 	glib-compile-schemas $(BUILDDIR)/data
+	mkdir -m 700 $(BUILDDIR)/HOME
+	mkdir -m 700 $(BUILDDIR)/XRD
 ifneq (,$(filter hurd-i386 kfreebsd-i386 kfreebsd-amd64 riscv64 s390x,$(DEB_HOST_ARCH)))
 	-$(TEST_COMMAND)
 	-$(TEST_COMMAND_FLAKY)
@@ -79,6 +91,10 @@ else ifeq (,$(filter mips mips64el mipsel,$(DEB_HOST_ARCH)))
 	$(TEST_COMMAND)
 	-$(TEST_COMMAND_FLAKY)
 endif
+endif
+
+override_dh_missing:
+	dh_missing --fail-missing
 
 override_dh_girepository:
 	dh_girepository /usr/lib/$(DEB_HOST_MULTIARCH)/mutter-6

@@ -1,0 +1,80 @@
+From: Benjamin Berg <bberg@redhat.com>
+Date: Mon, 7 Sep 2020 16:15:30 +0200
+Subject: kms/crtc: Always consider gamma state valid
+
+The gamma curve remains valid even if the CRTC is turned off. As such,
+there is no need to clear it and doing so breaks reading the gamma curve
+while the screens are turned off using DPMS.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1419
+
+Closes: https://gitlab.gnome.org/GNOME/mutter/-/issues/1392
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/commit/95ed477
+---
+ src/backends/native/meta-kms-crtc.c | 32 --------------------------------
+ 1 file changed, 32 deletions(-)
+
+diff --git a/src/backends/native/meta-kms-crtc.c b/src/backends/native/meta-kms-crtc.c
+index f554756..ebdd8ed 100644
+--- a/src/backends/native/meta-kms-crtc.c
++++ b/src/backends/native/meta-kms-crtc.c
+@@ -156,13 +156,10 @@ void
+ meta_kms_crtc_predict_state (MetaKmsCrtc   *crtc,
+                              MetaKmsUpdate *update)
+ {
+-  gboolean is_gamma_valid;
+   GList *mode_sets;
+   GList *crtc_gammas;
+   GList *l;
+ 
+-  is_gamma_valid = TRUE;
+-
+   mode_sets = meta_kms_update_get_mode_sets (update);
+   for (l = mode_sets; l; l = l->next)
+     {
+@@ -190,8 +187,6 @@ meta_kms_crtc_predict_state (MetaKmsCrtc   *crtc,
+           crtc->current_state.drm_mode = (drmModeModeInfo) { 0 };
+         }
+ 
+-      is_gamma_valid = FALSE;
+-
+       break;
+     }
+ 
+@@ -212,35 +207,8 @@ meta_kms_crtc_predict_state (MetaKmsCrtc   *crtc,
+       crtc->current_state.gamma.blue =
+         g_memdup (gamma->blue, gamma->size * sizeof (uint16_t));
+ 
+-      is_gamma_valid = TRUE;
+       break;
+     }
+-
+-  if (!is_gamma_valid)
+-    {
+-      if (crtc->current_state.is_drm_mode_valid)
+-        {
+-          MetaKmsImplDevice *impl_device;
+-          drmModeCrtc *drm_crtc;
+-
+-          impl_device = meta_kms_device_get_impl_device (crtc->device);
+-          drm_crtc = drmModeGetCrtc (meta_kms_impl_device_get_fd (impl_device),
+-                                     crtc->id);
+-          if (drm_crtc)
+-            {
+-              read_gamma_state (crtc, impl_device, drm_crtc);
+-              drmModeFreeCrtc (drm_crtc);
+-            }
+-          else
+-            {
+-              clear_gamma_state (crtc);
+-            }
+-        }
+-      else
+-        {
+-          clear_gamma_state (crtc);
+-        }
+-    }
+ }
+ 
+ MetaKmsCrtc *
