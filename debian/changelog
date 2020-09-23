@@ -1,3 +1,11 @@
+mutter (3.36.6-1ubuntu0.20.04.2) focal; urgency=medium
+
+  * xrandr-scaling: Never try to set invalid screen sizes (again!)
+    Looks like this change (introduced to fix LP:1889090) got lost while
+    rebasing previous fixes, gbp has been a bad guy this time! (LP: #1896818)
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Wed, 23 Sep 2020 22:03:53 +0200
+
 mutter (3.36.6-1ubuntu0.20.04.1) focal; urgency=medium
 
   * Merge with debian, containing new stable release (LP: #1896332)
