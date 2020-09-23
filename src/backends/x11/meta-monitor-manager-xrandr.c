@@ -659,8 +659,11 @@ apply_crtc_assignments (MetaMonitorManager *manager,
     }
 
   if (width > manager->screen_width || height > manager->screen_height)
-    meta_monitor_manager_xrandr_update_screen_size (manager_xrandr, width, height,
-                                                    avg_screen_scale);
+    {
+      meta_monitor_manager_xrandr_update_screen_size (manager_xrandr,
+                                                      width, height,
+                                                      avg_screen_scale);
+    }
 
   for (i = 0; i < n_crtcs; i++)
     {
@@ -777,8 +780,12 @@ apply_crtc_assignments (MetaMonitorManager *manager,
       output->is_primary = FALSE;
     }
 
-  meta_monitor_manager_xrandr_update_screen_size (manager_xrandr, width, height,
-                                                  avg_screen_scale);
+  if (width > 0 && height > 0)
+    {
+      meta_monitor_manager_xrandr_update_screen_size (manager_xrandr,
+                                                      width, height,
+                                                      avg_screen_scale);
+    }
 
   XUngrabServer (manager_xrandr->xdisplay);
   XFlush (manager_xrandr->xdisplay);
@@ -860,9 +867,13 @@ meta_monitor_manager_xrandr_update_screen_size_derived (MetaMonitorManager *mana
       average_scale += (crtc->scale - average_scale) / (float) n_crtcs;
     }
 
-  meta_monitor_manager_xrandr_update_screen_size (manager_xrandr,
-                                                  screen_width, screen_height,
-                                                  average_scale);
+  if (screen_width > 0 && screen_height > 0)
+    {
+      meta_monitor_manager_xrandr_update_screen_size (manager_xrandr,
+                                                      screen_width,
+                                                      screen_height,
+                                                      average_scale);
+    }
 }
 
 static void
