@@ -1,3 +1,14 @@
+mutter (3.38.0-2) unstable; urgency=medium
+
+  * Team upload
+  * Release to unstable (starts transition: #969321)
+  * d/rules: Ignore test failures in flaky tests on all architectures.
+    Upstream presumably marked them as flaky for a reason, and they do
+    fail on amd64 when under load.
+  * Revert "debian/watch: Watch unstable versions"
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 25 Sep 2020 10:53:27 +0100
+
 mutter (3.38.0-1) experimental; urgency=medium
 
   * New upstream release:
@@ -84,6 +95,17 @@ mutter (3.37.91-1) experimental; urgency=medium
   * debian/*.install: Use dh variable substitution in install files
 
  -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Thu, 27 Aug 2020 16:39:49 +0100
+
+mutter (3.36.6-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Update symbols file
+  * d/control.in, d/rules: Enable Pipewire on Debian (but not Ubuntu).
+    Now that we have Pipewire 0.3, we can enable screencasting and remote
+    desktop support again.
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 10 Sep 2020 12:46:31 +0100
 
 mutter (3.36.5-1) unstable; urgency=medium
 
