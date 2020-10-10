@@ -128,12 +128,15 @@ static void
 meta_barrier_dispose (GObject *object)
 {
   MetaBarrier *barrier = META_BARRIER (object);
+  MetaBarrierPrivate *priv = barrier->priv;
 
   if (meta_barrier_is_active (barrier))
     {
       meta_bug ("MetaBarrier %p was destroyed while it was still active.",
                 barrier);
     }
+
+  g_clear_object (&priv->impl);
 
   G_OBJECT_CLASS (meta_barrier_parent_class)->dispose (object);
 }
@@ -294,7 +297,7 @@ meta_barrier_destroy (MetaBarrier *barrier)
   MetaBarrierImpl *impl = barrier->priv->impl;
 
   if (impl)
-    return META_BARRIER_IMPL_GET_CLASS (impl)->destroy (impl);
+    META_BARRIER_IMPL_GET_CLASS (impl)->destroy (impl);
 
   g_object_unref (barrier);
 }
