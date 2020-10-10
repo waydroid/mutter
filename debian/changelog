@@ -1,3 +1,25 @@
+mutter (3.38.1-1) unstable; urgency=medium
+
+  * New upstream release:
+    - Fix Night Light updates after DPMS (LP: #1894596)
+    - Fix button scrolling on X11
+    - Always use correct font-dpi setting on X11
+    - Improve handling of scanout failures
+    - Fix middle/right button mixup in scroll button assignment
+    - Fix resizing of attached modal dialogs on wayland
+    - Enable KMS modifiers on devices that need them
+    - Fix IM handling on X11
+    - Fix glitches in "undefined" screencast areas
+    - Fix visual glitches on background with fractional scaling (LP: #1898080)
+    - Fix using correct refresh rate under X11 (LP: #1898645)
+    - Misc. bug fixes and cleanups
+    - Plugged memory leaks
+  * debian/patches: Refresh as per upstream changes
+  * debian/mutter-common.install: Include mutter udev rules
+  * debian/control: Add udev build-dependency
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Sun, 11 Oct 2020 01:43:05 +0200
+
 mutter (3.38.0-2) unstable; urgency=medium
 
   * Team upload

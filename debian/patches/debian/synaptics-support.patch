@@ -12,12 +12,12 @@ Forwarded: https://gitlab.gnome.org/GNOME/mutter/merge_requests/37
 Applied-upstream: no, rejected as not long-term sustainable
 Last-Update: 2018-03-16
 ---
- src/backends/x11/meta-input-settings-x11.c | 150 ++++++++++++++++++++++++++---
+ src/backends/x11/meta-input-settings-x11.c | 155 ++++++++++++++++++++++++++---
  src/backends/x11/meta-seat-x11.c           |  12 ++-
- 2 files changed, 146 insertions(+), 16 deletions(-)
+ 2 files changed, 151 insertions(+), 16 deletions(-)
 
 diff --git a/src/backends/x11/meta-input-settings-x11.c b/src/backends/x11/meta-input-settings-x11.c
-index d563f27..633116a 100644
+index 5c22dff..a7a77d6 100644
 --- a/src/backends/x11/meta-input-settings-x11.c
 +++ b/src/backends/x11/meta-input-settings-x11.c
 @@ -175,8 +175,6 @@ meta_input_settings_x11_set_send_events (MetaInputSettings        *settings,
@@ -129,41 +129,39 @@ index d563f27..633116a 100644
  }
  
  static void
-@@ -320,6 +357,16 @@ meta_input_settings_x11_set_edge_scroll (MetaInputSettings            *settings,
+@@ -320,6 +357,31 @@ change_scroll_method (ClutterInputDevice           *device,
    guchar *current = NULL;
    guchar *available = NULL;
  
-+  current = get_property (device, "Synaptics Edge Scrolling",
-+                          XA_INTEGER, 8, 3);
-+  if (current)
++  if (method == SCROLL_METHOD_FIELD_EDGE)
 +    {
-+      current[0] = current[1] = !!edge_scroll_enabled;
-+      change_property (device, "Synaptics Edge Scrolling",
-+                       XA_INTEGER, 8, current, 3);
-+      goto out;
++      current = get_property (device, "Synaptics Edge Scrolling",
++                              XA_INTEGER, 8, 3);
++      if (current)
++        {
++          current[0] = current[1] = !!enabled;
++          change_property (device, "Synaptics Edge Scrolling",
++                           XA_INTEGER, 8, current, 3);
++          goto out;
++        }
++    }
++  else if (method == SCROLL_METHOD_FIELD_2FG)
++    {
++      current = get_property (device, "Synaptics Two-Finger Scrolling",
++                              XA_INTEGER, 8, 2);
++      if (current)
++        {
++          current[0] = current[1] = !!enabled;
++          change_property (device, "Synaptics Two-Finger Scrolling",
++                          XA_INTEGER, 8, current, 2);
++          goto out;
++        }
 +    }
 +
    available = get_property (device, "libinput Scroll Methods Available",
                              XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
-   if (!available || !available[SCROLL_METHOD_FIELD_EDGE])
-@@ -349,6 +396,16 @@ meta_input_settings_x11_set_two_finger_scroll (MetaInputSettings            *set
-   guchar *current = NULL;
-   guchar *available = NULL;
- 
-+  current = get_property (device, "Synaptics Two-Finger Scrolling",
-+                          XA_INTEGER, 8, 2);
-+  if (current)
-+    {
-+      current[0] = current[1] = !!two_finger_scroll_enabled;
-+      change_property (device, "Synaptics Two-Finger Scrolling",
-+                       XA_INTEGER, 8, current, 2);
-+      goto out;
-+    }
-+
-   available = get_property (device, "libinput Scroll Methods Available",
-                             XA_INTEGER, 8, SCROLL_METHOD_NUM_FIELDS);
-   if (!available || !available[SCROLL_METHOD_FIELD_2FG])
-@@ -376,10 +433,19 @@ meta_input_settings_x11_has_two_finger_scroll (MetaInputSettings  *settings,
+   if (!available || !available[method])
+@@ -363,10 +425,19 @@ meta_input_settings_x11_has_two_finger_scroll (MetaInputSettings  *settings,
    guchar *available = NULL;
    gboolean has_two_finger = TRUE;
  
@@ -187,8 +185,8 @@ index d563f27..633116a 100644
  
    meta_XFree (available);
    return has_two_finger;
-@@ -394,6 +460,58 @@ meta_input_settings_x11_set_scroll_button (MetaInputSettings  *settings,
-                    XA_INTEGER, 32, &button, 1);
+@@ -382,6 +453,58 @@ meta_input_settings_x11_set_scroll_button (MetaInputSettings  *settings,
+                    XA_CARDINAL, 32, &button, 1);
  }
  
 +static void
@@ -246,7 +244,7 @@ index d563f27..633116a 100644
  static void
  meta_input_settings_x11_set_click_method (MetaInputSettings           *settings,
                                            ClutterInputDevice          *device,
-@@ -405,7 +523,11 @@ meta_input_settings_x11_set_click_method (MetaInputSettings           *settings,
+@@ -393,7 +516,11 @@ meta_input_settings_x11_set_click_method (MetaInputSettings           *settings,
    available = get_property (device, "libinput Click Methods Available",
                              XA_INTEGER, 8, 2);
    if (!available)
@@ -260,7 +258,7 @@ index d563f27..633116a 100644
    switch (mode)
      {
 diff --git a/src/backends/x11/meta-seat-x11.c b/src/backends/x11/meta-seat-x11.c
-index 17d2a96..2e678b9 100644
+index 3988523..834bb92 100644
 --- a/src/backends/x11/meta-seat-x11.c
 +++ b/src/backends/x11/meta-seat-x11.c
 @@ -248,7 +248,8 @@ is_touch_device (XIAnyClassInfo         **classes,

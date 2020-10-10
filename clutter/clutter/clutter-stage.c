@@ -1680,7 +1680,7 @@ clutter_stage_dispose (GObject *object)
 
   clutter_actor_hide (CLUTTER_ACTOR (object));
 
-  _clutter_clear_events_queue_for_stage (stage);
+  _clutter_clear_events_queue ();
 
   if (priv->impl != NULL)
     {
@@ -3471,7 +3471,7 @@ _clutter_stage_update_state (ClutterStage      *stage,
                              ClutterStageState  set_flags)
 {
   ClutterStageState new_state;
-  ClutterEvent event;
+  ClutterEvent *event;
 
   new_state = stage->priv->current_state;
   new_state |= set_flags;
@@ -3480,16 +3480,16 @@ _clutter_stage_update_state (ClutterStage      *stage,
   if (new_state == stage->priv->current_state)
     return FALSE;
 
-  memset (&event, 0, sizeof (event));
-  event.type = CLUTTER_STAGE_STATE;
-  clutter_event_set_stage (&event, stage);
+  event = clutter_event_new (CLUTTER_STAGE_STATE);
+  clutter_event_set_stage (event, stage);
 
-  event.stage_state.new_state = new_state;
-  event.stage_state.changed_mask = new_state ^ stage->priv->current_state;
+  event->stage_state.new_state = new_state;
+  event->stage_state.changed_mask = new_state ^ stage->priv->current_state;
 
   stage->priv->current_state = new_state;
 
-  clutter_stage_event (stage, &event);
+  clutter_stage_event (stage, event);
+  clutter_event_free (event);
 
   return TRUE;
 }
@@ -3613,6 +3613,14 @@ clutter_stage_paint_to_framebuffer (ClutterStage                *stage,
   ClutterStagePrivate *priv = stage->priv;
   ClutterPaintContext *paint_context;
   cairo_region_t *redraw_clip;
+
+  if (paint_flags & CLUTTER_PAINT_FLAG_CLEAR)
+    {
+      CoglColor clear_color;
+
+      cogl_color_init_from_4ub (&clear_color, 0, 0, 0, 0);
+      cogl_framebuffer_clear (framebuffer, COGL_BUFFER_BIT_COLOR, &clear_color);
+    }
 
   redraw_clip = cairo_region_create_rectangle (rect);
   paint_context =
