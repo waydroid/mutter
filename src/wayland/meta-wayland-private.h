@@ -46,6 +46,7 @@ typedef struct
 {
   int display_index;
   char *lock_file;
+  int abstract_fd;
   int unix_fd;
   char *name;
 } MetaXWaylandConnection;
@@ -54,6 +55,9 @@ typedef struct
 {
   MetaXWaylandConnection private_connection;
   MetaXWaylandConnection public_connection;
+
+  guint abstract_fd_watch_id;
+  guint unix_fd_watch_id;
 
   guint xserver_grace_period_id;
   struct wl_display *wayland_display;
