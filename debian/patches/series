@@ -3,3 +3,9 @@ theme-load-icons-as-Gtk-does-with-fallback-and-RTL-suppor.patch
 meson-add-back-default_driver-option.patch
 debian/synaptics-support.patch
 debian/tests-Tag-unstable-tests-as-flaky.patch
+Revert-wayland-Drop-Xwayland-abstract-socket.patch
+wayland-start-Xwayland-on-connection-to-either-public-X11.patch
+window-Don-t-override-tile-monitor.patch
+window-Do-not-go-past-size-hints-on-resize.patch
+window-props-Check-for-actual-size-hints-changes.patch
+constraints-Use-orig-rectangle-for-interactive-resize.patch
