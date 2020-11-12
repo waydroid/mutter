@@ -12,11 +12,11 @@ implies a move, such windows might drift while resizing.
 
 Make sure to use the current rectangle for non-interactive resizes only.
 
-Closes: https://gitlab.gnome.org/GNOME/mutter/-/issues/543
-
 (cherry picked from commit 7ab3eac0e27e62642bdd8dc1ddad3bf9acf5a02d)
 
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/543
 Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1878293
+Origin: upstream, 3.38.2
 ---
  src/core/constraints.c | 34 +++++++++++++---------------------
  1 file changed, 13 insertions(+), 21 deletions(-)

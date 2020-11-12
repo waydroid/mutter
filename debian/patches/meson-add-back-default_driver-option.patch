@@ -44,7 +44,7 @@ index a3c61cf..c45614c 100644
    input: 'cogl-config.h.meson',
    output: 'cogl-config.h',
 diff --git a/meson.build b/meson.build
-index c3d9d3c..b1f1fe9 100644
+index a510b62..f694f7d 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -224,6 +224,8 @@ if have_wayland_eglstream
@@ -56,7 +56,7 @@ index c3d9d3c..b1f1fe9 100644
  have_sm = get_option('sm')
  if have_sm
    sm_dep = dependency('sm')
-@@ -486,6 +488,7 @@ output = [
+@@ -489,6 +491,7 @@ output = [
    '        Wayland EGLStream........ ' + have_wayland_eglstream.to_string(),
    '        Native Backend........... ' + have_native_backend.to_string(),
    '        EGL Device............... ' + have_egl_device.to_string(),

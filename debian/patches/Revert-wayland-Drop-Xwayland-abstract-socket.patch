@@ -8,7 +8,8 @@ the presence of the abstract X11 socket.
 
 https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1508
 
-Ubuntu-Bug: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1897224
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1897224
+Origin: upstream, 3.38.2
 ---
  src/wayland/meta-wayland-private.h |  1 +
  src/wayland/meta-xwayland.c        | 70 +++++++++++++++++++++++++++++++++-----
