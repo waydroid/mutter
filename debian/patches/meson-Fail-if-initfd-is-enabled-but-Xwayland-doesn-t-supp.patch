@@ -1,0 +1,40 @@
+From: Bastien Nocera <hadess@hadess.net>
+Date: Tue, 3 Mar 2020 14:26:06 +0000
+Subject: meson: Fail if initfd is enabled but Xwayland doesn't support it
+
+Fedora's mutter is built with --auto-features=enabled which enables
+-initfd support. But the current meson code doesn't check whether
+-initfd is available in Xwayland, leading to the wayland session not
+starting up.
+
+Check for -initfd's availability before enabling it.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1103
+
+(cherry picked from commit f79d40077ecfe7b7f471a8d750f1e9ef65058e54)
+
+Origin: upstream, 3.38.2
+---
+ meson.build | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index c3d9d3c..a510b62 100644
+--- a/meson.build
++++ b/meson.build
+@@ -411,11 +411,14 @@ if have_wayland
+ 
+   # For Xwayland -initfd usage
+   use_initfd = get_option('xwayland_initfd')
++  xwayland_options = run_command(xwayland_path, '-help')
+   if use_initfd.auto()
+-    xwayland_options = run_command(xwayland_path, '-help')
+     have_xwayland_initfd = xwayland_options.stderr().contains('-initfd')
+   else
+     have_xwayland_initfd = use_initfd.enabled()
++    if have_xwayland_initfd and not xwayland_options.stderr().contains('-initfd')
++      error('XWayland -initfd support requested but not available')
++    endif
+   endif
+ 
+   if (have_xwayland_initfd)

@@ -199,6 +199,7 @@ meta_backend_finalize (GObject *object)
 
   g_list_free_full (priv->gpus, g_object_unref);
 
+  g_clear_object (&priv->current_device);
   g_clear_object (&priv->monitor_manager);
   g_clear_object (&priv->orientation_manager);
   g_clear_object (&priv->input_settings);
@@ -349,16 +350,6 @@ meta_backend_monitor_device (MetaBackend        *backend,
   create_device_monitor (backend, device);
 }
 
-static void
-on_device_added (ClutterSeat        *seat,
-                 ClutterInputDevice *device,
-                 gpointer            user_data)
-{
-  MetaBackend *backend = META_BACKEND (user_data);
-
-  create_device_monitor (backend, device);
-}
-
 static inline gboolean
 device_is_physical_touchscreen (ClutterInputDevice *device)
 {
@@ -419,6 +410,20 @@ check_has_physical_touchscreen (ClutterSeat *seat)
 }
 
 static void
+on_device_added (ClutterSeat        *seat,
+                 ClutterInputDevice *device,
+                 gpointer            user_data)
+{
+  MetaBackend *backend = META_BACKEND (user_data);
+  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+
+  create_device_monitor (backend, device);
+
+  if (device_is_physical_touchscreen (device))
+    meta_cursor_tracker_set_pointer_visible (priv->cursor_tracker, FALSE);
+}
+
+static void
 on_device_removed (ClutterSeat        *seat,
                    ClutterInputDevice *device,
                    gpointer            user_data)
@@ -437,7 +442,7 @@ on_device_removed (ClutterSeat        *seat,
       gboolean has_touchscreen, has_pointing_device;
       ClutterInputDeviceType device_type;
 
-      priv->current_device = NULL;
+      g_clear_object (&priv->current_device);
       g_clear_handle_id (&priv->device_update_idle_id, g_source_remove);
 
       device_type = clutter_input_device_get_device_type (device);
@@ -481,27 +486,6 @@ create_device_monitors (MetaBackend *backend,
   g_list_free (devices);
 }
 
-static void
-set_initial_pointer_visibility (MetaBackend *backend,
-                                ClutterSeat *seat)
-{
-  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
-  GList *l, *devices;
-  gboolean has_touchscreen = FALSE;
-
-  devices = clutter_seat_list_devices (seat);
-  for (l = devices; l; l = l->next)
-    {
-      ClutterInputDevice *device = l->data;
-
-      has_touchscreen |= device_is_physical_touchscreen (device);
-    }
-
-  g_list_free (devices);
-  meta_cursor_tracker_set_pointer_visible (priv->cursor_tracker,
-                                           !has_touchscreen);
-}
-
 static MetaInputSettings *
 meta_backend_create_input_settings (MetaBackend *backend)
 {
@@ -535,8 +519,6 @@ meta_backend_real_post_init (MetaBackend *backend)
   g_signal_connect_object (seat, "device-removed",
                            G_CALLBACK (on_device_removed), backend,
                            G_CONNECT_AFTER);
-
-  set_initial_pointer_visibility (backend, seat);
 
   priv->input_settings = meta_backend_create_input_settings (backend);
 
@@ -1322,7 +1304,7 @@ meta_backend_update_last_device (MetaBackend        *backend,
       clutter_input_device_get_device_mode (device) == CLUTTER_INPUT_MODE_LOGICAL)
     return;
 
-  priv->current_device = device;
+  g_set_object (&priv->current_device, device);
 
   if (priv->device_update_idle_id == 0)
     {

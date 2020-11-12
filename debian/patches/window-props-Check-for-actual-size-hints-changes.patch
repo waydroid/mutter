@@ -21,11 +21,11 @@ hence defeating the purpose of the META_MOVE_RESIZE_USER_ACTION flag.
 To avoid that issue, make mutter a bit smarter and avoid queuing a
 window resize if the XSizeHints haven't actually changed.
 
-https://gitlab.gnome.org/GNOME/mutter/-/issues/543
-
 (cherry picked from commit deaa9480a84938cc0120e433fa9f3607acdfa29c)
 
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/543
 Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1878293
+Origin: upstream, 3.38.2
 ---
  src/x11/window-props.c | 31 ++++++++++++++++++++++++++-----
  1 file changed, 26 insertions(+), 5 deletions(-)

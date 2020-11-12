@@ -19,13 +19,14 @@ https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1495
 
 (cherry picked from commit 03c69ed8cf8059d98089929b9d79b92df0167fbe)
 
+Origin: upstream, 3.38.2
 Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1878293
 ---
  src/core/window.c | 35 ++++++++++++++++++++---------------
  1 file changed, 20 insertions(+), 15 deletions(-)
 
 diff --git a/src/core/window.c b/src/core/window.c
-index c7ff7c7..71295c5 100644
+index 681805c..de8159f 100644
 --- a/src/core/window.c
 +++ b/src/core/window.c
 @@ -6248,9 +6248,9 @@ update_resize (MetaWindow *window,

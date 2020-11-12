@@ -1,0 +1,43 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Thu, 12 Nov 2020 14:40:06 +0100
+Subject: window/wayland: Warn when attempted to resend uninitialized state
+
+This happens due to Qt doing wierd things, committing incomplete and
+incorrect state.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1559
+---
+ src/wayland/meta-window-wayland.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/wayland/meta-window-wayland.c b/src/wayland/meta-window-wayland.c
+index b4329d4..4ddecb4 100644
+--- a/src/wayland/meta-window-wayland.c
++++ b/src/wayland/meta-window-wayland.c
+@@ -53,6 +53,7 @@ struct _MetaWindowWayland
+   GList *pending_configurations;
+   gboolean has_pending_state_change;
+ 
++  gboolean has_last_sent_configuration;
+   int last_sent_x;
+   int last_sent_y;
+   int last_sent_width;
+@@ -188,6 +189,10 @@ surface_state_changed (MetaWindow *window)
+   if (window->unmanaging)
+     return;
+ 
++  g_return_if_fail (wl_window->has_last_sent_configuration);
++  if (!wl_window->has_last_sent_configuration)
++    return;
++
+   configuration =
+     meta_wayland_window_configuration_new (wl_window->last_sent_x,
+                                            wl_window->last_sent_y,
+@@ -401,6 +406,7 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
+         }
+     }
+ 
++  wl_window->has_last_sent_configuration = TRUE;
+   wl_window->last_sent_x = configured_x;
+   wl_window->last_sent_y = configured_y;
+   wl_window->last_sent_width = configured_width;

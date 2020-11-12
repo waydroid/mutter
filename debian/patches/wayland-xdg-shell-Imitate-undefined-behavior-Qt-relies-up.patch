@@ -1,0 +1,88 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Thu, 12 Nov 2020 14:06:43 +0100
+Subject: wayland/xdg-shell: Imitate undefined behavior Qt relies upon
+
+Qt sets window geometry without in the same commit providing actual
+content matching it, and relies on the compositor being able to adapt
+without a new window geometry on a later commit. Other compositors do
+this, so do the same, even though it's not guaranteed according to spec.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1557
+(cherry picked from commit f5b44be9f22efd59b34dd8c3a98328306f979eea)
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1559
+---
+ src/wayland/meta-wayland-xdg-shell.c | 13 +++++++++++--
+ src/wayland/meta-window-wayland.c    |  9 ++++++++-
+ 2 files changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/src/wayland/meta-wayland-xdg-shell.c b/src/wayland/meta-wayland-xdg-shell.c
+index 176f8a9..4350593 100644
+--- a/src/wayland/meta-wayland-xdg-shell.c
++++ b/src/wayland/meta-wayland-xdg-shell.c
+@@ -89,6 +89,7 @@ typedef struct _MetaWaylandXdgSurfacePrivate
+   struct wl_resource *resource;
+   MetaWaylandXdgShellClient *shell_client;
+   MetaRectangle geometry;
++  MetaRectangle unconstrained_geometry;
+ 
+   guint configure_sent : 1;
+   guint first_buffer_attached : 1;
+@@ -810,7 +811,7 @@ meta_wayland_xdg_toplevel_post_apply_state (MetaWaylandSurfaceRole  *surface_rol
+     META_WAYLAND_SURFACE_ROLE_CLASS (meta_wayland_xdg_toplevel_parent_class);
+   surface_role_class->post_apply_state (surface_role, pending);
+ 
+-  if (!pending->newly_attached)
++  if (!surface->buffer_ref->buffer)
+     return;
+ 
+   window_geometry = meta_wayland_xdg_surface_get_window_geometry (xdg_surface);
+@@ -1536,6 +1537,7 @@ meta_wayland_xdg_surface_real_reset (MetaWaylandXdgSurface *xdg_surface)
+   priv->first_buffer_attached = FALSE;
+   priv->configure_sent = FALSE;
+   priv->geometry = (MetaRectangle) { 0 };
++  priv->unconstrained_geometry = (MetaRectangle) { 0 };
+   priv->has_set_geometry = FALSE;
+ }
+ 
+@@ -1578,12 +1580,19 @@ meta_wayland_xdg_surface_post_apply_state (MetaWaylandSurfaceRole  *surface_role
+ 
+   if (pending->has_new_geometry)
+     {
++      priv->unconstrained_geometry = pending->new_geometry;
+       meta_wayland_shell_surface_determine_geometry (shell_surface,
+                                                      &pending->new_geometry,
+                                                      &priv->geometry);
+       priv->has_set_geometry = TRUE;
+     }
+-  else if (!priv->has_set_geometry)
++  else if (priv->has_set_geometry)
++    {
++      meta_wayland_shell_surface_determine_geometry (shell_surface,
++                                                     &priv->unconstrained_geometry,
++                                                     &priv->geometry);
++    }
++  else
+     {
+       MetaRectangle new_geometry = { 0 };
+ 
+diff --git a/src/wayland/meta-window-wayland.c b/src/wayland/meta-window-wayland.c
+index 4ddecb4..89ee0c2 100644
+--- a/src/wayland/meta-window-wayland.c
++++ b/src/wayland/meta-window-wayland.c
+@@ -999,7 +999,14 @@ meta_window_wayland_finish_move_resize (MetaWindow              *window,
+   else
+     {
+       if (acked_configuration)
+-        calculate_offset (acked_configuration, &new_geom, &rect);
++        {
++          calculate_offset (acked_configuration, &new_geom, &rect);
++        }
++      else
++        {
++          rect.x = window->rect.x;
++          rect.y = window->rect.y;
++        }
+     }
+ 
+   if (rect.x != window->rect.x || rect.y != window->rect.y)

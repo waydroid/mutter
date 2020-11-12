@@ -1,0 +1,47 @@
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Mon, 5 Oct 2020 12:13:07 +0200
+Subject: backend: Don't pull generated headers (indirectly)
+
+Use a typedef for MetaRemoteDesktop, so tests poking MetaBackend don't
+indirectly depend upon generated headers. This is arguably a code fix
+for a build system bug.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1470
+
+Fixes: https://gitlab.gnome.org/GNOME/mutter/-/issues/1449
+(or something...)
+
+Origin: upstream, 3.39.0, commit:e0944b6097566dee3a09a919ba49a071e0137f26
+---
+ src/backends/meta-backend-private.h | 4 ----
+ src/backends/meta-backend-types.h   | 4 ++++
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/backends/meta-backend-private.h b/src/backends/meta-backend-private.h
+index 6d7d3ad..5f4981f 100644
+--- a/src/backends/meta-backend-private.h
++++ b/src/backends/meta-backend-private.h
+@@ -42,10 +42,6 @@
+ #include "backends/meta-settings-private.h"
+ #include "core/util-private.h"
+ 
+-#ifdef HAVE_REMOTE_DESKTOP
+-#include "backends/meta-remote-desktop.h"
+-#endif
+-
+ #define DEFAULT_XKB_RULES_FILE "evdev"
+ #define DEFAULT_XKB_MODEL "pc105+inet"
+ 
+diff --git a/src/backends/meta-backend-types.h b/src/backends/meta-backend-types.h
+index 4753c07..146a8c3 100644
+--- a/src/backends/meta-backend-types.h
++++ b/src/backends/meta-backend-types.h
+@@ -59,4 +59,8 @@ typedef struct _MetaScreenCastStream MetaScreenCastStream;
+ 
+ typedef struct _MetaWaylandCompositor MetaWaylandCompositor;
+ 
++#ifdef HAVE_REMOTE_DESKTOP
++typedef struct _MetaRemoteDesktop MetaRemoteDesktop;
++#endif
++
+ #endif /* META_BACKEND_TYPE_H */

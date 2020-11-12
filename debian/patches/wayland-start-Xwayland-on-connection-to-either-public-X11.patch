@@ -2,11 +2,11 @@ From: James Henstridge <james@jamesh.id.au>
 Date: Sat, 17 Oct 2020 12:01:44 +0800
 Subject: wayland: start Xwayland on connection to either public X11 socket
 
-Fixes: https://gitlab.gnome.org/GNOME/mutter/-/issues/1454
-
 https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1508
 
-Ubuntu-Bug: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1897224
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/1454
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1897224
+Origin: upstream, 3.38.2
 ---
  src/wayland/meta-wayland-private.h |  3 +++
  src/wayland/meta-xwayland.c        | 13 +++++++++++--
