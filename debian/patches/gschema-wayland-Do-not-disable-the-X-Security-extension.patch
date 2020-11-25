@@ -1,0 +1,30 @@
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Fri, 9 Oct 2020 11:49:16 +0200
+Subject: gschema/wayland: Do not disable the X Security extension
+
+If Xwayland was built with the X Security extension enabled, it should
+be safe to use, there is no need to disable it by default from mutter.
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1485
+(cherry picked from commit 935d594978693547deb3a3f1cd8b8193daa275ae)
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1600>
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/1552
+Origin: upstream, 3.38.2, commit:c70610c4388147c23e27a0136478fa39152c4066
+---
+ data/org.gnome.mutter.wayland.gschema.xml.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/data/org.gnome.mutter.wayland.gschema.xml.in b/data/org.gnome.mutter.wayland.gschema.xml.in
+index b8674b3..8a1878e 100644
+--- a/data/org.gnome.mutter.wayland.gschema.xml.in
++++ b/data/org.gnome.mutter.wayland.gschema.xml.in
+@@ -112,7 +112,7 @@
+ 
+     <key name="xwayland-disable-extension"
+         flags='org.gnome.mutter.MetaXwaylandDisableExtension'>
+-      <default>["Security"]</default>
++      <default>[]</default>
+       <summary>Disable selected X extensions in Xwayland</summary>
+       <description>
+         This option disables the selected X extensions in Xwayland if

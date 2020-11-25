@@ -12,6 +12,7 @@ Fixes: https://gitlab.gnome.org/GNOME/mutter/-/issues/1449
 (or something...)
 
 Origin: upstream, 3.39.0, commit:e0944b6097566dee3a09a919ba49a071e0137f26
+Origin: upstream, 3.38.2, commit:965c94d46788188a3fe24e64056e39ad28469d18
 ---
  src/backends/meta-backend-private.h | 4 ----
  src/backends/meta-backend-types.h   | 4 ++++

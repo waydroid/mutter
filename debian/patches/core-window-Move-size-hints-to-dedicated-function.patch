@@ -1,0 +1,56 @@
+From: Christian Rauch <Rauch.Christian@gmx.de>
+Date: Sat, 4 Jan 2020 21:03:53 +0000
+Subject: core/window: Move size hints to dedicated function
+
+https://gitlab.gnome.org/GNOME/mutter/merge_requests/801#note_676932
+(cherry picked from commit 3faea8532c0935ee07ff2fff0517f230aa5d6c0c)
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1595>
+
+Origin: upstream, 3.38.2, commit:4419509efb0d43a9d334aca3da17a20fe6a512cc
+---
+ src/core/window.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/src/core/window.c b/src/core/window.c
+index 71295c5..3516b8d 100644
+--- a/src/core/window.c
++++ b/src/core/window.c
+@@ -3273,6 +3273,15 @@ unmaximize_window_before_freeing (MetaWindow        *window)
+ #endif
+ }
+ 
++static void
++meta_window_maybe_apply_size_hints (MetaWindow    *window,
++                                    MetaRectangle *target_rect)
++{
++  meta_window_frame_rect_to_client_rect (window, target_rect, target_rect);
++  ensure_size_hints_satisfied (target_rect, &window->size_hints);
++  meta_window_client_rect_to_frame_rect (window, target_rect, target_rect);
++}
++
+ void
+ meta_window_unmaximize (MetaWindow        *window,
+                         MetaMaximizeFlags  directions)
+@@ -3370,9 +3379,7 @@ meta_window_unmaximize (MetaWindow        *window,
+       /* Window's size hints may have changed while maximized, making
+        * saved_rect invalid.  #329152
+        */
+-      meta_window_frame_rect_to_client_rect (window, &target_rect, &target_rect);
+-      ensure_size_hints_satisfied (&target_rect, &window->size_hints);
+-      meta_window_client_rect_to_frame_rect (window, &target_rect, &target_rect);
++      meta_window_maybe_apply_size_hints (window, &target_rect);
+ 
+       meta_compositor_size_change_window (window->display->compositor, window,
+                                           META_SIZE_CHANGE_UNMAXIMIZE,
+@@ -3527,9 +3534,7 @@ meta_window_unmake_fullscreen (MetaWindow  *window)
+       /* Window's size hints may have changed while maximized, making
+        * saved_rect invalid.  #329152
+        */
+-      meta_window_frame_rect_to_client_rect (window, &target_rect, &target_rect);
+-      ensure_size_hints_satisfied (&target_rect, &window->size_hints);
+-      meta_window_client_rect_to_frame_rect (window, &target_rect, &target_rect);
++      meta_window_maybe_apply_size_hints (window, &target_rect);
+ 
+       /* Need to update window->has_resize_func before we move_resize()
+        */

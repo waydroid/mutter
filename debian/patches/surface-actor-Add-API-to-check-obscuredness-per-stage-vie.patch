@@ -1,0 +1,112 @@
+From: Robert Mader <robert.mader@posteo.de>
+Date: Mon, 5 Oct 2020 13:18:15 +0200
+Subject: surface-actor: Add API to check obscuredness per stage view
+
+Our main use case of `is_obscured()` is frame callback emission.
+Since we now support stage views running at differt speeds, we
+need to know whether an actor is visible on a specific stage view
+in order to schedule frame callbacks accordingly.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1468>
+
+(cherry picked from commit 9db09e327c87275d86600b1d510ab5708027ca57)
+
+Origin: upstream, 3.38.2, commit:6ae413db139a2a5f54f10f47f96cb40e162da74f
+---
+ src/compositor/meta-surface-actor.c | 68 +++++++++++++++++++++++++++++++++++++
+ src/compositor/meta-surface-actor.h |  3 ++
+ 2 files changed, 71 insertions(+)
+
+diff --git a/src/compositor/meta-surface-actor.c b/src/compositor/meta-surface-actor.c
+index 0fa6f64..bdf4272 100644
+--- a/src/compositor/meta-surface-actor.c
++++ b/src/compositor/meta-surface-actor.c
+@@ -469,6 +469,74 @@ meta_surface_actor_is_obscured (MetaSurfaceActor *self)
+     return FALSE;
+ }
+ 
++gboolean
++meta_surface_actor_is_obscured_on_stage_view (MetaSurfaceActor *self,
++                                              ClutterStageView *stage_view,
++                                              float            *unobscurred_fraction)
++{
++  cairo_region_t *unobscured_region;
++
++  unobscured_region = effective_unobscured_region (self);
++
++  if (unobscured_region)
++    {
++      MetaSurfaceActorPrivate *priv =
++        meta_surface_actor_get_instance_private (self);
++      cairo_region_t *intersection_region;
++      cairo_rectangle_int_t stage_rect;
++      float x, y;
++      float bounds_width, bounds_height;
++      float bounds_size;
++      int intersection_size = 0;
++      int n_rects, i;
++
++      if (cairo_region_is_empty (unobscured_region))
++        return TRUE;
++
++      intersection_region = cairo_region_copy (unobscured_region);
++      clutter_actor_get_transformed_position (CLUTTER_ACTOR (self), &x, &y);
++      cairo_region_translate (intersection_region, x, y);
++
++      clutter_stage_view_get_layout (stage_view, &stage_rect);
++      cairo_region_intersect_rectangle (intersection_region,
++                                        &stage_rect);
++
++      if (cairo_region_is_empty (intersection_region))
++        {
++          cairo_region_destroy (intersection_region);
++          return TRUE;
++        }
++      else if (!unobscurred_fraction)
++        {
++          cairo_region_destroy (intersection_region);
++          return FALSE;
++        }
++
++      clutter_content_get_preferred_size (CLUTTER_CONTENT (priv->texture),
++                                          &bounds_width,
++                                          &bounds_height);
++      bounds_size = bounds_width * bounds_height;
++
++      n_rects = cairo_region_num_rectangles (intersection_region);
++      for (i = 0; i < n_rects; i++)
++        {
++          cairo_rectangle_int_t rect;
++
++          cairo_region_get_rectangle (intersection_region, i, &rect);
++          intersection_size += (rect.width - rect.x) * (rect.height - rect.x);
++        }
++      cairo_region_destroy (intersection_region);
++
++      g_return_val_if_fail (bounds_size > 0, FALSE);
++
++      *unobscurred_fraction = CLAMP (intersection_size / bounds_size, 0, 1);
++      return FALSE;
++    }
++
++  return !clutter_actor_is_effectively_on_stage_view (CLUTTER_ACTOR (self),
++                                                      stage_view);
++}
++
+ void
+ meta_surface_actor_set_input_region (MetaSurfaceActor *self,
+                                      cairo_region_t   *region)
+diff --git a/src/compositor/meta-surface-actor.h b/src/compositor/meta-surface-actor.h
+index fb3764c..a612510 100644
+--- a/src/compositor/meta-surface-actor.h
++++ b/src/compositor/meta-surface-actor.h
+@@ -39,6 +39,9 @@ void meta_surface_actor_update_area (MetaSurfaceActor *self,
+                                      int               height);
+ 
+ gboolean meta_surface_actor_is_obscured (MetaSurfaceActor *self);
++gboolean meta_surface_actor_is_obscured_on_stage_view (MetaSurfaceActor *self,
++                                                       ClutterStageView *stage_view,
++                                                       float            *unobscurred_fraction);
+ 
+ void meta_surface_actor_set_input_region (MetaSurfaceActor *self,
+                                           cairo_region_t   *region);

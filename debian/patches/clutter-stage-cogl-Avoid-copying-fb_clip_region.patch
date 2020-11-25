@@ -1,0 +1,29 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Wed, 18 Nov 2020 19:08:38 +0800
+Subject: clutter/stage-cogl: Avoid copying fb_clip_region
+
+Because it gets destroyed (unreferenced) immediately after that.
+This avoids a deep copy of potentially kilobytes of data.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1572>
+
+(cherry picked from commit 32b68478ede34caee447c9803addedc12a4df6c7)
+
+Origin: upstream, 3.38.2, commit:bd42c9c23b6f33bc3827b0ddb149ce2dcfb914ef
+---
+ clutter/clutter/cogl/clutter-stage-cogl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/clutter/clutter/cogl/clutter-stage-cogl.c b/clutter/clutter/cogl/clutter-stage-cogl.c
+index b682662..5356517 100644
+--- a/clutter/clutter/cogl/clutter-stage-cogl.c
++++ b/clutter/clutter/cogl/clutter-stage-cogl.c
+@@ -613,7 +613,7 @@ clutter_stage_cogl_redraw_view_primary (ClutterStageCogl *stage_cogl,
+    * artefacts.
+    */
+   if (use_clipped_redraw)
+-    swap_region = cairo_region_copy (fb_clip_region);
++    swap_region = cairo_region_reference (fb_clip_region);
+   else
+     swap_region = cairo_region_create ();
+ 

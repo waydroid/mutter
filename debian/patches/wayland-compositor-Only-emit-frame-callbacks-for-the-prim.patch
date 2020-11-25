@@ -1,0 +1,55 @@
+From: Robert Mader <robert.mader@posteo.de>
+Date: Thu, 22 Oct 2020 23:16:28 +0200
+Subject: wayland/compositor: Only emit frame callbacks for the primary stage
+ view
+
+Since we schedule frames for each stage view seperately now, surfaces receive
+frame callbacks for each stage view they are visible on.
+
+Only emit frame callbacks for the primary stage view.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1468>
+
+(cherry picked from commit c78b03bd50783983e9d0e75882bc8565c42ed509)
+
+Origin: upstream, 3.38.2, commit:30a0ef4776c6bcac16cef0eac6e06466c2a286d7
+---
+ src/wayland/meta-wayland.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/src/wayland/meta-wayland.c b/src/wayland/meta-wayland.c
+index c0d3197..62f2195 100644
+--- a/src/wayland/meta-wayland.c
++++ b/src/wayland/meta-wayland.c
+@@ -30,6 +30,7 @@
+ 
+ #include "clutter/clutter.h"
+ #include "clutter/wayland/clutter-wayland-compositor.h"
++#include "compositor/meta-surface-actor-wayland.h"
+ #include "core/main-private.h"
+ #include "wayland/meta-wayland-buffer.h"
+ #include "wayland/meta-wayland-data-device.h"
+@@ -212,6 +213,7 @@ on_after_update (ClutterStage          *stage,
+       MetaWaylandSurface *surface = l->data;
+       MetaSurfaceActor *actor;
+       MetaWaylandActorSurface *actor_surface;
++      ClutterStageView *surface_primary_view;
+ 
+       l = l->next;
+ 
+@@ -219,12 +221,9 @@ on_after_update (ClutterStage          *stage,
+       if (!actor)
+         continue;
+ 
+-      if (!clutter_actor_has_mapped_clones (CLUTTER_ACTOR (actor)) &&
+-          meta_surface_actor_is_obscured (actor))
+-        continue;
+-
+-      if (!clutter_actor_is_effectively_on_stage_view (CLUTTER_ACTOR (actor),
+-                                                       stage_view))
++      surface_primary_view =
++        meta_surface_actor_wayland_get_current_primary_view (actor, stage);
++      if (stage_view != surface_primary_view)
+         continue;
+ 
+       actor_surface = META_WAYLAND_ACTOR_SURFACE (surface->role);
