@@ -1,0 +1,94 @@
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Tue, 6 Oct 2020 13:44:27 +0200
+Subject: backends/native: Wait to have an stage before emitting
+ CLUTTER_DEVICE_ADDED
+
+During seat initialization, we process early libinput events (adding all known
+devices) before the seat gets a stage assigned. This causes warnings when trying
+to handle the corresponding CLUTTER_DEVICE_ADDED events, as they are sent
+stageless.
+
+As it is definitely too soon to have those events sent meaningfully, filter
+those events out and instead handle the CLUTTER_DEVICE_ADDED emission for all
+known devices after the seat receives an stage. This makes the events guaranteed
+to be emitted early in initialization, but not so soon that they can't be
+handled yet.
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/-/issues/1549
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1597>
+Origin: upstream, 3.38.2, commit:2c863f1e752cda61cd88d11fbfd28279f8f7a2f7
+---
+ src/backends/native/meta-seat-native.c | 35 +++++++++++++++++++++++++++-------
+ 1 file changed, 28 insertions(+), 7 deletions(-)
+
+diff --git a/src/backends/native/meta-seat-native.c b/src/backends/native/meta-seat-native.c
+index 2b8261d..9e3bd19 100644
+--- a/src/backends/native/meta-seat-native.c
++++ b/src/backends/native/meta-seat-native.c
+@@ -1485,31 +1485,42 @@ process_base_event (MetaSeatNative        *seat,
+                     struct libinput_event *event)
+ {
+   ClutterInputDevice *device = NULL;
+-  ClutterEvent *device_event;
++  ClutterEvent *device_event = NULL;
+   struct libinput_device *libinput_device;
++  ClutterStage *stage;
++
++  stage = meta_seat_native_get_stage (seat);
+ 
+   switch (libinput_event_get_type (event))
+     {
+     case LIBINPUT_EVENT_DEVICE_ADDED:
+       libinput_device = libinput_event_get_device (event);
+-
+       device = evdev_add_device (seat, libinput_device);
+-      device_event = clutter_event_new (CLUTTER_DEVICE_ADDED);
+-      clutter_event_set_device (device_event, device);
++
++      if (stage)
++        {
++          device_event = clutter_event_new (CLUTTER_DEVICE_ADDED);
++          clutter_event_set_device (device_event, device);
++        }
+       break;
+ 
+     case LIBINPUT_EVENT_DEVICE_REMOVED:
+       libinput_device = libinput_event_get_device (event);
+ 
+       device = libinput_device_get_user_data (libinput_device);
+-      device_event = clutter_event_new (CLUTTER_DEVICE_REMOVED);
+-      clutter_event_set_device (device_event, device);
++
++      if (stage)
++        {
++          device_event = clutter_event_new (CLUTTER_DEVICE_REMOVED);
++          clutter_event_set_device (device_event, device);
++        }
++
+       evdev_remove_device (seat,
+                            META_INPUT_DEVICE_NATIVE (device));
+       break;
+ 
+     default:
+-      device_event = NULL;
++      break;
+     }
+ 
+   if (device_event)
+@@ -2859,6 +2870,16 @@ meta_seat_native_set_stage (MetaSeatNative *seat,
+       ClutterInputDevice *device = l->data;
+ 
+       _clutter_input_device_set_stage (device, stage);
++
++      if (clutter_input_device_get_device_mode (device) == CLUTTER_INPUT_MODE_PHYSICAL)
++        {
++          ClutterEvent *device_event;
++
++          device_event = clutter_event_new (CLUTTER_DEVICE_ADDED);
++          clutter_event_set_device (device_event, device);
++          device_event->device.stage = stage;
++          queue_event (device_event);
++        }
+     }
+ }
+ 
