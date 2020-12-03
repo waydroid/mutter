@@ -1,3 +1,26 @@
+mutter (3.38.2-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Don't crash during screencasting if cursor is not available
+    - Don't crash if a kernel bug results in appearing to have multiple
+      builtin panels
+    - Log warnings instead of crashing if user-defined keymap is
+      misconfigured
+    - Don't forget we have a touchscreen if a non-touchscreen input device
+      is connected
+    - Log warnings instead of crashing if invalid barriers are created
+    - Otherwise functionally equivalent to 3.38.1-4
+  * Drop patches cherry-picked from upstream or applied upstream
+  * d/gbp.conf: Use upstream 3.38.x branch.
+    Version 40~alpha was already released, so it's misleading to say that
+    3.38.x is the latest.
+  * Standards-Version: 4.5.1 (no changes required)
+  * d/rules: Don't run tests if built with nocheck option
+  * Upload to unstable
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 03 Dec 2020 10:23:26 +0000
+
 mutter (3.38.1-4) experimental; urgency=medium
 
   * Team upload
