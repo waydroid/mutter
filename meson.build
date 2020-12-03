@@ -1,5 +1,5 @@
 project('mutter', 'c',
-  version: '3.38.1',
+  version: '3.38.2',
   meson_version: '>= 0.51.0',
   license: 'GPLv2+'
 )
@@ -411,11 +411,14 @@ if have_wayland
 
   # For Xwayland -initfd usage
   use_initfd = get_option('xwayland_initfd')
+  xwayland_options = run_command(xwayland_path, '-help')
   if use_initfd.auto()
-    xwayland_options = run_command(xwayland_path, '-help')
     have_xwayland_initfd = xwayland_options.stderr().contains('-initfd')
   else
     have_xwayland_initfd = use_initfd.enabled()
+    if have_xwayland_initfd and not xwayland_options.stderr().contains('-initfd')
+      error('XWayland -initfd support requested but not available')
+    endif
   endif
 
   if (have_xwayland_initfd)

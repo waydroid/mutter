@@ -1450,7 +1450,8 @@ meta_seat_native_handle_device_event (ClutterSeat  *seat,
   switch (event->type)
     {
       case CLUTTER_DEVICE_ADDED:
-        seat_native->has_touchscreen = check_touch_mode;
+        if (check_touch_mode)
+          seat_native->has_touchscreen = TRUE;
 
         if (libinput_device_has_capability (device_native->libinput_device,
                                             LIBINPUT_DEVICE_CAP_SWITCH) &&
@@ -1485,31 +1486,42 @@ process_base_event (MetaSeatNative        *seat,
                     struct libinput_event *event)
 {
   ClutterInputDevice *device = NULL;
-  ClutterEvent *device_event;
+  ClutterEvent *device_event = NULL;
   struct libinput_device *libinput_device;
+  ClutterStage *stage;
+
+  stage = meta_seat_native_get_stage (seat);
 
   switch (libinput_event_get_type (event))
     {
     case LIBINPUT_EVENT_DEVICE_ADDED:
       libinput_device = libinput_event_get_device (event);
-
       device = evdev_add_device (seat, libinput_device);
-      device_event = clutter_event_new (CLUTTER_DEVICE_ADDED);
-      clutter_event_set_device (device_event, device);
+
+      if (stage)
+        {
+          device_event = clutter_event_new (CLUTTER_DEVICE_ADDED);
+          clutter_event_set_device (device_event, device);
+        }
       break;
 
     case LIBINPUT_EVENT_DEVICE_REMOVED:
       libinput_device = libinput_event_get_device (event);
 
       device = libinput_device_get_user_data (libinput_device);
-      device_event = clutter_event_new (CLUTTER_DEVICE_REMOVED);
-      clutter_event_set_device (device_event, device);
+
+      if (stage)
+        {
+          device_event = clutter_event_new (CLUTTER_DEVICE_REMOVED);
+          clutter_event_set_device (device_event, device);
+        }
+
       evdev_remove_device (seat,
                            META_INPUT_DEVICE_NATIVE (device));
       break;
 
     default:
-      device_event = NULL;
+      break;
     }
 
   if (device_event)
@@ -2486,8 +2498,6 @@ meta_seat_native_constructed (GObject *object)
 
   seat->udev_client = g_udev_client_new ((const gchar *[]) { "input", NULL });
 
-  dispatch_libinput (seat);
-
   source = meta_event_source_new (seat);
   seat->event_source = source;
 
@@ -2861,6 +2871,16 @@ meta_seat_native_set_stage (MetaSeatNative *seat,
       ClutterInputDevice *device = l->data;
 
       _clutter_input_device_set_stage (device, stage);
+
+      if (clutter_input_device_get_device_mode (device) == CLUTTER_INPUT_MODE_PHYSICAL)
+        {
+          ClutterEvent *device_event;
+
+          device_event = clutter_event_new (CLUTTER_DEVICE_ADDED);
+          clutter_event_set_device (device_event, device);
+          device_event->device.stage = stage;
+          queue_event (device_event);
+        }
     }
 }
 
@@ -3142,6 +3162,7 @@ meta_seat_native_set_keyboard_map (MetaSeatNative    *seat,
   ClutterKeymap *keymap;
 
   g_return_if_fail (META_IS_SEAT_NATIVE (seat));
+  g_return_if_fail (xkb_keymap != NULL);
 
   keymap = clutter_seat_get_keymap (CLUTTER_SEAT (seat));
   meta_keymap_native_set_keyboard_map (META_KEYMAP_NATIVE (keymap),

@@ -89,6 +89,7 @@ typedef struct _MetaWaylandXdgSurfacePrivate
   struct wl_resource *resource;
   MetaWaylandXdgShellClient *shell_client;
   MetaRectangle geometry;
+  MetaRectangle unconstrained_geometry;
 
   guint configure_sent : 1;
   guint first_buffer_attached : 1;
@@ -700,8 +701,8 @@ meta_wayland_xdg_toplevel_send_configure (MetaWaylandXdgToplevel         *xdg_to
   fill_states (xdg_toplevel, &states);
 
   xdg_toplevel_send_configure (xdg_toplevel->resource,
-                               configuration->width,
-                               configuration->height,
+                               configuration->width / configuration->scale,
+                               configuration->height / configuration->scale,
                                &states);
   wl_array_release (&states);
 
@@ -810,7 +811,7 @@ meta_wayland_xdg_toplevel_post_apply_state (MetaWaylandSurfaceRole  *surface_rol
     META_WAYLAND_SURFACE_ROLE_CLASS (meta_wayland_xdg_toplevel_parent_class);
   surface_role_class->post_apply_state (surface_role, pending);
 
-  if (!pending->newly_attached)
+  if (!surface->buffer_ref->buffer)
     return;
 
   window_geometry = meta_wayland_xdg_surface_get_window_geometry (xdg_surface);
@@ -1250,7 +1251,8 @@ meta_wayland_xdg_popup_configure (MetaWaylandShellSurface        *shell_surface,
     }
   xdg_popup_send_configure (xdg_popup->resource,
                             x, y,
-                            configuration->width, configuration->height);
+                            configuration->width / configuration->scale,
+                            configuration->height / configuration->scale);
 
   meta_wayland_xdg_surface_send_configure (xdg_surface, configuration);
 }
@@ -1535,6 +1537,7 @@ meta_wayland_xdg_surface_real_reset (MetaWaylandXdgSurface *xdg_surface)
   priv->first_buffer_attached = FALSE;
   priv->configure_sent = FALSE;
   priv->geometry = (MetaRectangle) { 0 };
+  priv->unconstrained_geometry = (MetaRectangle) { 0 };
   priv->has_set_geometry = FALSE;
 }
 
@@ -1577,12 +1580,19 @@ meta_wayland_xdg_surface_post_apply_state (MetaWaylandSurfaceRole  *surface_role
 
   if (pending->has_new_geometry)
     {
+      priv->unconstrained_geometry = pending->new_geometry;
       meta_wayland_shell_surface_determine_geometry (shell_surface,
                                                      &pending->new_geometry,
                                                      &priv->geometry);
       priv->has_set_geometry = TRUE;
     }
-  else if (!priv->has_set_geometry)
+  else if (priv->has_set_geometry)
+    {
+      meta_wayland_shell_surface_determine_geometry (shell_surface,
+                                                     &priv->unconstrained_geometry,
+                                                     &priv->geometry);
+    }
+  else
     {
       MetaRectangle new_geometry = { 0 };
 
@@ -2046,8 +2056,10 @@ meta_wayland_xdg_positioner_to_placement (MetaWaylandXdgPositioner *xdg_position
                 }
               if (configuration->has_size)
                 {
-                  parent_rect.width = configuration->width;
-                  parent_rect.height = configuration->height;
+                  parent_rect.width =
+                    configuration->width / configuration->scale;
+                  parent_rect.height =
+                    configuration->height / configuration->scale;
                 }
             }
           else if (xdg_positioner->has_parent_size)

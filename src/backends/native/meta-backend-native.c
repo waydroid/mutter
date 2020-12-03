@@ -485,6 +485,14 @@ meta_backend_native_set_keymap (MetaBackend *backend,
   keymap = xkb_keymap_new_from_names (context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
   xkb_context_unref (context);
 
+  if (keymap == NULL)
+    {
+      g_warning ("Unable to load configured keymap: rules=%s, model=%s, layout=%s, variant=%s, options=%s",
+                 DEFAULT_XKB_RULES_FILE, DEFAULT_XKB_MODEL, layouts,
+                 variants, options);
+      return;
+    }
+
   seat = clutter_backend_get_default_seat (clutter_backend);
   meta_seat_native_set_keyboard_map (META_SEAT_NATIVE (seat), keymap);
 
@@ -573,6 +581,9 @@ create_gpu_from_udev_device (MetaBackendNative  *native,
 
   if (meta_is_udev_device_requires_modifiers (device))
     flags |= META_KMS_DEVICE_FLAG_REQUIRES_MODIFIERS;
+
+  if (meta_is_udev_device_preferred_primary (device))
+    flags |= META_KMS_DEVICE_FLAG_PREFERRED_PRIMARY;
 
   device_path = g_udev_device_get_device_file (device);
 
