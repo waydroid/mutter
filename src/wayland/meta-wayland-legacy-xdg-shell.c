@@ -609,8 +609,8 @@ meta_wayland_zxdg_toplevel_v6_send_configure (MetaWaylandZxdgToplevelV6      *xd
   fill_states (&states, window);
 
   zxdg_toplevel_v6_send_configure (xdg_toplevel->resource,
-                                   configuration->width,
-                                   configuration->height,
+                                   configuration->width / configuration->scale,
+                                   configuration->height / configuration->scale,
                                    &states);
   wl_array_release (&states);
 
@@ -658,6 +658,8 @@ meta_wayland_zxdg_toplevel_v6_apply_state (MetaWaylandSurfaceRole  *surface_role
     META_WAYLAND_ZXDG_SURFACE_V6 (xdg_toplevel);
   MetaWaylandZxdgSurfaceV6Private *xdg_surface_priv =
     meta_wayland_zxdg_surface_v6_get_instance_private (xdg_surface);
+  MetaWaylandActorSurface *actor_surface =
+    META_WAYLAND_ACTOR_SURFACE (xdg_surface);
   MetaWaylandSurfaceRoleClass *surface_role_class;
   MetaWaylandSurface *surface =
     meta_wayland_surface_role_get_surface (surface_role);
@@ -666,7 +668,7 @@ meta_wayland_zxdg_toplevel_v6_apply_state (MetaWaylandSurfaceRole  *surface_role
   window = meta_wayland_surface_get_window (surface);
   if (!window)
     {
-      meta_wayland_surface_cache_pending_frame_callbacks (surface, pending);
+      meta_wayland_actor_surface_queue_frame_callbacks (actor_surface, pending);
       return;
     }
 
@@ -1073,7 +1075,8 @@ meta_wayland_zxdg_popup_v6_configure (MetaWaylandShellSurface        *shell_surf
 
   zxdg_popup_v6_send_configure (xdg_popup->resource,
                                 x, y,
-                                configuration->width, configuration->height);
+                                configuration->width / configuration->scale,
+                                configuration->height / configuration->scale);
   meta_wayland_zxdg_surface_v6_send_configure (xdg_surface, configuration);
 }
 
@@ -1251,13 +1254,9 @@ meta_wayland_zxdg_surface_v6_send_configure (MetaWaylandZxdgSurfaceV6       *xdg
 static void
 zxdg_surface_v6_destructor (struct wl_resource *resource)
 {
-  MetaWaylandSurface *surface = surface_from_xdg_surface_resource (resource);
   MetaWaylandZxdgSurfaceV6 *xdg_surface = wl_resource_get_user_data (resource);
   MetaWaylandZxdgSurfaceV6Private *priv =
     meta_wayland_zxdg_surface_v6_get_instance_private (xdg_surface);
-
-  meta_wayland_compositor_destroy_frame_callbacks (surface->compositor,
-                                                   surface);
 
   priv->shell_client->surfaces = g_list_remove (priv->shell_client->surfaces,
                                                 xdg_surface);

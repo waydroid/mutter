@@ -697,8 +697,8 @@ meta_wayland_xdg_toplevel_send_configure (MetaWaylandXdgToplevel         *xdg_to
   fill_states (xdg_toplevel, &states);
 
   xdg_toplevel_send_configure (xdg_toplevel->resource,
-                               configuration->width,
-                               configuration->height,
+                               configuration->width / configuration->scale,
+                               configuration->height / configuration->scale,
                                &states);
   wl_array_release (&states);
 
@@ -744,6 +744,8 @@ meta_wayland_xdg_toplevel_apply_state (MetaWaylandSurfaceRole  *surface_role,
   MetaWaylandXdgSurface *xdg_surface = META_WAYLAND_XDG_SURFACE (xdg_toplevel);
   MetaWaylandXdgSurfacePrivate *xdg_surface_priv =
     meta_wayland_xdg_surface_get_instance_private (xdg_surface);
+  MetaWaylandActorSurface *actor_surface =
+    META_WAYLAND_ACTOR_SURFACE (xdg_toplevel);
   MetaWaylandSurfaceRoleClass *surface_role_class;
   MetaWaylandSurface *surface =
     meta_wayland_surface_role_get_surface (surface_role);
@@ -752,15 +754,12 @@ meta_wayland_xdg_toplevel_apply_state (MetaWaylandSurfaceRole  *surface_role,
   window = meta_wayland_surface_get_window (surface);
   if (!window)
     {
-      meta_wayland_surface_cache_pending_frame_callbacks (surface, pending);
+      meta_wayland_actor_surface_queue_frame_callbacks (actor_surface, pending);
       return;
     }
 
   if (!surface->buffer_ref.buffer && xdg_surface_priv->first_buffer_attached)
     {
-      MetaWaylandActorSurface *actor_surface =
-        META_WAYLAND_ACTOR_SURFACE (xdg_toplevel);
-
       meta_wayland_xdg_surface_reset (xdg_surface);
       meta_wayland_actor_surface_queue_frame_callbacks (actor_surface,
                                                         pending);
@@ -1114,6 +1113,8 @@ meta_wayland_xdg_popup_apply_state (MetaWaylandSurfaceRole  *surface_role,
   MetaWaylandXdgSurface *xdg_surface = META_WAYLAND_XDG_SURFACE (surface_role);
   MetaWaylandXdgSurfacePrivate *xdg_surface_priv =
     meta_wayland_xdg_surface_get_instance_private (xdg_surface);
+  MetaWaylandActorSurface *actor_surface =
+    META_WAYLAND_ACTOR_SURFACE (xdg_popup);
   MetaWaylandSurfaceRoleClass *surface_role_class;
   MetaWaylandSurface *surface =
     meta_wayland_surface_role_get_surface (surface_role);
@@ -1124,7 +1125,7 @@ meta_wayland_xdg_popup_apply_state (MetaWaylandSurfaceRole  *surface_role,
   if (!surface->buffer_ref.buffer && xdg_surface_priv->first_buffer_attached)
     {
       meta_wayland_xdg_surface_reset (xdg_surface);
-      meta_wayland_surface_cache_pending_frame_callbacks (surface, pending);
+      meta_wayland_actor_surface_queue_frame_callbacks (actor_surface, pending);
       return;
     }
 
@@ -1246,7 +1247,8 @@ meta_wayland_xdg_popup_configure (MetaWaylandShellSurface        *shell_surface,
     }
   xdg_popup_send_configure (xdg_popup->resource,
                             x, y,
-                            configuration->width, configuration->height);
+                            configuration->width / configuration->scale,
+                            configuration->height / configuration->scale);
 
   meta_wayland_xdg_surface_send_configure (xdg_surface, configuration);
 }
@@ -1419,13 +1421,9 @@ meta_wayland_xdg_surface_send_configure (MetaWaylandXdgSurface          *xdg_sur
 static void
 xdg_surface_destructor (struct wl_resource *resource)
 {
-  MetaWaylandSurface *surface = surface_from_xdg_surface_resource (resource);
   MetaWaylandXdgSurface *xdg_surface = wl_resource_get_user_data (resource);
   MetaWaylandXdgSurfacePrivate *priv =
     meta_wayland_xdg_surface_get_instance_private (xdg_surface);
-
-  meta_wayland_compositor_destroy_frame_callbacks (surface->compositor,
-                                                   surface);
 
   priv->shell_client->surfaces = g_list_remove (priv->shell_client->surfaces,
                                                 xdg_surface);
@@ -2046,8 +2044,10 @@ meta_wayland_xdg_positioner_to_placement (MetaWaylandXdgPositioner *xdg_position
                 }
               if (configuration->has_size)
                 {
-                  parent_rect.width = configuration->width;
-                  parent_rect.height = configuration->height;
+                  parent_rect.width =
+                    configuration->width / configuration->scale;
+                  parent_rect.height =
+                    configuration->height / configuration->scale;
                 }
             }
           else if (xdg_positioner->has_parent_size)

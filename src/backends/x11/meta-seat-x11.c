@@ -1391,6 +1391,25 @@ meta_seat_x11_get_property (GObject    *object,
     }
 }
 
+void
+meta_seat_x11_notify_devices (MetaSeatX11  *seat_x11,
+			      ClutterStage *stage)
+{
+  GHashTableIter iter;
+  ClutterInputDevice *device;
+
+  g_hash_table_iter_init (&iter, seat_x11->devices_by_id);
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer *) &device))
+    {
+      ClutterEvent *event;
+
+      event = clutter_event_new (CLUTTER_DEVICE_ADDED);
+      clutter_event_set_device (event, device);
+      clutter_event_set_stage (event, stage);
+      clutter_do_event (event);
+    }
+}
+
 static void
 meta_seat_x11_constructed (GObject *object)
 {
@@ -1812,6 +1831,10 @@ meta_seat_x11_translate_event (MetaSeatX11  *seat,
         device = g_hash_table_lookup (seat->devices_by_id,
                                       GINT_TO_POINTER (xev->deviceid));
         clutter_event_set_device (event, device);
+
+        if (clutter_input_device_get_device_mode (device) == CLUTTER_INPUT_MODE_MASTER &&
+            stage != NULL)
+          _clutter_input_device_set_stage (device, stage);
 
         /* XXX keep this in sync with the evdev device manager */
         n = print_keysym (event->key.keyval, buffer, sizeof (buffer));

@@ -108,11 +108,6 @@ typedef struct _MetaCompositorPrivate
   gulong stage_presented_id;
   gulong stage_after_paint_id;
 
-  int64_t server_time_query_time;
-  int64_t server_time_offset;
-
-  gboolean server_time_is_monotonic_time;
-
   ClutterActor *stage;
 
   ClutterActor *window_group;
@@ -490,11 +485,6 @@ after_stage_paint (ClutterStage *stage,
 
   for (l = priv->windows; l; l = l->next)
     meta_window_actor_post_paint (l->data);
-
-#ifdef HAVE_WAYLAND
-  if (meta_is_wayland_compositor ())
-    meta_wayland_compositor_paint_finished (meta_wayland_compositor_get_default ());
-#endif
 }
 
 static void
@@ -1128,6 +1118,11 @@ meta_compositor_real_post_paint (MetaCompositor *compositor)
     meta_compositor_get_instance_private (compositor);
   CoglGraphicsResetStatus status;
 
+#ifdef HAVE_WAYLAND
+  if (meta_is_wayland_compositor ())
+    meta_wayland_compositor_paint_finished (meta_wayland_compositor_get_default ());
+#endif
+
   status = cogl_get_graphics_reset_status (priv->context);
   switch (status)
     {
@@ -1426,7 +1421,7 @@ meta_compositor_flash_window (MetaCompositor *compositor,
 }
 
 /**
- * meta_compositor_monotonic_time_to_server_time:
+ * meta_compositor_monotonic_to_high_res_xserver_time:
  * @display: a #MetaDisplay
  * @monotonic_time: time in the units of g_get_monotonic_time()
  *
@@ -1439,40 +1434,13 @@ meta_compositor_flash_window (MetaCompositor *compositor,
  * a time representation with high accuracy. If there is not a common
  * time source, then the time synchronization will be less accurate.
  */
-gint64
-meta_compositor_monotonic_time_to_server_time (MetaDisplay *display,
-                                               gint64       monotonic_time)
+int64_t
+meta_compositor_monotonic_to_high_res_xserver_time (MetaCompositor *compositor,
+                                                   int64_t         monotonic_time_us)
 {
-  MetaCompositor *compositor = display->compositor;
-  MetaCompositorPrivate *priv =
-    meta_compositor_get_instance_private (compositor);
+  MetaCompositorClass *klass = META_COMPOSITOR_GET_CLASS (compositor);
 
-  if (priv->server_time_query_time == 0 ||
-      (!priv->server_time_is_monotonic_time &&
-       monotonic_time > priv->server_time_query_time + 10*1000*1000)) /* 10 seconds */
-    {
-      guint32 server_time = meta_display_get_current_time_roundtrip (display);
-      gint64 server_time_usec = (gint64)server_time * 1000;
-      gint64 current_monotonic_time = g_get_monotonic_time ();
-      priv->server_time_query_time = current_monotonic_time;
-
-      /* If the server time is within a second of the monotonic time,
-       * we assume that they are identical. This seems like a big margin,
-       * but we want to be as robust as possible even if the system
-       * is under load and our processing of the server response is
-       * delayed.
-       */
-      if (server_time_usec > current_monotonic_time - 1000*1000 &&
-          server_time_usec < current_monotonic_time + 1000*1000)
-        priv->server_time_is_monotonic_time = TRUE;
-
-      priv->server_time_offset = server_time_usec - current_monotonic_time;
-    }
-
-  if (priv->server_time_is_monotonic_time)
-    return monotonic_time;
-  else
-    return monotonic_time + priv->server_time_offset;
+  return klass->monotonic_to_high_res_xserver_time (compositor, monotonic_time_us);
 }
 
 void

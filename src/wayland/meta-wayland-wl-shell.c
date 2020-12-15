@@ -103,9 +103,6 @@ wl_shell_surface_destructor (struct wl_resource *resource)
     surface_from_wl_shell_surface_resource (resource);
   GList *l;
 
-  meta_wayland_compositor_destroy_frame_callbacks (surface->compositor,
-                                                   surface);
-
   if (wl_shell_surface->popup)
     meta_wayland_popup_dismiss (wl_shell_surface->popup);
 
@@ -660,7 +657,8 @@ wl_shell_surface_role_configure (MetaWaylandShellSurface        *shell_surface,
 
   wl_shell_surface_send_configure (wl_shell_surface->resource,
                                    0,
-                                   configuration->width, configuration->height);
+                                   configuration->width / configuration->scale,
+                                   configuration->height / configuration->scale);
 
   wl_shell_surface->emulated_ack_configure_serial = configuration->serial;
 }

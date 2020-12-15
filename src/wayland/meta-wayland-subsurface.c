@@ -363,9 +363,6 @@ wl_subsurface_destructor (struct wl_resource *resource)
 {
   MetaWaylandSurface *surface = wl_resource_get_user_data (resource);
 
-  meta_wayland_compositor_destroy_frame_callbacks (surface->compositor,
-                                                   surface);
-
   g_node_unlink (surface->subsurface_branch_node);
   unparent_actor (surface);
 
@@ -533,6 +530,17 @@ surface_handle_parent_surface_destroyed (struct wl_listener *listener,
   surface->sub.parent = NULL;
 }
 
+static gboolean
+is_same_or_ancestor (MetaWaylandSurface *surface,
+                     MetaWaylandSurface *other_surface)
+{
+  if (surface == other_surface)
+    return TRUE;
+  if (other_surface->sub.parent)
+    return is_same_or_ancestor (surface, other_surface->sub.parent);
+  return FALSE;
+}
+
 static void
 wl_subcompositor_get_subsurface (struct wl_client   *client,
                                  struct wl_resource *resource,
@@ -549,6 +557,16 @@ wl_subcompositor_get_subsurface (struct wl_client   *client,
       wl_resource_post_error (surface_resource,
                               WL_DISPLAY_ERROR_INVALID_OBJECT,
                               "wl_subcompositor::get_subsurface already requested");
+      return;
+    }
+
+  if (is_same_or_ancestor (surface, parent))
+    {
+      wl_resource_post_error (resource, WL_SUBCOMPOSITOR_ERROR_BAD_SURFACE,
+                              "Circular relationship between wl_surface@%d "
+                              "and parent surface wl_surface@%d",
+                              wl_resource_get_id (surface->resource),
+                              wl_resource_get_id (parent->resource));
       return;
     }
 
