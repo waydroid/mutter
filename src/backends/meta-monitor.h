@@ -62,6 +62,7 @@ typedef enum _MetaMonitorScalesConstraint
 {
   META_MONITOR_SCALES_CONSTRAINT_NONE = 0,
   META_MONITOR_SCALES_CONSTRAINT_NO_FRAC = (1 << 0),
+  META_MONITOR_SCALES_CONSTRAINT_NO_LOGICAL = (1 << 1),
 } MetaMonitorScalesConstraint;
 
 #define META_TYPE_MONITOR (meta_monitor_get_type ())
@@ -224,8 +225,9 @@ void meta_monitor_calculate_crtc_pos (MetaMonitor          *monitor,
                                       int                  *out_y);
 
 META_EXPORT_TEST
-float meta_monitor_calculate_mode_scale (MetaMonitor     *monitor,
-                                         MetaMonitorMode *monitor_mode);
+float meta_monitor_calculate_mode_scale (MetaMonitor                 *monitor,
+                                         MetaMonitorMode             *monitor_mode,
+                                         MetaMonitorScalesConstraint  constraints);
 
 META_EXPORT_TEST
 float * meta_monitor_calculate_supported_scales (MetaMonitor                 *monitor,
