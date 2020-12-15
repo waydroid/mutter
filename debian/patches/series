@@ -5,11 +5,3 @@ meson-add-back-default_driver-option.patch
 x11-Add-support-for-fractional-scaling-using-Randr.patch
 debian/synaptics-support.patch
 debian/tests-Tag-closed-transient-no-input-tests-as-flaky.patch
-kms-crtc-Read-initial-gamma-state.patch
-kms-crtc-Always-consider-gamma-state-valid.patch
-backend-Don-t-emit-last-device-updates-with-no-device.patch
-backend-Use-connect-after-to-perform-actions-on-device-re.patch
-clutter-event-Add-device-added-removed-events.patch
-clutter-seat-Handle-device-events-and-emit-signals.patch
-seat-x11-Translate-device-enabled-disabled-into-clutter-e.patch
-seat-native-Process-device-added-removed-events-as-Clutte.patch

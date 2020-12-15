@@ -55,7 +55,6 @@ libmutter-6.so.0 libmutter-6-0 #MINVER#
  meta_close_dialog_response@Base 3.28.2
  meta_close_dialog_response_get_type@Base 3.28.2
  meta_close_dialog_show@Base 3.28.2
- meta_clutter_init@Base 3.28.2
  meta_comp_effect_get_type@Base 3.28.2
  meta_compositor_add_window@Base 3.28.2
  meta_compositor_destroy@Base 3.28.2
@@ -1839,6 +1838,7 @@ libmutter-clutter-6.so.0 libmutter-6-0 #MINVER#
  clutter_stage_paint_to_framebuffer@Base 3.36.2
  clutter_stage_queue_redraw@Base 3.29.4
  clutter_stage_read_pixels@Base 3.29.4
+ clutter_stage_schedule_update@Base 3.36.7+git20201123
  clutter_stage_set_accept_focus@Base 3.29.4
  clutter_stage_set_color@Base 3.29.4
  clutter_stage_set_key_focus@Base 3.29.4

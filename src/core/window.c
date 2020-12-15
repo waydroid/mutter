@@ -3275,6 +3275,15 @@ unmaximize_window_before_freeing (MetaWindow        *window)
 #endif
 }
 
+static void
+meta_window_maybe_apply_size_hints (MetaWindow    *window,
+                                    MetaRectangle *target_rect)
+{
+  meta_window_frame_rect_to_client_rect (window, target_rect, target_rect);
+  ensure_size_hints_satisfied (target_rect, &window->size_hints);
+  meta_window_client_rect_to_frame_rect (window, target_rect, target_rect);
+}
+
 void
 meta_window_unmaximize (MetaWindow        *window,
                         MetaMaximizeFlags  directions)
@@ -3372,9 +3381,7 @@ meta_window_unmaximize (MetaWindow        *window,
       /* Window's size hints may have changed while maximized, making
        * saved_rect invalid.  #329152
        */
-      meta_window_frame_rect_to_client_rect (window, &target_rect, &target_rect);
-      ensure_size_hints_satisfied (&target_rect, &window->size_hints);
-      meta_window_client_rect_to_frame_rect (window, &target_rect, &target_rect);
+      meta_window_maybe_apply_size_hints (window, &target_rect);
 
       meta_compositor_size_change_window (window->display->compositor, window,
                                           META_SIZE_CHANGE_UNMAXIMIZE,
@@ -3529,9 +3536,7 @@ meta_window_unmake_fullscreen (MetaWindow  *window)
       /* Window's size hints may have changed while maximized, making
        * saved_rect invalid.  #329152
        */
-      meta_window_frame_rect_to_client_rect (window, &target_rect, &target_rect);
-      ensure_size_hints_satisfied (&target_rect, &window->size_hints);
-      meta_window_client_rect_to_frame_rect (window, &target_rect, &target_rect);
+      meta_window_maybe_apply_size_hints (window, &target_rect);
 
       /* Need to update window->has_resize_func before we move_resize()
        */
@@ -6250,9 +6255,9 @@ update_resize (MetaWindow *window,
                gboolean force)
 {
   int dx, dy;
-  int new_w, new_h;
   MetaGravity gravity;
-  MetaRectangle old;
+  MetaRectangle new_rect;
+  MetaRectangle old_rect;
   double remaining = 0;
 
   window->display->grab_latest_motion_x = x;
@@ -6271,8 +6276,8 @@ update_resize (MetaWindow *window,
       dy *= 2;
     }
 
-  new_w = window->display->grab_anchor_window_pos.width;
-  new_h = window->display->grab_anchor_window_pos.height;
+  new_rect.width = window->display->grab_anchor_window_pos.width;
+  new_rect.height = window->display->grab_anchor_window_pos.height;
 
   /* Don't bother doing anything if no move has been specified.  (This
    * happens often, even in keyboard resizing, due to the warping of the
@@ -6301,14 +6306,16 @@ update_resize (MetaWindow *window,
     }
 
   if (window->display->grab_op & META_GRAB_OP_WINDOW_DIR_EAST)
-    new_w += dx;
+    new_rect.width += dx;
   else if (window->display->grab_op & META_GRAB_OP_WINDOW_DIR_WEST)
-    new_w -= dx;
+    new_rect.width -= dx;
 
   if (window->display->grab_op & META_GRAB_OP_WINDOW_DIR_SOUTH)
-    new_h += dy;
+    new_rect.height += dy;
   else if (window->display->grab_op & META_GRAB_OP_WINDOW_DIR_NORTH)
-    new_h -= dy;
+    new_rect.height -= dy;
+
+  meta_window_maybe_apply_size_hints (window, &new_rect);
 
   /* If we're waiting for a request for _NET_WM_SYNC_REQUEST, we'll
    * resize the window when the window responds, or when we time
@@ -6338,7 +6345,7 @@ update_resize (MetaWindow *window,
   /* Remove any scheduled compensation events */
   g_clear_handle_id (&window->display->grab_resize_timeout_id, g_source_remove);
 
-  meta_window_get_frame_rect (window, &old);
+  meta_window_get_frame_rect (window, &old_rect);
 
   /* One sided resizing ought to actually be one-sided, despite the fact that
    * aspect ratio windows don't interact nicely with the above stuff.  So,
@@ -6346,10 +6353,10 @@ update_resize (MetaWindow *window,
    */
 
   if ((window->display->grab_op & (META_GRAB_OP_WINDOW_DIR_WEST | META_GRAB_OP_WINDOW_DIR_EAST)) == 0)
-    new_w = old.width;
+    new_rect.width = old_rect.width;
 
   if ((window->display->grab_op & (META_GRAB_OP_WINDOW_DIR_NORTH | META_GRAB_OP_WINDOW_DIR_SOUTH)) == 0)
-    new_h = old.height;
+    new_rect.height = old_rect.height;
 
   /* compute gravity of client during operation */
   gravity = meta_resize_gravity_from_grab_op (window->display->grab_op);
@@ -6357,17 +6364,20 @@ update_resize (MetaWindow *window,
 
   /* Do any edge resistance/snapping */
   meta_window_edge_resistance_for_resize (window,
-                                          &new_w,
-                                          &new_h,
+                                          &new_rect.width,
+                                          &new_rect.height,
                                           gravity,
                                           update_resize_timeout,
                                           snap,
                                           FALSE);
 
-  meta_window_resize_frame_with_gravity (window, TRUE, new_w, new_h, gravity);
+  meta_window_resize_frame_with_gravity (window, TRUE,
+                                         new_rect.width, new_rect.height,
+                                         gravity);
 
   /* Store the latest resize time, if we actually resized. */
-  if (window->rect.width != old.width || window->rect.height != old.height)
+  if (window->rect.width != old_rect.width ||
+      window->rect.height != old_rect.height)
     window->display->grab_last_moveresize_time = g_get_real_time ();
 }
 

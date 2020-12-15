@@ -418,6 +418,8 @@ clutter_event_get_position (const ClutterEvent *event,
     case CLUTTER_IM_COMMIT:
     case CLUTTER_IM_DELETE:
     case CLUTTER_IM_PREEDIT:
+    case CLUTTER_DEVICE_ADDED:
+    case CLUTTER_DEVICE_REMOVED:
       graphene_point_init (position, 0.f, 0.f);
       break;
 
@@ -495,6 +497,8 @@ clutter_event_set_coords (ClutterEvent *event,
     case CLUTTER_IM_COMMIT:
     case CLUTTER_IM_DELETE:
     case CLUTTER_IM_PREEDIT:
+    case CLUTTER_DEVICE_ADDED:
+    case CLUTTER_DEVICE_REMOVED:
       break;
 
     case CLUTTER_ENTER:
@@ -1170,6 +1174,11 @@ clutter_event_set_device (ClutterEvent       *event,
     case CLUTTER_PAD_RING:
       event->pad_ring.device = device;
       break;
+
+    case CLUTTER_DEVICE_ADDED:
+    case CLUTTER_DEVICE_REMOVED:
+      event->device.device = device;
+      break;
     }
 }
 
@@ -1269,6 +1278,11 @@ clutter_event_get_device (const ClutterEvent *event)
 
     case CLUTTER_PAD_RING:
       device = event->pad_ring.device;
+      break;
+
+    case CLUTTER_DEVICE_ADDED:
+    case CLUTTER_DEVICE_REMOVED:
+      device = event->device.device;
       break;
     }
 
@@ -1428,6 +1442,11 @@ clutter_event_copy (const ClutterEvent *event)
       new_event->im.text = g_strdup (event->im.text);
       break;
 
+    case CLUTTER_DEVICE_ADDED:
+    case CLUTTER_DEVICE_REMOVED:
+      new_event->device.device = event->device.device;
+      break;
+
     default:
       break;
     }
@@ -1563,7 +1582,9 @@ _clutter_event_push (const ClutterEvent *event,
   device = clutter_event_get_device (event);
   if (device != NULL)
     {
-      if (!clutter_input_device_get_enabled (device))
+      if (event->type != CLUTTER_DEVICE_ADDED &&
+          event->type != CLUTTER_DEVICE_REMOVED &&
+          !clutter_input_device_get_enabled (device))
         return;
     }
 
@@ -1755,6 +1776,8 @@ clutter_event_get_axes (const ClutterEvent *event,
     case CLUTTER_EVENT_LAST:
     case CLUTTER_PROXIMITY_IN:
     case CLUTTER_PROXIMITY_OUT:
+    case CLUTTER_DEVICE_ADDED:
+    case CLUTTER_DEVICE_REMOVED:
       break;
 
     case CLUTTER_SCROLL:

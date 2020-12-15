@@ -37,8 +37,10 @@ void                    meta_wayland_init                       (void);
 
 void                    meta_wayland_finalize                   (void);
 
-/* We maintain a singleton MetaWaylandCompositor which can be got at via this
- * API after meta_wayland_init() has been called. */
+MetaWaylandCompositor * meta_wayland_compositor_new             (MetaBackend *backend);
+
+void                    meta_wayland_compositor_setup           (MetaWaylandCompositor *compositor);
+
 META_EXPORT_TEST
 MetaWaylandCompositor  *meta_wayland_compositor_get_default     (void);
 
@@ -60,8 +62,11 @@ void                    meta_wayland_compositor_set_input_focus (MetaWaylandComp
 
 void                    meta_wayland_compositor_paint_finished  (MetaWaylandCompositor *compositor);
 
-void                    meta_wayland_compositor_destroy_frame_callbacks (MetaWaylandCompositor *compositor,
-                                                                         MetaWaylandSurface    *surface);
+void                    meta_wayland_compositor_add_frame_callback_surface (MetaWaylandCompositor *compositor,
+                                                                            MetaWaylandSurface    *surface);
+
+void                    meta_wayland_compositor_remove_frame_callback_surface (MetaWaylandCompositor *compositor,
+                                                                               MetaWaylandSurface    *surface);
 
 META_EXPORT_TEST
 const char             *meta_wayland_get_wayland_display_name   (MetaWaylandCompositor *compositor);

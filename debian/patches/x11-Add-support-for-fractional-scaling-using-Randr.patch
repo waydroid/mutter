@@ -31,13 +31,13 @@ Forwarded: No, forwarding is in progress and planned though
  src/backends/x11/meta-monitor-manager-xrandr.c | 571 +++++++++++++++++++------
  src/backends/x11/meta-monitor-manager-xrandr.h |   4 +-
  src/backends/x11/meta-output-xrandr.c          |   5 +-
- src/compositor/meta-compositor-x11.c           |  98 ++++-
+ src/compositor/meta-compositor-x11.c           |  99 ++++-
  src/core/boxes-private.h                       |   4 +
  src/core/boxes.c                               |  21 +
  src/core/window.c                              |  19 +
  src/org.gnome.Mutter.DisplayConfig.xml         |   5 +
  src/tests/meta-monitor-manager-test.c          |  13 +-
- 29 files changed, 1778 insertions(+), 271 deletions(-)
+ 29 files changed, 1779 insertions(+), 271 deletions(-)
  create mode 100644 data/org.gnome.mutter.x11.gschema.xml.in
 
 diff --git a/data/meson.build b/data/meson.build
@@ -3331,7 +3331,7 @@ index 869a39e..c274df2 100644
  
    tile_atom = XInternAtom (xdisplay, "TILE", FALSE);
 diff --git a/src/compositor/meta-compositor-x11.c b/src/compositor/meta-compositor-x11.c
-index 1737e97..755e733 100644
+index ba9cca2..4043d81 100644
 --- a/src/compositor/meta-compositor-x11.c
 +++ b/src/compositor/meta-compositor-x11.c
 @@ -31,6 +31,7 @@
@@ -3342,15 +3342,16 @@ index 1737e97..755e733 100644
  #include "x11/meta-x11-display-private.h"
  
  struct _MetaCompositorX11
-@@ -43,6 +44,7 @@ struct _MetaCompositorX11
-   gboolean have_x11_sync_object;
- 
-   MetaWindow *unredirected_window;
+@@ -47,6 +48,8 @@ struct _MetaCompositorX11
+   gboolean xserver_uses_monotonic_clock;
+   int64_t xserver_time_query_time_us;
+   int64_t xserver_time_offset_us;
++
 +  gboolean randr_scale_disabled;
  };
  
  G_DEFINE_TYPE (MetaCompositorX11, meta_compositor_x11, META_TYPE_COMPOSITOR)
-@@ -206,20 +208,91 @@ shape_cow_for_window (MetaCompositorX11 *compositor_x11,
+@@ -238,20 +241,91 @@ shape_cow_for_window (MetaCompositorX11 *compositor_x11,
      }
  }
  
@@ -3443,7 +3444,7 @@ index 1737e97..755e733 100644
        window_actor = meta_window_actor_from_window (prev_unredirected_window);
        window_actor_x11 = META_WINDOW_ACTOR_X11 (window_actor);
        meta_window_actor_x11_set_unredirected (window_actor_x11, FALSE);
-@@ -233,6 +306,17 @@ set_unredirected_window (MetaCompositorX11 *compositor_x11,
+@@ -265,6 +339,17 @@ set_unredirected_window (MetaCompositorX11 *compositor_x11,
        MetaWindowActor *window_actor;
        MetaWindowActorX11 *window_actor_x11;
  
@@ -3461,7 +3462,7 @@ index 1737e97..755e733 100644
        window_actor = meta_window_actor_from_window (window);
        window_actor_x11 = META_WINDOW_ACTOR_X11 (window_actor);
        meta_window_actor_x11_set_unredirected (window_actor_x11, TRUE);
-@@ -244,21 +328,11 @@ maybe_unredirect_top_window (MetaCompositorX11 *compositor_x11)
+@@ -276,21 +361,11 @@ maybe_unredirect_top_window (MetaCompositorX11 *compositor_x11)
  {
    MetaCompositor *compositor = META_COMPOSITOR (compositor_x11);
    MetaWindow *window_to_unredirect = NULL;
@@ -3532,7 +3533,7 @@ index 37d04bb..93a2b6b 100644
  void
  meta_rectangle_clamp_to_fit_into_region (const GList         *spanning_rects,
 diff --git a/src/core/window.c b/src/core/window.c
-index ea721f7..e34868d 100644
+index 706a221..a3efc4c 100644
 --- a/src/core/window.c
 +++ b/src/core/window.c
 @@ -227,6 +227,7 @@ enum

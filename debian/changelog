@@ -1,3 +1,19 @@
+mutter (3.36.7+git20201123-0.20.04.1) focal; urgency=medium
+
+  * New upstream release and git snapshot (LP: #1903230)
+    - Fix Night Light updates after DPMS
+    - Fix IM handling on X11 (LP: #1899206, thanks to Gunnar Hjalmarsson for
+      the initial cherry-pick)
+    - Fix resizing of attached modal dialogs on wayland
+    - Fix jumps when resizing windows using discrete steps
+    - Fixed crashes
+    - Plugged Memory leaks
+    - Misc. bug fixes and cleanups
+  * debian/libmutter-6-0.symbols: Update to match upstream changes.
+    No symbol is a public one
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 15 Dec 2020 04:27:46 +0100
+
 mutter (3.36.6-1ubuntu0.20.04.2) focal; urgency=medium
 
   * xrandr-scaling: Never try to set invalid screen sizes (again!)
