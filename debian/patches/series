@@ -1,3 +1,15 @@
+window-Do-not-handle-ungrabbed-events-when-unmanaging.patch
+window-Guard-can_ping-against-unmanaging-windows.patch
+monitor-config-store-Properly-escape-monitor-spec.patch
+monitor-config-Free-meta_monitor_spec-safely.patch
+tests-monitor-config-Improve-debugging-output.patch
+workspace-Downgrade-assert-to-warning-when-adding-window.patch
+screen-cast-stream-Add-getter-for-stream-src.patch
+screen-cast-monitor-stream-Don-t-fall-apart-when-monitor-.patch
+screen-cast-area-src-Handle-monitors-changes-here-too.patch
+window-Freeze-stack-when-calculating-showing-state.patch
+window-actor-Add-a-new-can_freeze_commits-API.patch
+window-x11-Check-before-freezing-commits.patch
 theme-use-gtk_render_icon_suface-to-paint-button-icon.patch
 theme-load-icons-as-Gtk-does-with-fallback-and-RTL-suppor.patch
 meson-add-back-default_driver-option.patch

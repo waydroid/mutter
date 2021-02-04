@@ -1,0 +1,31 @@
+From: =?utf-8?q?Florian_M=C3=BCllner?= <fmuellner@gnome.org>
+Date: Wed, 20 Jan 2021 12:22:22 +0100
+Subject: window: Do not handle ungrabbed events when unmanaging
+
+Once we are no longer managing a window, we have no business in
+dealing with it anymore, and operations like focusing, raising or
+pinging the window aren't expected to work, and can go horribly
+wrong if we try.
+
+Bug: https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/2467
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1676>
+(cherry picked from commit e7b58c23b896c604b71d542b2f477523df60e637)
+Origin: upstream, 3.38.4, commit:dd2f4963d39a46eeda5825ba25af925424821ac9
+---
+ src/core/window.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/core/window.c b/src/core/window.c
+index 2e37e9d..1abad19 100644
+--- a/src/core/window.c
++++ b/src/core/window.c
+@@ -8313,6 +8313,9 @@ meta_window_handle_ungrabbed_event (MetaWindow         *window,
+   gfloat x, y;
+   guint button;
+ 
++  if (window->unmanaging)
++    return;
++
+   if (event->type != CLUTTER_BUTTON_PRESS &&
+       event->type != CLUTTER_TOUCH_BEGIN)
+     return;

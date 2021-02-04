@@ -1,0 +1,46 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Wed, 27 Jan 2021 23:36:51 +0100
+Subject: screen-cast-stream: Add getter for stream src
+
+(cherry picked from commit 9f6a4416651263181d22aea28caa7f2181982705)
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1694>
+Origin: upstream, 3.38.4, commit:6724bbe497a259987e3bc1e9f05546c72c5e25f0
+---
+ src/backends/meta-screen-cast-stream.c | 9 +++++++++
+ src/backends/meta-screen-cast-stream.h | 2 ++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/src/backends/meta-screen-cast-stream.c b/src/backends/meta-screen-cast-stream.c
+index fa2f368..fed1560 100644
+--- a/src/backends/meta-screen-cast-stream.c
++++ b/src/backends/meta-screen-cast-stream.c
+@@ -168,6 +168,15 @@ meta_screen_cast_stream_get_object_path (MetaScreenCastStream *stream)
+   return priv->object_path;
+ }
+ 
++MetaScreenCastStreamSrc *
++meta_screen_cast_stream_get_src (MetaScreenCastStream *stream)
++{
++  MetaScreenCastStreamPrivate *priv =
++    meta_screen_cast_stream_get_instance_private (stream);
++
++  return priv->src;
++}
++
+ void
+ meta_screen_cast_stream_transform_position (MetaScreenCastStream *stream,
+                                             double                stream_x,
+diff --git a/src/backends/meta-screen-cast-stream.h b/src/backends/meta-screen-cast-stream.h
+index 1fa8ddd..d121c15 100644
+--- a/src/backends/meta-screen-cast-stream.h
++++ b/src/backends/meta-screen-cast-stream.h
+@@ -59,6 +59,8 @@ void meta_screen_cast_stream_close (MetaScreenCastStream *stream);
+ 
+ char * meta_screen_cast_stream_get_object_path (MetaScreenCastStream *stream);
+ 
++MetaScreenCastStreamSrc * meta_screen_cast_stream_get_src (MetaScreenCastStream *stream);
++
+ void meta_screen_cast_stream_transform_position (MetaScreenCastStream *stream,
+                                                  double                stream_x,
+                                                  double                stream_y,

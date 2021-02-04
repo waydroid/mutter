@@ -1,0 +1,32 @@
+From: =?utf-8?q?Thomas_M=C3=BChlbacher?= <tmuehlbacher@posteo.net>
+Date: Wed, 27 Jan 2021 20:00:04 +0100
+Subject: monitor-config: Free `meta_monitor_spec` safely
+
+`g_free()` alone can't help if the value it gets is `NULL` + the offset
+of the struct members.
+
+This prevents gnome-shell from segfaulting if `monitors.xml` contains
+invalid XML.
+
+Bug: <https://gitlab.gnome.org/GNOME/mutter/-/issues/1011>
+(cherry picked from commit 88647ae23cd818c28ff81fd9de38aac4144c4994)
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1694>
+Origin: upstream, 3.38.4, commit:8af95b4c4b07524e43004eaf00dbf18ec63fa594
+---
+ src/backends/meta-monitor-config-manager.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/backends/meta-monitor-config-manager.c b/src/backends/meta-monitor-config-manager.c
+index 1ef92c2..fc7a8dd 100644
+--- a/src/backends/meta-monitor-config-manager.c
++++ b/src/backends/meta-monitor-config-manager.c
+@@ -1388,7 +1388,8 @@ meta_monitor_config_manager_class_init (MetaMonitorConfigManagerClass *klass)
+ void
+ meta_monitor_config_free (MetaMonitorConfig *monitor_config)
+ {
+-  meta_monitor_spec_free (monitor_config->monitor_spec);
++  if (monitor_config->monitor_spec)
++    meta_monitor_spec_free (monitor_config->monitor_spec);
+   g_free (monitor_config->mode_spec);
+   g_free (monitor_config);
+ }
