@@ -1,3 +1,19 @@
+mutter (3.38.3-2) unstable; urgency=medium
+
+  * Team upload
+  * d/patches: Update to commit 3.38.3-12-g2d424a739 from gnome-3-38 branch
+    - Cope with monitors with metacharacters in their EDID data
+    - Don't crash if parsing monitor configuration fails
+    - Don't crash if an extension tries to add the same window to a
+      workspace more than once, such as auto-move-windows
+    - Cope with monitor configuration changes during screencasting
+    - Speed up workspace switching when many windows are open
+    - Fix Xwayland windows not always appearing in the gnome-shell overview
+    - Avoid warning spam and poor performance when unmanaging a window
+      (probably Closes: #970295, LP: #1841774)
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 04 Feb 2021 10:26:19 +0000
+
 mutter (3.38.3-1) unstable; urgency=medium
 
   * Team upload

@@ -1,0 +1,60 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Thu, 28 Jan 2021 23:21:12 +0100
+Subject: screen-cast/area-src: Handle monitors changes here too
+
+Like with the monitor source, we need to reattach to the new views after
+monitor changes, otherwise the screen cast will get stuck.
+
+(cherry picked from commit 893c0cd2f93a0d10a211af32d26be167e9656cd7)
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1694>
+Origin: upstream, 3.38.4, commit:d881fcdece6087b32cee725c1879a3278ceee9b6
+---
+ src/backends/meta-screen-cast-area-stream-src.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/src/backends/meta-screen-cast-area-stream-src.c b/src/backends/meta-screen-cast-area-stream-src.c
+index e7d42d4..7cc70dc 100644
+--- a/src/backends/meta-screen-cast-area-stream-src.c
++++ b/src/backends/meta-screen-cast-area-stream-src.c
+@@ -316,12 +316,29 @@ add_view_painted_watches (MetaScreenCastAreaStreamSrc *area_src,
+     }
+ }
+ 
++static void
++on_monitors_changed (MetaMonitorManager          *monitor_manager,
++                     MetaScreenCastAreaStreamSrc *area_src)
++{
++  MetaStage *stage = META_STAGE (get_stage (area_src));
++  GList *l;
++
++  for (l = area_src->watches; l; l = l->next)
++    meta_stage_remove_watch (stage, l->data);
++  g_clear_pointer (&area_src->watches, g_list_free);
++
++  add_view_painted_watches (area_src,
++                            META_STAGE_WATCH_AFTER_ACTOR_PAINT);
++}
++
+ static void
+ meta_screen_cast_area_stream_src_enable (MetaScreenCastStreamSrc *src)
+ {
+   MetaScreenCastAreaStreamSrc *area_src =
+     META_SCREEN_CAST_AREA_STREAM_SRC (src);
+   MetaBackend *backend = get_backend (area_src);
++  MetaMonitorManager *monitor_manager =
++    meta_backend_get_monitor_manager (backend);
+   MetaCursorTracker *cursor_tracker = meta_backend_get_cursor_tracker (backend);
+   ClutterStage *stage;
+   MetaScreenCastStream *stream;
+@@ -354,6 +371,10 @@ meta_screen_cast_area_stream_src_enable (MetaScreenCastStreamSrc *src)
+       break;
+     }
+ 
++  g_signal_connect_object (monitor_manager, "monitors-changed-internal",
++                           G_CALLBACK (on_monitors_changed),
++                           area_src, 0);
++
+   clutter_actor_queue_redraw (CLUTTER_ACTOR (stage));
+ }
+ 
