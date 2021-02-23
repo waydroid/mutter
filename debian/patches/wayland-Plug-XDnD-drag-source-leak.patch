@@ -1,0 +1,29 @@
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Mon, 8 Feb 2021 20:20:22 +0100
+Subject: wayland: Plug XDnD drag source leak
+
+This object is just being detached, with no code unref'ing it. Do
+this whenever the XDnD selection goes unowned, usually a good
+indication that the drag source no longer is one.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1720>
+
+(cherry-picked from 8e01ea1e045c2ef1f417154c5f55360ffb14ad9e)
+
+Origin: upstream, 3.38.4, commit:ee26aea10152e8efce860857e754cf0707cd1a4b
+---
+ src/wayland/meta-xwayland-dnd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/wayland/meta-xwayland-dnd.c b/src/wayland/meta-xwayland-dnd.c
+index f3251fc..eb667fd 100644
+--- a/src/wayland/meta-xwayland-dnd.c
++++ b/src/wayland/meta-xwayland-dnd.c
+@@ -907,6 +907,7 @@ meta_xwayland_dnd_handle_xfixes_selection_notify (MetaWaylandCompositor *composi
+   else if (event->owner == None)
+     {
+       meta_xwayland_end_dnd_grab (data_device, FALSE);
++      g_clear_object (&dnd->source);
+     }
+ 
+   return FALSE;
