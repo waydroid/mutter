@@ -1,0 +1,89 @@
+From: Robert Mader <robert.mader@posteo.de>
+Date: Fri, 22 Jan 2021 14:14:50 +0100
+Subject: feedback-actor: Add API to set and get geometry scale
+
+Analogous to MetaWindowActor. Also take it into account for positioning
+when an anchor is set.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1683>
+
+(cherry picked from commit dfa659b5b55538652cb13abea1ce10978c98904e)
+
+Origin: upstream, 3.38.4, commit:989ef121f6a24b9b5b532610dac3b96fab34bbd3
+---
+ src/compositor/meta-feedback-actor-private.h |  5 ++++
+ src/compositor/meta-feedback-actor.c         | 36 ++++++++++++++++++++++++++--
+ 2 files changed, 39 insertions(+), 2 deletions(-)
+
+diff --git a/src/compositor/meta-feedback-actor-private.h b/src/compositor/meta-feedback-actor-private.h
+index 530bb2d..86cacb3 100644
+--- a/src/compositor/meta-feedback-actor-private.h
++++ b/src/compositor/meta-feedback-actor-private.h
+@@ -62,4 +62,9 @@ void meta_feedback_actor_set_position (MetaFeedbackActor  *self,
+ void meta_feedback_actor_update (MetaFeedbackActor  *self,
+                                  const ClutterEvent *event);
+ 
++void meta_feedback_actor_set_geometry_scale (MetaFeedbackActor *self,
++                                             int                geometry_scale);
++
++int meta_feedback_actor_get_geometry_scale (MetaFeedbackActor *self);
++
+ #endif /* META_FEEDBACK_ACTOR_PRIVATE_H */
+diff --git a/src/compositor/meta-feedback-actor.c b/src/compositor/meta-feedback-actor.c
+index c8eb0fc..d3277ec 100644
+--- a/src/compositor/meta-feedback-actor.c
++++ b/src/compositor/meta-feedback-actor.c
+@@ -44,6 +44,8 @@ struct _MetaFeedbackActorPrivate
+   float anchor_y;
+   float pos_x;
+   float pos_y;
++
++  int geometry_scale;
+ };
+ 
+ G_DEFINE_TYPE_WITH_PRIVATE (MetaFeedbackActor, meta_feedback_actor, CLUTTER_TYPE_ACTOR)
+@@ -65,8 +67,10 @@ meta_feedback_actor_update_position (MetaFeedbackActor *self)
+   MetaFeedbackActorPrivate *priv = meta_feedback_actor_get_instance_private (self);
+ 
+   clutter_actor_set_position (CLUTTER_ACTOR (self),
+-                              priv->pos_x - priv->anchor_x,
+-                              priv->pos_y - priv->anchor_y);
++                              priv->pos_x -
++                              (priv->anchor_x * priv->geometry_scale),
++                              priv->pos_y -
++                              (priv->anchor_y * priv->geometry_scale));
+ }
+ 
+ static void
+@@ -249,3 +253,31 @@ meta_feedback_actor_update (MetaFeedbackActor  *self,
+   clutter_event_get_position (event, &point);
+   meta_feedback_actor_set_position (self, point.x, point.y);
+ }
++
++void
++meta_feedback_actor_set_geometry_scale (MetaFeedbackActor *self,
++                                        int                geometry_scale)
++{
++  MetaFeedbackActorPrivate *priv =
++    meta_feedback_actor_get_instance_private (self);
++  CoglMatrix child_transform;
++
++  if (priv->geometry_scale == geometry_scale)
++    return;
++
++  priv->geometry_scale = geometry_scale;
++
++  cogl_matrix_init_identity (&child_transform);
++  cogl_matrix_scale (&child_transform, geometry_scale, geometry_scale, 1);
++  clutter_actor_set_child_transform (CLUTTER_ACTOR (self),
++                                     &child_transform);
++}
++
++int
++meta_feedback_actor_get_geometry_scale (MetaFeedbackActor *self)
++{
++  MetaFeedbackActorPrivate *priv =
++    meta_feedback_actor_get_instance_private (self);
++
++  return priv->geometry_scale;
++}

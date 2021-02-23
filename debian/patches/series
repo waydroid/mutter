@@ -10,6 +10,14 @@ screen-cast-area-src-Handle-monitors-changes-here-too.patch
 window-Freeze-stack-when-calculating-showing-state.patch
 window-actor-Add-a-new-can_freeze_commits-API.patch
 window-x11-Check-before-freezing-commits.patch
+feedback-actor-Add-API-to-set-and-get-geometry-scale.patch
+wayland-dnd-surface-Use-new-API-to-set-geometry-scale-of-.patch
+compositor-dnd-actor-Take-geometry-scale-into-account-on-.patch
+clutter-timeline-Clear-stage-view-listener-when-actor-des.patch
+wayland-Make-XDnD-grab-unlink-source-offer-manually.patch
+wayland-Plug-XDnD-drag-source-leak.patch
+wayland-Manually-detach-source-offer-on-failure-paths.patch
+wayland-Avoid-automatically-decoupling-source-offer-after.patch
 theme-use-gtk_render_icon_suface-to-paint-button-icon.patch
 theme-load-icons-as-Gtk-does-with-fallback-and-RTL-suppor.patch
 meson-add-back-default_driver-option.patch

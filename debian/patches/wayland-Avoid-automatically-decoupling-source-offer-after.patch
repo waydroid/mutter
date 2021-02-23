@@ -1,0 +1,62 @@
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Mon, 8 Feb 2021 20:23:22 +0100
+Subject: wayland: Avoid automatically decoupling source/offer after grab
+
+In the case that DnD is performed and succeeds, we want to release
+the grab early, and let the transfer IPC happen in the back. For
+that to happen without a hitch, drag source and offer must be left
+related to each other after undoing the grab, even though the default
+ungrabbing code does that automatically (indirectly, by unsetting the
+drag focus).
+
+In these cases, we used to manually unset the current source, so
+this decoupling was skipped. Notably, one missed case is X11 DnD,
+so we might end up with the situation there that DnD did succeed,
+transfer is ongoing, but the source and offer are already decoupled,
+this confused the machinery and missed the finishing XdndFinished
+to be emitted to the X11 drag source.
+
+The prior commits prepared for this source/offer decoupling being
+a manual operation, this commit avoids doing this automatically
+when ungrabbing.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1720>
+
+(cherry picked from commit 698fe3f1a98ae492335cfe718bc8818c14e813de)
+
+Origin: upstream, 3.38.4, commit:2818cfda89dc0c12483a9e892316c7c375a18b9f
+---
+ src/wayland/meta-wayland-data-device.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/src/wayland/meta-wayland-data-device.c b/src/wayland/meta-wayland-data-device.c
+index 9311fd5..e40a58c 100644
+--- a/src/wayland/meta-wayland-data-device.c
++++ b/src/wayland/meta-wayland-data-device.c
+@@ -352,6 +352,7 @@ drag_grab_motion (MetaWaylandPointerGrab *grab,
+ static void
+ data_device_end_drag_grab (MetaWaylandDragGrab *drag_grab)
+ {
++  meta_wayland_drag_grab_set_source (drag_grab, NULL);
+   meta_wayland_drag_grab_set_focus (drag_grab, NULL);
+ 
+   if (drag_grab->drag_origin)
+@@ -366,8 +367,6 @@ data_device_end_drag_grab (MetaWaylandDragGrab *drag_grab)
+       wl_list_remove (&drag_grab->drag_icon_listener.link);
+     }
+ 
+-  meta_wayland_drag_grab_set_source (drag_grab, NULL);
+-
+   if (drag_grab->feedback_actor)
+     {
+       clutter_actor_remove_all_children (drag_grab->feedback_actor);
+@@ -448,9 +447,6 @@ drag_grab_button (MetaWaylandPointerGrab *grab,
+           meta_wayland_data_source_has_target (source) &&
+           meta_wayland_data_source_get_current_action (source))
+         {
+-          /* Detach the data source from the grab, it's meant to live longer */
+-          meta_wayland_drag_grab_set_source (drag_grab, NULL);
+-
+           meta_wayland_surface_drag_dest_drop (drag_grab->drag_focus);
+           meta_wayland_data_source_notify_drop_performed (source);
+ 

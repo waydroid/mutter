@@ -1,0 +1,44 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Mon, 8 Feb 2021 17:34:00 +0000
+Subject: clutter/timeline: Clear stage view listener when actor destroyed
+
+We might have a stage view listener attached to the stage itself if the
+actor didn't have a suitable frame clock when the actor was associated
+with the timeline. We'd then listen to stage-views-changed signals on
+the stage itself to be able to attach to a frame clock when one
+appeared.
+
+What went wrong is that if an actor that didn't have a frameclock was
+associated with a timeline, but then destroyed, the timeline would
+disassociate itself from the actor, but it'd still listen on the
+stage-views-changed signal on the stage. This would be in itself
+harmless, until the timeline itself is destroyed, as at this point, it
+wouldn't clean up the stage-views-changed listener on the stage, as it's
+assumed to only be valid when there is an actor attached.
+
+Fix this issue by cleaning up the stage's stage-views-changed listener
+when the actor is destroyed, as we wouldn't be able to make use of it by
+then anyway.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1719>
+
+(cherry picked from commit 4145fbbae4deb2de830c00a386324929b2ae0d5e)
+
+Bug: https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/3323
+Origin: upstream, 3.38.4, commit:78c61f557f7c3ff6b604bcb6142d9fed143b50cf
+---
+ clutter/clutter/clutter-timeline.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/clutter/clutter/clutter-timeline.c b/clutter/clutter/clutter-timeline.c
+index 23392fc..f7b9b98 100644
+--- a/clutter/clutter/clutter-timeline.c
++++ b/clutter/clutter/clutter-timeline.c
+@@ -311,6 +311,7 @@ on_actor_destroyed (ClutterActor    *actor,
+ {
+   ClutterTimelinePrivate *priv = timeline->priv;
+ 
++  g_clear_signal_handler (&priv->stage_stage_views_handler_id, priv->stage);
+   priv->actor = NULL;
+ }
+ 

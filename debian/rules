@@ -19,6 +19,7 @@ export MUTTER_SONAME
 ifeq ($(DEB_HOST_ARCH_OS),linux)
 CONFFLAGS = \
 	-Degl_device=true \
+	-Dremote_desktop=true \
 	-Dwayland_eglstream=true
 else
 CONFFLAGS += \
@@ -36,15 +37,6 @@ CONFFLAGS += \
 else
 CONFFLAGS += \
 	-Ddefault_driver=gl
-endif
-
-# pipewire is not in Ubuntu main yet
-ifeq ($(DEB_HOST_ARCH_OS),linux)
-ifeq ($(shell dpkg-vendor --query vendor),Ubuntu)
-	CONFFLAGS += -Dremote_desktop=false
-else
-	CONFFLAGS += -Dremote_desktop=true
-endif
 endif
 
 override_dh_auto_configure:

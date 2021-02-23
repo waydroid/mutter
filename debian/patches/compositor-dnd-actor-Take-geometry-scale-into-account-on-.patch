@@ -1,0 +1,62 @@
+From: Robert Mader <robert.mader@posteo.de>
+Date: Sun, 31 Jan 2021 17:33:21 +0100
+Subject: compositor/dnd-actor: Take geometry scale into account on DnD-cancel
+
+Technically this is still wrong if the source actor or dnd actor are
+transformed in other ways. However geometry scale is the by far most
+common case and we currently lack convenience API in Clutter to
+easily compute the right values.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1683>
+
+(cherry picked from commit 7da34f154b315131d06e6ccb6728600238e1e236)
+
+Origin: upstream, 3.38.4, commit:22ab643c568932b8877a12053fe56ba71658785d
+---
+ src/compositor/meta-dnd-actor.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/src/compositor/meta-dnd-actor.c b/src/compositor/meta-dnd-actor.c
+index 31a01db..80bffde 100644
+--- a/src/compositor/meta-dnd-actor.c
++++ b/src/compositor/meta-dnd-actor.c
+@@ -28,6 +28,7 @@
+ #include "config.h"
+ 
+ #include "compositor/meta-dnd-actor-private.h"
++#include "compositor/meta-window-actor-private.h"
+ 
+ #include "clutter/clutter.h"
+ 
+@@ -206,16 +207,29 @@ meta_dnd_actor_drag_finish (MetaDnDActor *self,
+ 
+       if (CLUTTER_ACTOR_IS_VISIBLE (self->drag_origin))
+         {
++          MetaWindowActor *origin_actor;
+           float anchor_x, anchor_y;
+           graphene_point_t dest;
++          int origin_geometry_scale;
++          int feedback_geometry_scale;
+ 
+           clutter_actor_get_transformed_position (self->drag_origin,
+                                                   &dest.x, &dest.y);
++
++          origin_actor = meta_window_actor_from_actor (self->drag_origin);
++          g_return_if_fail (origin_actor);
++          origin_geometry_scale =
++            meta_window_actor_get_geometry_scale (origin_actor);
++
+           meta_feedback_actor_get_anchor (META_FEEDBACK_ACTOR (self),
+                                           &anchor_x, &anchor_y);
++          feedback_geometry_scale =
++            meta_feedback_actor_get_geometry_scale (META_FEEDBACK_ACTOR (self));
+ 
+-          dest.x += self->drag_start_x - anchor_x;
+-          dest.y += self->drag_start_y - anchor_y;
++          dest.x += ((self->drag_start_x * origin_geometry_scale) -
++                     (anchor_x * feedback_geometry_scale));
++          dest.y += ((self->drag_start_y * origin_geometry_scale) -
++                     (anchor_y * feedback_geometry_scale));
+           clutter_actor_set_position (actor, dest.x, dest.y);
+         }
+ 
