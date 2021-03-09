@@ -1,0 +1,56 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Fri, 5 Mar 2021 09:55:34 +0100
+Subject: window-actor/x11: Queue full actor redraw when redraw queued
+
+With frame timings, we might end up in a situation where a frame drawn
+is expected, but no damage was posted. Up until now, mutter handled
+this, if the window wasn't completely hidden, by posting a 1x1 pixel
+damage region. The problem with this is that we now are a bit more
+aggressive optimizing away no-op redraws, meaning we still might end up
+not drawing, making things get stuck.
+
+Fix this by doing a full actor redraw, as that is the only reliable way
+to both a new frame being drawn, as well as the actor in question itself
+getting redrawn.
+
+Closes: https://gitlab.gnome.org/GNOME/mutter/-/issues/1516
+Closes: https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/3369
+Closes: https://gitlab.gnome.org/GNOME/mutter/-/issues/1471
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1754>
+(cherry picked from commit 9b90b5a1b0856144d21e1a70e306d3f769a2e2f0)
+(cherry picked from commit 894a6d0935e61398e246482ebff423e3ad84d50f)
+---
+ src/compositor/meta-window-actor-x11.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/src/compositor/meta-window-actor-x11.c b/src/compositor/meta-window-actor-x11.c
+index 6764877..e4e579e 100644
+--- a/src/compositor/meta-window-actor-x11.c
++++ b/src/compositor/meta-window-actor-x11.c
+@@ -483,10 +483,12 @@ meta_window_actor_x11_queue_frame_drawn (MetaWindowActor *actor,
+        * damage or any unobscured, or while we had the window frozen
+        * (e.g. during an interactive resize.) We need to make sure that the
+        * before_paint/after_paint functions get called, enabling us to
+-       * send a _NET_WM_FRAME_DRAWN. We do a 1-pixel redraw to get
+-       * consistent timing with non-empty frames. If the window
+-       * is completely obscured, or completely off screen we fire off the
+-       * send_frame_messages timeout.
++       * send a _NET_WM_FRAME_DRAWN. We need to do full damage to ensure that
++       * the window is actually repainted, otherwise any subregion we would pass
++       * might end up being either outside of any stage view, or be occluded by
++       * something else, which could potentially result in no frame being drawn
++       * after all. If the window is completely obscured, or completely off
++       * screen we fire off the send_frame_messages timeout.
+        */
+       if (is_obscured ||
+           !clutter_actor_peek_stage_views (CLUTTER_ACTOR (actor)))
+@@ -495,8 +497,7 @@ meta_window_actor_x11_queue_frame_drawn (MetaWindowActor *actor,
+         }
+       else if (surface)
+         {
+-          const cairo_rectangle_int_t clip = { 0, 0, 1, 1 };
+-          clutter_actor_queue_redraw_with_clip (CLUTTER_ACTOR (surface), &clip);
++          clutter_actor_queue_redraw (CLUTTER_ACTOR (surface));
+           actor_x11->repaint_scheduled = TRUE;
+         }
+     }

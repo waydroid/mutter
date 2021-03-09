@@ -1,0 +1,59 @@
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Mon, 8 Feb 2021 09:54:43 +0100
+Subject: core: Account for the globally active input case
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Commit afa43154 tried to make sure the focus was properly changed when
+calling focus_default_window() by checking the focused window just after
+trying to set the focus.
+
+However, the X11 “Inter-Client Communication Conventions Manual” version
+2.0 (ICCCM 2 for short) states that some X11 client may want to use a so
+called “globally active input” model in which case the client expects
+keyboard input and set input focus even when it's not one of its own
+window.
+
+To comply with this, when dealing with such clients, mutter will not
+change the focus and send a WM_TAKE_FOCUS message instead.
+
+That mechanism will defeat the logic introduced by commit afa43154
+because the focused window is not changed in this case. As a result, the
+input focus will fallback to the no-focus window.
+
+To avoid this, only check that the focus change occurred for windows
+using a synchronous focus model.
+
+v2: Split specific test for "globally active input" model (Florian).
+v3: Remove the check for window->unmanaging which is useless (Jonas).
+
+Fixes: afa43154 - "core: Make sure focus_default_window() worked"
+Close: https://gitlab.gnome.org/GNOME/mutter/-/issues/1620
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1716>
+(cherry picked from commit 2432508db78a235abc5cee198fb94043625db65f)
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/commit/2d34ee08
+---
+ src/core/workspace.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/core/workspace.c b/src/core/workspace.c
+index a80560b..a6edb5f 100644
+--- a/src/core/workspace.c
++++ b/src/core/workspace.c
+@@ -1367,6 +1367,14 @@ try_to_set_focus_and_check (MetaWindow *window,
+ {
+   meta_window_focus (window, timestamp);
+ 
++  /* meta_focus_window() will not change focus for clients using the
++   * "globally active input" model of input handling, hence defeating
++   * the assumption that focus should be changed for such windows.
++   * See https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.7
++   */
++  if (meta_window_is_focus_async (window))
++    return TRUE;
++
+   /* meta_window_focus() does not guarantee that focus will end up
+    * where we expect, it can fail for various reasons, better check
+    * it did not actually changed or even left focus to the window we

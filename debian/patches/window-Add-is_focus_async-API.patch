@@ -1,0 +1,113 @@
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Thu, 11 Feb 2021 17:53:59 +0100
+Subject: window: Add "is_focus_async" API
+
+X11 clients can use different models of input handling, of which some
+may not result focus being set synchronously.
+
+For such clients, meta_focus_window() will not change the focus itself
+but rely on the client itself to set the input focus on the desired
+window.
+
+Add a new MetaWindow API to check when dealing with such a window.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1716>
+(cherry picked from commit 6438919a89a4d0a0430321bedd68689a2c2f6e90)
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/commit/cb7ac99f
+---
+ src/core/window-private.h         |  2 ++
+ src/core/window.c                 |  6 ++++++
+ src/wayland/meta-window-wayland.c |  7 +++++++
+ src/x11/window-x11.c              | 11 +++++++++++
+ 4 files changed, 26 insertions(+)
+
+diff --git a/src/core/window-private.h b/src/core/window-private.h
+index 3872479..1d7ec70 100644
+--- a/src/core/window-private.h
++++ b/src/core/window-private.h
+@@ -602,6 +602,7 @@ struct _MetaWindowClass
+   gboolean (*is_stackable)        (MetaWindow *window);
+   gboolean (*can_ping)            (MetaWindow *window);
+   gboolean (*are_updates_frozen)  (MetaWindow *window);
++  gboolean (*is_focus_async)      (MetaWindow *window);
+ 
+   MetaStackLayer (*calculate_layer) (MetaWindow *window);
+ 
+@@ -872,4 +873,5 @@ void meta_window_force_restore_shortcuts (MetaWindow         *window,
+ gboolean meta_window_shortcuts_inhibited (MetaWindow         *window,
+                                           ClutterInputDevice *source);
+ gboolean meta_window_is_stackable (MetaWindow *window);
++gboolean meta_window_is_focus_async (MetaWindow *window);
+ #endif
+diff --git a/src/core/window.c b/src/core/window.c
+index 3180d15..e1c58fc 100644
+--- a/src/core/window.c
++++ b/src/core/window.c
+@@ -8589,6 +8589,12 @@ meta_window_is_stackable (MetaWindow *window)
+   return META_WINDOW_GET_CLASS (window)->is_stackable (window);
+ }
+ 
++gboolean
++meta_window_is_focus_async (MetaWindow *window)
++{
++  return META_WINDOW_GET_CLASS (window)->is_focus_async (window);
++}
++
+ MetaStackLayer
+ meta_window_calculate_layer (MetaWindow *window)
+ {
+diff --git a/src/wayland/meta-window-wayland.c b/src/wayland/meta-window-wayland.c
+index 89ee0c2..45b79ec 100644
+--- a/src/wayland/meta-window-wayland.c
++++ b/src/wayland/meta-window-wayland.c
+@@ -724,6 +724,12 @@ meta_window_wayland_are_updates_frozen (MetaWindow *window)
+   return !wl_window->has_been_shown;
+ }
+ 
++static gboolean
++meta_window_wayland_is_focus_async (MetaWindow *window)
++{
++  return FALSE;
++}
++
+ static MetaStackLayer
+ meta_window_wayland_calculate_layer (MetaWindow *window)
+ {
+@@ -780,6 +786,7 @@ meta_window_wayland_class_init (MetaWindowWaylandClass *klass)
+   window_class->calculate_layer = meta_window_wayland_calculate_layer;
+   window_class->map = meta_window_wayland_map;
+   window_class->unmap = meta_window_wayland_unmap;
++  window_class->is_focus_async = meta_window_wayland_is_focus_async;
+ }
+ 
+ MetaWindow *
+diff --git a/src/x11/window-x11.c b/src/x11/window-x11.c
+index 980a151..c0c8734 100644
+--- a/src/x11/window-x11.c
++++ b/src/x11/window-x11.c
+@@ -2058,6 +2058,16 @@ meta_window_x11_impl_always_update_shape (MetaWindow *window)
+   return FALSE;
+ }
+ 
++static gboolean
++meta_window_x11_is_focus_async (MetaWindow *window)
++{
++  MetaWindowX11 *window_x11 = META_WINDOW_X11 (window);
++  MetaWindowX11Private *priv =
++    meta_window_x11_get_instance_private (window_x11);
++
++  return !window->input && priv->wm_take_focus;
++}
++
+ static void
+ meta_window_x11_class_init (MetaWindowX11Class *klass)
+ {
+@@ -2088,6 +2098,7 @@ meta_window_x11_class_init (MetaWindowX11Class *klass)
+   window_class->calculate_layer = meta_window_x11_calculate_layer;
+   window_class->map = meta_window_x11_map;
+   window_class->unmap = meta_window_x11_unmap;
++  window_class->is_focus_async = meta_window_x11_is_focus_async;
+ 
+   klass->freeze_commits = meta_window_x11_impl_freeze_commits;
+   klass->thaw_commits = meta_window_x11_impl_thaw_commits;
