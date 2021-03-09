@@ -1,0 +1,56 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Wed, 10 Feb 2021 09:39:18 +0100
+Subject: clutter/stage-view: Disable double buffered shadow buffering
+
+To make the double buffered shadow buffer damaged tiles detection
+feasable, a new EGL extension is needed for creating FBO's backed by
+a custom CPU memory buffer, instead of DMA buffers, as DMA buffers can
+be very slow to read, much slower than just painting the shadow buffer
+directly.
+
+Leave the code there, since such an EGL extension is intended to be
+added, but hide it behind an env var so that it isn't enabled by
+accident.
+
+(cherry picked from commit ad5b5f2c57dd0dcb9e586ea09486eebff89fb94d)
+
+https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1724
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1743>
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/commit/95b683ae
+---
+ clutter/clutter/clutter-stage-view.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/clutter/clutter/clutter-stage-view.c b/clutter/clutter/clutter-stage-view.c
+index 00a4d5a..ccc07cd 100644
+--- a/clutter/clutter/clutter-stage-view.c
++++ b/clutter/clutter/clutter-stage-view.c
+@@ -415,15 +415,19 @@ init_shadowfb (ClutterStageView *view)
+   height = cogl_framebuffer_get_height (priv->framebuffer);
+   cogl_context = cogl_framebuffer_get_context (priv->framebuffer);
+ 
+-  if (init_dma_buf_shadowfbs (view, cogl_context, width, height, &error))
++  if (g_strcmp0 (g_getenv ("MUTTER_DEBUG_ENABLE_DOUBLE_SHADOWFB"), "1") == 0)
+     {
+-      g_message ("Initialized double buffered shadow fb for %s", priv->name);
+-      return;
+-    }
++      if (init_dma_buf_shadowfbs (view, cogl_context, width, height, &error))
++        {
++          g_message ("Initialized double buffered shadow fb for %s",
++                     priv->name);
++          return;
++        }
+ 
+-  g_warning ("Failed to initialize double buffered shadow fb for %s: %s",
+-             priv->name, error->message);
+-  g_clear_error (&error);
++      g_warning ("Failed to initialize double buffered shadow fb for %s: %s",
++                 priv->name, error->message);
++      g_clear_error (&error);
++    }
+ 
+   if (!init_fallback_shadowfb (view, cogl_context, width, height, &error))
+     {

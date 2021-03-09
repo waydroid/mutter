@@ -1,3 +1,24 @@
+mutter (3.38.3-4) unstable; urgency=medium
+
+  * Team upload
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/patches: cherry-pick more upstream gnome-3-38 fixes
+    - Correctly restore focus to applications that use globally active
+      input handling, such as AWT/Swing Java apps
+    - Disable double buffered shadow buffering, which was intended to
+      improve performance with e.g. llvmpipe but currently makes it worse
+  * debian/tests: Adapt autopkgtest name and linked library to current soname
+  * debian/tests/control: Update references to libmutter-7-dev
+
+  [ Simon McVittie ]
+  * d/patches: Update to commit 3.38.3-26-g30c542ddc from gnome-3-38 branch
+    - Fix X11 frame timing getting stuck if frames are skipped, resulting
+      in X11 applications not always being redrawn when they should be
+    - Fix a crash when clicking below titlebar with broken GTK themes
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 09 Mar 2021 20:34:42 +0000
+
 mutter (3.38.3-3) unstable; urgency=medium
 
   * Team upload
