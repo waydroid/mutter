@@ -21,6 +21,7 @@ wayland-Avoid-automatically-decoupling-source-offer-after.patch
 window-Add-is_focus_async-API.patch
 core-Account-for-the-globally-active-input-case.patch
 clutter-stage-view-Disable-double-buffered-shadow-bufferi.patch
+compositor-x11-Notify-the-sync-ring-about-frames-on-updat.patch
 window-actor-x11-Queue-full-actor-redraw-when-redraw-queu.patch
 frame-Fix-crash-when-clicking-below-titlebar-with-broken-.patch
 theme-use-gtk_render_icon_suface-to-paint-button-icon.patch

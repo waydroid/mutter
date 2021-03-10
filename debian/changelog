@@ -1,3 +1,13 @@
+mutter (3.38.3-5) unstable; urgency=medium
+
+  * Team upload
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/patches: Include a missing commit from upstream gnome-3-38
+    branch to fix X11 UI stutters
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 10 Mar 2021 09:37:00 +0000
+
 mutter (3.38.3-4) unstable; urgency=medium
 
   * Team upload
