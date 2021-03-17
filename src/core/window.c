@@ -1798,6 +1798,7 @@ stackcmp (gconstpointer a, gconstpointer b)
 static gboolean
 idle_calc_showing (gpointer data)
 {
+  MetaDisplay *display = meta_get_display ();
   GSList *tmp;
   GSList *copy;
   GSList *should_show;
@@ -1868,6 +1869,8 @@ idle_calc_showing (gpointer data)
       tmp = tmp->next;
     }
 
+  meta_stack_freeze (display->stack);
+
   tmp = should_show;
   while (tmp != NULL)
     {
@@ -1891,6 +1894,8 @@ idle_calc_showing (gpointer data)
 
       tmp = tmp->next;
     }
+
+  meta_stack_thaw (display->stack);
 
   tmp = copy;
   while (tmp != NULL)
@@ -8313,6 +8318,9 @@ meta_window_handle_ungrabbed_event (MetaWindow         *window,
   gfloat x, y;
   guint button;
 
+  if (window->unmanaging)
+    return;
+
   if (event->type != CLUTTER_BUTTON_PRESS &&
       event->type != CLUTTER_TOUCH_BEGIN)
     return;
@@ -8570,6 +8578,8 @@ meta_window_is_focusable (MetaWindow *window)
 gboolean
 meta_window_can_ping (MetaWindow *window)
 {
+  g_return_val_if_fail (!window->unmanaging, FALSE);
+
   return META_WINDOW_GET_CLASS (window)->can_ping (window);
 }
 
@@ -8577,6 +8587,12 @@ gboolean
 meta_window_is_stackable (MetaWindow *window)
 {
   return META_WINDOW_GET_CLASS (window)->is_stackable (window);
+}
+
+gboolean
+meta_window_is_focus_async (MetaWindow *window)
+{
+  return META_WINDOW_GET_CLASS (window)->is_focus_async (window);
 }
 
 MetaStackLayer

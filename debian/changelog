@@ -1,3 +1,15 @@
+mutter (3.38.4-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+    - Fix Wayland spec compliance when reordering subsurfaces.
+      This is likely to be required by future Firefox versions in native
+      Wayland mode.
+    - Many other fixes that we already had via debian/patches
+  * Drop most patches, included in the new upstream release
+
+ -- Simon McVittie <smcv@debian.org>  Wed, 17 Mar 2021 09:52:33 +0000
+
 mutter (3.38.3-5) unstable; urgency=medium
 
   * Team upload

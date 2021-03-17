@@ -369,10 +369,11 @@ void
 meta_workspace_add_window (MetaWorkspace *workspace,
                            MetaWindow    *window)
 {
+  g_return_if_fail (g_list_find (workspace->mru_list, window) == NULL);
+
   COGL_TRACE_BEGIN_SCOPED (MetaWorkspaceAddWindow,
                            "Workspace (add window)");
 
-  g_assert (g_list_find (workspace->mru_list, window) == NULL);
   workspace->mru_list = g_list_prepend (workspace->mru_list, window);
 
   workspace->windows = g_list_prepend (workspace->windows, window);
@@ -1365,6 +1366,14 @@ try_to_set_focus_and_check (MetaWindow *window,
                             uint32_t    timestamp)
 {
   meta_window_focus (window, timestamp);
+
+  /* meta_focus_window() will not change focus for clients using the
+   * "globally active input" model of input handling, hence defeating
+   * the assumption that focus should be changed for such windows.
+   * See https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.7
+   */
+  if (meta_window_is_focus_async (window))
+    return TRUE;
 
   /* meta_window_focus() does not guarantee that focus will end up
    * where we expect, it can fail for various reasons, better check
