@@ -194,7 +194,8 @@ surface_state_changed (MetaWindow *window)
     return;
 
   configuration =
-    meta_wayland_window_configuration_new (wl_window->last_sent_x,
+    meta_wayland_window_configuration_new (window,
+                                           wl_window->last_sent_x,
                                            wl_window->last_sent_y,
                                            wl_window->last_sent_width,
                                            wl_window->last_sent_height,
@@ -263,24 +264,8 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
    * to the Wayland surface. */
   geometry_scale = meta_window_wayland_get_geometry_scale (window);
 
-  if (flags & META_MOVE_RESIZE_UNMAXIMIZE &&
-      !meta_window_is_fullscreen (window))
-    {
-      configured_width = 0;
-      configured_height = 0;
-    }
-  else if (flags & META_MOVE_RESIZE_UNFULLSCREEN &&
-           !meta_window_get_maximized (window) &&
-           meta_window_get_tile_mode (window) == META_TILE_NONE)
-    {
-      configured_width = 0;
-      configured_height = 0;
-    }
-  else
-    {
-      configured_width = constrained_rect.width;
-      configured_height = constrained_rect.height;
-    }
+  configured_width = constrained_rect.width;
+  configured_height = constrained_rect.height;
 
   /* For wayland clients, the size is completely determined by the client,
    * and while this allows to avoid some trickery with frames and the resulting
@@ -318,6 +303,12 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
     }
   else
     {
+      int pending_width;
+      int pending_height;
+      meta_window_wayland_get_pending_size (wl_window,
+                                            &pending_width,
+                                            &pending_height);
+
       if (window->placement.rule)
         {
           switch (window->placement.state)
@@ -332,8 +323,8 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
                 if (flags & META_MOVE_RESIZE_PLACEMENT_CHANGED ||
                     rel_x != wl_window->last_sent_rel_x ||
                     rel_y != wl_window->last_sent_rel_y ||
-                    constrained_rect.width != window->rect.width ||
-                    constrained_rect.height != window->rect.height)
+                    constrained_rect.width != pending_width ||
+                    constrained_rect.height != pending_height)
                   {
                     MetaWaylandWindowConfiguration *configuration;
 
@@ -366,8 +357,8 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
               break;
             }
         }
-      else if (constrained_rect.width != window->rect.width ||
-               constrained_rect.height != window->rect.height ||
+      else if (constrained_rect.width != pending_width ||
+               constrained_rect.height != pending_height ||
                flags & META_MOVE_RESIZE_STATE_CHANGED)
         {
           MetaWaylandWindowConfiguration *configuration;
@@ -390,7 +381,8 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
             return;
 
           configuration =
-            meta_wayland_window_configuration_new (configured_x,
+            meta_wayland_window_configuration_new (window,
+                                                   configured_x,
                                                    configured_y,
                                                    configured_width,
                                                    configured_height,
@@ -977,6 +969,13 @@ meta_window_wayland_finish_move_resize (MetaWindow              *window,
   is_window_being_resized = (meta_grab_op_is_resizing (display->grab_op) &&
                              display->grab_window == window);
 
+  rect = (MetaRectangle) {
+    .x = window->rect.x,
+    .y = window->rect.y,
+    .width = new_geom.width,
+    .height = new_geom.height
+  };
+
   if (!is_window_being_resized)
     {
       if (acked_configuration)
@@ -989,32 +988,20 @@ meta_window_wayland_finish_move_resize (MetaWindow              *window,
               rect.x = parent->rect.x + acked_configuration->rel_x;
               rect.y = parent->rect.y + acked_configuration->rel_y;
             }
-          else
+          else if (acked_configuration->has_position)
             {
               calculate_offset (acked_configuration, &new_geom, &rect);
             }
         }
-      else
-        {
-          rect.x = window->rect.x;
-          rect.y = window->rect.y;
-        }
-
-      rect.x += dx;
-      rect.y += dy;
     }
   else
     {
-      if (acked_configuration)
-        {
-          calculate_offset (acked_configuration, &new_geom, &rect);
-        }
-      else
-        {
-          rect.x = window->rect.x;
-          rect.y = window->rect.y;
-        }
+      if (acked_configuration && acked_configuration->has_position)
+        calculate_offset (acked_configuration, &new_geom, &rect);
     }
+
+  rect.x += dx;
+  rect.y += dy;
 
   if (rect.x != window->rect.x || rect.y != window->rect.y)
     flags |= META_MOVE_RESIZE_MOVE_ACTION;
@@ -1024,9 +1011,6 @@ meta_window_wayland_finish_move_resize (MetaWindow              *window,
       flags |= META_MOVE_RESIZE_WAYLAND_STATE_CHANGED;
       wl_window->has_pending_state_change = FALSE;
     }
-
-  rect.width = new_geom.width;
-  rect.height = new_geom.height;
 
   if (rect.width != window->rect.width || rect.height != window->rect.height)
     flags |= META_MOVE_RESIZE_RESIZE_ACTION;
@@ -1227,4 +1211,28 @@ meta_window_wayland_get_max_size (MetaWindow *window,
 
   scale = 1.0 / (float) meta_window_wayland_get_geometry_scale (window);
   scale_size (width, height, scale);
+}
+
+void
+meta_window_wayland_get_pending_size (MetaWindowWayland *wl_window,
+                                      int               *width,
+                                      int               *height)
+{
+  MetaWindow *window = META_WINDOW (wl_window);
+  GList *l;
+
+  for (l = wl_window->pending_configurations; l; l = l->next)
+    {
+      MetaWaylandWindowConfiguration *configuration = l->data;
+
+      if (configuration->has_size)
+        {
+          *width = configuration->width;
+          *height = configuration->height;
+          return;
+        }
+    }
+
+  *width = window->rect.width;
+  *height = window->rect.height;
 }

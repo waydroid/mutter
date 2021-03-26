@@ -1,7 +1,8 @@
 Source: mutter
 Section: x11
 Priority: optional
-Maintainer: Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>
 Uploaders: @GNOME_TEAM@
 Build-Depends: debhelper-compat (= 13),
                dh-sequence-gir,
@@ -75,8 +76,10 @@ Build-Depends: debhelper-compat (= 13),
                zenity
 Rules-Requires-Root: no
 Standards-Version: 4.5.1
-Vcs-Git: https://salsa.debian.org/gnome-team/mutter.git
-Vcs-Browser: https://salsa.debian.org/gnome-team/mutter
+XS-Debian-Vcs-Git: https://salsa.debian.org/gnome-team/mutter.git
+XS-Debian-Vcs-Browser: https://salsa.debian.org/gnome-team/mutter
+Vcs-Git: https://salsa.debian.org/gnome-team/mutter.git -b ubuntu/master
+Vcs-Browser: https://salsa.debian.org/gnome-team/mutter/tree/ubuntu/master
 
 Package: mutter
 Architecture: any
@@ -137,7 +140,7 @@ Depends: adwaita-icon-theme,
 Breaks: apparmor (<< 2.13.3-5~),
         gnome-control-center (<< 1:3.25.2),
         gnome-settings-daemon (<< 3.31.91),
-        gnome-shell (<< 3.36)
+        gnome-shell (<< 3.38.4)
 Description: window manager library from the Mutter window manager
  Mutter is a Wayland display server and X11 window manager and
  compositor library. It contains functionality related to, among other

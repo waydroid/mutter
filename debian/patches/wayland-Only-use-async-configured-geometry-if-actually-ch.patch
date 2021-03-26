@@ -1,0 +1,228 @@
+From: =?utf-8?q?Jonas_=C3=85dahl?= <jadahl@gmail.com>
+Date: Thu, 17 Sep 2020 14:06:27 +0200
+Subject: wayland: Only use async configured geometry if actually changed
+
+When (un)maximizing, (un)fullscreening, the move/resize action is
+flagged with 'ACTION_MOVE' and 'ACTION_RESIZE' , while e.g.
+'appears-focus' does not.
+
+When a client misbehaved and didn't immediately reply to a configure
+request with a commit with the corresponding ack_configure, the
+following commit would trigger a oddly timed move, making the window
+appear to move back to a previous position.
+
+Avoid this issue by only carrying over the target window position if the
+configuration actually contained a new position.
+
+We cannot only rely on the flags however, as e.g. a new position should
+be respected during interactive resize, even though only 'ACTION_RESIZE'
+is passed in such scenarios.
+
+Do the same for the size, except if the window state dictates that the
+size is fixed to a certain size, e.g. being fullscreen or maximized.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1445>
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/commit/cda26b49
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1917939
+---
+ src/wayland/meta-wayland-window-configuration.c | 58 ++++++++++++++++++-------
+ src/wayland/meta-wayland-window-configuration.h | 15 ++++---
+ src/wayland/meta-window-wayland.c               | 40 ++++++++---------
+ 3 files changed, 68 insertions(+), 45 deletions(-)
+
+diff --git a/src/wayland/meta-wayland-window-configuration.c b/src/wayland/meta-wayland-window-configuration.c
+index a0ee8f8..6a91a71 100644
+--- a/src/wayland/meta-wayland-window-configuration.c
++++ b/src/wayland/meta-wayland-window-configuration.c
+@@ -24,14 +24,31 @@
+ 
+ static uint32_t global_serial_counter = 0;
+ 
++static gboolean
++is_window_size_fixed (MetaWindow *window)
++{
++  if (meta_window_is_fullscreen (window))
++    return TRUE;
++
++  if (meta_window_get_maximized (window) |
++      (META_MAXIMIZE_VERTICAL | META_MAXIMIZE_VERTICAL))
++    return TRUE;
++
++  if (meta_window_get_tile_mode (window) != META_TILE_NONE)
++    return TRUE;
++
++  return FALSE;
++}
++
+ MetaWaylandWindowConfiguration *
+-meta_wayland_window_configuration_new (int                 x,
+-                                       int                 y,
+-                                       int                 width,
+-                                       int                 height,
+-                                       int                 scale,
+-                                       MetaMoveResizeFlags flags,
+-                                       MetaGravity         gravity)
++meta_wayland_window_configuration_new (MetaWindow          *window,
++                                       int                  x,
++                                       int                  y,
++                                       int                  width,
++                                       int                  height,
++                                       int                  scale,
++                                       MetaMoveResizeFlags  flags,
++                                       MetaGravity          gravity)
+ {
+   MetaWaylandWindowConfiguration *configuration;
+ 
+@@ -39,19 +56,30 @@ meta_wayland_window_configuration_new (int                 x,
+   *configuration = (MetaWaylandWindowConfiguration) {
+     .serial = ++global_serial_counter,
+ 
+-    .has_position = TRUE,
+-    .x = x,
+-    .y = y,
+-
+-    .has_size = TRUE,
+-    .width = width,
+-    .height = height,
+-
+     .scale = scale,
+     .gravity = gravity,
+     .flags = flags,
+   };
+ 
++  if (flags & META_MOVE_RESIZE_MOVE_ACTION ||
++      window->rect.x != x ||
++      window->rect.y != y)
++    {
++      configuration->has_position = TRUE;
++      configuration->x = x;
++      configuration->y = y;
++    }
++
++  if (flags & META_MOVE_RESIZE_RESIZE_ACTION ||
++      is_window_size_fixed (window) ||
++      window->rect.width != width ||
++      window->rect.height != height)
++    {
++      configuration->has_size = TRUE;
++      configuration->width = width;
++      configuration->height = height;
++    }
++
+   return configuration;
+ }
+ 
+diff --git a/src/wayland/meta-wayland-window-configuration.h b/src/wayland/meta-wayland-window-configuration.h
+index b524f43..b3211d1 100644
+--- a/src/wayland/meta-wayland-window-configuration.h
++++ b/src/wayland/meta-wayland-window-configuration.h
+@@ -48,13 +48,14 @@ struct _MetaWaylandWindowConfiguration
+   MetaMoveResizeFlags flags;
+ };
+ 
+-MetaWaylandWindowConfiguration * meta_wayland_window_configuration_new (int                 x,
+-                                                                        int                 y,
+-                                                                        int                 width,
+-                                                                        int                 height,
+-                                                                        int                 scale,
+-                                                                        MetaMoveResizeFlags flags,
+-                                                                        MetaGravity         gravity);
++MetaWaylandWindowConfiguration * meta_wayland_window_configuration_new (MetaWindow          *window,
++                                                                        int                  x,
++                                                                        int                  y,
++                                                                        int                  width,
++                                                                        int                  height,
++                                                                        int                  scale,
++                                                                        MetaMoveResizeFlags  flags,
++                                                                        MetaGravity          gravity);
+ 
+ MetaWaylandWindowConfiguration * meta_wayland_window_configuration_new_relative (int rel_x,
+                                                                                  int rel_y,
+diff --git a/src/wayland/meta-window-wayland.c b/src/wayland/meta-window-wayland.c
+index cf5b0b4..77a5af3 100644
+--- a/src/wayland/meta-window-wayland.c
++++ b/src/wayland/meta-window-wayland.c
+@@ -194,7 +194,8 @@ surface_state_changed (MetaWindow *window)
+     return;
+ 
+   configuration =
+-    meta_wayland_window_configuration_new (wl_window->last_sent_x,
++    meta_wayland_window_configuration_new (window,
++                                           wl_window->last_sent_x,
+                                            wl_window->last_sent_y,
+                                            wl_window->last_sent_width,
+                                            wl_window->last_sent_height,
+@@ -374,7 +375,8 @@ meta_window_wayland_move_resize_internal (MetaWindow                *window,
+             return;
+ 
+           configuration =
+-            meta_wayland_window_configuration_new (configured_x,
++            meta_wayland_window_configuration_new (window,
++                                                   configured_x,
+                                                    configured_y,
+                                                    configured_width,
+                                                    configured_height,
+@@ -961,6 +963,13 @@ meta_window_wayland_finish_move_resize (MetaWindow              *window,
+   is_window_being_resized = (meta_grab_op_is_resizing (display->grab_op) &&
+                              display->grab_window == window);
+ 
++  rect = (MetaRectangle) {
++    .x = window->rect.x,
++    .y = window->rect.y,
++    .width = new_geom.width,
++    .height = new_geom.height
++  };
++
+   if (!is_window_being_resized)
+     {
+       if (acked_configuration)
+@@ -973,33 +982,21 @@ meta_window_wayland_finish_move_resize (MetaWindow              *window,
+               rect.x = parent->rect.x + acked_configuration->rel_x;
+               rect.y = parent->rect.y + acked_configuration->rel_y;
+             }
+-          else
++          else if (acked_configuration->has_position)
+             {
+               calculate_offset (acked_configuration, &new_geom, &rect);
+             }
+         }
+-      else
+-        {
+-          rect.x = window->rect.x;
+-          rect.y = window->rect.y;
+-        }
+-
+-      rect.x += dx;
+-      rect.y += dy;
+     }
+   else
+     {
+-      if (acked_configuration)
+-        {
+-          calculate_offset (acked_configuration, &new_geom, &rect);
+-        }
+-      else
+-        {
+-          rect.x = window->rect.x;
+-          rect.y = window->rect.y;
+-        }
++      if (acked_configuration && acked_configuration->has_position)
++        calculate_offset (acked_configuration, &new_geom, &rect);
+     }
+ 
++  rect.x += dx;
++  rect.y += dy;
++
+   if (rect.x != window->rect.x || rect.y != window->rect.y)
+     flags |= META_MOVE_RESIZE_MOVE_ACTION;
+ 
+@@ -1009,9 +1006,6 @@ meta_window_wayland_finish_move_resize (MetaWindow              *window,
+       wl_window->has_pending_state_change = FALSE;
+     }
+ 
+-  rect.width = new_geom.width;
+-  rect.height = new_geom.height;
+-
+   if (rect.width != window->rect.width || rect.height != window->rect.height)
+     flags |= META_MOVE_RESIZE_RESIZE_ACTION;
+ 

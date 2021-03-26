@@ -1,0 +1,81 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Thu, 11 Feb 2021 15:48:40 +0800
+Subject: clutter/frame-clock: Evenly space updates when presentation times
+ are zero
+
+This is for the Nvidia-X11 driver where `last_presentation_time_us` is
+always zero. Other drivers should be unaffected.
+
+The existing `calculate_next_update_time_us` algorithm only provides a
+guarantee of not scheduling faster than the refresh rate in the presence
+of a valid `last_presentation_time_us`. When `last_presentation_time_us`
+is zero there is no solid foundation to guarantee we're not occasionally
+scheduling too early. So introduce one now.
+
+By introducing a hard guarantee that updates are never scheduled faster
+than the refresh rate, we avoid keeping Nvidia's triple (or quad?) buffer
+queue full. So this avoids the high latency and random stalls experienced
+on Nvidia.
+
+Closes: https://gitlab.gnome.org/GNOME/mutter/-/issues/818,
+        https://gitlab.gnome.org/GNOME/mutter/-/issues/1273,
+        https://gitlab.gnome.org/GNOME/mutter/-/issues/1287,
+        https://gitlab.gnome.org/GNOME/mutter/-/issues/1291,
+        https://gitlab.gnome.org/GNOME/mutter/-/issues/1583
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1726>
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/commit/56fc0915
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1880086
+---
+ clutter/clutter/clutter-frame-clock.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/clutter/clutter/clutter-frame-clock.c b/clutter/clutter/clutter-frame-clock.c
+index 355a2c0..8149845 100644
+--- a/clutter/clutter/clutter-frame-clock.c
++++ b/clutter/clutter/clutter-frame-clock.c
+@@ -70,6 +70,7 @@ struct _ClutterFrameClock
+   int64_t frame_count;
+ 
+   ClutterFrameClockState state;
++  int64_t last_dispatch_time_us;
+   int64_t last_presentation_time_us;
+ 
+   gboolean is_next_presentation_time_valid;
+@@ -236,6 +237,17 @@ calculate_next_update_time_us (ClutterFrameClock *frame_clock,
+   refresh_rate = frame_clock->refresh_rate;
+   refresh_interval_us = (int64_t) (0.5 + G_USEC_PER_SEC / refresh_rate);
+ 
++  if (frame_clock->last_presentation_time_us == 0)
++    {
++      *out_next_update_time_us =
++        frame_clock->last_dispatch_time_us ?
++        frame_clock->last_dispatch_time_us + refresh_interval_us :
++        now_us;
++
++      *out_next_presentation_time_us = 0;
++      return;
++    }
++
+   min_render_time_allowed_us = refresh_interval_us / 2;
+   max_render_time_allowed_us = refresh_interval_us - SYNC_DELAY_US;
+ 
+@@ -369,7 +381,8 @@ clutter_frame_clock_schedule_update (ClutterFrameClock *frame_clock)
+       calculate_next_update_time_us (frame_clock,
+                                      &next_update_time_us,
+                                      &frame_clock->next_presentation_time_us);
+-      frame_clock->is_next_presentation_time_valid = TRUE;
++      frame_clock->is_next_presentation_time_valid =
++        (frame_clock->next_presentation_time_us != 0);
+       break;
+     case CLUTTER_FRAME_CLOCK_STATE_SCHEDULED:
+       return;
+@@ -394,6 +407,7 @@ clutter_frame_clock_dispatch (ClutterFrameClock *frame_clock,
+ 
+   COGL_TRACE_BEGIN_SCOPED (ClutterFrameCLockDispatch, "Frame Clock (dispatch)");
+ 
++  frame_clock->last_dispatch_time_us = time_us;
+   g_source_set_ready_time (frame_clock->source, -1);
+ 
+   frame_clock->state = CLUTTER_FRAME_CLOCK_STATE_DISPATCHING;
