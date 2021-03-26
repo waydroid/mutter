@@ -1,0 +1,43 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Tue, 23 Mar 2021 11:59:59 +0800
+Subject: wayland-dma-buf: Add support for DRM_FORMAT_ABGR2101010
+
+It seems to be the preferred format of the Mesa V3D driver on
+Raspberry Pi 4. If the compositor doesn't advertise it then Mesa will
+fallback from `zwp_linux_dmabuf_v1` to `wl_drm`, incorrectly. Meaning
+it will keep using a buffer with modifiers on an interface that does
+not have modifiers.
+
+Add support for `DRM_FORMAT_ABGR2101010`. It works, and prevents Mesa
+from taking its broken fallback path.
+
+Fixes: https://gitlab.gnome.org/GNOME/mutter/-/issues/1520
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1798>
+
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1896171
+---
+ src/wayland/meta-wayland-dma-buf.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/wayland/meta-wayland-dma-buf.c b/src/wayland/meta-wayland-dma-buf.c
+index 2f9794a..410db98 100644
+--- a/src/wayland/meta-wayland-dma-buf.c
++++ b/src/wayland/meta-wayland-dma-buf.c
+@@ -121,6 +121,9 @@ meta_wayland_dma_buf_realize_texture (MetaWaylandBuffer  *buffer,
+     case DRM_FORMAT_ARGB2101010:
+       cogl_format = COGL_PIXEL_FORMAT_ARGB_2101010_PRE;
+       break;
++    case DRM_FORMAT_ABGR2101010:
++      cogl_format = COGL_PIXEL_FORMAT_ABGR_2101010_PRE;
++      break;
+     case DRM_FORMAT_RGB565:
+       cogl_format = COGL_PIXEL_FORMAT_RGB_565;
+       break;
+@@ -690,6 +693,7 @@ dma_buf_bind (struct wl_client *client,
+   send_modifiers (resource, DRM_FORMAT_ARGB8888);
+   send_modifiers (resource, DRM_FORMAT_XRGB8888);
+   send_modifiers (resource, DRM_FORMAT_ARGB2101010);
++  send_modifiers (resource, DRM_FORMAT_ABGR2101010);
+   send_modifiers (resource, DRM_FORMAT_XRGB2101010);
+   send_modifiers (resource, DRM_FORMAT_RGB565);
+   send_modifiers (resource, DRM_FORMAT_ABGR16161616F);

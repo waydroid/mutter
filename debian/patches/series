@@ -3,3 +3,9 @@ theme-load-icons-as-Gtk-does-with-fallback-and-RTL-suppor.patch
 meson-add-back-default_driver-option.patch
 debian/synaptics-support.patch
 debian/tests-Tag-unstable-tests-as-flaky.patch
+x11-Add-support-for-fractional-scaling-using-Randr.patch
+wayland-dma-buf-Add-support-for-DRM_FORMAT_ABGR2101010.patch
+clutter-frame-clock-Evenly-space-updates-when-presentatio.patch
+wayland-window-Provide-prior-floating-window-dimensions.patch
+wayland-Only-use-async-configured-geometry-if-actually-ch.patch
+wayland-window-Correct-detection-whether-to-send-configur.patch
