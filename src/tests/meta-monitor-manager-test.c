@@ -291,9 +291,10 @@ meta_monitor_manager_test_is_transform_handled (MetaMonitorManager  *manager,
 }
 
 static float
-meta_monitor_manager_test_calculate_monitor_mode_scale (MetaMonitorManager *manager,
-                                                        MetaMonitor        *monitor,
-                                                        MetaMonitorMode    *monitor_mode)
+meta_monitor_manager_test_calculate_monitor_mode_scale (MetaMonitorManager           *manager,
+                                                        MetaLogicalMonitorLayoutMode  layout_mode,
+                                                        MetaMonitor                  *monitor,
+                                                        MetaMonitorMode              *monitor_mode)
 {
   MetaOutput *output;
   MetaOutputTest *output_test;
@@ -320,6 +321,7 @@ meta_monitor_manager_test_calculate_supported_scales (MetaMonitorManager        
   switch (layout_mode)
     {
     case META_LOGICAL_MONITOR_LAYOUT_MODE_LOGICAL:
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL:
       break;
     case META_LOGICAL_MONITOR_LAYOUT_MODE_PHYSICAL:
       constraints |= META_MONITOR_SCALES_CONSTRAINT_NO_FRAC;
@@ -345,8 +347,9 @@ is_monitor_framebuffer_scaled (void)
 static MetaMonitorManagerCapability
 meta_monitor_manager_test_get_capabilities (MetaMonitorManager *manager)
 {
-  MetaMonitorManagerCapability capabilities =
-    META_MONITOR_MANAGER_CAPABILITY_NONE;
+  MetaMonitorManagerCapability capabilities;
+
+  capabilities = META_MONITOR_MANAGER_CAPABILITY_TILING;
 
   if (is_monitor_framebuffer_scaled ())
     capabilities |= META_MONITOR_MANAGER_CAPABILITY_LAYOUT_MODE;

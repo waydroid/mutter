@@ -112,8 +112,18 @@ static gboolean
 meta_monitor_manager_is_config_complete (MetaMonitorManager *manager,
                                          MetaMonitorsConfig *config);
 
-static MetaMonitor *
-meta_monitor_manager_get_active_monitor (MetaMonitorManager *manager);
+static gboolean
+is_global_scale_matching_in_config (MetaMonitorsConfig *config,
+                                    float               scale);
+
+static gboolean
+meta_monitor_manager_is_scale_supported_with_threshold (MetaMonitorManager           *manager,
+                                                        MetaLogicalMonitorLayoutMode  layout_mode,
+                                                        MetaMonitor                  *monitor,
+                                                        MetaMonitorMode              *monitor_mode,
+                                                        float                         scale,
+                                                        float                         threshold,
+                                                        float                        *out_scale);
 
 static void
 meta_monitor_manager_real_read_current_state (MetaMonitorManager *manager);
@@ -204,15 +214,45 @@ meta_monitor_manager_rebuild_logical_monitors (MetaMonitorManager *manager,
                                                     primary_logical_monitor);
 }
 
+float
+meta_monitor_manager_get_maximum_crtc_scale (MetaMonitorManager *manager)
+{
+  GList *l;
+  float scale;
+
+  scale = 1.0f;
+  for (l = manager->monitors; l != NULL; l = l->next)
+    {
+      MetaMonitor *monitor = l->data;
+      MetaOutput *output = meta_monitor_get_main_output (monitor);
+      MetaCrtc *crtc = meta_output_get_assigned_crtc (output);
+
+      if (crtc)
+        {
+          const MetaCrtcConfig *crtc_config = meta_crtc_get_config (crtc);
+
+          scale = MAX (scale, crtc_config ? crtc_config->scale : 1.0f);
+        }
+    }
+
+  return scale;
+}
+
 static float
 derive_configured_global_scale (MetaMonitorManager *manager,
                                 MetaMonitorsConfig *config)
 {
-  MetaLogicalMonitorConfig *logical_monitor_config;
+  GList *l;
 
-  logical_monitor_config = config->logical_monitor_configs->data;
+  for (l = config->logical_monitor_configs; l; l = l->next)
+    {
+      MetaLogicalMonitorConfig *monitor_config = l->data;
 
-  return logical_monitor_config->scale;
+      if (is_global_scale_matching_in_config (config, monitor_config->scale))
+        return monitor_config->scale;
+    }
+
+  return 1.0f;
 }
 
 static float
@@ -223,24 +263,70 @@ calculate_monitor_scale (MetaMonitorManager *manager,
 
   monitor_mode = meta_monitor_get_current_mode (monitor);
   return meta_monitor_manager_calculate_monitor_mode_scale (manager,
+                                                            manager->layout_mode,
                                                             monitor,
                                                             monitor_mode);
+}
+
+static gboolean
+meta_monitor_manager_is_scale_supported_by_other_monitors (MetaMonitorManager *manager,
+                                                           MetaMonitor        *not_this_one,
+                                                           float               scale)
+{
+  GList *l;
+
+   for (l = manager->monitors; l; l = l->next)
+    {
+      MetaMonitor *monitor = l->data;
+      MetaMonitorMode *mode;
+
+      if (monitor == not_this_one || !meta_monitor_is_active (monitor))
+        continue;
+
+      mode = meta_monitor_get_current_mode (monitor);
+      if (!meta_monitor_manager_is_scale_supported (manager, manager->layout_mode,
+                                                    monitor, mode, scale))
+        return FALSE;
+    }
+
+  return TRUE;
 }
 
 static float
 derive_calculated_global_scale (MetaMonitorManager *manager)
 {
   MetaMonitor *monitor = NULL;
+  float scale;
+  GList *l;
 
+  scale = 1.0f;
   monitor = meta_monitor_manager_get_primary_monitor (manager);
 
-  if (!monitor || !meta_monitor_is_active (monitor))
-    monitor = meta_monitor_manager_get_active_monitor (manager);
+  if (monitor && meta_monitor_is_active (monitor))
+    {
+      scale = calculate_monitor_scale (manager, monitor);
+      if (meta_monitor_manager_is_scale_supported_by_other_monitors (manager,
+                                                                     monitor,
+                                                                     scale))
+        return scale;
+    }
 
-  if (!monitor)
-    return 1.0;
+  for (l = manager->monitors; l; l = l->next)
+    {
+      MetaMonitor *other_monitor = l->data;
+      float monitor_scale;
 
-  return calculate_monitor_scale (manager, monitor);
+      if (other_monitor == monitor || !meta_monitor_is_active (other_monitor))
+        continue;
+
+      monitor_scale = calculate_monitor_scale (manager, other_monitor);
+      if (meta_monitor_manager_is_scale_supported_by_other_monitors (manager,
+                                                                     other_monitor,
+                                                                     monitor_scale))
+        scale = MAX (scale, monitor_scale);
+    }
+
+  return scale;
 }
 
 static float
@@ -260,6 +346,51 @@ derive_scale_from_config (MetaMonitorManager *manager,
 
   g_warning ("Missing logical monitor, using scale 1");
   return 1.0;
+}
+
+static gboolean
+derive_scale_from_crtc (MetaMonitorManager *manager,
+                        MetaMonitor        *monitor,
+                        float              *out_scale)
+{
+  MetaMonitorManagerCapability capabilities;
+  MetaMonitorMode *monitor_mode;
+  float threshold;
+  MetaOutput *output;
+  MetaCrtc *crtc;
+  float scale;
+
+  capabilities = meta_monitor_manager_get_capabilities (manager);
+
+  if (!(capabilities & META_MONITOR_MANAGER_CAPABILITY_NATIVE_OUTPUT_SCALING))
+    return FALSE;
+
+  if (!(capabilities & META_MONITOR_MANAGER_CAPABILITY_LAYOUT_MODE))
+    return FALSE;
+
+  output = meta_monitor_get_main_output (monitor);
+  crtc = meta_output_get_assigned_crtc (output);
+
+  if (!crtc)
+    return FALSE;
+
+  /* Due to integer and possibly inverse scaling applied to the output the
+   * result could not match exactly, so we apply a more relaxed threshold
+   * in this case. */
+  threshold = 0.001f;
+
+  scale = meta_crtc_get_config_scale (crtc);
+  monitor_mode = meta_monitor_get_current_mode (monitor);
+  if (meta_monitor_manager_is_scale_supported_with_threshold (manager,
+                                                              manager->layout_mode,
+                                                              monitor,
+                                                              monitor_mode,
+                                                              scale,
+                                                              threshold,
+                                                              out_scale))
+    return TRUE;
+
+  return FALSE;
 }
 
 static void
@@ -309,11 +440,17 @@ meta_monitor_manager_rebuild_logical_monitors_derived (MetaMonitorManager *manag
           float scale;
 
           if (use_global_scale)
-            scale = global_scale;
-          else if (config)
-            scale = derive_scale_from_config (manager, config, &layout);
+            scale = roundf (global_scale);
           else
-            scale = calculate_monitor_scale (manager, monitor);
+            {
+              if (!derive_scale_from_crtc (manager, monitor, &scale))
+                {
+                  if (config)
+                    scale = derive_scale_from_config (manager, config, &layout);
+                  else
+                    scale = calculate_monitor_scale (manager, monitor);
+                }
+            }
 
           g_assert (scale > 0);
 
@@ -415,16 +552,24 @@ meta_monitor_manager_is_headless (MetaMonitorManager *manager)
 }
 
 float
-meta_monitor_manager_calculate_monitor_mode_scale (MetaMonitorManager *manager,
-                                                   MetaMonitor        *monitor,
-                                                   MetaMonitorMode    *monitor_mode)
+meta_monitor_manager_calculate_monitor_mode_scale (MetaMonitorManager           *manager,
+                                                   MetaLogicalMonitorLayoutMode  layout_mode,
+                                                   MetaMonitor                  *monitor,
+                                                   MetaMonitorMode              *monitor_mode)
 {
+  float scale;
   MetaMonitorManagerClass *manager_class =
     META_MONITOR_MANAGER_GET_CLASS (manager);
 
-  return manager_class->calculate_monitor_mode_scale (manager,
-                                                      monitor,
-                                                      monitor_mode);
+  scale = manager_class->calculate_monitor_mode_scale (manager,
+                                                       layout_mode,
+                                                       monitor,
+                                                       monitor_mode);
+
+  if (g_list_find (manager->scale_override_monitors, monitor))
+    return ceilf (scale);
+
+  return scale;
 }
 
 float *
@@ -538,7 +683,8 @@ static gboolean
 should_use_stored_config (MetaMonitorManager *manager)
 {
   return (manager->in_init ||
-          !meta_monitor_manager_has_hotplug_mode_update (manager));
+          (!manager->scale_override_monitors &&
+           !meta_monitor_manager_has_hotplug_mode_update (manager)));
 }
 
 MetaMonitorsConfig *
@@ -550,6 +696,8 @@ meta_monitor_manager_ensure_configured (MetaMonitorManager *manager)
   MetaMonitorsConfigMethod method;
   MetaMonitorsConfigMethod fallback_method =
     META_MONITORS_CONFIG_METHOD_TEMPORARY;
+  MetaLogicalMonitorLayoutMode layout_mode =
+    meta_monitor_manager_get_default_layout_mode (manager);
 
   use_stored_config = should_use_stored_config (manager);
   if (use_stored_config)
@@ -559,7 +707,18 @@ meta_monitor_manager_ensure_configured (MetaMonitorManager *manager)
 
   if (use_stored_config)
     {
+      g_autoptr(MetaMonitorsConfig) new_config = NULL;
+
       config = meta_monitor_config_manager_get_stored (manager->config_manager);
+      if (config && config->layout_mode != layout_mode)
+        {
+          new_config =
+            meta_monitor_config_manager_create_for_layout (manager->config_manager,
+                                                           config,
+                                                           layout_mode);
+          config = new_config;
+        }
+
       if (config)
         {
           if (!meta_monitor_manager_apply_monitors_config (manager,
@@ -603,6 +762,16 @@ meta_monitor_manager_ensure_configured (MetaMonitorManager *manager)
   if (config)
     {
       config = g_object_ref (config);
+
+      if (config && config->layout_mode != layout_mode)
+        {
+          MetaMonitorsConfig *new_config =
+            meta_monitor_config_manager_create_for_layout (manager->config_manager,
+                                                           config,
+                                                           layout_mode);
+          g_object_unref (config);
+          config = new_config;
+        }
 
       if (meta_monitor_manager_is_config_complete (manager, config))
         {
@@ -726,6 +895,66 @@ orientation_changed (MetaOrientationManager *orientation_manager,
   g_object_unref (config);
 }
 
+static gboolean
+apply_x11_fractional_scaling_config (MetaMonitorManager *manager)
+{
+  g_autoptr(GError) error = NULL;
+  g_autoptr(MetaMonitorsConfig) config = NULL;
+  MetaMonitorsConfig *applied_config;
+  MetaLogicalMonitorLayoutMode layout_mode =
+    meta_monitor_manager_get_default_layout_mode (manager);
+
+  if (!META_IS_MONITOR_MANAGER_XRANDR (manager))
+    return TRUE;
+
+  applied_config =
+    meta_monitor_config_manager_get_current (manager->config_manager);
+  config =
+    meta_monitor_config_manager_create_for_layout (manager->config_manager,
+                                                   applied_config,
+                                                   layout_mode);
+  if (!config)
+    return FALSE;
+
+  if (meta_monitor_manager_apply_monitors_config (manager,
+                                                  config,
+                                                  META_MONITORS_CONFIG_METHOD_PERSISTENT,
+                                                  &error))
+    {
+      if (config != applied_config && manager->persistent_timeout_id)
+        {
+          if (G_UNLIKELY (applied_config !=
+                          meta_monitor_config_manager_get_previous (manager->config_manager)))
+            {
+              g_warning ("The removed configuration doesn't match the "
+                         "previously applied one, reverting may not work");
+            }
+          else
+            {
+              g_autoptr(MetaMonitorsConfig) previous_config = NULL;
+
+              /* The previous config we applied was just a temporary one that
+               * GNOME control center passed us while toggling the fractional
+               * scaling. So, in such case, once the configuration with the
+               * correct layout has been applied, we need to ignore the
+               * temporary one. */
+              previous_config =
+                meta_monitor_config_manager_pop_previous (manager->config_manager);
+
+              g_assert_true (applied_config == previous_config);
+            }
+        }
+    }
+  else
+    {
+      g_warning ("Impossible to apply the layout config %s\n",
+                 error->message);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
 static void
 experimental_features_changed (MetaSettings           *settings,
                                MetaExperimentalFeature old_experimental_features,
@@ -733,6 +962,8 @@ experimental_features_changed (MetaSettings           *settings,
 {
   gboolean was_stage_views_scaled;
   gboolean is_stage_views_scaled;
+  gboolean was_x11_scaling;
+  gboolean x11_scaling;
   gboolean should_reconfigure = FALSE;
 
   was_stage_views_scaled =
@@ -742,9 +973,22 @@ experimental_features_changed (MetaSettings           *settings,
     meta_settings_is_experimental_feature_enabled (
       settings,
       META_EXPERIMENTAL_FEATURE_SCALE_MONITOR_FRAMEBUFFER);
+  was_x11_scaling =
+    !!(old_experimental_features &
+       META_EXPERIMENTAL_FEATURE_X11_RANDR_FRACTIONAL_SCALING);
+  x11_scaling =
+    meta_settings_is_experimental_feature_enabled (
+      settings,
+      META_EXPERIMENTAL_FEATURE_X11_RANDR_FRACTIONAL_SCALING);
 
   if (is_stage_views_scaled != was_stage_views_scaled)
     should_reconfigure = TRUE;
+
+  if (was_x11_scaling != x11_scaling)
+    {
+      if (!apply_x11_fractional_scaling_config (manager))
+        should_reconfigure = TRUE;
+    }
 
   if (should_reconfigure)
     meta_monitor_manager_on_hotplug (manager);
@@ -1273,6 +1517,33 @@ meta_monitor_manager_handle_get_resources (MetaDBusDisplayConfig *skeleton,
 }
 
 static void
+restore_previous_experimental_config (MetaMonitorManager *manager,
+                                      MetaMonitorsConfig *previous_config)
+{
+  MetaBackend *backend = manager->backend;
+  MetaSettings *settings = meta_backend_get_settings (backend);
+  gboolean was_fractional;
+
+  if (!META_IS_MONITOR_MANAGER_XRANDR (manager))
+    return;
+
+  was_fractional =
+    previous_config->layout_mode != META_LOGICAL_MONITOR_LAYOUT_MODE_PHYSICAL;
+
+  if (meta_settings_is_experimental_feature_enabled (settings,
+        META_EXPERIMENTAL_FEATURE_X11_RANDR_FRACTIONAL_SCALING) == was_fractional)
+    return;
+
+  g_signal_handler_block (settings,
+                          manager->experimental_features_changed_handler_id);
+
+  meta_settings_enable_x11_fractional_scaling (settings, was_fractional);
+
+  g_signal_handler_unblock (settings,
+                            manager->experimental_features_changed_handler_id);
+}
+
+static void
 restore_previous_config (MetaMonitorManager *manager)
 {
   MetaMonitorsConfig *previous_config;
@@ -1284,6 +1555,8 @@ restore_previous_config (MetaMonitorManager *manager)
   if (previous_config)
     {
       MetaMonitorsConfigMethod method;
+
+      restore_previous_experimental_config (manager, previous_config);
 
       method = META_MONITORS_CONFIG_METHOD_TEMPORARY;
       if (meta_monitor_manager_apply_monitors_config (manager,
@@ -1341,6 +1614,41 @@ request_persistent_confirmation (MetaMonitorManager *manager)
   g_signal_emit (manager, signals[CONFIRM_DISPLAY_CHANGE], 0);
 }
 
+gboolean
+meta_monitor_manager_disable_scale_for_monitor (MetaMonitorManager *manager,
+                                                MetaLogicalMonitor *monitor)
+{
+  switch (manager->layout_mode)
+    {
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_LOGICAL:
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL:
+      break;
+    default:
+      return FALSE;
+    }
+
+  if (monitor && fmodf (monitor->scale, 1.0) != 0.0f)
+    {
+      if (manager->scale_override_monitors)
+        {
+          g_clear_pointer (&manager->scale_override_monitors, g_list_free);
+          g_object_unref (meta_monitor_config_manager_pop_previous (manager->config_manager));
+        }
+
+      manager->scale_override_monitors = g_list_copy (monitor->monitors);
+      meta_monitor_manager_ensure_configured (manager);
+      return TRUE;
+    }
+
+  if (manager->scale_override_monitors)
+    {
+      g_clear_pointer (&manager->scale_override_monitors, g_list_free);
+      restore_previous_config (manager);
+    }
+
+  return FALSE;
+}
+
 #define META_DISPLAY_CONFIG_MODE_FLAGS_PREFERRED (1 << 0)
 #define META_DISPLAY_CONFIG_MODE_FLAGS_CURRENT (1 << 1)
 
@@ -1368,6 +1676,7 @@ meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
   MetaMonitorManagerCapability capabilities;
   int ui_scaling_factor;
   int max_screen_width, max_screen_height;
+  char *renderer;
 
   g_variant_builder_init (&monitors_builder,
                           G_VARIANT_TYPE (MONITORS_FORMAT));
@@ -1414,6 +1723,7 @@ meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
 
           preferred_scale =
             meta_monitor_manager_calculate_monitor_mode_scale (manager,
+                                                               manager->layout_mode,
                                                                monitor,
                                                                monitor_mode);
 
@@ -1521,6 +1831,14 @@ meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
     }
 
   g_variant_builder_init (&properties_builder, G_VARIANT_TYPE ("a{sv}"));
+
+  renderer = g_ascii_strdown (G_OBJECT_TYPE_NAME (manager) +
+                              strlen (g_type_name (g_type_parent (G_OBJECT_TYPE (manager)))),
+                              -1);
+  g_variant_builder_add (&properties_builder, "{sv}",
+                         "renderer",
+                         g_variant_new_take_string (renderer));
+
   capabilities = meta_monitor_manager_get_capabilities (manager);
 
   g_variant_builder_add (&properties_builder, "{sv}",
@@ -1537,6 +1855,14 @@ meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
     {
       g_variant_builder_add (&properties_builder, "{sv}",
                              "global-scale-required",
+                             g_variant_new_boolean (TRUE));
+    }
+  else if (META_IS_MONITOR_MANAGER_XRANDR (manager) &&
+           (capabilities & META_MONITOR_MANAGER_CAPABILITY_NATIVE_OUTPUT_SCALING) &&
+           (capabilities & META_MONITOR_MANAGER_CAPABILITY_LAYOUT_MODE))
+    {
+      g_variant_builder_add (&properties_builder, "{sv}",
+                             "x11-fractional-scaling",
                              g_variant_new_boolean (TRUE));
     }
 
@@ -1583,12 +1909,14 @@ meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
 #undef LOGICAL_MONITOR_FORMAT
 #undef LOGICAL_MONITORS_FORMAT
 
-gboolean
-meta_monitor_manager_is_scale_supported (MetaMonitorManager          *manager,
-                                         MetaLogicalMonitorLayoutMode layout_mode,
-                                         MetaMonitor                 *monitor,
-                                         MetaMonitorMode             *monitor_mode,
-                                         float                        scale)
+static gboolean
+meta_monitor_manager_is_scale_supported_with_threshold (MetaMonitorManager           *manager,
+                                                        MetaLogicalMonitorLayoutMode  layout_mode,
+                                                        MetaMonitor                  *monitor,
+                                                        MetaMonitorMode              *monitor_mode,
+                                                        float                         scale,
+                                                        float                         threshold,
+                                                        float                        *out_scale)
 {
   g_autofree float *supported_scales = NULL;
   int n_supported_scales;
@@ -1602,8 +1930,66 @@ meta_monitor_manager_is_scale_supported (MetaMonitorManager          *manager,
                                                      &n_supported_scales);
   for (i = 0; i < n_supported_scales; i++)
     {
-      if (supported_scales[i] == scale)
-        return TRUE;
+      if (fabs (supported_scales[i] - scale) < threshold)
+        {
+          if (out_scale)
+            *out_scale = supported_scales[i];
+
+          return TRUE;
+        }
+    }
+
+  return FALSE;
+}
+
+gboolean
+meta_monitor_manager_is_scale_supported (MetaMonitorManager          *manager,
+                                         MetaLogicalMonitorLayoutMode layout_mode,
+                                         MetaMonitor                 *monitor,
+                                         MetaMonitorMode             *monitor_mode,
+                                         float                        scale)
+{
+  return meta_monitor_manager_is_scale_supported_with_threshold (manager,
+                                                                 layout_mode,
+                                                                 monitor,
+                                                                 monitor_mode,
+                                                                 scale,
+                                                                 FLT_EPSILON,
+                                                                 NULL);
+}
+
+static gboolean
+is_global_scale_matching_in_config (MetaMonitorsConfig *config,
+                                    float               scale)
+{
+  GList *l;
+
+  for (l = config->logical_monitor_configs; l; l = l->next)
+    {
+      MetaLogicalMonitorConfig *logical_monitor_config = l->data;
+
+      if (fabs (logical_monitor_config->scale - scale) > FLT_EPSILON)
+        return FALSE;
+    }
+
+  return TRUE;
+}
+
+static gboolean
+meta_monitor_manager_is_scale_supported_for_config (MetaMonitorManager *manager,
+                                                    MetaMonitorsConfig *config,
+                                                    MetaMonitor        *monitor,
+                                                    MetaMonitorMode    *monitor_mode,
+                                                    float               scale)
+{
+  if (meta_monitor_manager_is_scale_supported (manager, config->layout_mode,
+                                               monitor, monitor_mode, scale))
+    {
+      if (meta_monitor_manager_get_capabilities (manager) &
+          META_MONITOR_MANAGER_CAPABILITY_GLOBAL_SCALE_REQUIRED)
+        return is_global_scale_matching_in_config (config, scale);
+
+      return TRUE;
     }
 
   return FALSE;
@@ -1647,11 +2033,11 @@ meta_monitor_manager_is_config_applicable (MetaMonitorManager *manager,
               return FALSE;
             }
 
-          if (!meta_monitor_manager_is_scale_supported (manager,
-                                                        config->layout_mode,
-                                                        monitor,
-                                                        monitor_mode,
-                                                        scale))
+          if (!meta_monitor_manager_is_scale_supported_for_config (manager,
+                                                                   config,
+                                                                   monitor,
+                                                                   monitor_mode,
+                                                                   scale))
             {
               g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                            "Scale not supported by backend");
@@ -1872,6 +2258,7 @@ derive_logical_monitor_size (MetaMonitorConfig           *monitor_config,
   switch (layout_mode)
     {
     case META_LOGICAL_MONITOR_LAYOUT_MODE_LOGICAL:
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL:
       width = roundf (width / scale);
       height = roundf (height / scale);
       break;
@@ -1971,9 +2358,11 @@ create_logical_monitor_config_from_variant (MetaMonitorManager          *manager
     .monitor_configs = monitor_configs
   };
 
-  if (!meta_verify_logical_monitor_config (logical_monitor_config,
+  if (layout_mode != META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL &&
+      !meta_verify_logical_monitor_config (logical_monitor_config,
                                            layout_mode,
                                            manager,
+                                           1.0f,
                                            error))
     {
       meta_logical_monitor_config_free (logical_monitor_config);
@@ -1994,6 +2383,7 @@ is_valid_layout_mode (MetaLogicalMonitorLayoutMode layout_mode)
     {
     case META_LOGICAL_MONITOR_LAYOUT_MODE_LOGICAL:
     case META_LOGICAL_MONITOR_LAYOUT_MODE_PHYSICAL:
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL:
       return TRUE;
     }
 
@@ -2016,6 +2406,7 @@ meta_monitor_manager_handle_apply_monitors_config (MetaDBusDisplayConfig *skelet
   MetaMonitorsConfig *config;
   GList *logical_monitor_configs = NULL;
   GError *error = NULL;
+  float max_scale = 1.0f;
 
   if (serial != manager->serial)
     {
@@ -2087,8 +2478,40 @@ meta_monitor_manager_handle_apply_monitors_config (MetaDBusDisplayConfig *skelet
           return TRUE;
         }
 
+      max_scale = MAX (max_scale, logical_monitor_config->scale);
       logical_monitor_configs = g_list_append (logical_monitor_configs,
                                                logical_monitor_config);
+    }
+
+  if (manager->layout_mode == META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL)
+    {
+      GList *l;
+      int ui_scale = ceilf (max_scale);
+
+      for (l = logical_monitor_configs; l; l = l->next)
+        {
+          MetaLogicalMonitorConfig *logical_monitor_config = l->data;
+
+          logical_monitor_config->layout.width =
+            roundf (logical_monitor_config->layout.width * ui_scale);
+          logical_monitor_config->layout.height =
+            roundf (logical_monitor_config->layout.height * ui_scale);
+
+          if (!meta_verify_logical_monitor_config (logical_monitor_config,
+                                                   manager->layout_mode,
+                                                   manager,
+                                                   ui_scale,
+                                                   &error))
+            {
+              g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+                                                    G_DBUS_ERROR_INVALID_ARGS,
+                                                    "%s", error->message);
+              g_error_free (error);
+              g_list_free_full (logical_monitor_configs,
+                                (GDestroyNotify) meta_logical_monitor_config_free);
+              return TRUE;
+            }
+        }
     }
 
   config = meta_monitors_config_new (manager,
@@ -2535,12 +2958,6 @@ meta_monitor_manager_get_laptop_panel (MetaMonitorManager *manager)
   return find_monitor (manager, meta_monitor_is_laptop_panel);
 }
 
-static MetaMonitor *
-meta_monitor_manager_get_active_monitor (MetaMonitorManager *manager)
-{
-  return find_monitor (manager, meta_monitor_is_active);
-}
-
 MetaMonitor *
 meta_monitor_manager_get_monitor_from_connector (MetaMonitorManager *manager,
                                                  const char         *connector)
@@ -2716,6 +3133,10 @@ rebuild_monitors (MetaMonitorManager *manager)
 {
   GList *gpus;
   GList *l;
+  gboolean has_tiling;
+
+  has_tiling = meta_monitor_manager_get_capabilities (manager) &
+                META_MONITOR_MANAGER_CAPABILITY_TILING;
 
   if (manager->monitors)
     {
@@ -2734,7 +3155,7 @@ rebuild_monitors (MetaMonitorManager *manager)
           MetaOutput *output = k->data;
           const MetaOutputInfo *output_info = meta_output_get_info (output);
 
-          if (output_info->tile_info.group_id)
+          if (has_tiling && output_info->tile_info.group_id)
             {
               if (is_main_tiled_monitor_output (output))
                 {
@@ -2940,7 +3361,7 @@ meta_monitor_manager_update_logical_state_derived (MetaMonitorManager *manager,
   else
     manager->current_switch_config = META_MONITOR_SWITCH_CONFIG_UNKNOWN;
 
-  manager->layout_mode = META_LOGICAL_MONITOR_LAYOUT_MODE_PHYSICAL;
+  manager->layout_mode = meta_monitor_manager_get_default_layout_mode (manager);
 
   meta_monitor_manager_rebuild_logical_monitors_derived (manager, config);
 }
@@ -2949,9 +3370,13 @@ void
 meta_monitor_manager_rebuild_derived (MetaMonitorManager *manager,
                                       MetaMonitorsConfig *config)
 {
+  MetaMonitorManagerClass *klass = META_MONITOR_MANAGER_GET_CLASS (manager);
   GList *old_logical_monitors;
 
   meta_monitor_manager_update_monitor_modes_derived (manager);
+
+  if (klass->update_screen_size_derived)
+    klass->update_screen_size_derived (manager, config);
 
   if (manager->in_init)
     return;
