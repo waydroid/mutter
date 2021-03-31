@@ -1,3 +1,21 @@
+mutter (3.36.9-0ubuntu0.20.04.1) focal; urgency=medium
+
+  * New upstream release (LP: #1919143)
+    - Do not ping unmanaging windows
+    - Improve freezes when switching workspace
+    - Fix drag cancel animation when using geometry scaling
+    - Fix stuck icon in DND operation between X11 and wayland
+    - Fix restoring focus to windows using globally active input
+    - Fix _NET_WM_FRAME_DRAWN timestamps
+    - Fix unwanted position changes on window resize
+    - Fix device configuration not being picked up on X11
+    - Fix size hints with CSD
+    - Disable CRTCs if there is no monitor (LP: #1905825)
+    - Fixed crashes
+    - Plugged memory leaks
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Wed, 31 Mar 2021 02:15:27 +0200
+
 mutter (3.36.7+git20201123-0.20.04.1) focal; urgency=medium
 
   * New upstream release and git snapshot (LP: #1903230)
