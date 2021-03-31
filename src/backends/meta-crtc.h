@@ -64,6 +64,7 @@ struct _MetaCrtc
 
   glong crtc_id;
   unsigned int all_transforms;
+  float scale;
 
   MetaCrtcConfig *config;
 
