@@ -44,7 +44,7 @@ index 2dfe5bc..3d4c2d3 100644
    input: 'cogl-config.h.meson',
    output: 'cogl-config.h',
 diff --git a/meson.build b/meson.build
-index 9b88b5b..70c1a12 100644
+index 637173a..46cfbef 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -222,6 +222,8 @@ if have_wayland_eglstream

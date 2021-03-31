@@ -658,6 +658,9 @@ apply_crtc_assignments (MetaMonitorManager *manager,
       crtc->scale = 1.0f;
     }
 
+  if (!n_crtcs)
+    goto out;
+
   if (width > manager->screen_width || height > manager->screen_height)
     {
       meta_monitor_manager_xrandr_update_screen_size (manager_xrandr,
@@ -787,6 +790,7 @@ apply_crtc_assignments (MetaMonitorManager *manager,
                                                       avg_screen_scale);
     }
 
+out:
   XUngrabServer (manager_xrandr->xdisplay);
   XFlush (manager_xrandr->xdisplay);
 }
@@ -901,6 +905,9 @@ meta_monitor_manager_xrandr_apply_monitors_config (MetaMonitorManager      *mana
 
   if (!config)
     {
+      if (!manager->in_init)
+        apply_crtc_assignments (manager, TRUE, NULL, 0, NULL, 0);
+
       meta_monitor_manager_rebuild_derived (manager, NULL);
       return TRUE;
     }
