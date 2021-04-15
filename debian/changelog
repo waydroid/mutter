@@ -1,3 +1,20 @@
+mutter (3.38.4-1ubuntu2) hirsute; urgency=medium
+
+  [ Daniel van Vugt ]
+  * Revert "debian/patches: Properly handle configuration events on windows"
+    to fix a regression making some windows to move on resize (LP: #1922034).
+  * Add 61-mutter.rules-Enable-KMS-modifiers-for-Raspberry-P.patch.
+    To enable KMS modifiers on Raspberry Pi, which means to enable the
+    first fix in wayland-dma-buf-Add-support-for-DRM_FORMAT_ABGR2101010.patch
+    (LP: #1896171)
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/patches: Backport workspace fixes from upstream gnome-3-38 branch
+  * debian/patches: Use Xwayland pkg-config if available
+  * debian/patches: Use -listenfd to invoke XWayland if available (LP: #1922539)
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Thu, 15 Apr 2021 06:28:51 +0200
+
 mutter (3.38.4-1ubuntu1) hirsute; urgency=medium
 
   * Merge with debian, containing new upstream release.

@@ -1,0 +1,21 @@
+From: Daniel van Vugt <daniel.van.vugt@canonical.com>
+Date: Fri, 9 Apr 2021 16:23:00 +0800
+Subject: [PATCH] 61-mutter.rules: Enable KMS modifiers for Raspberry Pi 4
+ drivers
+
+Origin: https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1817
+Bug-GNOME: https://gitlab.gnome.org/GNOME/mutter/-/issues/1520
+Bug-Ubuntu: https://launchpad.net/bugs/1896171
+Forwarded: yes
+Last-Update: 2021-04-09
+---
+ data/61-mutter.rules | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/data/61-mutter.rules b/data/61-mutter.rules
+index 59cc000..3ce048a 100644
+--- a/data/61-mutter.rules
++++ b/data/61-mutter.rules
+@@ -1 +1,2 @@
+ DRIVER=="tegra-host1x", SUBSYSTEM=="platform", TAG+="mutter-device-requires-kms-modifiers"
++DRIVER=="v3d|vc4-drm", SUBSYSTEM=="platform", TAG+="mutter-device-requires-kms-modifiers"

@@ -22,72 +22,35 @@
 
 #include "wayland/meta-wayland-window-configuration.h"
 
-#include "wayland/meta-window-wayland.h"
-
 static uint32_t global_serial_counter = 0;
 
-static gboolean
-is_window_size_fixed (MetaWindow *window)
-{
-  if (meta_window_is_fullscreen (window))
-    return TRUE;
-
-  if (meta_window_get_maximized (window) |
-      (META_MAXIMIZE_VERTICAL | META_MAXIMIZE_VERTICAL))
-    return TRUE;
-
-  if (meta_window_get_tile_mode (window) != META_TILE_NONE)
-    return TRUE;
-
-  return FALSE;
-}
-
 MetaWaylandWindowConfiguration *
-meta_wayland_window_configuration_new (MetaWindow          *window,
-                                       int                  x,
-                                       int                  y,
-                                       int                  width,
-                                       int                  height,
-                                       int                  scale,
-                                       MetaMoveResizeFlags  flags,
-                                       MetaGravity          gravity)
+meta_wayland_window_configuration_new (int                 x,
+                                       int                 y,
+                                       int                 width,
+                                       int                 height,
+                                       int                 scale,
+                                       MetaMoveResizeFlags flags,
+                                       MetaGravity         gravity)
 {
   MetaWaylandWindowConfiguration *configuration;
-  MetaWindowWayland *wl_window = META_WINDOW_WAYLAND (window);
-  int pending_width;
-  int pending_height;
-
-  meta_window_wayland_get_pending_size (wl_window,
-                                        &pending_width,
-                                        &pending_height);
 
   configuration = g_new0 (MetaWaylandWindowConfiguration, 1);
   *configuration = (MetaWaylandWindowConfiguration) {
     .serial = ++global_serial_counter,
 
+    .has_position = TRUE,
+    .x = x,
+    .y = y,
+
+    .has_size = TRUE,
+    .width = width,
+    .height = height,
+
     .scale = scale,
     .gravity = gravity,
     .flags = flags,
   };
-
-  if (flags & META_MOVE_RESIZE_MOVE_ACTION ||
-      window->rect.x != x ||
-      window->rect.y != y)
-    {
-      configuration->has_position = TRUE;
-      configuration->x = x;
-      configuration->y = y;
-    }
-
-  if (flags & META_MOVE_RESIZE_RESIZE_ACTION ||
-      is_window_size_fixed (window) ||
-      pending_width != width ||
-      pending_height != height)
-    {
-      configuration->has_size = TRUE;
-      configuration->width = width;
-      configuration->height = height;
-    }
 
   return configuration;
 }

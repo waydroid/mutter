@@ -395,10 +395,17 @@ if cc.has_header_symbol('sys/prctl.h', 'prctl')
 endif
 
 have_xwayland_initfd = false
+have_xwayland_listenfd = false
 if have_wayland
+  xwayland_dep = dependency('xwayland', required: false)
+
   xwayland_path = get_option('xwayland_path')
   if xwayland_path == ''
-    xwayland_path = find_program('Xwayland').path()
+    if xwayland_dep.found()
+      xwayland_path = xwayland_dep.get_pkgconfig_variable('xwayland')
+    else
+      xwayland_path = find_program('Xwayland').path()
+    endif
   endif
   cdata.set_quoted('XWAYLAND_PATH', xwayland_path)
 
@@ -413,18 +420,33 @@ if have_wayland
 
   # For Xwayland -initfd usage
   use_initfd = get_option('xwayland_initfd')
-  xwayland_options = run_command(xwayland_path, '-help')
+  if xwayland_dep.found()
+    xwayland_supports_initfd = xwayland_dep.get_pkgconfig_variable('have_initfd') == 'true'
+  else
+    xwayland_options = run_command(xwayland_path, '-help')
+    xwayland_supports_initfd = xwayland_options.stderr().contains('-initfd')
+  endif
+
   if use_initfd.auto()
-    have_xwayland_initfd = xwayland_options.stderr().contains('-initfd')
+    have_xwayland_initfd = xwayland_supports_initfd
   else
     have_xwayland_initfd = use_initfd.enabled()
-    if have_xwayland_initfd and not xwayland_options.stderr().contains('-initfd')
+    if have_xwayland_initfd and not xwayland_supports_initfd
       error('XWayland -initfd support requested but not available')
     endif
   endif
 
   if (have_xwayland_initfd)
     cdata.set('HAVE_XWAYLAND_INITFD', 1)
+  endif
+
+  # For Xwayland -listenfd usage
+  if xwayland_dep.found()
+    have_xwayland_listenfd = xwayland_dep.get_pkgconfig_variable('have_listenfd') == 'true'
+  endif
+
+  if (have_xwayland_listenfd)
+    cdata.set('HAVE_XWAYLAND_LISTENFD', 1)
   endif
 endif
 
@@ -500,6 +522,7 @@ output = [
   '        Introspection............ ' + have_introspection.to_string(),
   '        Profiler................. ' + have_profiler.to_string(),
   '        Xwayland initfd.......... ' + have_xwayland_initfd.to_string(),
+  '        Xwayland listenfd........ ' + have_xwayland_listenfd.to_string(),
   '',
   '    Tests:',
   '',

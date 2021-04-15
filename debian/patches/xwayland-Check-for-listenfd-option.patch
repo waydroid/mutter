@@ -1,0 +1,108 @@
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Fri, 22 Jan 2021 11:16:24 +0100
+Subject: xwayland: Check for listenfd option
+
+Current Xwayland has marked the command line option "-listen" as
+deprecated in favor of "-listenfd".
+
+Use the pkg-config variable "have_listenfd" (if available) from Xwayland
+to determine if we should use that option, to avoid a deprecation
+warning when spawning Xwayland.
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1682>
+
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1922539
+---
+ config.h.meson              |  3 +++
+ meson.build                 | 11 +++++++++++
+ src/wayland/meta-xwayland.c | 12 +++++++++---
+ 3 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/config.h.meson b/config.h.meson
+index b2a2359..c16cf5a 100644
+--- a/config.h.meson
++++ b/config.h.meson
+@@ -71,6 +71,9 @@
+ /* Whether Xwayland has -initfd option */
+ #mesondefine HAVE_XWAYLAND_INITFD
+ 
++/* Whether Xwayland has -listenfd option */
++#mesondefine HAVE_XWAYLAND_LISTENFD
++
+ /* Whether the mkostemp function exists */
+ #mesondefine HAVE_MKOSTEMP
+ 
+diff --git a/meson.build b/meson.build
+index 2fd28c5..0bcb280 100644
+--- a/meson.build
++++ b/meson.build
+@@ -395,6 +395,7 @@ if cc.has_header_symbol('sys/prctl.h', 'prctl')
+ endif
+ 
+ have_xwayland_initfd = false
++have_xwayland_listenfd = false
+ if have_wayland
+   xwayland_dep = dependency('xwayland', required: false)
+ 
+@@ -438,6 +439,15 @@ if have_wayland
+   if (have_xwayland_initfd)
+     cdata.set('HAVE_XWAYLAND_INITFD', 1)
+   endif
++
++  # For Xwayland -listenfd usage
++  if xwayland_dep.found()
++    have_xwayland_listenfd = xwayland_dep.get_pkgconfig_variable('have_listenfd') == 'true'
++  endif
++
++  if (have_xwayland_listenfd)
++    cdata.set('HAVE_XWAYLAND_LISTENFD', 1)
++  endif
+ endif
+ 
+ optional_functions = [
+@@ -512,6 +522,7 @@ output = [
+   '        Introspection............ ' + have_introspection.to_string(),
+   '        Profiler................. ' + have_profiler.to_string(),
+   '        Xwayland initfd.......... ' + have_xwayland_initfd.to_string(),
++  '        Xwayland listenfd........ ' + have_xwayland_listenfd.to_string(),
+   '',
+   '    Tests:',
+   '',
+diff --git a/src/wayland/meta-xwayland.c b/src/wayland/meta-xwayland.c
+index cd95d68..6645b16 100644
+--- a/src/wayland/meta-xwayland.c
++++ b/src/wayland/meta-xwayland.c
+@@ -48,6 +48,12 @@
+ #include "wayland/meta-xwayland-surface.h"
+ #include "x11/meta-x11-display-private.h"
+ 
++#ifdef HAVE_XWAYLAND_LISTENFD
++#define XWAYLAND_LISTENFD "-listenfd"
++#else
++#define XWAYLAND_LISTENFD "-listen"
++#endif
++
+ static int display_number_override = -1;
+ 
+ static void meta_xwayland_stop_xserver (MetaXWaylandManager *manager);
+@@ -658,9 +664,9 @@ meta_xwayland_start_xserver (MetaXWaylandManager *manager,
+   args[i++] = "-core";
+   args[i++] = "-auth";
+   args[i++] = manager->auth_file;
+-  args[i++] = "-listen";
++  args[i++] = XWAYLAND_LISTENFD;
+   args[i++] = "4";
+-  args[i++] = "-listen";
++  args[i++] = XWAYLAND_LISTENFD;
+   args[i++] = "5";
+   args[i++] = "-displayfd";
+   args[i++] = "6",
+@@ -668,7 +674,7 @@ meta_xwayland_start_xserver (MetaXWaylandManager *manager,
+   args[i++] = "-initfd";
+   args[i++] = "7";
+ #else
+-  args[i++] = "-listen";
++  args[i++] = XWAYLAND_LISTENFD;
+   args[i++] = "7";
+ #endif
+   for (j = 0; j <  G_N_ELEMENTS (x11_extension_names); j++)
