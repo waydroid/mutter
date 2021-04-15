@@ -1,0 +1,48 @@
+From: Robert Mader <robert.mader@posteo.de>
+Date: Tue, 23 Mar 2021 14:01:13 +0100
+Subject: wayland/actor-surface: Call ensure_size_valid() on shaped-texture
+
+Use the new API to make sure the shaped texture has a valid size
+during the next layout phase.
+
+This is needed here because, quoting the previous commit:
+
+When the texture size is invalidated using `invalidate_size()`, the new
+size will only get calculated the next time `update_size()` is
+called. This happens e.g. in `meta_shaped_texture_get_preferred_size()`
+via `ensure_size_valid()`.
+
+`update_size()` can chain up to `clutter_content_invalidate_size()`
+as well as emitting a `size-changed` signal. If this happens during
+layout, the result is a 'change the layout conditions during layout'
+issue, causing heavy breakage in e.g. the Shell overview.
+
+To fix this, expose `ensure_size_valid()` as API so callers can make
+sure the texture has a valid size without creating redundant size
+invalidations calls.
+
+Note that if a buffer with a new size is attached we already trigger
+`update_size()` explicitely, avoiding such situations.
+
+Closes https://gitlab.gnome.org/GNOME/mutter/-/issues/1718
+
+(cherry picked from commit a09c9142302f7dfc9898f2c5cd9ff73b230255ca)
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1808>
+---
+ src/wayland/meta-wayland-actor-surface.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/wayland/meta-wayland-actor-surface.c b/src/wayland/meta-wayland-actor-surface.c
+index 50af540..797795f 100644
+--- a/src/wayland/meta-wayland-actor-surface.c
++++ b/src/wayland/meta-wayland-actor-surface.c
+@@ -271,6 +271,8 @@ meta_wayland_actor_surface_real_sync_actor_state (MetaWaylandActorSurface *actor
+       meta_surface_actor_reset_viewport_dst_size (surface_actor);
+     }
+ 
++  meta_shaped_texture_ensure_size_valid (stex);
++
+   META_WAYLAND_SURFACE_FOREACH_SUBSURFACE (surface, subsurface_surface)
+     {
+       MetaWaylandActorSurface *actor_surface;

@@ -6,6 +6,11 @@ debian/tests-Tag-unstable-tests-as-flaky.patch
 x11-Add-support-for-fractional-scaling-using-Randr.patch
 wayland-dma-buf-Add-support-for-DRM_FORMAT_ABGR2101010.patch
 clutter-frame-clock-Evenly-space-updates-when-presentatio.patch
-wayland-window-Provide-prior-floating-window-dimensions.patch
-wayland-Only-use-async-configured-geometry-if-actually-ch.patch
-wayland-window-Correct-detection-whether-to-send-configur.patch
+61-mutter.rules-Enable-KMS-modifiers-for-Raspberry-P.patch
+shaped-texture-Viewport-update-calculation-fixes.patch
+region-utils-Fix-typo-in-crop_and_scale-fastpath.patch
+shaped-texture-Use-G_APPROX_VALUE-to-compare-viewport-sou.patch
+shaped-texture-Expose-ensure_size_valid-API.patch
+wayland-actor-surface-Call-ensure_size_valid-on-shaped-te.patch
+build-Use-Xwayland-pkg-config-if-available.patch
+xwayland-Check-for-listenfd-option.patch

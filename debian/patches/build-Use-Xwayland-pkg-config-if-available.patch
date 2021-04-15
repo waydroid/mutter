@@ -1,0 +1,61 @@
+From: Olivier Fourdan <ofourdan@redhat.com>
+Date: Tue, 15 Dec 2020 10:19:05 +0100
+Subject: build: Use Xwayland pkg-config if available
+
+Xwayland in its main development branch now provides a pkg-config file
+which can be used to determine Xwayland installation path and various
+options enabled at build time.
+
+Change mutter build system to optionally use that mechanism if
+available. If not (as with Xwayland from the current stable branch),
+keep the fallback mechanisms (basically search for the Xwayland and parse
+its command line options to determine if initfd is available).
+
+Part-of: <https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1635>
+---
+ meson.build | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 4d8bdaf..2fd28c5 100644
+--- a/meson.build
++++ b/meson.build
+@@ -396,9 +396,15 @@ endif
+ 
+ have_xwayland_initfd = false
+ if have_wayland
++  xwayland_dep = dependency('xwayland', required: false)
++
+   xwayland_path = get_option('xwayland_path')
+   if xwayland_path == ''
+-    xwayland_path = find_program('Xwayland').path()
++    if xwayland_dep.found()
++      xwayland_path = xwayland_dep.get_pkgconfig_variable('xwayland')
++    else
++      xwayland_path = find_program('Xwayland').path()
++    endif
+   endif
+   cdata.set_quoted('XWAYLAND_PATH', xwayland_path)
+ 
+@@ -413,12 +419,18 @@ if have_wayland
+ 
+   # For Xwayland -initfd usage
+   use_initfd = get_option('xwayland_initfd')
+-  xwayland_options = run_command(xwayland_path, '-help')
++  if xwayland_dep.found()
++    xwayland_supports_initfd = xwayland_dep.get_pkgconfig_variable('have_initfd') == 'true'
++  else
++    xwayland_options = run_command(xwayland_path, '-help')
++    xwayland_supports_initfd = xwayland_options.stderr().contains('-initfd')
++  endif
++
+   if use_initfd.auto()
+-    have_xwayland_initfd = xwayland_options.stderr().contains('-initfd')
++    have_xwayland_initfd = xwayland_supports_initfd
+   else
+     have_xwayland_initfd = use_initfd.enabled()
+-    if have_xwayland_initfd and not xwayland_options.stderr().contains('-initfd')
++    if have_xwayland_initfd and not xwayland_supports_initfd
+       error('XWayland -initfd support requested but not available')
+     endif
+   endif
